@@ -1,0 +1,57 @@
+# Godot 4.0+
+.godot/
+/android/
+*.translation
+**/reports/
+
+# gdUnit4
+reports/
+
+# C#
+nupkg/
+bin/
+obj/
+.generated/
+
+# macOS
+.DS_Store
+
+# Blender
+*.blend1
+
+# Build Artifacts
+.builds/
+*/.builds/
+tmp/
+*.pck
+*.x86_64
+*.arm64
+
+# Dotenv
+.env.local
+
+# Claude
+.claude/**/settings.local.json
+.claude/context
+.claude/insights/
+.claude/plans/
+.claude/worktrees/
+.claude/scheduled_tasks.lock
+handoff/
+
+# Claudot
+.claudot/
+
+# Logs
+logs/
+
+# Obsidian
+**/.obsidian/workspace.json
+**/.obsidian/workspace-*.json
+
+# Playtests
+.playtests/
+
+# Reports
+.reports/
+*/.reports/

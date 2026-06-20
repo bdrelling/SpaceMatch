@@ -1,0 +1,38 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "source/**"
+      - ".github/workflows/tests.yml"
+  pull_request:
+    paths:
+      - "source/**"
+      - ".github/workflows/tests.yml"
+
+jobs:
+  test:
+    name: Headless tests (gdUnit4)
+    runs-on: ubuntu-latest
+
+    container:
+      image: ghcr.io/bdrelling/godot:4.6-stable
+      options: --user root
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Parse check (GDScript)
+        run: godot --path source --headless --check-only --quit
+        continue-on-error: false
+
+      - name: Run gdUnit4 tests
+        run: |
+          cd source
+          bash addons/gdUnit4/runtest.sh \
+            --godot_binary godot \
+            --headless \
+            --tests tests
+        # gdUnit4 exits non-zero on test failure, which will fail the step.

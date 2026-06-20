@@ -1,0 +1,11 @@
+{
+    "files.exclude": {
+        ".builds": true,
+        "**/*.uid": true,
+        "**/.obsidian": true,
+        "reports": true,
+        "armory": true,
+        "conduit": true,
+    },
+    "makefile.configureOnOpen": false
+}

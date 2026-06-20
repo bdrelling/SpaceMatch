@@ -1,0 +1,20 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Play",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "make play",
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "name": "Play & Debug (Godot)",
+            "type": "godot",
+            "request": "launch",
+            "project": "${workspaceFolder}/source",
+            "address": "127.0.0.1",
+            "port": 6007
+        }
+    ]
+}

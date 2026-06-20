@@ -1,0 +1,125 @@
+{
+  "sandbox": {
+    "filesystem": {
+      "denyRead": [
+        "~/"
+      ],
+      "allowRead": [
+        ".",
+        "~/.claude"
+      ],
+      "denyWrite": [
+        "."
+      ],
+      "allowWrite": [
+        "./.claude",
+        "./docs",
+        "./scripts",
+        "./source",
+        "./Makefile",
+        "./README.md"
+      ]
+    }
+  },
+  "model": "opus",
+  "effortLevel": "xhigh",
+  "worktree": {
+    "baseRef": "head",
+    "bgIsolation": "none"
+  },
+  "permissions": {
+    "allow": [
+      "Read(**)",
+      "Read(~/.claude/**)",
+      "Write(.claude/**)",
+      "Write(docs/**)",
+      "Write(scripts/**)",
+      "Write(source/**)",
+      "Write(Makefile)",
+      "Write(README.md)",
+      "Bash(bash scripts/*)",
+      "Bash(./scripts/*)",
+      "Bash(chmod +x *)",
+      "Bash(make help *)",
+      "Bash(make play:*)",
+      "Bash(make playtest:*)",
+      "Bash(make test:*)",
+      "Bash(make test-debug:*)",
+      "Bash(make clean)",
+      "Bash(godot:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(find:*)",
+      "Bash(fd:*)",
+      "Bash(wc:*)",
+      "Bash(tree:*)",
+      "Bash(stat:*)",
+      "Bash(file:*)",
+      "Bash(which:*)",
+      "Bash(pwd)",
+      "Bash(echo:*)",
+      "Bash(sort:*)",
+      "Bash(uniq:*)",
+      "Bash(cut:*)",
+      "Bash(diff:*)",
+      "Bash(realpath:*)",
+      "Bash(basename:*)",
+      "Bash(dirname:*)",
+      "Bash(date:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git blame:*)",
+      "Bash(git stash list:*)",
+      "WebSearch",
+      "WebFetch",
+      "Skill(take-screenshot)",
+      "Skill(take-screenshot:*)"
+    ],
+    "deny": [
+      "Read(.env.local)",
+      "Read(**/.env.local)",
+      "Read(.mcp.json)",
+      "Edit(.env.local)",
+      "Edit(**/.env.local)",
+      "Edit(.mcp.json)",
+      "Write(.env.local)",
+      "Write(**/.env.local)",
+      "Write(.mcp.json)",
+      "Read(**/*.pem)",
+      "Read(**/*.key)",
+      "Bash(git merge *)",
+      "Bash(git commit *)",
+      "Bash(git branch *)",
+      "Bash(git checkout *)",
+      "Bash(git reset *)"
+    ],
+    "ask": []
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/gdd-guard.sh"
+          }
+        ]
+      }
+    ]
+  },
+  "disabledMcpjsonServers": [
+    "claude_ai_Figma",
+    "claude_ai_Notion",
+    "claude_ai_Atlassian_Rovo",
+    "claude_ai_Gmail",
+    "claude_ai_Google_Calendar",
+    "claude_ai_Google_Drive"
+  ]
+}
