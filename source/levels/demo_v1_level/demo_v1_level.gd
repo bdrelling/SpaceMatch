@@ -1,0 +1,2 @@
+class_name DemoV1Level
+extends GameLevel

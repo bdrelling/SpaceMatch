@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="ItemBlueprint" format=3 uid="uid://2rs2tjm8isrf"]
+
+[ext_resource type="Script" uid="uid://8ky2pkrs3xta" path="res://systems/inventory/item/item_blueprint.gd" id="1_script"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_scrap"]
+size = Vector3(0.35, 0.35, 0.35)
+
+[resource]
+script = ExtResource("1_script")
+id = 0
+name = "Scrap"
+world_mesh = SubResource("BoxMesh_scrap")
+color = Color(0.72, 0.45, 0.3, 1)
+max_stack_size = 100

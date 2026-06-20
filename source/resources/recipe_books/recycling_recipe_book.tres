@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="RecipeBookBlueprint" format=3 uid="uid://5m7ztuj1w9ycz"]
+
+[ext_resource type="Script" uid="uid://ipoukpm4esua" path="res://systems/crafting/recipe_book/recipe_book_blueprint.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://cfxgtdd8aqfqe" path="res://systems/crafting/recipe/recipe_blueprint.gd" id="2_rb"]
+[ext_resource type="Resource" path="res://resources/recipes/recycling/recycle_scrap.tres" id="3_scrap"]
+
+[resource]
+script = ExtResource("1_script")
+recipes = Array[ExtResource("2_rb")]([ExtResource("3_scrap")])

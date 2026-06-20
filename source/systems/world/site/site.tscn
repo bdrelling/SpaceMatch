@@ -1,0 +1,15 @@
+[gd_scene format=3 uid="uid://ut7g1nhx7m4ep"]
+
+[ext_resource type="Script" path="res://systems/world/site/site.gd" id="Script_site"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_bounds"]
+
+[node name="Site" type="Node3D" script=ExtResource("Script_site")]
+
+[node name="Bounds" type="Area3D" parent="."]
+unique_name_in_owner = true
+collision_layer = 0
+collision_mask = 0
+
+[node name="BoundsShape" type="CollisionShape3D" parent="Bounds"]
+shape = SubResource("BoxShape3D_bounds")

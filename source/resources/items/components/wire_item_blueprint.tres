@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemBlueprint" format=3 uid="uid://2o42viuml7yu"]
+
+[ext_resource type="Script" uid="uid://8ky2pkrs3xta" path="res://systems/inventory/item/item_blueprint.gd" id="1_bnu2r"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_wire"]
+top_radius = 0.04
+bottom_radius = 0.04
+height = 0.6
+
+[resource]
+script = ExtResource("1_bnu2r")
+id = 100
+name = "Wire"
+category = 2
+world_mesh = SubResource("CylinderMesh_wire")
+color = Color(0.85, 0.5, 0.25, 1)
+max_stack_size = 20

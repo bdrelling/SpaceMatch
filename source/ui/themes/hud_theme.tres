@@ -1,0 +1,41 @@
+[gd_resource type="Theme" format=3 uid="uid://eocpj2bjh4aa"]
+
+[ext_resource type="FontFile" uid="uid://dcfwlgpa47duw" path="res://assets/fonts/inconsolata/Inconsolata.ttf" id="1_font"]
+
+[sub_resource type="FontVariation" id="FontVariation_compass"]
+base_font = ExtResource("1_font")
+variation_opentype = {
+"wght": 400.0
+}
+spacing_glyph = 1
+
+[sub_resource type="FontVariation" id="FontVariation_body"]
+base_font = ExtResource("1_font")
+variation_opentype = {
+"wght": 400.0
+}
+
+[sub_resource type="FontVariation" id="FontVariation_heading"]
+base_font = ExtResource("1_font")
+variation_opentype = {
+"wght": 400.0
+}
+spacing_glyph = 2
+
+[resource]
+compass_label/base_type = &"Label"
+compass_label/colors/font_color = Color(0.655, 0.702, 0.847, 1)
+compass_label/font_sizes/font_size = 12
+compass_label/fonts/font = SubResource("FontVariation_compass")
+hud_body/base_type = &"Label"
+hud_body/colors/font_color = Color(0.902, 0.925, 1, 1)
+hud_body/font_sizes/font_size = 12
+hud_body/fonts/font = SubResource("FontVariation_body")
+hud_dimmed/base_type = &"Label"
+hud_dimmed/colors/font_color = Color(0.424, 0.471, 0.643, 1)
+hud_dimmed/font_sizes/font_size = 11
+hud_dimmed/fonts/font = SubResource("FontVariation_body")
+hud_heading/base_type = &"Label"
+hud_heading/colors/font_color = Color(0.655, 0.702, 0.847, 1)
+hud_heading/font_sizes/font_size = 11
+hud_heading/fonts/font = SubResource("FontVariation_heading")

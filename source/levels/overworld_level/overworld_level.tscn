@@ -1,0 +1,167 @@
+[gd_scene format=3 uid="uid://cu0icc3o2b5vo"]
+
+[ext_resource type="Script" uid="uid://coenrey8h5sx6" path="res://levels/overworld_level/overworld_level.gd" id="1_0caqf"]
+[ext_resource type="Script" uid="uid://dj47d8frvq354" path="res://systems/world/terrain/terrain_stamp.gd" id="2_stamp"]
+[ext_resource type="Script" path="res://systems/world/scatter/scatter_config.gd" id="3_scatter_config"]
+[ext_resource type="Resource" path="res://systems/world/terrain/stamps/crater.tres" id="4_crater"]
+[ext_resource type="Resource" path="res://resources/scatter/scattered_craters.tres" id="4_scattered_craters"]
+[ext_resource type="PackedScene" uid="uid://dqrg54vjdsapj" path="res://entities/sites/outpost/outpost.tscn" id="5_outpost"]
+[ext_resource type="Texture2D" uid="uid://cseq2fmgn6q1r" path="res://levels/overworld_level/assets/textures/clay/clay_alb_ht.png" id="10_clay_alb"]
+[ext_resource type="Texture2D" uid="uid://def8mhvy2htwl" path="res://levels/overworld_level/assets/textures/clay/clay_nrm_rgh.png" id="11_clay_nrm"]
+[ext_resource type="PackedScene" path="res://systems/atmosphere/atmosphere.tscn" id="12_atmo"]
+[ext_resource type="Script" path="res://systems/atmosphere/atmosphere_cycle_driver.gd" id="13_cycle_driver"]
+[ext_resource type="Shader" uid="uid://cgbpkmub8ef3h" path="res://levels/overworld_level/dune_terrain.gdshader" id="14_dune_shader"]
+
+[sub_resource type="Gradient" id="Gradient_b1j1w"]
+offsets = PackedFloat32Array(0.2, 1)
+colors = PackedColorArray(1, 1, 1, 1, 0, 0, 0, 1)
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_62111"]
+noise_type = 3
+frequency = 0.005
+fractal_octaves = 3
+fractal_gain = 0.4
+cellular_jitter = 3.0
+cellular_return_type = 0
+domain_warp_enabled = true
+domain_warp_type = 1
+domain_warp_amplitude = 50.0
+domain_warp_fractal_type = 2
+domain_warp_fractal_lacunarity = 1.5
+domain_warp_fractal_gain = 1.0
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_2wadf"]
+noise = SubResource("FastNoiseLite_62111")
+color_ramp = SubResource("Gradient_b1j1w")
+seamless = true
+
+[sub_resource type="Terrain3DMaterial" id="Terrain3DMaterial_tl7j8"]
+_shader_parameters = {
+&"auto_overlay_texture": 0,
+&"bias_distance": null,
+&"blend_sharpness": 0.5,
+&"depth_blur": null,
+&"dual_scale_far": 170.0,
+&"dual_scale_near": 100.0,
+&"dual_scale_reduction": 0.3,
+&"dual_scale_texture": 0,
+&"enable_macro_variation": null,
+&"enable_projection": null,
+&"flat_terrain_normals": null,
+&"macro_variation1": Color(0.957, 0.829, 0.762, 1),
+&"macro_variation2": Color(0.978, 0.905, 0.867, 1),
+&"macro_variation_slope": null,
+&"mipmap_bias": null,
+&"noise1_angle": null,
+&"noise1_offset": null,
+&"noise1_scale": 0.005,
+&"noise2_scale": 0.01,
+&"noise_texture": SubResource("NoiseTexture2D_2wadf"),
+&"projection_threshold": null,
+&"tri_scale_reduction": 0.3
+}
+shader_override_enabled = true
+shader_override = ExtResource("14_dune_shader")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_45pww"]
+transparency = 4
+cull_mode = 2
+vertex_color_use_as_albedo = true
+backlight_enabled = true
+backlight = Color(0.5, 0.5, 0.5, 1)
+
+[sub_resource type="Terrain3DMeshAsset" id="Terrain3DMeshAsset_dp5o0"]
+generated_type = 1
+height_offset = 0.5
+material_override = SubResource("StandardMaterial3D_45pww")
+last_lod = 0
+last_shadow_lod = 0
+lod0_range = 128.0
+
+[sub_resource type="Terrain3DTextureAsset" id="Terrain3DTextureAsset_clay"]
+name = "Clay"
+albedo_color = Color(0.893984, 0.572693, 0.405394, 1)
+albedo_texture = ExtResource("10_clay_alb")
+normal_texture = ExtResource("11_clay_nrm")
+normal_depth = 1.0
+ao_strength = 0.0
+uv_scale = 0.2
+
+[sub_resource type="Terrain3DAssets" id="Terrain3DAssets_dyjuo"]
+mesh_list = Array[Terrain3DMeshAsset]([SubResource("Terrain3DMeshAsset_dp5o0")])
+texture_list = Array[Terrain3DTextureAsset]([SubResource("Terrain3DTextureAsset_clay")])
+
+[sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_up"]
+plane = Plane(0, -1, 0, 0)
+
+[sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_down"]
+
+[sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_fwd"]
+plane = Plane(0, 0, 1, 0)
+
+[sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_back"]
+plane = Plane(0, 0, -1, 0)
+
+[sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_left"]
+plane = Plane(-1, 0, 0, 0)
+
+[sub_resource type="WorldBoundaryShape3D" id="WorldBoundaryShape3D_right"]
+plane = Plane(1, 0, 0, 0)
+
+[node name="OverworldLevel" type="Node3D" unique_id=222887829]
+script = ExtResource("1_0caqf")
+scatter_configs = Array[ExtResource("3_scatter_config")]([ExtResource("4_scattered_craters")])
+
+[node name="SpawnPoint" type="Marker3D" parent="." unique_id=1700000001]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+
+[node name="Terrain" type="Terrain3D" parent="." unique_id=1430676799]
+material = SubResource("Terrain3DMaterial_tl7j8")
+assets = SubResource("Terrain3DAssets_dyjuo")
+free_editor_textures = false
+unique_name_in_owner = true
+top_level = true
+metadata/_edit_lock_ = true
+
+[node name="WorldBoundary" type="StaticBody3D" parent="." unique_id=1042273913]
+collision_mask = 6
+
+[node name="WorldBoundaryUp" type="CollisionShape3D" parent="WorldBoundary" unique_id=1508081071]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 240, 0)
+shape = SubResource("WorldBoundaryShape3D_up")
+
+[node name="WorldBoundaryDown" type="CollisionShape3D" parent="WorldBoundary" unique_id=291554949]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -100, 0)
+shape = SubResource("WorldBoundaryShape3D_down")
+
+[node name="WorldBoundaryForward" type="CollisionShape3D" parent="WorldBoundary" unique_id=1360712460]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -2560)
+shape = SubResource("WorldBoundaryShape3D_fwd")
+
+[node name="WorldBoundaryBack" type="CollisionShape3D" parent="WorldBoundary" unique_id=1391823072]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2560)
+shape = SubResource("WorldBoundaryShape3D_back")
+
+[node name="WorldBoundaryRight" type="CollisionShape3D" parent="WorldBoundary" unique_id=764608758]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2560, 0, 0)
+shape = SubResource("WorldBoundaryShape3D_left")
+
+[node name="WorldBoundaryLeft" type="CollisionShape3D" parent="WorldBoundary" unique_id=1631774748]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2560, 0, 0)
+shape = SubResource("WorldBoundaryShape3D_right")
+
+[node name="Outpost" parent="." unique_id=1423026133 instance=ExtResource("5_outpost")]
+
+[node name="Stamps" type="Node3D" parent="." unique_id=569182763]
+
+[node name="Crater" type="Node3D" parent="Stamps" unique_id=1254671642]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 160, 0, 80)
+script = ExtResource("2_stamp")
+stamp = ExtResource("4_crater")
+
+[node name="Atmosphere" parent="." unique_id=1300000777 instance=ExtResource("12_atmo")]
+
+[node name="AtmosphereCycleDriver" type="Node" parent="." node_paths=PackedStringArray("atmosphere")]
+script = ExtResource("13_cycle_driver")
+atmosphere = NodePath("../Atmosphere")

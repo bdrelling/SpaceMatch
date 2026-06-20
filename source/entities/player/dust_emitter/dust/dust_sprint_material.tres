@@ -1,0 +1,18 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3]
+
+[ext_resource type="Shader" path="res://entities/player/dust_emitter/dust/dust_particles.gdshader" id="1_shader"]
+
+[resource]
+resource_local_to_scene = true
+shader = ExtResource("1_shader")
+shader_parameter/ground_color = Color(1, 1, 1, 1)
+shader_parameter/emission_box_extents = Vector3(0.38, 0.05, 0.15)
+shader_parameter/emission_direction = Vector3(0, 0.32, 0.9)
+shader_parameter/spread_degrees = 42.0
+shader_parameter/initial_velocity_min = 0.5
+shader_parameter/initial_velocity_max = 1.6
+shader_parameter/gravity = Vector3(0, -1, 0)
+shader_parameter/damping_min = 1.0
+shader_parameter/damping_max = 2.5
+shader_parameter/scale_min = 0.8
+shader_parameter/scale_max = 1.5

@@ -1,0 +1,34 @@
+[gd_resource type="Resource" script_class="RecipeBlueprint" format=3]
+
+[ext_resource type="Script" uid="uid://cfxgtdd8aqfqe" path="res://systems/crafting/recipe/recipe_blueprint.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://cv6sohrraimw4" path="res://systems/inventory/item/item_stack.gd" id="2_stack"]
+[ext_resource type="Resource" path="res://resources/items/components/panel_item_blueprint.tres" id="3_panel"]
+[ext_resource type="Resource" path="res://resources/items/components/wire_item_blueprint.tres" id="4_wire"]
+[ext_resource type="Resource" path="res://resources/items/components/coil_item_blueprint.tres" id="5_coil"]
+[ext_resource type="Resource" path="res://resources/items/modules/reactor_item_blueprint.tres" id="6_output"]
+
+[sub_resource type="Resource" id="Input_panel"]
+script = ExtResource("2_stack")
+item_blueprint = ExtResource("3_panel")
+quantity = 2
+
+[sub_resource type="Resource" id="Input_wire"]
+script = ExtResource("2_stack")
+item_blueprint = ExtResource("4_wire")
+quantity = 2
+
+[sub_resource type="Resource" id="Input_coil"]
+script = ExtResource("2_stack")
+item_blueprint = ExtResource("5_coil")
+quantity = 1
+
+[sub_resource type="Resource" id="Output_reactor"]
+script = ExtResource("2_stack")
+item_blueprint = ExtResource("6_output")
+
+[resource]
+script = ExtResource("1_script")
+inputs = Array[ExtResource("2_stack")]([SubResource("Input_panel"), SubResource("Input_wire"), SubResource("Input_coil")])
+outputs = Array[ExtResource("2_stack")]([SubResource("Output_reactor")])
+name = "Fabricate Reactor"
+description = "Assembles a Reactor from panels, wire, and a coil."

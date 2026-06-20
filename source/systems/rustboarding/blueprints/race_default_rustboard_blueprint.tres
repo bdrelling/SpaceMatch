@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="RustboardBlueprint" format=3]
+
+[ext_resource type="Script" path="res://systems/rustboarding/rustboard_blueprint.gd" id="1_blueprint"]
+
+[resource]
+script = ExtResource("1_blueprint")
+max_speed = 40.0
+nudge_acceleration = 3.0
+slope_acceleration_scale = 1.6
+kinetic_friction = 0.05
+static_friction = 0.2
+lateral_friction = 1.5
+stop_speed = 0.5
+rotation_speed = 1.8
+deploy_tilt_degrees = 4.0
+alignment_speed = 12.0
+straighten_speed = 1.5
+air_righting_speed = 2.0
+straighten_fade_speed = 6.0
+carve_grip = 4.5
+speed_turn_falloff = 0.015
+steer_ramp = 6.0
+lean_degrees = 18.0
+normal_smoothing = 12.0

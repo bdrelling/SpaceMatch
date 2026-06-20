@@ -1,0 +1,64 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://cgdgtlaqka87" path="res://ui/pause_menu/pause_menu.gd" id="1_menu"]
+[ext_resource type="PackedScene" path="res://ui/pause_menu/panels/pause_menu_main_panel.tscn" id="2_main"]
+[ext_resource type="PackedScene" path="res://ui/pause_menu/panels/pause_menu_settings_panel.tscn" id="3_settings"]
+[ext_resource type="Script" uid="uid://b0jra5o3cgx37" path="res://addons/components/helpers/state_machine/state_machine.gd" id="4_sm"]
+[ext_resource type="Script" uid="uid://bvcbk14cst6gq" path="res://ui/pause_menu/states/closed_panel_state.gd" id="5_closed"]
+[ext_resource type="Script" uid="uid://b0guoconjkndf" path="res://ui/pause_menu/states/main_panel_state.gd" id="6_main_state"]
+[ext_resource type="Script" uid="uid://ci2372wy4wglj" path="res://ui/pause_menu/states/settings_panel_state.gd" id="7_settings_state"]
+
+[node name="PauseMenu" type="CanvasLayer"]
+process_mode = 3
+layer = 5
+script = ExtResource("1_menu")
+
+[node name="Overlay" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 0
+
+[node name="Backdrop" type="ColorRect" parent="Overlay"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.6)
+mouse_filter = 0
+
+[node name="PanelSlot" type="CenterContainer" parent="Overlay"]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="MainPanel" parent="Overlay/PanelSlot" instance=ExtResource("2_main")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="SettingsPanel" parent="Overlay/PanelSlot" instance=ExtResource("3_settings")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[node name="StateMachine" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("4_sm")
+
+[node name="ClosedPanelState" type="Node" parent="StateMachine"]
+script = ExtResource("5_closed")
+
+[node name="MainPanelState" type="Node" parent="StateMachine"]
+script = ExtResource("6_main_state")
+
+[node name="SettingsPanelState" type="Node" parent="StateMachine"]
+script = ExtResource("7_settings_state")

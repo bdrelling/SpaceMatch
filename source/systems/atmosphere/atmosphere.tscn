@@ -1,0 +1,16 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://systems/atmosphere/atmosphere.gd" id="1_atmo"]
+[ext_resource type="Resource" path="res://systems/atmosphere/configs/starry_night.tres" id="2_bp"]
+[ext_resource type="Resource" path="res://systems/atmosphere/configs/starry_cycle.tres" id="3_cycle"]
+
+[node name="Atmosphere" type="Node3D" node_paths=PackedStringArray("world_environment", "sun")]
+script = ExtResource("1_atmo")
+world_environment = NodePath("WorldEnvironment")
+sun = NodePath("Sun")
+config = ExtResource("2_bp")
+cycle = ExtResource("3_cycle")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+
+[node name="Sun" type="DirectionalLight3D" parent="."]

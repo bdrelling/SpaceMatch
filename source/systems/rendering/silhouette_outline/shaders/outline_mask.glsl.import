@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://besnpm128srmv"
+path="res://.godot/imported/outline_mask.glsl-4eec23f211744990792064438f3d98ac.res"
+
+[deps]
+
+source_file="res://systems/rendering/silhouette_outline/shaders/outline_mask.glsl"
+dest_files=["res://.godot/imported/outline_mask.glsl-4eec23f211744990792064438f3d98ac.res"]
+
+[params]
+

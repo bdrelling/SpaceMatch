@@ -1,0 +1,43 @@
+[gd_scene load_steps=7 format=3 uid="uid://c5jqjw6mm0w6i"]
+
+[ext_resource type="Script" path="res://systems/crafting/station/working_effects/working_effects.gd" id="1_effects"]
+
+[sub_resource type="Gradient" id="Gradient_smoke"]
+offsets = PackedFloat32Array(0, 0.7, 1)
+colors = PackedColorArray(0.45, 0.45, 0.45, 0.55, 0.55, 0.55, 0.55, 0.3, 0.6, 0.6, 0.6, 0)
+
+[sub_resource type="GradientTexture1D" id="GradientTexture1D_smoke"]
+gradient = SubResource("Gradient_smoke")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_smoke"]
+direction = Vector3(0, 1, 0)
+spread = 12.0
+initial_velocity_min = 0.6
+initial_velocity_max = 1.0
+gravity = Vector3(0, 0.6, 0)
+scale_min = 0.5
+scale_max = 1.0
+color_ramp = SubResource("GradientTexture1D_smoke")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_smoke"]
+transparency = 1
+shading_mode = 0
+vertex_color_use_as_albedo = true
+billboard_mode = 3
+billboard_keep_scale = true
+
+[sub_resource type="QuadMesh" id="QuadMesh_smoke"]
+material = SubResource("StandardMaterial3D_smoke")
+size = Vector2(0.35, 0.35)
+
+[node name="WorkingEffects" type="Node3D"]
+script = ExtResource("1_effects")
+
+[node name="Smoke" type="GPUParticles3D" parent="."]
+unique_name_in_owner = true
+emitting = false
+amount = 12
+lifetime = 1.2
+visibility_aabb = AABB(-2, -2, -2, 4, 4, 4)
+process_material = SubResource("ParticleProcessMaterial_smoke")
+draw_pass_1 = SubResource("QuadMesh_smoke")

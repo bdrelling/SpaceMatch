@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="GridCapacityRule" format=3 uid="uid://00c8p4q552v9c"]
+
+[ext_resource type="Script" uid="uid://dlu7exmqc328p" path="res://systems/inventory/capacity_rule/grid_capacity_rule.gd" id="1_rule"]
+
+[resource]
+script = ExtResource("1_rule")
+width = 8
+height = 5
+single_cell_rows = 1

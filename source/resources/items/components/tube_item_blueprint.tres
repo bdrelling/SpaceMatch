@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ItemBlueprint" format=3 uid="uid://dh5x7yghk802g"]
+
+[ext_resource type="Script" uid="uid://8ky2pkrs3xta" path="res://systems/inventory/item/item_blueprint.gd" id="1_a32mn"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_tube"]
+top_radius = 0.11
+bottom_radius = 0.11
+height = 0.5
+
+[resource]
+script = ExtResource("1_a32mn")
+id = 101
+name = "Tube"
+category = 2
+world_mesh = SubResource("CylinderMesh_tube")
+color = Color(0.55, 0.62, 0.58, 1)
+max_stack_size = 20

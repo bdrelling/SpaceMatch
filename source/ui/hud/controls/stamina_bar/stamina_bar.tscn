@@ -1,0 +1,22 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://cboic0ys4o1tw" path="res://ui/hud/controls/stamina_bar/stamina_bar.gd" id="1_script"]
+[ext_resource type="Theme" uid="uid://eocpj2bjh4aa" path="res://ui/themes/hud_theme.tres" id="2_theme"]
+
+[node name="StaminaBar" type="VBoxContainer"]
+theme = ExtResource("2_theme")
+script = ExtResource("1_script")
+theme_override_constants/separation = 4
+
+[node name="Label" type="Label" parent="."]
+layout_mode = 2
+text = "STAMINA"
+theme_type_variation = &"hud_heading"
+
+[node name="ProgressBar" type="ProgressBar" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(180, 8)
+max_value = 100.0
+value = 100.0
+show_percentage = false

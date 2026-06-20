@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="ScatterConfig" format=3 uid="uid://bj6qpe3ppiuly"]
+
+[ext_resource type="Script" uid="uid://oq8n333jreop" path="res://systems/world/scatter/scatter_config.gd" id="1_config"]
+[ext_resource type="Script" uid="uid://dekhvdau013mn" path="res://systems/world/scatter/scatter_entry.gd" id="2_entry"]
+[ext_resource type="Script" uid="uid://1w57oqui16kx" path="res://systems/world/terrain/crater_stamp_data.gd" id="3_crater"]
+
+[sub_resource type="Resource" id="Resource_crater_stamp"]
+script = ExtResource("3_crater")
+radius = 18.0
+depth = 6.0
+
+[sub_resource type="Resource" id="Resource_crater_entry"]
+script = ExtResource("2_entry")
+stamp = SubResource("Resource_crater_stamp")
+
+[resource]
+script = ExtResource("1_config")
+pool = Array[ExtResource("2_entry")]([SubResource("Resource_crater_entry")])
+distribution = 2
+min_count = 0
+max_count = 2
+min_scale = 0.7
+max_scale = 1.6

@@ -1,0 +1,27 @@
+[gd_scene format=3 uid="uid://btx64rj7pu2ob"]
+
+[ext_resource type="Script" uid="uid://b5sx8xair45vc" path="res://demos/halfpipe/halfpipe.gd" id="1_demo"]
+[ext_resource type="PackedScene" uid="uid://cvev68emr2krb" path="res://entities/player/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://q77on3hpfwd8" path="res://systems/camera/player_camera/player_camera.tscn" id="3_camera"]
+[ext_resource type="PackedScene" path="res://demos/halfpipe/halfpipe_ramp.tscn" id="4_ramp"]
+[ext_resource type="PackedScene" path="res://systems/atmosphere/atmosphere.tscn" id="5_atmosphere"]
+
+[node name="Halfpipe" type="Node3D" unique_id=1335938459]
+script = ExtResource("1_demo")
+
+[node name="Atmosphere" parent="." unique_id=558886834 instance=ExtResource("5_atmosphere")]
+
+[node name="SpawnPoint" type="Marker3D" parent="." unique_id=807221630]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 13, 0)
+
+[node name="Player" parent="." unique_id=921726545 node_paths=PackedStringArray("player_camera") instance=ExtResource("2_player")]
+unique_name_in_owner = true
+player_camera = NodePath("../PlayerCamera")
+
+[node name="PlayerCamera" parent="." unique_id=668510152 node_paths=PackedStringArray("follow_target") instance=ExtResource("3_camera")]
+mode = 4
+follow_target = NodePath("../Player")
+lock_mode = true
+
+[node name="Ramp" parent="." unique_id=1839888449 instance=ExtResource("4_ramp")]

@@ -1,0 +1,33 @@
+[gd_scene load_steps=4 format=3 uid="uid://hp6fqx0iim3g"]
+
+[ext_resource type="Script" uid="uid://ce2jnpi5l5gpd" path="res://systems/interaction/interactable_zone.gd" id="1_zone"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_collision"]
+size = Vector3(10, 10, 10)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_interact"]
+
+[node name="Structure" type="Node3D" unique_id=1612339474]
+
+[node name="Model" type="Node3D" parent="." unique_id=792252008]
+unique_name_in_owner = true
+
+[node name="CollisionBody" type="StaticBody3D" parent="." unique_id=447832910]
+unique_name_in_owner = true
+collision_layer = 16
+collision_mask = 0
+
+[node name="CollisionShape" type="CollisionShape3D" parent="CollisionBody" unique_id=558104231]
+unique_name_in_owner = true
+shape = SubResource("BoxShape3D_collision")
+
+[node name="InteractZone" type="Area3D" parent="." unique_id=1978999688]
+unique_name_in_owner = true
+collision_layer = 8
+collision_mask = 2
+script = ExtResource("1_zone")
+
+[node name="InteractShape" type="CollisionShape3D" parent="InteractZone" unique_id=63409162]
+unique_name_in_owner = true
+shape = SubResource("BoxShape3D_interact")
+debug_color = Color(0, 0.6, 0.7, 0.42)

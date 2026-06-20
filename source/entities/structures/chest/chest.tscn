@@ -1,0 +1,47 @@
+[gd_scene load_steps=10 format=3 uid="uid://w72zjqybf1hz9"]
+
+[ext_resource type="PackedScene" uid="uid://hp6fqx0iim3g" path="res://systems/world/structure/structure.tscn" id="1_structure"]
+[ext_resource type="Script" path="res://entities/structures/chest/chest.gd" id="2_chest"]
+[ext_resource type="PackedScene" uid="uid://y4um8slts68ou" path="res://systems/ui/nameplate/nameplate.tscn" id="3_nameplate"]
+[ext_resource type="PackedScene" uid="uid://bhc2ldcf1ue30" path="res://systems/inventory/inventory/inventory.tscn" id="4_inventory"]
+[ext_resource type="Resource" uid="uid://cuzdq39tc9pqb" path="res://resources/inventories/chest_inventory_blueprint.tres" id="5_blueprint"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_body"]
+size = Vector3(1.4, 0.8, 0.9)
+
+[sub_resource type="BoxMesh" id="BoxMesh_lid"]
+size = Vector3(1.5, 0.25, 1.0)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_collision"]
+size = Vector3(1.5, 1.05, 1.0)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_interact"]
+size = Vector3(4, 3, 4)
+
+[node name="Chest" instance=ExtResource("1_structure")]
+script = ExtResource("2_chest")
+
+[node name="MeshBody" type="MeshInstance3D" parent="Model" index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
+mesh = SubResource("BoxMesh_body")
+
+[node name="MeshLid" type="MeshInstance3D" parent="Model" index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.925, 0)
+mesh = SubResource("BoxMesh_lid")
+
+[node name="CollisionShape" parent="CollisionBody" index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.525, 0)
+shape = SubResource("BoxShape3D_collision")
+
+[node name="InteractShape" parent="InteractZone" index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("BoxShape3D_interact")
+
+[node name="Nameplate" parent="." index="3" instance=ExtResource("3_nameplate")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0)
+text = "Chest"
+orientation = 1
+
+[node name="Inventory" parent="." index="4" instance=ExtResource("4_inventory")]
+unique_name_in_owner = true
+blueprint = ExtResource("5_blueprint")

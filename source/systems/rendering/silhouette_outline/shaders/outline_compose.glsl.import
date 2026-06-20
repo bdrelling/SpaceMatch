@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://c10gxtfh3pds3"
+path="res://.godot/imported/outline_compose.glsl-3580e1ed2002a446311ac94f1f441d4a.res"
+
+[deps]
+
+source_file="res://systems/rendering/silhouette_outline/shaders/outline_compose.glsl"
+dest_files=["res://.godot/imported/outline_compose.glsl-3580e1ed2002a446311ac94f1f441d4a.res"]
+
+[params]
+

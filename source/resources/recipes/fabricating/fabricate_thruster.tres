@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="RecipeBlueprint" format=3]
+
+[ext_resource type="Script" uid="uid://cfxgtdd8aqfqe" path="res://systems/crafting/recipe/recipe_blueprint.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://cv6sohrraimw4" path="res://systems/inventory/item/item_stack.gd" id="2_stack"]
+[ext_resource type="Resource" path="res://resources/items/components/tube_item_blueprint.tres" id="3_tube"]
+[ext_resource type="Resource" path="res://resources/items/components/wire_item_blueprint.tres" id="4_wire"]
+[ext_resource type="Resource" path="res://resources/items/modules/thruster_item_blueprint.tres" id="5_output"]
+
+[sub_resource type="Resource" id="Input_tube"]
+script = ExtResource("2_stack")
+item_blueprint = ExtResource("3_tube")
+quantity = 1
+
+[sub_resource type="Resource" id="Input_wire"]
+script = ExtResource("2_stack")
+item_blueprint = ExtResource("4_wire")
+quantity = 1
+
+[sub_resource type="Resource" id="Output_thruster"]
+script = ExtResource("2_stack")
+item_blueprint = ExtResource("5_output")
+
+[resource]
+script = ExtResource("1_script")
+inputs = Array[ExtResource("2_stack")]([SubResource("Input_tube"), SubResource("Input_wire")])
+outputs = Array[ExtResource("2_stack")]([SubResource("Output_thruster")])
+name = "Fabricate Thruster"
+description = "Assembles a Thruster from a tube and wire."

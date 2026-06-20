@@ -1,0 +1,35 @@
+[gd_scene load_steps=9 format=3 uid="uid://cytfpelvesg8x"]
+
+[ext_resource type="PackedScene" uid="uid://hp6fqx0iim3g" path="res://systems/world/structure/structure.tscn" id="1_structure"]
+[ext_resource type="Script" uid="uid://divywfah2b1b7" path="res://entities/structures/landing_pad/landing_pad.gd" id="2_landing_pad"]
+[ext_resource type="Resource" path="res://entities/structures/landing_pad/landing_pad_blueprint.tres" id="3_blueprint"]
+[ext_resource type="Material" uid="uid://c5rx8g6t81er5" path="res://assets/textures/prototype/wall.tres" id="4_material"]
+[ext_resource type="Script" uid="uid://dtuv4plp0rqfc" path="res://entities/structures/landing_pad/landing_zone.gd" id="5_landing_zone"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_pad"]
+size = Vector3(16, 0.5, 16)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_collision"]
+size = Vector3(16, 0.5, 16)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_interact"]
+size = Vector3(16, 4, 16)
+
+[node name="LandingPad" instance=ExtResource("1_structure")]
+script = ExtResource("2_landing_pad")
+blueprint = ExtResource("3_blueprint")
+
+[node name="Mesh" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_pad")
+surface_material_override/0 = ExtResource("4_material")
+
+[node name="CollisionShape" parent="CollisionBody"]
+shape = SubResource("BoxShape3D_collision")
+
+[node name="InteractShape" parent="InteractZone"]
+shape = SubResource("BoxShape3D_interact")
+
+[node name="LandingZone" type="Marker3D" parent="."]
+unique_name_in_owner = true
+transform = Transform3D(-4.37114e-08, 0, 1, 0, 1, 0, -1, 0, -4.37114e-08, 0, 1.4, 0.15)
+script = ExtResource("5_landing_zone")

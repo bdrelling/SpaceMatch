@@ -1,0 +1,24 @@
+[gd_scene load_steps=3 format=3 uid="uid://b8salvaging0001"]
+
+[ext_resource type="Script" uid="uid://c22v8qi4fpheq" path="res://minigames/salvaging/salvaging.gd" id="1_salvaging"]
+[ext_resource type="Script" uid="uid://bhhb1ur48vcvr" path="res://systems/canvas/board_canvas.gd" id="2_canvas"]
+
+[node name="Salvaging" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("1_salvaging")
+
+[node name="BoardCanvas" type="Control" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_canvas")
+interactive = true
+max_zoom = 4.0

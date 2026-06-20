@@ -1,0 +1,28 @@
+[gd_resource type="Resource" script_class="RecipeBlueprint" format=3]
+
+[ext_resource type="Script" uid="uid://cfxgtdd8aqfqe" path="res://systems/crafting/recipe/recipe_blueprint.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://cv6sohrraimw4" path="res://systems/inventory/item/item_stack.gd" id="2_stack"]
+[ext_resource type="Resource" path="res://resources/items/components/wire_item_blueprint.tres" id="3_wire"]
+[ext_resource type="Resource" path="res://resources/items/components/coil_item_blueprint.tres" id="4_coil"]
+[ext_resource type="Resource" path="res://resources/items/modules/sensor_array_item_blueprint.tres" id="5_output"]
+
+[sub_resource type="Resource" id="Input_wire"]
+script = ExtResource("2_stack")
+item_blueprint = ExtResource("3_wire")
+quantity = 1
+
+[sub_resource type="Resource" id="Input_coil"]
+script = ExtResource("2_stack")
+item_blueprint = ExtResource("4_coil")
+quantity = 1
+
+[sub_resource type="Resource" id="Output_sensor_array"]
+script = ExtResource("2_stack")
+item_blueprint = ExtResource("5_output")
+
+[resource]
+script = ExtResource("1_script")
+inputs = Array[ExtResource("2_stack")]([SubResource("Input_wire"), SubResource("Input_coil")])
+outputs = Array[ExtResource("2_stack")]([SubResource("Output_sensor_array")])
+name = "Fabricate Sensor Array"
+description = "Assembles a Sensor Array from wire and a coil."

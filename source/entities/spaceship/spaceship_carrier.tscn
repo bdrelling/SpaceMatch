@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://d2hovrwmtp8xm"]
+
+[ext_resource type="PackedScene" uid="uid://o0p65xk6lqq2" path="res://entities/spaceship/assets/carrier/carrier.fbx" id="1_coa5y"]
+
+[node name="Carrier" type="Node3D"]
+
+[node name="Model" parent="." instance=ExtResource("1_coa5y")]

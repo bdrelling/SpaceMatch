@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://bhpg304e7ghn7"]
+
+[ext_resource type="Script" uid="uid://jp1fawfgrgih" path="res://demos/canyon/canyon_demo.gd" id="1_demo"]
+[ext_resource type="Script" uid="uid://dq23m2xf36hdp" path="res://demos/canyon/canyon_manager.gd" id="2_manager"]
+[ext_resource type="PackedScene" uid="uid://cvev68emr2krb" path="res://entities/player/player.tscn" id="3_player"]
+[ext_resource type="PackedScene" uid="uid://q77on3hpfwd8" path="res://systems/camera/player_camera/player_camera.tscn" id="4_camera"]
+[ext_resource type="PackedScene" path="res://demos/canyon/canyon_chunk.tscn" id="5_chunk"]
+[ext_resource type="PackedScene" path="res://systems/atmosphere/atmosphere.tscn" id="6_atmosphere"]
+
+[node name="CanyonDemo" type="Node3D" unique_id=457059276]
+script = ExtResource("1_demo")
+
+[node name="Atmosphere" parent="." unique_id=1235842957 instance=ExtResource("6_atmosphere")]
+
+[node name="SpawnPoint" type="Marker3D" parent="." unique_id=1664311159]
+unique_name_in_owner = true
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -15)
+
+[node name="Player" parent="." unique_id=1527838871 node_paths=PackedStringArray("player_camera") instance=ExtResource("3_player")]
+unique_name_in_owner = true
+player_camera = NodePath("../PlayerCamera")
+
+[node name="PlayerCamera" parent="." unique_id=800933632 node_paths=PackedStringArray("follow_target") instance=ExtResource("4_camera")]
+mode = 4
+follow_target = NodePath("../Player")
+lock_mode = true
+
+[node name="CanyonManager" type="Node3D" parent="." unique_id=211423424]
+unique_name_in_owner = true
+script = ExtResource("2_manager")
+chunk_scene = ExtResource("5_chunk")

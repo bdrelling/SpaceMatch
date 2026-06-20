@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=3 uid="uid://y4um8slts68ou"]
+
+[ext_resource type="Script" path="res://systems/ui/nameplate/nameplate.gd" id="1_script"]
+[ext_resource type="FontFile" uid="uid://dcfwlgpa47duw" path="res://assets/fonts/inconsolata/Inconsolata.ttf" id="2_font"]
+
+[node name="Nameplate" type="Label3D"]
+pixel_size = 0.0075
+text = "Label"
+font = ExtResource("2_font")
+font_size = 64
+outline_size = 14
+modulate = Color(0.902, 0.925, 1, 1)
+outline_modulate = Color(0.05, 0.06, 0.09, 1)
+script = ExtResource("1_script")

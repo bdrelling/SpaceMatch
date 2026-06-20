@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="CraterStampData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://systems/world/terrain/crater_stamp_data.gd" id="1_crater_stamp_data"]
+
+[resource]
+script = ExtResource("1_crater_stamp_data")
+radius = 40.0
+depth = 10.0
+world_position = Vector3(0, 0, 0)

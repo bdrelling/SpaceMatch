@@ -1,0 +1,16 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" uid="uid://b2v0jahnc05ed" path="res://systems/inventory/ui/quickbar/inventory_quickbar.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://systems/inventory/ui/grid_view/inventory_grid_view.tscn" id="2_view"]
+
+[node name="InventoryQuickbar" type="MarginContainer"]
+clip_contents = true
+mouse_filter = 2
+script = ExtResource("1_script")
+
+[node name="View" parent="." instance=ExtResource("2_view")]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+row_count = 1
+cell_size = 40

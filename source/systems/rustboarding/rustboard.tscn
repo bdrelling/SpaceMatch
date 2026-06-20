@@ -1,0 +1,34 @@
+[gd_scene format=3 uid="uid://xm21tvxg3iig"]
+
+[ext_resource type="Script" path="res://systems/rustboarding/rustboard.gd" id="1_board"]
+[ext_resource type="Script" uid="uid://b0jra5o3cgx37" path="res://addons/components/helpers/state_machine/state_machine.gd" id="2_sm"]
+[ext_resource type="Script" path="res://systems/rustboarding/states/stowed_rustboard_state.gd" id="3_stowed"]
+[ext_resource type="Script" path="res://systems/rustboarding/states/deployed_rustboard_state.gd" id="4_deployed"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_board"]
+albedo_color = Color(0.88, 0.72, 0.22, 1)
+metallic = 0.3
+roughness = 0.4
+
+[sub_resource type="BoxMesh" id="BoxMesh_board"]
+size = Vector3(0.42, 0.08, 1.6)
+
+[node name="Rustboard" type="Node3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0)
+visible = false
+script = ExtResource("1_board")
+
+[node name="Mesh" type="MeshInstance3D" parent="."]
+unique_name_in_owner = true
+material_override = SubResource("StandardMaterial3D_board")
+mesh = SubResource("BoxMesh_board")
+
+[node name="Controller" type="Node" parent="."]
+unique_name_in_owner = true
+script = ExtResource("2_sm")
+
+[node name="Stowed" type="Node" parent="Controller"]
+script = ExtResource("3_stowed")
+
+[node name="Deployed" type="Node" parent="Controller"]
+script = ExtResource("4_deployed")

@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://c2u3dieggx313"]
+
+[ext_resource type="PackedScene" uid="uid://k1b6c3i1pr6x" path="res://entities/spaceship/assets/bomber/bomber.blend" id="1_vbc5p"]
+
+[node name="Bomber" type="Node3D"]
+
+[node name="bomber" parent="." instance=ExtResource("1_vbc5p")]
+transform = Transform3D(-8.74228e-08, 0, 2, 0, 2, 0, -2, 0, -8.74228e-08, 0, 0, 0)

@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="TerrainStampData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://systems/world/terrain/terrain_stamp_data.gd" id="1_terrain_stamp"]
+
+[resource]
+script = ExtResource("1_terrain_stamp")
+height_image = null
+alpha_image = null
+height_image_path = "res://systems/world/terrain/stamps/outpost_flat_height.exr"
+alpha_image_path = "res://systems/world/terrain/stamps/outpost_flat_alpha.exr"
+world_position = Vector3(0, 0, 0)
+world_size = Vector2(192, 192)

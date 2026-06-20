@@ -1,0 +1,59 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" uid="uid://hp6fqx0iim3g" path="res://systems/world/structure/structure.tscn" id="1_structure"]
+[ext_resource type="Script" uid="uid://bivk1xkducnop" path="res://entities/structures/refurbisher/refurbisher.gd" id="2_refurbisher"]
+[ext_resource type="Resource" uid="uid://dwyifya1hny0s" path="res://resources/recipe_books/refurbishing_recipe_book.tres" id="3_book"]
+[ext_resource type="PackedScene" uid="uid://bxffpg3cfyy5a" path="res://systems/ui/nameplate/nameplate.tscn" id="7_nameplate"]
+[ext_resource type="PackedScene" uid="uid://c5jqjw6mm0w6i" path="res://systems/crafting/station/working_effects/working_effects.tscn" id="8_effects"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_body"]
+size = Vector3(2.0, 1.4, 1.6)
+
+[sub_resource type="BoxMesh" id="BoxMesh_hopper"]
+size = Vector3(1.6, 0.4, 1.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_chute"]
+size = Vector3(1.0, 0.4, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_collision"]
+size = Vector3(2.2, 1.6, 1.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_interact"]
+size = Vector3(4.5, 3, 4)
+
+[node name="Refurbisher" instance=ExtResource("1_structure")]
+script = ExtResource("2_refurbisher")
+recipe_book_blueprint = ExtResource("3_book")
+action_label = "Refurbish"
+
+[node name="MeshBody" type="MeshInstance3D" parent="Model" index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7, 0)
+mesh = SubResource("BoxMesh_body")
+
+[node name="MeshHopper" type="MeshInstance3D" parent="Model" index="1"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0)
+mesh = SubResource("BoxMesh_hopper")
+
+[node name="MeshChute" type="MeshInstance3D" parent="Model" index="2"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, -0.95)
+mesh = SubResource("BoxMesh_chute")
+
+[node name="CollisionShape" parent="CollisionBody" index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.8, 0)
+shape = SubResource("BoxShape3D_collision")
+
+[node name="InteractShape" parent="InteractZone" index="0"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("BoxShape3D_interact")
+
+[node name="Nameplate" parent="." index="3" instance=ExtResource("7_nameplate")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
+text = "Refurbisher"
+orientation = 1
+
+[node name="WorkingEffects" parent="." index="4" instance=ExtResource("8_effects") node_paths=PackedStringArray("target")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.9, 0)
+target = NodePath("../Model")
+
+[connection signal="work_started" from="." to="WorkingEffects" method="start"]
+[connection signal="work_finished" from="." to="WorkingEffects" method="stop"]
