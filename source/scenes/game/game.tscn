@@ -1,0 +1,79 @@
+[gd_scene format=3 uid="uid://qeuunh3bnmjbe"]
+
+[ext_resource type="Script" uid="uid://coo6texv2f7fg" path="res://demos/arcade/arcade.gd" id="1_arcade"]
+[ext_resource type="PackedScene" uid="uid://b1topbar00001" path="res://demos/arcade/chrome/arcade_top_bar.tscn" id="2_topbar"]
+[ext_resource type="PackedScene" uid="uid://c0o7vt3hjlf81" path="res://demos/arcade/arcade_pager.tscn" id="3_pager"]
+[ext_resource type="PackedScene" uid="uid://nekbkphykxea" path="res://demos/arcade/screens/minigame_screen/minigame_screen.tscn" id="4_minigame"]
+[ext_resource type="PackedScene" uid="uid://023jhm0a681" path="res://demos/arcade/screens/menu_screen/menu_screen.tscn" id="5_menu"]
+[ext_resource type="PackedScene" uid="uid://b1invbar000001" path="res://demos/arcade/chrome/arcade_inventory_bar.tscn" id="6_invbar"]
+[ext_resource type="PackedScene" uid="uid://xf0sqaejc8to" path="res://demos/arcade/arcade_tab_bar.tscn" id="7_tabbar"]
+[ext_resource type="PackedScene" uid="uid://b8recycling0001" path="res://minigames/recycling/recycling.tscn" id="10_recycling"]
+[ext_resource type="PackedScene" uid="uid://b8outfitting001" path="res://minigames/outfitting/outfitting.tscn" id="12_outfitting"]
+
+[node name="Game" type="Control" node_paths=PackedStringArray("_pager", "_tab_bar", "_top_bar", "_inventory_bar")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_arcade")
+_pager = NodePath("Chrome/ArcadePager")
+_tab_bar = NodePath("Chrome/TabBar")
+_top_bar = NodePath("Chrome/TopBar")
+_inventory_bar = NodePath("Chrome/InventoryBar")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.07, 0.09, 0.14, 1)
+
+[node name="Chrome" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="TopBar" parent="Chrome" instance=ExtResource("2_topbar")]
+layout_mode = 2
+
+[node name="ArcadePager" parent="Chrome" instance=ExtResource("3_pager")]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Recycling" parent="Chrome/ArcadePager" instance=ExtResource("4_minigame")]
+layout_mode = 1
+title = "Recycling"
+
+[node name="Minigame" parent="Chrome/ArcadePager/Recycling" instance=ExtResource("10_recycling")]
+layout_mode = 1
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Outfitting" parent="Chrome/ArcadePager" instance=ExtResource("4_minigame")]
+visible = false
+layout_mode = 1
+title = "Outfitting"
+
+[node name="Minigame" parent="Chrome/ArcadePager/Outfitting" instance=ExtResource("12_outfitting")]
+layout_mode = 1
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Settings" parent="Chrome/ArcadePager" instance=ExtResource("5_menu")]
+visible = false
+layout_mode = 1
+title = "Settings"
+
+[node name="InventoryBar" parent="Chrome" instance=ExtResource("6_invbar")]
+layout_mode = 2
+
+[node name="TabBar" parent="Chrome" instance=ExtResource("7_tabbar")]
+layout_mode = 2

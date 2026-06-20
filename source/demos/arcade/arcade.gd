@@ -15,7 +15,7 @@ extends Control
 
 ## Loaded on demand in [method create] rather than `preload`-ed, so referencing [Arcade] (e.g. from
 ## a boot-time platform switch) never pulls the scene into memory — only [method create] does.
-const SCENE_PATH := "res://demos/arcade/arcade.tscn"
+const SCENE_PATH := "res://scenes/game/game.tscn"
 
 #endregion
 
