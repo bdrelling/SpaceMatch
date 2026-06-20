@@ -1,3 +1,6 @@
 [submodule "armory"]
 	path = armory
 	url = https://github.com/bdrelling/armory
+[submodule "matchbox"]
+	path = matchbox
+	url = https://github.com/bdrelling/matchbox
