@@ -40,16 +40,15 @@ else
 		| xargs -n1 dirname | sed 's|^\./||' | sort -u | sed 's/^/--add /' | tr '\n' ' ')
 fi
 
-# Detect headless environments (CI, or Linux without a display).
-# In those cases we pass --headless through to Godot and tell gdUnit4 to skip
-# its display-required guard. On macOS dev machines this stays empty so the
-# normal windowed runner is used.
-#
-# HEADLESS=true requests headless explicitly (e.g. background agent sessions
-# with no display). CI=true means "running in CI" — it implies headless because
-# CI machines have no display, but don't set it just to get a headless run.
+# Headless decision, in priority order:
+#   1. CI=true ALWAYS forces headless (CI machines have no display) — wins even
+#      over an explicit HEADLESS=false.
+#   2. otherwise HEADLESS is honored (true → headless, false → windowed).
+#   3. default is windowed (false) — i.e. a human running it at their desk, who
+#      also gets the HTML report popped open at the end (see below).
+# When headless we also tell gdUnit4 to skip its display-required guard.
 HEADLESS_FLAGS=""
-if [ "$HEADLESS" = "true" ] || [ "$CI" = "true" ] || { [ -z "$DISPLAY" ] && [ -z "$WAYLAND_DISPLAY" ] && [ "$(uname)" = "Linux" ]; }; then
+if [ "$CI" = "true" ] || [ "$HEADLESS" = "true" ]; then
 	HEADLESS_FLAGS="--headless --ignoreHeadlessMode"
 fi
 

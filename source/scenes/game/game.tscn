@@ -7,7 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://023jhm0a681" path="res://scenes/game/screens/menu_screen/menu_screen.tscn" id="5_menu"]
 [ext_resource type="PackedScene" uid="uid://b1invbar000001" path="res://scenes/game/chrome/game_inventory_bar.tscn" id="6_invbar"]
 [ext_resource type="PackedScene" uid="uid://xf0sqaejc8to" path="res://scenes/game/game_tab_bar.tscn" id="7_tabbar"]
-[ext_resource type="PackedScene" uid="uid://b8recycling0001" path="res://minigames/recycling/recycling.tscn" id="10_recycling"]
+[ext_resource type="PackedScene" uid="uid://b8match0001" path="res://minigames/match/match.tscn" id="10_match"]
 [ext_resource type="PackedScene" uid="uid://b8outfitting001" path="res://minigames/outfitting/outfitting.tscn" id="12_outfitting"]
 
 [node name="Game" type="Control" node_paths=PackedStringArray("_pager", "_tab_bar", "_top_bar", "_inventory_bar")]
@@ -48,11 +48,11 @@ layout_mode = 2
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="Recycling" parent="Chrome/GamePager" instance=ExtResource("4_minigame")]
+[node name="Match" parent="Chrome/GamePager" instance=ExtResource("4_minigame")]
 layout_mode = 1
-title = "Recycling"
+title = "Match"
 
-[node name="Minigame" parent="Chrome/GamePager/Recycling" instance=ExtResource("10_recycling")]
+[node name="Minigame" parent="Chrome/GamePager/Match" instance=ExtResource("10_match")]
 layout_mode = 1
 grow_horizontal = 2
 grow_vertical = 2

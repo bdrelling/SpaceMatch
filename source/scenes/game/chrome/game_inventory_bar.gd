@@ -2,7 +2,7 @@ class_name GameInventoryBar
 extends Control
 ## The context strip above the tab bar. It reads the active stage's [method Minigame.inventory_chips]
 ## into an always-visible row, and — when the stage offers a [method Minigame.inventory_detail] — a tap
-## expands it into a drawer with the richer view (recycling's full breakdown, outfitting's module grid).
+## expands it into a drawer with the richer view (the match board's full breakdown, outfitting's module grid).
 ## A stage whose inventory IS its interface ([method Minigame.inventory_pinned]) shows the drawer pinned
 ## open with no toggle; a stage with nothing to show hides the strip entirely. Like the other bars its
 ## [member Background] bleeds to the screen sides while the content insets to the safe area.

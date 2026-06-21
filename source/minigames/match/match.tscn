@@ -1,15 +1,15 @@
-[gd_scene load_steps=3 format=3 uid="uid://b8recycling0001"]
+[gd_scene load_steps=3 format=3 uid="uid://b8match0001"]
 
-[ext_resource type="Script" path="res://minigames/recycling/recycling.gd" id="1_recycling"]
+[ext_resource type="Script" path="res://minigames/match/match.gd" id="1_match"]
 [ext_resource type="Script" uid="uid://bhhb1ur48vcvr" path="res://addons/grid_system/view/board_canvas.gd" id="2_canvas"]
 
-[node name="Recycling" type="Control"]
+[node name="Match" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
-script = ExtResource("1_recycling")
+script = ExtResource("1_match")
 
 [node name="BoardCanvas" type="Control" parent="."]
 unique_name_in_owner = true

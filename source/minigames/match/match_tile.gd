@@ -1,6 +1,6 @@
-class_name RecyclingTile
+class_name MatchTile
 extends GridTile
-## A component tile for the recycling match-3: one of six glyphs (wire, tube, panel, bolt, gear, coil)
+## A component tile for the match-3 board: one of six glyphs (wire, tube, panel, bolt, gear, coil)
 ## chosen by [member kind], drawn centred on the node origin in unit cell-space so a pop scales about the
 ## centre. Filled with [member tint] when the host sets it (the component's colour), else a built-in palette.
 

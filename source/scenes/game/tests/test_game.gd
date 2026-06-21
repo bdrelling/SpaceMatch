@@ -62,7 +62,7 @@ func test_pager_has_every_stage_and_settings() -> void:
 		titles.append(screen.title)
 	# Order is the scene's business; the shell just has to surface every stage and Settings.
 	assert_array(titles).contains_exactly_in_any_order(
-		["Recycling", "Outfitting", "Settings"])
+		["Match", "Outfitting", "Settings"])
 	game.queue_free()
 
 func test_selecting_a_tab_pages_to_it() -> void:
@@ -130,7 +130,7 @@ func test_tabs_are_not_keyboard_focusable() -> void:
 	for button: Button in tabs:
 		assert_int(button.focus_mode).is_equal(Control.FOCUS_NONE)
 	# The tab bar authors one button per stage; Settings is the cog, not a tab.
-	assert_int(tabs.size()).is_equal(6)
+	assert_int(tabs.size()).is_equal(5)
 	game.queue_free()
 
 func test_minigame_screens_do_not_block_board_input() -> void:

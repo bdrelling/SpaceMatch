@@ -5,7 +5,7 @@ extends GdUnitTestSuite
 ## space so pushed touches land where the board reports its cells.
 
 const _VIEW_SIZE := Vector2i(1080, 1920)
-const _RECYCLING := "res://minigames/recycling/recycling.tscn"
+const _MATCH := "res://minigames/match/match.tscn"
 
 func _find(node: Node, type: Variant) -> Node:
 	if is_instance_of(node, type):
@@ -46,12 +46,12 @@ func _drag(viewport: Viewport, from: Vector2, to: Vector2) -> void:
 	event.relative = to - from
 	viewport.push_input(event)
 
-func test_recycling_board_drag_dispatches() -> void:
-	var recycling := _host_in_viewport(_RECYCLING) as RecyclingMinigame
+func test_match_board_drag_dispatches() -> void:
+	var match_game := _host_in_viewport(_MATCH) as MatchMinigame
 	# The board generates on _ready; give it a beat to lay out its tiles.
 	await await_millis(500)
-	var grid: Grid = _find(recycling, Grid)
-	var view: MatchBoardView = _find(recycling, MatchBoardView)
+	var grid: Grid = _find(match_game, Grid)
+	var view: MatchBoardView = _find(match_game, MatchBoardView)
 	assert_object(grid).is_not_null()
 	assert_object(view).is_not_null()
 	var transform := grid.get_global_transform()
@@ -59,7 +59,7 @@ func test_recycling_board_drag_dispatches() -> void:
 	assert_vector(Vector2(grid.cell_at(transform * grid.cell_center(Vector2i(3, 3))))).is_equal(Vector2(3, 3))
 	var resolved: Array[bool] = [false]
 	view.move_resolved.connect(func(_made_match: bool, _cleared: int) -> void: resolved[0] = true)
-	var viewport := recycling.get_viewport()
+	var viewport := match_game.get_viewport()
 	var from_cell := Vector2i(3, 3)
 	var to_cell := Vector2i(4, 3)
 	var p0: Vector2 = transform * grid.cell_center(from_cell)
@@ -72,5 +72,5 @@ func test_recycling_board_drag_dispatches() -> void:
 	# Let the committed swap and any cascade settle.
 	await await_millis(1200)
 	assert_bool(resolved[0]).override_failure_message(
-		"Recycling: board drag did not reach MatchBoardView (no move resolved)."
+		"Match: board drag did not reach MatchBoardView (no move resolved)."
 	).is_true()

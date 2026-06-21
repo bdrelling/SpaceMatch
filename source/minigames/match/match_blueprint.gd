@@ -1,8 +1,7 @@
-class_name RecyclingBlueprint
+class_name MatchBlueprint
 extends GridSessionBlueprint
-## Match-3 rules for the recycling minigame: swap a cell toward a neighbour to line up three-or-more
-## matching components, which clear and let the column refill. The host recycles each cleared run into
-## the inventory.
+## Match-3 rules for the match minigame: swap a cell toward a neighbour to line up three-or-more
+## matching tiles, which clear and let the column refill.
 
 const _BOARD_WIDTH: int = 8
 const _BOARD_HEIGHT: int = 8
