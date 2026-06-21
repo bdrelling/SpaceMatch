@@ -2,7 +2,7 @@ class_name ItemFootprintIcon
 extends Control
 ## Draws an [ItemBlueprint]'s grid footprint as filled cells in the item's colour, scaled to fit this
 ## control. The small at-a-glance "module shape" shown wherever an item is presented by picture rather
-## than text — the outfitting strip, the salvage yard, a fabricating recipe. Display only; never
+## than text — the outfitting strip or a fabricating recipe. Display only; never
 ## intercepts pointer input.
 
 ## The item to draw. Null draws nothing.

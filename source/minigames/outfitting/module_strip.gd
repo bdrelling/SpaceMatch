@@ -3,7 +3,7 @@ extends Control
 ## Horizontal strip of packable modules, each drawn as its grid footprint rather than text. A tap picks
 ## one up ([signal module_pressed]); a horizontal drag scrolls the row, so on touch a tap and a scroll
 ## never fight (the press is classified by travel, like the board's gesture recognizer). The held
-## module's slot stays lit. Presentation only — the host owns the salvage yard.
+## module's slot stays lit. Presentation only — the host owns the modules.
 
 signal module_pressed(stack: ItemStack)
 

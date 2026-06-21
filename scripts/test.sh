@@ -41,14 +41,15 @@ else
 fi
 
 # Headless decision, in priority order:
-#   1. CI=true ALWAYS forces headless (CI machines have no display) — wins even
-#      over an explicit HEADLESS=false.
-#   2. otherwise HEADLESS is honored (true → headless, false → windowed).
-#   3. default is windowed (false) — i.e. a human running it at their desk, who
-#      also gets the HTML report popped open at the end (see below).
+#   1. CI=true ALWAYS forces headless (CI machines have no display).
+#   2. otherwise HEADLESS is honored, and it DEFAULTS to true — tests never need
+#      a window. Set HEADLESS=false to watch a windowed run (and get the HTML
+#      report popped open at the end; see below).
 # When headless we also tell gdUnit4 to skip its display-required guard.
+HEADLESS="${HEADLESS:-true}"
+[ "$CI" = "true" ] && HEADLESS=true
 HEADLESS_FLAGS=""
-if [ "$CI" = "true" ] || [ "$HEADLESS" = "true" ]; then
+if [ "$HEADLESS" = "true" ]; then
 	HEADLESS_FLAGS="--headless --ignoreHeadlessMode"
 fi
 
@@ -121,30 +122,71 @@ HTML_REPORT_PATH=$(realpath "$HTML_REPORT_PATH" 2>/dev/null || echo "$HTML_REPOR
 # Extract exit code
 EXIT_CODE_FROM_OUTPUT=$(echo "$LAST_LINES" | grep -o "Exit code: [0-9]*" | sed 's/Exit code: //')
 
-# Print summary
-echo "====== SUMMARY ======"
-echo "Overall summary: $OVERALL_SUMMARY"
-echo "Total tests: $TOTAL_TESTS"
-echo "Errors: $ERRORS"
-echo "Failures: $FAILURES"
-echo "Flaky: $FLAKY"
-echo "Skipped: $SKIPPED"
-echo "Orphans: $ORPHANS"
-echo "Executed test suites: $EXECUTED_SUITES"
-echo "Executed test cases: $EXECUTED_CASES"
-echo "Total execution time: $TOTAL_EXECUTION_TIME"
+# --- Authoritative verdict from the report on disk ---------------------------
+# gdUnit writes the full XML report when the run finishes, BEFORE Godot's engine
+# teardown. On macOS headless that teardown intermittently SIGSEGVs while freeing
+# leaked GDScript objects (engine bug godot#95174 / #98182), corrupting the
+# *process* exit code (134/139) even though every test ran and the report is
+# complete. So the verdict comes from results.xml, not the exit code.
+RESULTS_XML=$(ls -dt "$REPORTS_DIRECTORY"/report_*/results.xml 2>/dev/null | head -1)
+if [ -n "$RESULTS_XML" ] && [ -f "$RESULTS_XML" ]; then
+	_root=$(grep -m1 "<testsuites " "$RESULTS_XML")
+	TOTAL_TESTS=$(printf '%s' "$_root" | grep -oE 'tests="[0-9]+"' | grep -oE '[0-9]+')
+	FAILURES=$(printf '%s' "$_root" | grep -oE 'failures="[0-9]+"' | grep -oE '[0-9]+')
+	ERRORS=$(printf '%s' "$_root" | grep -oE 'errors="[0-9]+"' | grep -oE '[0-9]+')
+	SKIPPED=$(printf '%s' "$_root" | grep -oE 'skipped="[0-9]+"' | grep -oE '[0-9]+')
+	XML_REPORT_PATH="$RESULTS_XML"
+	HTML_REPORT_PATH="${RESULTS_XML%results.xml}index.html"
+	: "${TOTAL_TESTS:=0}"; : "${FAILURES:=0}"; : "${ERRORS:=0}"
+	if [ "$FAILURES" -gt 0 ] || [ "$ERRORS" -gt 0 ]; then VERDICT=1; else VERDICT=0; fi
+	if [ "$EXIT_CODE" -gt 128 ]; then
+		echo "NOTE: Godot crashed at engine teardown (exit $EXIT_CODE) — known macOS"
+		echo "      headless bug. All $TOTAL_TESTS tests ran; verdict read from the report."
+	fi
+else
+	echo "ERROR: no results.xml found — the run did not produce a report."
+	VERDICT=$EXIT_CODE
+fi
 
-echo "XML report path: $XML_REPORT_PATH"
-echo "HTML report path: $HTML_REPORT_PATH"
+# Print a plain-language summary a human can read at a glance — no exit-code jargon.
+FAILED_COUNT=$(( ${FAILURES:-0} + ${ERRORS:-0} ))
+echo ""
+echo "=================================================================="
+if [ "${VERDICT:-1}" -eq 0 ]; then
+	echo "✓  ALL TESTS PASSED — ${TOTAL_TESTS:-0} tests${TOTAL_EXECUTION_TIME:+ in $TOTAL_EXECUTION_TIME}"
+else
+	echo "✗  TESTS FAILED — $FAILED_COUNT of ${TOTAL_TESTS:-0} tests failed:"
+	echo ""
+	# Name each failing test, with its message and location, straight from the report.
+	[ -f "$RESULTS_XML" ] && awk '
+		/<testcase / { if (match($0, /name="[^"]*"/)) name=substr($0, RSTART+6, RLENGTH-7) }
+		/<failure message=/ {
+			where=""; if (match($0, /FAILED: [^"]*/)) where=substr($0, RSTART+8, RLENGTH-8)
+			grab=1; next
+		}
+		grab && /CDATA/ { next }
+		grab && NF {
+			sub(/^[ \t]+/, "")
+			print "  ✗ " name
+			print "      " $0
+			print "      → " where
+			print ""
+			grab=0
+		}
+	' "$RESULTS_XML"
+fi
+echo "------------------------------------------------------------------"
+[ "${SKIPPED:-0}" -gt 0 ] && echo "($SKIPPED skipped)"
+echo "Full report: $HTML_REPORT_PATH"
+echo "=================================================================="
 
-echo "Exit code from output: $EXIT_CODE_FROM_OUTPUT"
-echo "Actual exit code: $EXIT_CODE"
-
-# Open the HTML report in the default browser (only on hosts that have `open`,
-# and only for interactive runs — not CI, not explicit headless).
-if [ -z "$CI" ] && [ "$HEADLESS" != "true" ] && command -v open >/dev/null 2>&1; then
+# Open the HTML report in the default browser only on a deliberate windowed run
+# (HEADLESS=false) — the "I'm watching this" mode. Default headless / CI / agent
+# runs never pop it.
+if [ "$HEADLESS" != "true" ] && command -v open >/dev/null 2>&1; then
 	open "$HTML_REPORT_PATH"
 fi
 
-# Exit with the appropriate code for CI
-exit $EXIT_CODE
+# Exit with the report-derived verdict (falls back to the process code only when
+# no report was produced).
+exit ${VERDICT:-$EXIT_CODE}

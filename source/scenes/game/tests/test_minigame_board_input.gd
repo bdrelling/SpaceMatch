@@ -48,22 +48,22 @@ func _drag(viewport: Viewport, from: Vector2, to: Vector2) -> void:
 
 func test_match_board_drag_dispatches() -> void:
 	var match_game := _host_in_viewport(_MATCH) as MatchMinigame
-	# The board generates on _ready; give it a beat to lay out its tiles.
-	await await_millis(500)
+	# Let _ready build the board, then wait out its pour-in intro: the board
+	# ignores pointer input while it animates, so a fixed delay races the fall.
+	await await_millis(100)
 	var grid: Grid = _find(match_game, Grid)
 	var view: MatchBoardView = _find(match_game, MatchBoardView)
 	assert_object(grid).is_not_null()
 	assert_object(view).is_not_null()
+	await _await_board_idle(view)
 	var transform := grid.get_global_transform()
 	# Sanity: a cell's view position resolves back to that cell.
 	assert_vector(Vector2(grid.cell_at(transform * grid.cell_center(Vector2i(3, 3))))).is_equal(Vector2(3, 3))
 	var resolved: Array[bool] = [false]
 	view.move_resolved.connect(func(_made_match: bool, _cleared: int) -> void: resolved[0] = true)
 	var viewport := match_game.get_viewport()
-	var from_cell := Vector2i(3, 3)
-	var to_cell := Vector2i(4, 3)
-	var p0: Vector2 = transform * grid.cell_center(from_cell)
-	var p1: Vector2 = transform * grid.cell_center(to_cell)
+	var p0: Vector2 = transform * grid.cell_center(Vector2i(3, 3))
+	var p1: Vector2 = transform * grid.cell_center(Vector2i(4, 3))
 	_press(viewport, p0)
 	await await_millis(40)
 	_drag(viewport, p0, p1)
@@ -74,3 +74,11 @@ func test_match_board_drag_dispatches() -> void:
 	assert_bool(resolved[0]).override_failure_message(
 		"Match: board drag did not reach MatchBoardView (no move resolved)."
 	).is_true()
+
+## Waits out any in-flight board animation (the pour-in intro or a move cascade) so a
+## pushed gesture isn't dropped by MatchBoardView's busy guard. Bails after ~3s.
+func _await_board_idle(view: MatchBoardView) -> void:
+	var waited := 0
+	while view._busy and waited < 3000:
+		await await_millis(50)
+		waited += 50

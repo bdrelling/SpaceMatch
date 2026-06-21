@@ -2,16 +2,8 @@
 
 [ext_resource type="Script" uid="uid://ipoukpm4esua" path="res://systems/crafting/recipe_book/recipe_book_blueprint.gd" id="1_script"]
 [ext_resource type="Script" uid="uid://cfxgtdd8aqfqe" path="res://systems/crafting/recipe/recipe_blueprint.gd" id="2_rb"]
-[ext_resource type="Resource" path="res://resources/recipes/fabricating/fabricate_reactor.tres" id="3_reactor"]
 [ext_resource type="Resource" path="res://resources/recipes/fabricating/fabricate_engine.tres" id="4_engine"]
-[ext_resource type="Resource" path="res://resources/recipes/fabricating/fabricate_thruster.tres" id="5_thruster"]
-[ext_resource type="Resource" path="res://resources/recipes/fabricating/fabricate_fuel_tank.tres" id="6_fuel"]
-[ext_resource type="Resource" path="res://resources/recipes/fabricating/fabricate_cargo_bay.tres" id="7_cargo"]
-[ext_resource type="Resource" path="res://resources/recipes/fabricating/fabricate_life_support.tres" id="8_life"]
-[ext_resource type="Resource" path="res://resources/recipes/fabricating/fabricate_armor_plating.tres" id="9_armor"]
-[ext_resource type="Resource" path="res://resources/recipes/fabricating/fabricate_shield_generator.tres" id="10_shield"]
-[ext_resource type="Resource" path="res://resources/recipes/fabricating/fabricate_sensor_array.tres" id="11_sensor"]
 
 [resource]
 script = ExtResource("1_script")
-recipes = Array[ExtResource("2_rb")]([ExtResource("3_reactor"), ExtResource("4_engine"), ExtResource("5_thruster"), ExtResource("6_fuel"), ExtResource("7_cargo"), ExtResource("8_life"), ExtResource("9_armor"), ExtResource("10_shield"), ExtResource("11_sensor")])
+recipes = Array[ExtResource("2_rb")]([ExtResource("4_engine")])

@@ -29,14 +29,16 @@ var session: GameSession
 @export var _tab_bar: GameTabBar
 @export var _top_bar: GameTopBar
 @export var _inventory_bar: GameInventoryBar
+## The Settings overlay — a top-most [CanvasLayer] shown while the game is paused, drawn over the
+## still-rendered (but frozen) game. Authored in the scene, injected here.
+@export var _settings_overlay: CanvasLayer
 
 var _inventory: Inventory
 var _clock: Clock
 
-# Pager indices of the playable stages — tab i pages to _tab_screen_indices[i]. The menu/settings page
-# is reached by the top-bar cog, not a tab, so it's tracked apart.
+# Pager indices of the playable stages — tab i pages to _tab_screen_indices[i]. Settings is not a page
+# but a top-most overlay (opened by pausing), so it isn't indexed here.
 var _tab_screen_indices: Array[int] = []
-var _settings_index: int = -1
 # The stage whose view-model is wired to the chrome right now; tracked so its signals are disconnected
 # before another page binds.
 var _bound_minigame: Minigame
@@ -69,23 +71,22 @@ func restart() -> void:
 	_start_game()
 	_on_page_changed(_current_index())
 
-# Splits the pages into the tabbed stages and the cog-reached settings page, so the tab bar carries only
-# the playable stages and a swipe/tab maps to the right pager index.
+# Collects the pager indices of the playable stages, so the tab bar carries one tab per stage and a
+# swipe/tab maps to the right pager index. Settings is an overlay, not a page, so it isn't indexed here.
 func _index_screens() -> void:
 	_tab_screen_indices.clear()
-	_settings_index = -1
 	for index: int in _pager.screens.size():
-		var screen: GameScreen = _pager.screens[index]
-		if screen is MinigameScreen:
+		if _pager.screens[index] is MinigameScreen:
 			_tab_screen_indices.append(index)
-		elif _settings_index < 0:
-			_settings_index = index
 
 # Connects the chrome and labels the tabs from the stages' own titles — each page owns its name, the
 # tab just mirrors it.
 func _wire_chrome() -> void:
 	_tab_bar.tab_selected.connect(_on_tab_selected)
 	_top_bar.settings_pressed.connect(_on_settings_pressed)
+	PauseMonitor.paused.connect(_open_settings)
+	PauseMonitor.unpaused.connect(_close_settings)
+	_settings_dim().gui_input.connect(_on_settings_dim_input)
 	_pager.page_changed.connect(_on_page_changed)
 	var titles: Array[String] = []
 	for index: int in _tab_screen_indices:
@@ -104,9 +105,27 @@ func _on_tab_selected(tab_index: int) -> void:
 		return
 	_pager.show_index(_tab_screen_indices[tab_index])
 
+# The cog opens Settings the same way the pause action does — by pausing the game, which the overlay
+# shows itself over. On mobile there's no ESC/joypad, so the cog is the way in.
 func _on_settings_pressed() -> void:
-	if _settings_index >= 0:
-		_pager.show_index(_settings_index)
+	PauseMonitor.pause()
+
+# Settings is a top-most overlay shown while paused — the screen's Done button resumes, and tapping the
+# dim outside the panel does too (touch has no ESC/joypad). Resuming hides it.
+func _open_settings() -> void:
+	_settings_overlay.visible = true
+
+func _close_settings() -> void:
+	_settings_overlay.visible = false
+
+func _settings_dim() -> Control:
+	return _settings_overlay.get_node("Dim")
+
+func _on_settings_dim_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and (event as InputEventMouseButton).pressed:
+		PauseMonitor.unpause()
+	elif event is InputEventScreenTouch and (event as InputEventScreenTouch).pressed:
+		PauseMonitor.unpause()
 
 # Keeps the tab highlight in sync (cleared on the settings page) and points the chrome's title, status,
 # actions, and inventory strip at the page that just became visible.

@@ -3,6 +3,11 @@ extends GdUnitTestSuite
 ## to one session see the same change, and the whole shell is 2D — no [Node3D] anywhere (it's the
 ## no-3D production entry, not the [Overworld]).
 
+func after_test() -> void:
+	# Defensive: the settings-overlay flows pause the shared tree — never leave it paused for the
+	# next test, even if an assertion above bailed before unpausing.
+	get_tree().paused = false
+
 func _blueprint(id: int) -> ItemBlueprint:
 	var blueprint := ItemBlueprint.new()
 	blueprint.id = id
@@ -53,16 +58,15 @@ func test_game_boots_a_session_and_is_2d_only() -> void:
 		"Game must be 2D-only, but a Node3D was found in its tree.").is_false()
 	game.queue_free()
 
-func test_pager_has_every_stage_and_settings() -> void:
+func test_pager_has_every_stage() -> void:
 	var game := Game.create()
 	add_child(game)
 	await await_idle_frame()
 	var titles: Array[String] = []
 	for screen: GameScreen in game._pager.screens:
 		titles.append(screen.title)
-	# Order is the scene's business; the shell just has to surface every stage and Settings.
-	assert_array(titles).contains_exactly_in_any_order(
-		["Match", "Outfitting", "Settings"])
+	# Settings is a top-most overlay now, not a page — the pager holds only the playable stages.
+	assert_array(titles).contains_exactly_in_any_order(["Match", "Outfitting"])
 	game.queue_free()
 
 func test_selecting_a_tab_pages_to_it() -> void:
@@ -75,18 +79,41 @@ func test_selecting_a_tab_pages_to_it() -> void:
 	assert_bool(game._pager.screens[0].visible).is_false()
 	game.queue_free()
 
-func test_settings_cog_pages_to_settings() -> void:
+func test_settings_cog_opens_the_overlay() -> void:
 	var game := Game.create()
 	add_child(game)
 	await await_idle_frame()
-	# Settings is not a tab — the top-bar cog opens it, and the tab highlight clears.
+	# Settings is not a tab — the top-bar cog opens it as a top-most overlay (by pausing the game).
+	assert_bool(game._settings_overlay.visible).is_false()
 	game._top_bar.settings_pressed.emit()
-	var settings_index := -1
-	for index: int in game._pager.screens.size():
-		if game._pager.screens[index].title == "Settings":
-			settings_index = index
-	assert_int(settings_index).is_greater_equal(0)
-	assert_bool(game._pager.screens[settings_index].visible).is_true()
+	assert_bool(game._settings_overlay.visible).is_true()
+	# The cog paused the shared tree to open the overlay — resume before freeing, or the deferred
+	# free can't flush on a paused tree and the game subtree leaks as an orphan.
+	PauseMonitor.unpause()
+	game.queue_free()
+
+func test_pause_opens_and_closes_the_settings_overlay() -> void:
+	var game := Game.create()
+	add_child(game)
+	await await_idle_frame()
+	# The pause action drives the overlay: pausing shows it over the frozen game, resuming hides it.
+	assert_bool(game._settings_overlay.visible).is_false()
+	PauseMonitor.pause()
+	assert_bool(game._settings_overlay.visible).is_true()
+	PauseMonitor.unpause()
+	assert_bool(game._settings_overlay.visible).is_false()
+	game.queue_free()
+
+func test_settings_done_button_resumes_and_closes() -> void:
+	var game := Game.create()
+	add_child(game)
+	await await_idle_frame()
+	PauseMonitor.pause()
+	var settings := game._settings_overlay.get_node("Settings") as SettingsScreen
+	# Done is the screen's exit — it resumes the game, which hides the overlay.
+	settings._done_button.pressed.emit()
+	assert_bool(PauseMonitor.is_paused).is_false()
+	assert_bool(game._settings_overlay.visible).is_false()
 	game.queue_free()
 
 func test_trackpad_pan_pages_between_screens() -> void:
@@ -130,7 +157,7 @@ func test_tabs_are_not_keyboard_focusable() -> void:
 	for button: Button in tabs:
 		assert_int(button.focus_mode).is_equal(Control.FOCUS_NONE)
 	# The tab bar authors one button per stage; Settings is the cog, not a tab.
-	assert_int(tabs.size()).is_equal(5)
+	assert_int(tabs.size()).is_equal(2)
 	game.queue_free()
 
 func test_minigame_screens_do_not_block_board_input() -> void:

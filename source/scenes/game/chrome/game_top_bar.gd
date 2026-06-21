@@ -5,7 +5,7 @@ extends Control
 ## [member Background] fills the whole bar — bled up under the top safe-area inset and out to the screen
 ## sides — while the title/actions/cog row is held inside the safe area by [method _apply_safe_area].
 
-## The cog was tapped — the shell pages to Settings.
+## The cog was tapped — the shell opens the Settings overlay.
 signal settings_pressed()
 
 ## Bar height below the top safe-area inset, in the portrait design space.
