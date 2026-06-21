@@ -6,6 +6,6 @@ extends Resource
 ## [GameSettings] loads that file as the fallback for any preference the player
 ## has not explicitly overridden.
 
-@export var camera_mode: PlayerCamera.Mode = PlayerCamera.Mode.ORBIT_AND_CHASE
-@export var invert_y_axis: bool = false
-@export var sprint_mode: Player.SprintMode = Player.SprintMode.TOGGLE
+# No game-specific settings yet — the 3D camera/player options (camera_mode,
+# invert_y_axis, sprint_mode) were removed with the overworld. Add 2D game
+# settings here as they arrive.

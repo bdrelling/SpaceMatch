@@ -72,11 +72,9 @@ func unblock_actions(claimant: Object) -> void:
 		if Input.is_action_pressed(action):
 			_held_through_unblock[action] = true
 
-## True while game input should be ignored: the window is unfocused, or an ImGui
-## panel is capturing the mouse or keyboard.
+## True while game input should be ignored: the window is unfocused.
 func _is_blocked() -> bool:
-	var io: ImGuiIOPtr = ImGui.GetIO()
-	return not _focused or io.WantCaptureMouse or io.WantCaptureKeyboard or io.WantTextInput
+	return not _focused
 
 # True while [param action] has stayed held since its block lifted; [method _process]
 # drops the latch once the action is physically released.

@@ -15,37 +15,6 @@ const DEFAULTS_PATH: String = "res://systems/settings/game_settings_defaults.tre
 const SAVE_PATH: String = "user://game_settings.cfg"
 const SECTION: String = "game"
 
-const KEY_CAMERA_MODE: StringName = &"camera_mode"
-const KEY_INVERT_Y_AXIS: StringName = &"invert_y_axis"
-const KEY_SPRINT_MODE: StringName = &"sprint_mode"
-
-var camera_mode: PlayerCamera.Mode:
-	get:
-		if _overrides.has(KEY_CAMERA_MODE):
-			var value: PlayerCamera.Mode = _overrides[KEY_CAMERA_MODE]
-			return value
-		return _defaults.camera_mode
-	set(value):
-		_set_override(KEY_CAMERA_MODE, value)
-
-var invert_y_axis: bool:
-	get:
-		if _overrides.has(KEY_INVERT_Y_AXIS):
-			var value: bool = _overrides[KEY_INVERT_Y_AXIS]
-			return value
-		return _defaults.invert_y_axis
-	set(value):
-		_set_override(KEY_INVERT_Y_AXIS, value)
-
-var sprint_mode: Player.SprintMode:
-	get:
-		if _overrides.has(KEY_SPRINT_MODE):
-			var value: Player.SprintMode = _overrides[KEY_SPRINT_MODE]
-			return value
-		return _defaults.sprint_mode
-	set(value):
-		_set_override(KEY_SPRINT_MODE, value)
-
 var _defaults: GameSettingsData
 var _overrides: Dictionary
 

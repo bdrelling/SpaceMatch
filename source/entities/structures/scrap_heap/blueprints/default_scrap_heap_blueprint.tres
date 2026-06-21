@@ -1,9 +1,0 @@
-[gd_resource type="Resource" script_class="ScrapHeapBlueprint" load_steps=3 format=3]
-
-[ext_resource type="Script" path="res://entities/structures/scrap_heap/scrap_heap_blueprint.gd" id="1_script"]
-[ext_resource type="Resource" path="res://entities/structures/scrap_heap/blueprints/scrap_loot_table.tres" id="2_loot"]
-
-[resource]
-script = ExtResource("1_script")
-max_interactions = 3
-loot_table = ExtResource("2_loot")

@@ -81,13 +81,6 @@ var display_name: String:
 var highlighted: bool = false:
 	set(value):
 		highlighted = value
-		if world_mesh:
-			# Through the focus arbiter, not SilhouetteHighlighter directly, so the item only
-			# shows when it's the single focus (and never steals focus from what you're at).
-			if value:
-				InteractionFocus.enter(world_mesh, self)
-			else:
-				InteractionFocus.exit(world_mesh)
 
 ## Whether the item can be collected right now. Launched items start false until they land
 ## (or [member settle_timeout] fires); items placed directly in the world start collectable.

@@ -1,5 +1,0 @@
-# Baked Terrain3D regions are generated from terrain_seed at runtime and not
-# tracked. Set DemoLevel.should_cache_chunks=true and force-add only when you
-# intentionally bake a level for shipping.
-*.res
-.gen_key

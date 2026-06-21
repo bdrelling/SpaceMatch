@@ -76,7 +76,7 @@ func _index_screens() -> void:
 	_settings_index = -1
 	for index: int in _pager.screens.size():
 		var screen: ArcadeScreen = _pager.screens[index]
-		if screen is MinigameScreen or screen is OutpostScreen:
+		if screen is MinigameScreen:
 			_tab_screen_indices.append(index)
 		elif _settings_index < 0:
 			_settings_index = index
@@ -166,7 +166,7 @@ func _start_game() -> void:
 	session.state.arcade = ArcadeState.new()
 	_inventory = Inventory.new()
 	add_child(_inventory)
-	session.bind_inventory(_inventory, 0)
+	session.bind_inventory(_inventory)
 
 	# The game's tick heartbeat. Nothing drives scrap yet — resource production (a tap now, an
 	# upgraded interval later) subscribes to `_clock.ticked` when it lands.

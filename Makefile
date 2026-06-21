@@ -13,7 +13,7 @@
 # USAGE
 # =============================================================================
 
-.PHONY: help play playtest test test-debug export-macos export-ios export-android export-linux export-web deploy-macos deploy-ios-store deploy-ios-sim deploy-iphone deploy-ipad deploy-android deploy-linux deploy-web release-macos release-ios release-android release-linux release-web clean claude-agents claude-rc
+.PHONY: help play playtest test test-debug export-macos export-ios export-android export-linux export-web deploy-macos deploy-ios-store deploy-ios-sim deploy-iphone deploy-ipad deploy-android deploy-linux deploy-web release-macos release-ios release-android release-linux release-web clean
 
 help: ## Show available commands
 	@echo "MACOS:"
@@ -119,6 +119,17 @@ release-web: export-web deploy-web ## Export and deploy web build
 play: ## Launch the game (no editor), maximized. Pass extra godot args after `--`.
 	@./scripts/play.sh -m
 
+# --resolution is the window size in pixels (×2 of points on retina) AND its aspect; tweak freely.
+# iPad Pro 11" ratio ≈ 0.698 (1117×1600); iPhone 15/16/17 ratio ≈ 0.461 (738×1600).
+arcade: ## Launch the Arcade as an iPad (portrait, desktop).
+	@./scripts/play.sh -w --resolution 1117x1600 -- --mode=arcade
+
+arcade-tablet: ## Launch the Arcade as an iPad (portrait, desktop).
+	@./scripts/play.sh -w --resolution 1117x1600 -- --mode=arcade
+
+arcade-phone: ## Launch the Arcade as an iPhone (portrait, desktop).
+	@./scripts/play.sh -w --resolution 738x1600 -- --mode=arcade
+
 playtest: ## Run the game with screenshot capture. Pass extra args after `--`.
 	@./scripts/playtest.sh $(ARGS)
 
@@ -145,6 +156,6 @@ clean: ## Clean build artifacts
 
 claude-agents: ## Launch Claude Code agents view, keeping the Mac awake
 	caffeinate -i claude agents
-
+	
 claude-rc: ## Launch Claude Code in remote-control mode, keeping the Mac awake
 	caffeinate -i claude remote-control

@@ -1,7 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://xptei2lvo0d7"]
-
-[ext_resource type="PackedScene" uid="uid://cam8cjb6ycnxn" path="res://entities/spaceship/assets/fighter/fighter.blend" id="1_bbsnx"]
-
-[node name="Fighter" type="Node3D"]
-
-[node name="fighter2" parent="." instance=ExtResource("1_bbsnx")]

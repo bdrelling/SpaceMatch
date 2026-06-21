@@ -1,6 +1,0 @@
-[gd_scene format=3]
-
-[ext_resource type="Script" path="res://ui/debug_menu/debug_menu.gd" id="1_dbmnu"]
-
-[node name="DebugMenu" type="Node"]
-script = ExtResource("1_dbmnu")
