@@ -13,7 +13,7 @@
 # USAGE
 # =============================================================================
 
-.PHONY: help play playtest test test-debug export-macos export-ios export-android export-linux export-web deploy-macos deploy-ios-store deploy-ios-sim deploy-iphone deploy-ipad deploy-android deploy-linux deploy-web release-macos release-ios release-android release-linux release-web clean
+.PHONY: help play play-tablet play-phone playtest test test-debug export-macos export-ios export-android export-linux export-web deploy-macos deploy-ios-store deploy-ios-sim deploy-iphone deploy-ipad deploy-android deploy-linux deploy-web release-macos release-ios release-android release-linux release-web clean
 
 help: ## Show available commands
 	@echo "MACOS:"
@@ -32,7 +32,7 @@ help: ## Show available commands
 	@grep -E '^(export-web|deploy-web|release-web):.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
 	@echo ""
 	@echo "DEV:"
-	@grep -E '^(play|playtest):.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^(play[a-zA-Z-]*|playtest):.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
 	@echo ""
 	@echo "TESTING:"
 	@grep -E '^test[a-zA-Z_-]*:.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -116,19 +116,17 @@ release-web: export-web deploy-web ## Export and deploy web build
 # DEV
 # =============================================================================
 
-play: ## Launch the game (no editor), maximized. Pass extra godot args after `--`.
-	@./scripts/play.sh -m
-
-# --resolution is the window size in pixels (×2 of points on retina) AND its aspect; tweak freely.
+# Desktop default is a tablet in portrait — the form factor we design against. Orientation still
+# switches: append `-- --orientation=landscape` to override. --resolution sets the window size AND
+# aspect; --orientation is read by main.gd.
 # iPad Pro 11" ratio ≈ 0.698 (1117×1600); iPhone 15/16/17 ratio ≈ 0.461 (738×1600).
-arcade: ## Launch the Arcade as an iPad (portrait, desktop).
-	@./scripts/play.sh -w --resolution 1117x1600 -- --mode=arcade
+play: ## Launch the game as a tablet (portrait, desktop). Pass extra godot args after `--`.
+	@./scripts/play.sh -w --resolution 1117x1600 -- --orientation=portrait
 
-arcade-tablet: ## Launch the Arcade as an iPad (portrait, desktop).
-	@./scripts/play.sh -w --resolution 1117x1600 -- --mode=arcade
+play-tablet: play ## Alias for `play` — tablet, portrait.
 
-arcade-phone: ## Launch the Arcade as an iPhone (portrait, desktop).
-	@./scripts/play.sh -w --resolution 738x1600 -- --mode=arcade
+play-phone: ## Launch the game as a phone (portrait, desktop).
+	@./scripts/play.sh -w --resolution 738x1600 -- --orientation=portrait
 
 playtest: ## Run the game with screenshot capture. Pass extra args after `--`.
 	@./scripts/playtest.sh $(ARGS)
@@ -138,10 +136,10 @@ playtest: ## Run the game with screenshot capture. Pass extra args after `--`.
 # =============================================================================
 
 test: ## Run all tests
-	@./scripts/test.sh systems
+	@./scripts/test.sh
 
 test-debug: ## Run tests with debug output
-	@DEBUG=true ./scripts/test.sh systems
+	@DEBUG=true ./scripts/test.sh
 
 # =============================================================================
 # CLEANUP

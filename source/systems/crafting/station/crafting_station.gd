@@ -46,7 +46,7 @@ signal crafted(recipe: Recipe)
 
 #region Properties
 
-## Links this station to its saved [CraftingStationState] — the 3D station and its arcade stage share
+## Links this station to its saved [CraftingStationState] — the 3D station and its game stage share
 ## one state by matching ids. Empty when the station persists nothing.
 @export var id: StringName = &""
 

@@ -1,6 +1,6 @@
 class_name MinigameAction
 extends RefCounted
-## A labelled button the [Arcade] top bar mounts for the active [Minigame] — its reset, mode toggle, and
+## A labelled button the [Game] top bar mounts for the active [Minigame] — its reset, mode toggle, and
 ## the like. The shell owns the button widget; the stage supplies the label and what a press does.
 
 var label: String

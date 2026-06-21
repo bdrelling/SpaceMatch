@@ -1,6 +1,6 @@
 class_name InventoryChip
 extends RefCounted
-## One entry in the arcade inventory strip: a label and a count. The shell renders it; the stage just
+## One entry in the game inventory strip: a label and a count. The shell renders it; the stage just
 ## lists what it holds.
 
 var label: String

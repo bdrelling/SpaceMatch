@@ -122,3 +122,16 @@ Modules group into **families by primary (headline) stat**. A family holds sever
 | Life Support | Air Recycler, Hydroponics Bay, Oxygen Tank (+Life Support; e.g. Hydroponics −Cargo) |
 
 Life Support is the atmospheric/biological systems (oxygen, hydrogen, hydroponics, botanicals), not crew quarters. Quarters/Cockpit are habitation, separate from this stat.
+
+## Hardspace Shipbreaker
+
+- Circuit
+- Dampener
+- Distributor
+- Filter
+- Fuse
+- Heat Sink
+- Ion Coil
+- Piston
+- Rod
+- Wires

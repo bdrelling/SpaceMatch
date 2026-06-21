@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://b8outfitting001"]
 
 [ext_resource type="Script" uid="uid://c05b4s2m66j65" path="res://minigames/outfitting/outfitting.gd" id="1_outfitting"]
-[ext_resource type="Script" uid="uid://bhhb1ur48vcvr" path="res://systems/canvas/board_canvas.gd" id="2_canvas"]
+[ext_resource type="Script" uid="uid://bhhb1ur48vcvr" path="res://addons/grid_system/view/board_canvas.gd" id="2_canvas"]
 
 [node name="Outfitting" type="Control"]
 layout_mode = 3

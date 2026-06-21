@@ -6,5 +6,5 @@ func _ready() -> void:
 		"orientation", DeviceUtils.ORIENTATION_NAMES, DeviceUtils.get_default_orientation()
 	)
 	DeviceUtils.set_orientation(orientation)
-	Arcade.apply_window(get_window())
-	SceneLoader.transition_to(Arcade.create())
+	Game.apply_window(get_window())
+	SceneLoader.transition_to(Game.create())

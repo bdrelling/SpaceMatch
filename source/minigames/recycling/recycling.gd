@@ -80,7 +80,7 @@ func actions() -> Array[MinigameAction]:
 	return list
 
 ## Wires the minigame to the running game's session inventory — the same economy the overworld reads.
-## Called by [MinigameScreen] when the arcade mounts this page.
+## Called by [MinigameScreen] when the game mounts this page.
 func bind_session(_game_session: GameSession, inventory: Inventory) -> void:
 	if _inventory != null and _inventory.changed.is_connected(_on_inventory_changed):
 		_inventory.changed.disconnect(_on_inventory_changed)

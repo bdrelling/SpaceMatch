@@ -6,8 +6,8 @@ extends Resource
 @export var inventory: InventoryState
 @export var ship: ShipState
 
-## The arcade's own slice of state, serialized with the one save.
-@export var arcade: ArcadeState
+## The game's own slice of state, serialized with the one save.
+@export var minigames: MinigamesState
 
 func _init() -> void:
 	if inventory == null:

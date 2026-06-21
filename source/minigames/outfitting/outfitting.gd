@@ -73,7 +73,7 @@ func inventory_pinned() -> bool:
 
 ## Binds the minigame to the running game: it packs modules drawn from the shared [InventoryState] onto
 ## the ship's persistent [ShipModuleGrid], seeding a few modules when the inventory has none. Called by
-## [MinigameScreen] when the arcade mounts this page.
+## [MinigameScreen] when the game mounts this page.
 func bind_session(session: GameSession, _inventory: Inventory) -> void:
 	if session == null or session.state == null:
 		return
