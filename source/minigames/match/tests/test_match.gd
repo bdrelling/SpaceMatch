@@ -12,7 +12,7 @@ func _make() -> MatchMinigame:
 func test_board_fills_completely() -> void:
 	var game := _make()
 	await await_idle_frame()
-	var state: GridBoardState = game._session.state
+	var state: GridState = game._session.state
 	var placed: int = 0
 	for y: int in 8:
 		for x: int in 8:

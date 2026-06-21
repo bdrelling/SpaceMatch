@@ -1,12 +1,17 @@
 class_name GameTopBar
 extends Control
-## The game's top bar: the active stage's title and status on the left, its [MinigameAction] buttons
-## and a settings cog on the right. A proper docked bar, not text floating over the board. Its
-## [member Background] fills the whole bar — bled up under the top safe-area inset and out to the screen
-## sides — while the title/actions/cog row is held inside the safe area by [method _apply_safe_area].
+## The game's top bar: a leading back button on the left and a settings cog on the right — no title,
+## since each stage now carries its own chrome. The bar itself is transparent (the shell's gradient
+## shows through); its button row is held inside the device safe area by [method _apply_safe_area].
 
 ## The cog was tapped — the shell opens the Settings overlay.
 signal settings_pressed()
+## The leading button (a back arrow) was tapped — the shell steps back from a sub-screen to the primary
+## stage. Shown only on sub-screens; the primary stage hides it (see [method hide_leading]).
+signal leading_pressed()
+
+## The leading button's back-arrow glyph, shown via [method show_leading] on a sub-screen.
+const LEADING_BACK: String = "←"
 
 ## Bar height below the top safe-area inset, in the portrait design space.
 const _CONTENT_HEIGHT: float = 132.0
@@ -14,8 +19,7 @@ const _CONTENT_HEIGHT: float = 132.0
 const _EDGE_PADDING: float = 24.0
 
 @onready var _content: HBoxContainer = $Content
-@onready var _title: Label = %Title
-@onready var _status: Label = %Status
+@onready var _leading: Button = %Leading
 @onready var _actions: HBoxContainer = %Actions
 @onready var _settings: Button = %Settings
 
@@ -23,15 +27,18 @@ var _insets := SafeArea.Insets.empty()
 
 func _ready() -> void:
 	_settings.pressed.connect(func() -> void: settings_pressed.emit())
+	_leading.pressed.connect(func() -> void: leading_pressed.emit())
 	_apply_safe_area()
 	get_viewport().size_changed.connect(_apply_safe_area)
 
-func set_title(text: String) -> void:
-	_title.text = text
+## Shows the leading button with [param glyph] (a sub-screen's back arrow).
+func show_leading(glyph: String) -> void:
+	_leading.text = glyph
+	_leading.visible = true
 
-func set_status(text: String) -> void:
-	_status.text = text
-	_status.visible = text != ""
+## Hides the leading button — the primary stage has no top-left button (it drills from its own HUD).
+func hide_leading() -> void:
+	_leading.visible = false
 
 ## Rebuilds the right-side action buttons from the active stage's declared [param actions].
 func set_actions(actions: Array[MinigameAction]) -> void:

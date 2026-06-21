@@ -55,18 +55,18 @@ func _draw() -> void:
 		var rect := _cell_rect(cell)
 		draw_rect(rect, _CELL)
 		draw_rect(rect, _CELL_BORDER, false, 1.0)
-	for index in grid.placements.size():
-		_draw_module(grid.modules[index], grid.placements[index])
+	for placed: PlacedModule in grid.placed_modules():
+		_draw_module(placed)
 	for cell: Vector2i in _preview_cells:
 		draw_rect(_cell_rect(cell), _VALID_PREVIEW if _preview_valid else _INVALID_PREVIEW)
 
-func _draw_module(blueprint: ItemBlueprint, placement: StackPlacement) -> void:
-	var fill: Color = blueprint.color
+func _draw_module(placed: PlacedModule) -> void:
+	var fill: Color = placed.module.color
 	fill.a = 1.0
-	for cell: Vector2i in GridGeometry.occupied_cells(blueprint.footprint_cells, placement.anchor, placement.rotation_steps):
+	for cell: Vector2i in placed.cells:
 		var rect := _cell_rect(cell)
 		draw_rect(rect, fill)
-		draw_rect(rect, blueprint.color.lightened(0.4), false, 2.0)
+		draw_rect(rect, placed.module.color.lightened(0.4), false, 2.0)
 
 func _cell_rect(cell: Vector2i) -> Rect2:
 	return Rect2(

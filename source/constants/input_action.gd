@@ -18,9 +18,8 @@ const INTERACT := &"interact"
 
 #endregion
 
-#region Inventory
+#region Outfitting
 
-const TOGGLE_INVENTORY := &"toggle_inventory"
 const ROTATE_ITEM := &"rotate_item"
 const QUICKBAR_SLOTS: Array[StringName] = [
 	&"quickbar_slot_1", &"quickbar_slot_2", &"quickbar_slot_3", &"quickbar_slot_4",
@@ -92,8 +91,6 @@ static func name_for_action(action: StringName) -> String:
 			return "Pause"
 		TOGGLE_DEBUG_MENU:
 			return "Toggle Debug Menu"
-		TOGGLE_INVENTORY:
-			return "Toggle Inventory"
 		ROTATE_ITEM:
 			return "Rotate Item"
 		TOGGLE_MAP:

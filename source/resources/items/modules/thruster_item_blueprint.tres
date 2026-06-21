@@ -1,24 +1,22 @@
-[gd_resource type="Resource" script_class="ModuleItemBlueprint" format=3 uid="uid://c5o7pvmx0e342"]
+[gd_resource type="Resource" script_class="ModuleBlueprint" format=3 uid="uid://c5o7pvmx0e342"]
 
-[ext_resource type="Script" uid="uid://daxrkag063tph" path="res://entities/starship/module_item_blueprint.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://daxrkag063tph" path="res://entities/starship/module_blueprint.gd" id="1_script"]
 [ext_resource type="Script" uid="uid://ha1rkn84cbir" path="res://entities/starship/stats/stat_block.gd" id="2_stats"]
+[ext_resource type="Script" uid="uid://dy25mpv7s2ajw" path="res://addons/grid_system/data/piece_shape.gd" id="3_shape"]
 
 [sub_resource type="Resource" id="Stats_thruster"]
 script = ExtResource("2_stats")
 speed = 2
 fuel = -1
 
-[sub_resource type="CylinderMesh" id="CylinderMesh_thruster"]
-top_radius = 0.18
-bottom_radius = 0.18
-height = 0.4
+[sub_resource type="Resource" id="Shape_thruster"]
+script = ExtResource("3_shape")
+offsets = Array[Vector2i]([Vector2i(0, 0)])
 
 [resource]
 script = ExtResource("1_script")
 stats = SubResource("Stats_thruster")
 id = 1002
 name = "Thruster"
-category = 3
-world_mesh = SubResource("CylinderMesh_thruster")
 color = Color(0.55, 0.75, 0.85, 1)
-max_stack_size = 1
+shape = SubResource("Shape_thruster")

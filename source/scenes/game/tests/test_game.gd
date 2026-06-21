@@ -1,18 +1,11 @@
 extends GdUnitTestSuite
-## The Game shell: the idle clock drips into the session-bound inventory, two screens bound
-## to one session see the same change, and the whole shell is 2D — no [Node3D] anywhere (it's the
-## no-3D production entry, not the [Overworld]).
+## The Game shell: the idle clock counts ticks and the whole shell is 2D — no [Node3D] anywhere
+## (it's the no-3D production entry, not the [Overworld]).
 
 func after_test() -> void:
 	# Defensive: the settings-overlay flows pause the shared tree — never leave it paused for the
 	# next test, even if an assertion above bailed before unpausing.
 	get_tree().paused = false
-
-func _blueprint(id: int) -> ItemBlueprint:
-	var blueprint := ItemBlueprint.new()
-	blueprint.id = id
-	blueprint.name = "Item %d" % id
-	return blueprint
 
 func test_clock_emits_and_counts_ticks() -> void:
 	var clock := Clock.new()
@@ -26,28 +19,6 @@ func test_clock_emits_and_counts_ticks() -> void:
 	assert_array(counts).is_equal([1, 2])
 	assert_int(clock.count).is_equal(2)
 	clock.queue_free()
-
-func test_two_screens_share_one_session_inventory() -> void:
-	var session := GameSession.new_game()
-	var inventory := Inventory.new()
-	add_child(inventory)
-	session.bind_inventory(inventory)
-	var screen_a := StageScreen.new()
-	var screen_b := StageScreen.new()
-	add_child(screen_a)
-	add_child(screen_b)
-	screen_a.bind(session, inventory)
-	screen_b.bind(session, inventory)
-
-	var no_tags: Array[Item.Tag] = []
-	inventory.add_variant(_blueprint(7), no_tags, 3)
-
-	# One change to the shared inventory shows on both screens — they're not separate copies.
-	assert_str(screen_a.summary()).contains("× 3")
-	assert_str(screen_b.summary()).contains("× 3")
-	screen_a.queue_free()
-	screen_b.queue_free()
-	inventory.queue_free()
 
 func test_game_boots_a_session_and_is_2d_only() -> void:
 	var game := Game.create()
@@ -69,14 +40,19 @@ func test_pager_has_every_stage() -> void:
 	assert_array(titles).contains_exactly_in_any_order(["Match", "Outfitting"])
 	game.queue_free()
 
-func test_selecting_a_tab_pages_to_it() -> void:
+func test_drill_into_outfitting_and_back() -> void:
 	var game := Game.create()
 	add_child(game)
 	await await_idle_frame()
-	# Tapping a stage tab (emitting its index) pages to that stage.
-	game._tab_bar.tab_selected.emit(1)
+	# The primary stage drills into Outfitting via its own drill request (the HUD "Player" box)...
+	var match_screen := game._pager.screens[0] as MinigameScreen
+	match_screen.minigame().drill_requested.emit()
 	assert_bool(game._pager.screens[1].visible).is_true()
 	assert_bool(game._pager.screens[0].visible).is_false()
+	# ...and the top-bar back button steps back to the primary stage.
+	game._top_bar.leading_pressed.emit()
+	assert_bool(game._pager.screens[0].visible).is_true()
+	assert_bool(game._pager.screens[1].visible).is_false()
 	game.queue_free()
 
 func test_settings_cog_opens_the_overlay() -> void:
@@ -147,17 +123,14 @@ func test_keyboard_arrows_do_not_page() -> void:
 	assert_bool(pager.screens[1].visible).is_false()
 	pager.queue_free()
 
-func test_tabs_are_not_keyboard_focusable() -> void:
-	# Focusable tab buttons would let arrow keys walk focus across the tabs, stealing left/right from
-	# the minigame; the tabs are tap/swipe-driven only — authored FOCUS_NONE in the scene.
+func test_top_bar_buttons_are_not_keyboard_focusable() -> void:
+	# Focusable chrome buttons would let arrow keys walk focus across them, stealing left/right from
+	# the minigame; the leading and settings buttons are tap-driven only — authored FOCUS_NONE.
 	var game := Game.create()
 	add_child(game)
 	await await_idle_frame()
-	var tabs := game._tab_bar.tab_buttons()
-	for button: Button in tabs:
+	for button: Button in [game._top_bar._leading, game._top_bar._settings]:
 		assert_int(button.focus_mode).is_equal(Control.FOCUS_NONE)
-	# The tab bar authors one button per stage; Settings is the cog, not a tab.
-	assert_int(tabs.size()).is_equal(2)
 	game.queue_free()
 
 func test_minigame_screens_do_not_block_board_input() -> void:

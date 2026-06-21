@@ -1,6 +1,6 @@
 # Minigame Design — Reference Games
 
-Existing games to mine for each station minigame's mechanics, organized **per minigame**, with **current** availability (June 2026) on the four platforms that matter: **Steam, Mac App Store, iPhone, iPad**. "Available" means purchasable and running on current OS *today* — delisted or abandoned apps don't count. Each entry says what to steal and is tied to the minigame it informs (see `docs/gdd/3-gameplay/11-minigames/`). Re-verify against live storefronts before any planning checkpoint.
+Existing games to mine for each minigame's mechanics, organized **per minigame**, with **current** availability (June 2026) on the four platforms that matter: **Steam, Mac App Store, iPhone, iPad**. "Available" means purchasable and running on current OS *today* — delisted or abandoned apps don't count. Each entry says what to steal and is tied to the minigame it informs (see `docs/gdd/3-gameplay/11-minigames/`). Re-verify against live storefronts before any planning checkpoint.
 
 Availability was verified against live `store.steampowered.com` / `apps.apple.com` pages (and Apple's lookup API), not aggregator sites. Platforms are listed only where the game is actually available now. Each section closes with **Rejected** — games considered and ruled out (year/platforms in parens).
 
@@ -22,7 +22,7 @@ Reveal-and-deduce: read the revealed numbers, mark the hazards, never guess. The
 - **Good Sudoku** (2020, iPhone/iPad) — number-deduction is adjacent, but the sudoku framing isn't the salvage fantasy.
 - **Wordoku** (various, iPhone/iPad) — sudoku-with-letters; same reason.
 
-## Fabricating — match-3
+## Match-3 (Encounter)
 
 _Availability verified; full what-to-steal / Rejected pass still pending._
 
@@ -57,7 +57,7 @@ _Availability verified; full what-to-steal / Rejected pass still pending (Peggle
 
 ## Cut (no minigame)
 
-- **Mini Metro** — route-drawing / network optimization; no overlap with any station minigame.
+- **Mini Metro** — route-drawing / network optimization; no overlap with any minigame.
 
 ---
 

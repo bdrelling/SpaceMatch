@@ -1,9 +1,0 @@
-[gd_resource type="Resource" script_class="RecipeBookBlueprint" format=3 uid="uid://6ug312x6lgdl"]
-
-[ext_resource type="Script" uid="uid://ipoukpm4esua" path="res://systems/crafting/recipe_book/recipe_book_blueprint.gd" id="1_script"]
-[ext_resource type="Script" uid="uid://cfxgtdd8aqfqe" path="res://systems/crafting/recipe/recipe_blueprint.gd" id="2_rb"]
-[ext_resource type="Resource" path="res://resources/recipes/fabricating/fabricate_engine.tres" id="4_engine"]
-
-[resource]
-script = ExtResource("1_script")
-recipes = Array[ExtResource("2_rb")]([ExtResource("4_engine")])

@@ -1,11 +1,12 @@
 class_name Game
 extends Control
 ## The 2D game shell — the production entry shipped to mobile/web, NOT the debug grid playground
-## switcher. The chrome (a full-bleed background, the [GameTopBar], a swipeable [GamePager] of stage
-## pages, the context [GameInventoryBar], and the bottom [GameTabBar]) is authored in
-## [code]game.tscn[/code]; each bar bleeds its background through the device safe area while holding
+## switcher. The chrome (a full-bleed gradient background, the [GameTopBar], a swipeable [GamePager] of
+## stage pages, and the context [GameInventoryBar]) is authored in [code]game.tscn[/code]; the top bar's
+## leading button drills from the primary stage into Outfitting and steps back, so there's no tab bar.
+## Each bar bleeds its background through the device safe area while holding
 ## its content inside it. This script wires the chrome to the pages and owns the live game state: one
-## [GameSession] with a shared [Inventory] bound to its [PlayerState] and a [Clock] (the game's tick
+## [GameSession] and a [Clock] (the game's tick
 ## heartbeat). A mobile app — no escape key, no 3D world.
 ##
 ## A stage is just its board plus a small view-model ([Minigame]); the shell reads the active stage's
@@ -26,19 +27,18 @@ var session: GameSession
 
 # The chrome — authored in the scene, injected here.
 @export var _pager: GamePager
-@export var _tab_bar: GameTabBar
 @export var _top_bar: GameTopBar
 @export var _inventory_bar: GameInventoryBar
 ## The Settings overlay — a top-most [CanvasLayer] shown while the game is paused, drawn over the
 ## still-rendered (but frozen) game. Authored in the scene, injected here.
 @export var _settings_overlay: CanvasLayer
 
-var _inventory: Inventory
 var _clock: Clock
 
-# Pager indices of the playable stages — tab i pages to _tab_screen_indices[i]. Settings is not a page
-# but a top-most overlay (opened by pausing), so it isn't indexed here.
-var _tab_screen_indices: Array[int] = []
+# Pager indices of the playable stages, in tree order — [0] is the primary stage (Encounter), the rest
+# are drilled into from it. Drives the leading button's drill/back and the --tab debug hook. Settings is
+# not a page but a top-most overlay (opened by pausing), so it isn't indexed here.
+var _stage_indices: Array[int] = []
 # The stage whose view-model is wired to the chrome right now; tracked so its signals are disconnected
 # before another page binds.
 var _bound_minigame: Minigame
@@ -71,39 +71,48 @@ func restart() -> void:
 	_start_game()
 	_on_page_changed(_current_index())
 
-# Collects the pager indices of the playable stages, so the tab bar carries one tab per stage and a
-# swipe/tab maps to the right pager index. Settings is an overlay, not a page, so it isn't indexed here.
+# Collects the pager indices of the playable stages in tree order, so the leading button and the --tab
+# hook map a stage to its pager index. Settings is an overlay, not a page, so it isn't indexed here.
 func _index_screens() -> void:
-	_tab_screen_indices.clear()
+	_stage_indices.clear()
 	for index: int in _pager.screens.size():
 		if _pager.screens[index] is MinigameScreen:
-			_tab_screen_indices.append(index)
+			_stage_indices.append(index)
 
-# Connects the chrome and labels the tabs from the stages' own titles — each page owns its name, the
-# tab just mirrors it.
+# Connects the chrome: the cog opens Settings, the leading button drills/steps back between stages.
 func _wire_chrome() -> void:
-	_tab_bar.tab_selected.connect(_on_tab_selected)
 	_top_bar.settings_pressed.connect(_on_settings_pressed)
+	_top_bar.leading_pressed.connect(_on_leading_pressed)
 	PauseMonitor.paused.connect(_open_settings)
 	PauseMonitor.unpaused.connect(_close_settings)
 	_settings_dim().gui_input.connect(_on_settings_dim_input)
 	_pager.page_changed.connect(_on_page_changed)
-	var titles: Array[String] = []
-	for index: int in _tab_screen_indices:
-		titles.append(_pager.screens[index].title)
-	_tab_bar.set_labels(titles)
 
 # Debug capture hook: `--tab=N` lands the game on the Nth playable stage at boot so a single
-# playtest screenshot can target one minigame. Inert without the argument — normal runs start on tab 0.
+# playtest screenshot can target one minigame. Inert without the argument — normal runs start on stage 0.
 func _apply_launch_tab() -> void:
 	if not CommandLine.has_launch_argument_key("tab"):
 		return
-	_on_tab_selected(int(CommandLine.get_launch_argument_value("tab", "0")))
+	_show_stage(int(CommandLine.get_launch_argument_value("tab", "0")))
 
-func _on_tab_selected(tab_index: int) -> void:
-	if tab_index < 0 or tab_index >= _tab_screen_indices.size():
+# Pages to the [param stage]th playable stage (0 = the primary Encounter stage).
+func _show_stage(stage: int) -> void:
+	if stage < 0 or stage >= _stage_indices.size():
 		return
-	_pager.show_index(_tab_screen_indices[tab_index])
+	_pager.show_index(_stage_indices[stage])
+
+# The pager index of the primary stage (Encounter) — where the leading button shows the grid glyph and
+# "back" returns to.
+func _primary_screen_index() -> int:
+	return _stage_indices[0] if not _stage_indices.is_empty() else 0
+
+# The leading button drills from the primary stage into Outfitting (grid glyph) and steps back from a
+# sub-screen (back arrow). Two stages today, so the drill target is the last stage and "back" is stage 0.
+func _on_leading_pressed() -> void:
+	if _current_index() == _primary_screen_index():
+		_show_stage(_stage_indices.size() - 1)
+	else:
+		_show_stage(0)
 
 # The cog opens Settings the same way the pause action does — by pausing the game, which the overlay
 # shows itself over. On mobile there's no ESC/joypad, so the cog is the way in.
@@ -127,10 +136,13 @@ func _on_settings_dim_input(event: InputEvent) -> void:
 	elif event is InputEventScreenTouch and (event as InputEventScreenTouch).pressed:
 		PauseMonitor.unpause()
 
-# Keeps the tab highlight in sync (cleared on the settings page) and points the chrome's title, status,
-# actions, and inventory strip at the page that just became visible.
+# Shows the back arrow on a sub-screen and hides the leading button on the primary stage (which drills
+# from its own HUD), then points the chrome's actions and inventory strip at the page now visible.
 func _on_page_changed(index: int) -> void:
-	_tab_bar.set_active(_tab_screen_indices.find(index))
+	if index == _primary_screen_index():
+		_top_bar.hide_leading()
+	else:
+		_top_bar.show_leading(GameTopBar.LEADING_BACK)
 	var screen: GameScreen = null
 	if index >= 0 and index < _pager.screens.size():
 		screen = _pager.screens[index]
@@ -140,37 +152,38 @@ func _bind_chrome(screen: GameScreen) -> void:
 	_unbind_minigame()
 	if screen == null:
 		return
-	_top_bar.set_title(screen.title)
 	var game: Minigame = null
 	if screen is MinigameScreen:
 		game = (screen as MinigameScreen).minigame()
 	if game == null:
 		var no_actions: Array[MinigameAction] = []
-		_top_bar.set_status("")
 		_top_bar.set_actions(no_actions)
 		_inventory_bar.bind(null)
 		return
 	_bound_minigame = game
-	_top_bar.set_status(game.status_text)
 	_top_bar.set_actions(game.actions())
 	_inventory_bar.bind(game)
-	game.status_changed.connect(_top_bar.set_status)
 	game.inventory_changed.connect(_inventory_bar.refresh)
 	game.actions_changed.connect(_refresh_actions)
+	game.drill_requested.connect(_on_drill_requested)
 
 func _refresh_actions() -> void:
 	if _bound_minigame != null:
 		_top_bar.set_actions(_bound_minigame.actions())
 
+# A stage asked to drill into the next screen (Encounter's "Player" box) — open the last stage (Outfitting).
+func _on_drill_requested() -> void:
+	_show_stage(_stage_indices.size() - 1)
+
 func _unbind_minigame() -> void:
 	if _bound_minigame == null:
 		return
-	if _bound_minigame.status_changed.is_connected(_top_bar.set_status):
-		_bound_minigame.status_changed.disconnect(_top_bar.set_status)
 	if _bound_minigame.inventory_changed.is_connected(_inventory_bar.refresh):
 		_bound_minigame.inventory_changed.disconnect(_inventory_bar.refresh)
 	if _bound_minigame.actions_changed.is_connected(_refresh_actions):
 		_bound_minigame.actions_changed.disconnect(_refresh_actions)
+	if _bound_minigame.drill_requested.is_connected(_on_drill_requested):
+		_bound_minigame.drill_requested.disconnect(_on_drill_requested)
 	_bound_minigame = null
 
 func _current_index() -> int:
@@ -181,11 +194,8 @@ func _current_index() -> int:
 
 func _start_game() -> void:
 	session = GameSession.new_game()
-	# The game owns its own slice of the save — game-only state the 3D game never reads.
-	session.state.minigames = MinigamesState.new()
-	_inventory = Inventory.new()
-	add_child(_inventory)
-	session.bind_inventory(_inventory)
+	# The active encounter's slice of the save — state the 3D game never reads.
+	session.state.encounter = EncounterState.new()
 
 	# The game's tick heartbeat. Nothing drives scrap yet — resource production (a tap now, an
 	# upgraded interval later) subscribes to `_clock.ticked` when it lands.
@@ -193,14 +203,12 @@ func _start_game() -> void:
 	add_child(_clock)
 
 	for screen: GameScreen in _pager.screens:
-		screen.bind(session, _inventory)
+		screen.bind(session)
 
 func _teardown_game() -> void:
-	for node: Node in [_clock, _inventory]:
-		if node != null:
-			node.queue_free()
+	if _clock != null:
+		_clock.queue_free()
 	_clock = null
-	_inventory = null
 
 static func create() -> Game:
 	var scene: PackedScene = load(SCENE_PATH)
@@ -225,5 +233,16 @@ static func apply_window(window: Window) -> void:
 		window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP
 		var aspect: float = float(window.size.x) / float(window.size.y)
 		window.content_scale_size = Vector2i(roundi(_DESIGN_SIZE.y * aspect), _DESIGN_SIZE.y)
+
+## The safe area the chrome insets its content against. On a handheld this is the device's real safe
+## area. Desktop and web report none, so a launch that emulates a handheld — a portrait window, as the
+## `make play`/`play-phone` targets open — substitutes a mocked mobile safe area; an ordinary landscape
+## desktop window is left as-is with no insets.
+static func safe_area(viewport: Viewport) -> SafeArea:
+	if not OS.has_feature("mobile"):
+		var size := viewport.get_visible_rect().size
+		if size.y > size.x:
+			return SafeArea.mocked_mobile()
+	return DeviceUtils.get_safe_area(viewport)
 
 #endregion

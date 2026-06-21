@@ -1,7 +1,10 @@
-[gd_scene load_steps=3 format=3 uid="uid://b8outfitting001"]
+[gd_scene load_steps=6 format=3 uid="uid://b8outfitting001"]
 
 [ext_resource type="Script" uid="uid://c05b4s2m66j65" path="res://minigames/outfitting/outfitting.gd" id="1_outfitting"]
 [ext_resource type="Script" uid="uid://bhhb1ur48vcvr" path="res://addons/grid_system/view/board_canvas.gd" id="2_canvas"]
+[ext_resource type="StyleBoxFlat" path="res://ui/styles/board_panel.tres" id="3_board"]
+[ext_resource type="StyleBoxFlat" path="res://ui/styles/hud_placeholder.tres" id="4_hud"]
+[ext_resource type="StyleBoxFlat" path="res://ui/styles/stat_bar.tres" id="5_bar"]
 
 [node name="Outfitting" type="Control"]
 layout_mode = 3
@@ -11,12 +14,181 @@ anchor_bottom = 1.0
 mouse_filter = 2
 script = ExtResource("1_outfitting")
 
-[node name="BoardCanvas" type="Control" parent="."]
-unique_name_in_owner = true
+[node name="Margins" type="MarginContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 36
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 36
+theme_override_constants/margin_bottom = 36
+
+[node name="Body" type="VBoxContainer" parent="Margins"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 24
+
+[node name="BoardPanel" type="PanelContainer" parent="Margins/Body"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_styles/panel = ExtResource("3_board")
+
+[node name="BoardCanvas" type="Control" parent="Margins/Body/BoardPanel"]
+unique_name_in_owner = true
+layout_mode = 2
 script = ExtResource("2_canvas")
+
+[node name="StatsPanel" type="PanelContainer" parent="Margins/Body"]
+custom_minimum_size = Vector2(0, 560)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = ExtResource("4_hud")
+
+[node name="Stats" type="VBoxContainer" parent="Margins/Body/StatsPanel"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 24
+
+[node name="Heading" type="Label" parent="Margins/Body/StatsPanel/Stats"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.66, 0.72, 0.85, 1)
+theme_override_font_sizes/font_size = 32
+text = "STATS / TBD"
+
+[node name="Bars" type="VBoxContainer" parent="Margins/Body/StatsPanel/Stats"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_constants/separation = 20
+
+[node name="Row1" type="HBoxContainer" parent="Margins/Body/StatsPanel/Stats/Bars"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Fill" type="Panel" parent="Margins/Body/StatsPanel/Stats/Bars/Row1"]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.85
+mouse_filter = 2
+theme_override_styles/panel = ExtResource("5_bar")
+
+[node name="Gap" type="Control" parent="Margins/Body/StatsPanel/Stats/Bars/Row1"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.15
+mouse_filter = 2
+
+[node name="Row2" type="HBoxContainer" parent="Margins/Body/StatsPanel/Stats/Bars"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Fill" type="Panel" parent="Margins/Body/StatsPanel/Stats/Bars/Row2"]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.62
+mouse_filter = 2
+theme_override_styles/panel = ExtResource("5_bar")
+
+[node name="Gap" type="Control" parent="Margins/Body/StatsPanel/Stats/Bars/Row2"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.38
+mouse_filter = 2
+
+[node name="Row3" type="HBoxContainer" parent="Margins/Body/StatsPanel/Stats/Bars"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Fill" type="Panel" parent="Margins/Body/StatsPanel/Stats/Bars/Row3"]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.95
+mouse_filter = 2
+theme_override_styles/panel = ExtResource("5_bar")
+
+[node name="Gap" type="Control" parent="Margins/Body/StatsPanel/Stats/Bars/Row3"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.05
+mouse_filter = 2
+
+[node name="Row4" type="HBoxContainer" parent="Margins/Body/StatsPanel/Stats/Bars"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Fill" type="Panel" parent="Margins/Body/StatsPanel/Stats/Bars/Row4"]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.5
+mouse_filter = 2
+theme_override_styles/panel = ExtResource("5_bar")
+
+[node name="Gap" type="Control" parent="Margins/Body/StatsPanel/Stats/Bars/Row4"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.5
+mouse_filter = 2
+
+[node name="Row5" type="HBoxContainer" parent="Margins/Body/StatsPanel/Stats/Bars"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Fill" type="Panel" parent="Margins/Body/StatsPanel/Stats/Bars/Row5"]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.78
+mouse_filter = 2
+theme_override_styles/panel = ExtResource("5_bar")
+
+[node name="Gap" type="Control" parent="Margins/Body/StatsPanel/Stats/Bars/Row5"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.22
+mouse_filter = 2
+
+[node name="Row6" type="HBoxContainer" parent="Margins/Body/StatsPanel/Stats/Bars"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Fill" type="Panel" parent="Margins/Body/StatsPanel/Stats/Bars/Row6"]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.9
+mouse_filter = 2
+theme_override_styles/panel = ExtResource("5_bar")
+
+[node name="Gap" type="Control" parent="Margins/Body/StatsPanel/Stats/Bars/Row6"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.1
+mouse_filter = 2
+
+[node name="Row7" type="HBoxContainer" parent="Margins/Body/StatsPanel/Stats/Bars"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Fill" type="Panel" parent="Margins/Body/StatsPanel/Stats/Bars/Row7"]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.6
+mouse_filter = 2
+theme_override_styles/panel = ExtResource("5_bar")
+
+[node name="Gap" type="Control" parent="Margins/Body/StatsPanel/Stats/Bars/Row7"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 0.4
+mouse_filter = 2

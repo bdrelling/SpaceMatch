@@ -6,11 +6,12 @@
 [ext_resource type="PackedScene" uid="uid://nekbkphykxea" path="res://scenes/game/screens/minigame_screen/minigame_screen.tscn" id="4_minigame"]
 [ext_resource type="PackedScene" uid="uid://023jhm0a681" path="res://scenes/game/screens/settings_screen/settings_screen.tscn" id="5_settings"]
 [ext_resource type="PackedScene" uid="uid://b1invbar000001" path="res://scenes/game/chrome/game_inventory_bar.tscn" id="6_invbar"]
-[ext_resource type="PackedScene" uid="uid://xf0sqaejc8to" path="res://scenes/game/game_tab_bar.tscn" id="7_tabbar"]
+[ext_resource type="Texture2D" path="res://ui/styles/space_background.tres" id="7_bg"]
 [ext_resource type="PackedScene" uid="uid://b8match0001" path="res://minigames/match/match.tscn" id="10_match"]
 [ext_resource type="PackedScene" uid="uid://b8outfitting001" path="res://minigames/outfitting/outfitting.tscn" id="12_outfitting"]
+[ext_resource type="Script" path="res://scenes/game/chrome/safe_area_overlay.gd" id="13_safeoverlay"]
 
-[node name="Game" type="Control" node_paths=PackedStringArray("_pager", "_tab_bar", "_top_bar", "_inventory_bar", "_settings_overlay")]
+[node name="Game" type="Control" node_paths=PackedStringArray("_pager", "_top_bar", "_inventory_bar", "_settings_overlay")]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -19,19 +20,19 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_game")
 _pager = NodePath("Chrome/GamePager")
-_tab_bar = NodePath("Chrome/TabBar")
 _top_bar = NodePath("Chrome/TopBar")
 _inventory_bar = NodePath("Chrome/InventoryBar")
 _settings_overlay = NodePath("SettingsOverlay")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="TextureRect" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.07, 0.09, 0.14, 1)
+texture = ExtResource("7_bg")
+expand_mode = 1
 
 [node name="Chrome" type="VBoxContainer" parent="."]
 layout_mode = 1
@@ -71,8 +72,15 @@ grow_vertical = 2
 [node name="InventoryBar" parent="Chrome" instance=ExtResource("6_invbar")]
 layout_mode = 2
 
-[node name="TabBar" parent="Chrome" instance=ExtResource("7_tabbar")]
-layout_mode = 2
+[node name="SafeAreaOverlay" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("13_safeoverlay")
 
 [node name="SettingsOverlay" type="CanvasLayer" parent="."]
 process_mode = 3

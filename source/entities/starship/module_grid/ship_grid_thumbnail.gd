@@ -13,7 +13,7 @@ var grid: ShipModuleGrid:
 		queue_redraw()
 
 func _draw() -> void:
-	if grid == null or grid.blueprint == null or size.x <= 0.0 or size.y <= 0.0:
+	if grid == null or size.x <= 0.0 or size.y <= 0.0:
 		return
 	var columns: int = grid.columns
 	var rows: int = grid.rows
@@ -24,13 +24,13 @@ func _draw() -> void:
 	for cell: Vector2i in grid.existing_cells():
 		draw_rect(_cell_rect(origin, cell_size, cell), _CELL)
 		draw_rect(_cell_rect(origin, cell_size, cell), _CELL_BORDER, false, 1.0)
-	for index: int in grid.placements.size():
-		_draw_module(origin, cell_size, grid.modules[index], grid.placements[index])
+	for placed: PlacedModule in grid.placed_modules():
+		_draw_module(origin, cell_size, placed)
 
-func _draw_module(origin: Vector2, cell_size: float, blueprint: ItemBlueprint, placement: StackPlacement) -> void:
-	var fill: Color = blueprint.color
+func _draw_module(origin: Vector2, cell_size: float, placed: PlacedModule) -> void:
+	var fill: Color = placed.module.color
 	fill.a = 1.0
-	for cell: Vector2i in GridGeometry.occupied_cells(blueprint.footprint_cells, placement.anchor, placement.rotation_steps):
+	for cell: Vector2i in placed.cells:
 		draw_rect(_cell_rect(origin, cell_size, cell), fill)
 
 func _cell_rect(origin: Vector2, cell_size: float, cell: Vector2i) -> Rect2:

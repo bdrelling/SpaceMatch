@@ -5,23 +5,22 @@ extends Control
 ## never fight (the press is classified by travel, like the board's gesture recognizer). The held
 ## module's slot stays lit. Presentation only — the host owns the modules.
 
-signal module_pressed(stack: ItemStack)
+signal module_pressed(module: ModuleBlueprint)
 
 const _SLOT_SIZE := Vector2(120.0, 108.0)
 const _SLOT_SPACING := 12.0
 const _EDGE_PADDING := 14.0
 ## A press that travels past this many pixels reads as a scroll, not a tap.
 const _TAP_SLOP := 12.0
-## Fraction of the slot the footprint fills, leaving room for the quantity badge.
+## Inset that frames the footprint within its slot.
 const _SHAPE_INSET := 18.0
-const _QUANTITY_FONT_SIZE := 22
 
 const _SLOT_BACKGROUND := Color(0.16, 0.21, 0.34)
 const _SLOT_BORDER := Color(1, 1, 1, 0.12)
 const _SELECTED_BORDER := Color(0.95, 0.78, 0.3)
 
-var _stacks: Array[ItemStack] = []
-var _selected: ItemStack
+var _modules: Array[ModuleBlueprint] = []
+var _selected: ModuleBlueprint
 
 var _scroll: float = 0.0
 var _pressed: bool = false
@@ -36,14 +35,14 @@ func _ready() -> void:
 	resized.connect(_clamp_scroll)
 
 ## Replaces the row; preserves the scroll offset, clamped to the new content width.
-func set_modules(stacks: Array[ItemStack]) -> void:
-	_stacks = stacks
+func set_modules(modules: Array[ModuleBlueprint]) -> void:
+	_modules = modules
 	_clamp_scroll()
 	queue_redraw()
 
-## Lights the slot whose stack matches (the held module); pass null to clear.
-func set_selected(stack: ItemStack) -> void:
-	_selected = stack
+## Lights the slot whose module matches (the held module); pass null to clear.
+func set_selected(module: ModuleBlueprint) -> void:
+	_selected = module
 	queue_redraw()
 
 func _gui_input(event: InputEvent) -> void:
@@ -100,15 +99,15 @@ func _end_press(local_position: Vector2) -> void:
 	_pressed = false
 	if _scrolling:
 		return
-	var stack := _stack_at(local_position)
-	if stack != null:
-		module_pressed.emit(stack)
+	var module := _module_at(local_position)
+	if module != null:
+		module_pressed.emit(module)
 
-# Stack whose slot contains [param local_position], or null.
-func _stack_at(local_position: Vector2) -> ItemStack:
-	for index: int in _stacks.size():
+# Module whose slot contains [param local_position], or null.
+func _module_at(local_position: Vector2) -> ModuleBlueprint:
+	for index: int in _modules.size():
 		if _slot_rect(index).has_point(local_position):
-			return _stacks[index]
+			return _modules[index]
 	return null
 
 func _slot_rect(index: int) -> Rect2:
@@ -116,32 +115,31 @@ func _slot_rect(index: int) -> Rect2:
 	return Rect2(Vector2(x, _EDGE_PADDING), _SLOT_SIZE)
 
 func _content_width() -> float:
-	if _stacks.is_empty():
+	if _modules.is_empty():
 		return 0.0
-	return _EDGE_PADDING * 2.0 + _stacks.size() * _SLOT_SIZE.x + (_stacks.size() - 1) * _SLOT_SPACING
+	return _EDGE_PADDING * 2.0 + _modules.size() * _SLOT_SIZE.x + (_modules.size() - 1) * _SLOT_SPACING
 
 func _clamp_scroll() -> void:
 	var max_scroll: float = maxf(_content_width() - size.x, 0.0)
 	_scroll = clampf(_scroll, 0.0, max_scroll)
 
 func _draw() -> void:
-	for index: int in _stacks.size():
+	for index: int in _modules.size():
 		_draw_slot(index)
 
 func _draw_slot(index: int) -> void:
-	var stack: ItemStack = _stacks[index]
+	var module: ModuleBlueprint = _modules[index]
 	var rect := _slot_rect(index)
 	if rect.end.x < 0.0 or rect.position.x > size.x:
 		return
 	draw_rect(rect, _SLOT_BACKGROUND)
-	var selected: bool = stack == _selected
+	var selected: bool = module == _selected
 	draw_rect(rect, _SELECTED_BORDER if selected else _SLOT_BORDER, false, 2.0 if selected else 1.0)
-	if stack.item_blueprint != null:
-		_draw_footprint(stack.item_blueprint, rect)
-	_draw_quantity(stack.quantity, rect)
+	if module != null and module.shape != null:
+		_draw_footprint(module, rect)
 
-func _draw_footprint(blueprint: ItemBlueprint, slot: Rect2) -> void:
-	var cells: Array[Vector2i] = blueprint.footprint_cells
+func _draw_footprint(module: ModuleBlueprint, slot: Rect2) -> void:
+	var cells: Array[Vector2i] = module.shape.offsets
 	if cells.is_empty():
 		return
 	var span := Vector2i.ONE
@@ -151,15 +149,9 @@ func _draw_footprint(blueprint: ItemBlueprint, slot: Rect2) -> void:
 	var inner := slot.grow(-_SHAPE_INSET)
 	var cell_size: float = minf(inner.size.x / span.x, inner.size.y / span.y)
 	var origin := inner.position + (inner.size - Vector2(span) * cell_size) * 0.5
-	var fill: Color = blueprint.color
+	var fill: Color = module.color
 	fill.a = 1.0
 	for cell: Vector2i in cells:
 		var cell_rect := Rect2(origin + Vector2(cell) * cell_size, Vector2(cell_size, cell_size) - Vector2(2.0, 2.0))
 		draw_rect(cell_rect, fill)
-		draw_rect(cell_rect, blueprint.color.lightened(0.4), false, 1.0)
-
-func _draw_quantity(quantity: int, slot: Rect2) -> void:
-	var font := ThemeDB.fallback_font
-	var text := "×%d" % quantity
-	var position := slot.position + Vector2(8.0, slot.size.y - 8.0)
-	draw_string(font, position, text, HORIZONTAL_ALIGNMENT_LEFT, -1, _QUANTITY_FONT_SIZE, Color(1, 1, 1, 0.85))
+		draw_rect(cell_rect, module.color.lightened(0.4), false, 1.0)

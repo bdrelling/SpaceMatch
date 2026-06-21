@@ -1,10 +1,10 @@
 # Components and Modules
 
-Working reference for the component and module catalogs — what atoms exist and the reasoning behind each cut. Fabricating packs **components → module**; outfitting packs **modules → ship**. In-flux; not canon.
+Working reference for the component and module catalogs — what atoms exist and the reasoning behind each cut. In-flux; not canon.
 
 ## Components
 
-A minimal palette of 4–6 components that can build all the other things.
+A minimal palette of 4–6 components.
 
 ### Potential
 
@@ -30,19 +30,19 @@ A minimal palette of 4–6 components that can build all the other things.
 - **Actuator** — motion, mechanical work
 - **Tube** — fluid, gas, thermal transport (absorbs Gasket)
 
-### Don't pick — covered by an atom, or by crafting itself
+### Don't pick — covered by another atom
 
-- **Fasteners** — pure assembly glue, no role of its own; implied by building anything
+- **Fasteners** — pure assembly glue, no role of its own
 - **Strut** — structure, same role as Panel
 - **Connector** — terminus of a Wire
 - **Gasket** — sealing, derives from Tube + Panel
 - **Insulation** — isolation barrier, a treated Panel
-- **Sensor** — a Circuit plus a simple optic; built rather than stocked
+- **Sensor** — a Circuit plus a simple optic; folds into Circuit
 
 ### Squeezing below six
 
 - **Five:** drop Tube (handle coolant abstractly).
-- **Four:** drop Actuator too — but then anything that moves (engine, thruster, landing gear, salvage arm) loses its distinguishing input and recipes start collapsing into each other. Four is below the natural floor.
+- **Four:** drop Actuator too — but then anything that moves (engine, thruster, landing gear, salvage arm) loses its distinguishing component and the families blur together. Four is below the natural floor.
 
 ### Open call
 
@@ -100,7 +100,7 @@ A minimal palette of 4–6 components that can build all the other things.
 ### Other
 
 - Gravity plating (grav generator)
-- Repair bay (drone bay, fabricator)
+- Repair bay (drone bay)
 
 ## Stat-vector model (tentative)
 

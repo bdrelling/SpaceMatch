@@ -1,21 +1,25 @@
 class_name MatchTile
 extends GridTile
-## A component tile for the match-3 board: one of six glyphs (wire, tube, panel, bolt, gear, coil)
-## chosen by [member kind], drawn centred on the node origin in unit cell-space so a pop scales about the
-## centre. Filled with [member tint] when the host sets it (the component's colour), else a built-in palette.
+## A component tile for the match-3 board: one of six glyphs (combat, propulsion, science, defense,
+## scrap, anomaly) chosen by [member kind], drawn centred on the node origin in unit cell-space so a pop
+## scales about the centre. Filled with [member tint] when the host sets it, else a built-in palette.
+##
+## Scrap is the only hexagon (flat-top, with a bolt hole); Science is an atom (three rounded oval orbits
+## around a nucleus), so the glyphs stay distinct at a glance.
 
 const KIND_COUNT: int = 6
 
-## Display names per kind, index-aligned with [constant _COLORS] and the host's component catalog.
-const NAMES: Array[String] = ["Wire", "Tube", "Panel", "Bolt", "Gear", "Coil"]
+## Display names per kind, index-aligned with [constant _COLORS]. The purple pentagon has no role yet —
+## it's an unnamed placeholder, labelled by its shape until one is assigned.
+const NAMES: Array[String] = ["Combat", "Propulsion", "Science", "Defense", "Scrap", "Pentagon"]
 
 const _COLORS: Array[Color] = [
-	Color(0.85, 0.50, 0.25),  # wire — copper
-	Color(0.55, 0.62, 0.58),  # tube — steel
-	Color(0.45, 0.55, 0.75),  # panel — slate blue
-	Color(0.96, 0.74, 0.26),  # bolt — brass
-	Color(0.66, 0.47, 0.86),  # gear — violet
-	Color(0.30, 0.79, 0.74),  # coil — teal
+	Color(0.88, 0.33, 0.34),  # combat — red diamond
+	Color(0.97, 0.80, 0.30),  # propulsion — yellow engine pod
+	Color(0.44, 0.78, 0.50),  # science — green atom (three oval orbits)
+	Color(0.35, 0.68, 0.92),  # defense — teal-blue shield
+	Color(0.60, 0.64, 0.70),  # scrap — grey nut (flat-top hexagon + bolt hole)
+	Color(0.66, 0.47, 0.86),  # (unassigned) — purple pentagon
 ]
 ## Glyph half-extent in cell units; leaves a margin inside the cell.
 const _HALF: float = 0.40
@@ -50,65 +54,93 @@ func _draw() -> void:
 	var detail: Color = color.darkened(0.5)
 	match kind:
 		0:
-			_draw_wire(color, detail)
+			_draw_diamond(color)
 		1:
-			_draw_tube(color, detail)
+			_draw_thruster(color, detail)
 		2:
-			_draw_panel(color, detail)
+			_draw_atom(color)
 		3:
-			_draw_bolt(color, detail)
+			_draw_shield(color)
 		4:
-			_draw_gear(color, detail)
+			_draw_nut(color, detail)
 		_:
-			_draw_coil(color, detail)
+			_draw_pentagon(color)
 	if _highlighted:
 		var inset: float = _HALF + 0.05
 		draw_rect(Rect2(Vector2(-inset, -inset), Vector2(inset * 2.0, inset * 2.0)), Color.WHITE, false, _LINE * 1.4)
 
 # --- glyphs (centred on origin) ---
 
-func _draw_wire(color: Color, detail: Color) -> void:
-	var points := PackedVector2Array()
-	var steps: int = 24
-	for index: int in steps + 1:
-		var t: float = float(index) / float(steps)
-		var x: float = lerpf(-_HALF, _HALF, t)
-		var y: float = sin(t * TAU * 1.5) * _HALF * 0.5
-		points.append(Vector2(x, y))
-	draw_polyline(points, color, _LINE * 2.2)
-	draw_circle(points[0], _HALF * 0.16, detail)
-	draw_circle(points[points.size() - 1], _HALF * 0.16, detail)
+# Combat — a tall diamond (rhombus), points up/down.
+func _draw_diamond(color: Color) -> void:
+	var w: float = _HALF * 0.82
+	var h: float = _HALF
+	draw_colored_polygon(PackedVector2Array([
+		Vector2(0.0, -h), Vector2(w, 0.0), Vector2(0.0, h), Vector2(-w, 0.0)]), color)
 
-func _draw_tube(color: Color, detail: Color) -> void:
-	draw_circle(Vector2.ZERO, _HALF, color)
-	draw_circle(Vector2.ZERO, _HALF * 0.55, detail)
-	draw_arc(Vector2.ZERO, _HALF * 0.78, 0.0, TAU, 24, color.lightened(0.25), _LINE)
+# Propulsion — a little engine pod: a capsule body with a porthole and a flared nozzle skirt.
+func _draw_thruster(color: Color, detail: Color) -> void:
+	var bw: float = _HALF * 0.42
+	var dome_y: float = -_HALF + bw
+	var nozzle_bottom: float = _HALF * 0.95
+	var nozzle_top: float = nozzle_bottom - _HALF * 0.3
+	# Capsule body: a domed top over a rectangle.
+	draw_circle(Vector2(0.0, dome_y), bw, color)
+	draw_rect(Rect2(Vector2(-bw, dome_y), Vector2(bw * 2.0, nozzle_top - dome_y)), color)
+	# Flared nozzle skirt under the body.
+	draw_colored_polygon(PackedVector2Array([
+		Vector2(-bw * 0.72, nozzle_top), Vector2(bw * 0.72, nozzle_top),
+		Vector2(bw * 1.25, nozzle_bottom), Vector2(-bw * 1.25, nozzle_bottom)]), detail)
+	# Porthole.
+	draw_circle(Vector2(0.0, (dome_y + nozzle_top) * 0.5), bw * 0.42, detail)
 
-func _draw_panel(color: Color, detail: Color) -> void:
-	draw_rect(Rect2(Vector2(-_HALF, -_HALF * 0.78), Vector2(_HALF * 2.0, _HALF * 1.56)), color)
-	var rivet: float = _HALF * 0.6
-	for corner: Vector2 in [Vector2(-rivet, -rivet * 0.78), Vector2(rivet, -rivet * 0.78), Vector2(-rivet, rivet * 0.78), Vector2(rivet, rivet * 0.78)]:
-		draw_circle(corner, _HALF * 0.12, detail)
+# Science — an atom: three rounded oval orbits 60° apart (a hexagonally symmetric ring) around a nucleus.
+func _draw_atom(color: Color) -> void:
+	var rx: float = _HALF
+	var ry: float = _HALF * 0.5
+	var width: float = _HALF * 0.11
+	# Rotated 30° so one oval stands vertical — a lobe points straight up.
+	for rot: float in [PI / 6.0, PI / 2.0, PI * 5.0 / 6.0]:
+		_draw_orbit(rx, ry, rot, color, width)
+	draw_circle(Vector2.ZERO, _HALF * 0.26, color)
 
-func _draw_bolt(color: Color, detail: Color) -> void:
-	draw_colored_polygon(_ngon(6, _HALF, PI / 6.0), color)
+# An ellipse outline centred on the origin, its major axis rotated by [param rot] — one electron orbit.
+func _draw_orbit(rx: float, ry: float, rot: float, color: Color, width: float) -> void:
+	var pts := PackedVector2Array()
+	for i in 49:
+		var t: float = float(i) / 48.0 * TAU
+		pts.append(Vector2(cos(t) * rx, sin(t) * ry).rotated(rot))
+	draw_polyline(pts, color, width)
+
+# Defense — a heater shield: flat top edge, slightly bowed sides tapering to a point. Sized to a roughly
+# square footprint (not the full cell height) so it sits contained like the other glyphs, not elongated.
+func _draw_shield(color: Color) -> void:
+	var w: float = _HALF * 0.85
+	var top: float = -_HALF * 0.8
+	var bottom: float = _HALF * 0.9
+	var p0 := Vector2(w, top)                  # top-right corner
+	var p1 := Vector2(w * 1.03, _HALF * 0.22)  # control — bows the right side out a touch
+	var p2 := Vector2(0.0, bottom)             # bottom point
+	var steps: int = 14
+	var right := PackedVector2Array()
+	for i in range(steps + 1):
+		var t: float = float(i) / float(steps)
+		right.append(p0.lerp(p1, t).lerp(p1.lerp(p2, t), t))
+	var pts := PackedVector2Array()
+	pts.append(Vector2(-w, top))              # top-left corner (flat top edge runs to the top-right)
+	pts.append_array(right)                   # down the rounded right side to the point
+	for i in range(steps - 1, 0, -1):         # up the mirrored left side
+		pts.append(Vector2(-right[i].x, right[i].y))
+	draw_colored_polygon(pts, color)
+
+# Scrap — a flat-top hexagon (rotated ~30° off the science hexagon) with a bolt hole in the centre.
+func _draw_nut(color: Color, detail: Color) -> void:
+	draw_colored_polygon(_ngon(6, _HALF, 0.0), color)
 	draw_circle(Vector2.ZERO, _HALF * 0.4, detail)
 
-func _draw_gear(color: Color, detail: Color) -> void:
-	draw_colored_polygon(_cog(8, _HALF, _HALF * 0.74), color)
-	draw_circle(Vector2.ZERO, _HALF * 0.32, detail)
-
-func _draw_coil(color: Color, detail: Color) -> void:
-	var turns: float = 2.5
-	var steps: int = 48
-	var points := PackedVector2Array()
-	for index: int in steps + 1:
-		var t: float = float(index) / float(steps)
-		var radius: float = lerpf(_HALF * 0.18, _HALF, t)
-		var angle: float = t * TAU * turns
-		points.append(Vector2(cos(angle), sin(angle)) * radius)
-	draw_polyline(points, color, _LINE * 2.0)
-	draw_circle(Vector2.ZERO, _HALF * 0.16, detail)
+# Anomaly — a pointy-top pentagon (placeholder kind).
+func _draw_pentagon(color: Color) -> void:
+	draw_colored_polygon(_ngon(5, _HALF, -PI / 2.0), color)
 
 # --- shape builders ---
 
@@ -116,14 +148,5 @@ func _ngon(sides: int, radius: float, rotation: float) -> PackedVector2Array:
 	var points := PackedVector2Array()
 	for index: int in sides:
 		var angle: float = rotation + index * TAU / float(sides)
-		points.append(Vector2(cos(angle), sin(angle)) * radius)
-	return points
-
-func _cog(teeth: int, outer: float, inner: float) -> PackedVector2Array:
-	var points := PackedVector2Array()
-	var steps: int = teeth * 2
-	for index: int in steps:
-		var angle: float = index * TAU / float(steps)
-		var radius: float = outer if index % 2 == 0 else inner
 		points.append(Vector2(cos(angle), sin(angle)) * radius)
 	return points

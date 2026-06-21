@@ -6,5 +6,16 @@ func _ready() -> void:
 		"orientation", DeviceUtils.ORIENTATION_NAMES, DeviceUtils.get_default_orientation()
 	)
 	DeviceUtils.set_orientation(orientation)
+
+	# Size the desktop window to the launched device: flag → enum → resolution, using DeviceUtils as
+	# the source of truth. The Makefile's --resolution just boots at the same size.
+	if CommandLine.has_launch_argument_key("device"):
+		var device: DeviceUtils.DeviceType = CommandLine.get_launch_option(
+			"device", DeviceUtils.DEVICE_TYPE_NAMES, DeviceUtils.DeviceType.DESKTOP
+		)
+		if DeviceUtils.DEVICE_RESOLUTIONS.has(device):
+			var points: Vector2 = DeviceUtils.DEVICE_RESOLUTIONS[device]
+			get_window().size = Vector2i((points * DeviceUtils.PREVIEW_SCALE).round())
+
 	Game.apply_window(get_window())
 	SceneLoader.transition_to(Game.create())
