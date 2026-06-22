@@ -44,9 +44,10 @@ func test_drill_into_outfitting_and_back() -> void:
 	var game := Game.create()
 	add_child(game)
 	await await_idle_frame()
-	# The primary stage drills into Outfitting via its own drill request (the HUD "Player" box)...
+	# The primary stage drills into Outfitting via its own drill request (the HUD "Player" box),
+	# handing the shell the combatant whose loadout to show.
 	var match_screen := game._pager.screens[0] as MinigameScreen
-	match_screen.minigame().drill_requested.emit()
+	match_screen.minigame().drill_requested.emit(game.session.state.starship)
 	assert_bool(game._pager.screens[1].visible).is_true()
 	assert_bool(game._pager.screens[0].visible).is_false()
 	# ...and the top-bar back button steps back to the primary stage.
