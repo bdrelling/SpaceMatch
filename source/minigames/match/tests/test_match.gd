@@ -89,3 +89,76 @@ func test_clear_banks_to_active_combatant() -> void:
 	assert_int(game._opponent_tally[kind]).is_equal(1)
 	assert_int(game._player_tally[kind]).is_equal(1)
 	game.queue_free()
+
+# The encounter opens on the player (turn 1), and after the player moves the AI
+# opponent takes its own turn unprompted, rolling play into round 2.
+func test_opponent_takes_its_turn_automatically() -> void:
+	var game := _make()
+	game.opponent_move_delay = 0.0
+	await await_idle_frame()
+	# The board pours in on ready (drop_in marks the view busy for ~0.6s); wait it
+	# out so the player's move isn't swallowed as input-during-animation.
+	var settle_ms: int = 0
+	while game._match_view._busy and settle_ms < 2000:
+		await await_millis(50)
+		settle_ms += 50
+	assert_int(game._encounter.active_combatant()).is_equal(EncounterState.Combatant.PLAYER)
+	# Play the player's turn with the same solver the AI uses for its own.
+	var swap := game._session.find_interaction(GridInteraction.Gesture.SWIPE) as SwapInteraction
+	var move: Array[Vector2i] = SwapSolver.best_move(game._session.state, swap)
+	assert_array(move).is_not_empty()
+	await game._match_view.perform_move(move)
+	# The opponent now plays on its own; wait for its move and cascade to settle.
+	var waited_ms: int = 0
+	while game._encounter.round_number < 2 and waited_ms < 4000:
+		await await_millis(100)
+		waited_ms += 100
+	assert_int(game._encounter.round_number).is_equal(2)
+	assert_int(game._encounter.active_combatant()).is_equal(EncounterState.Combatant.PLAYER)
+	game.queue_free()
+
+# The solver returns a swap that the match condition agrees is a match.
+func test_solver_finds_a_matching_swap() -> void:
+	var condition := MatchLineCondition.new()
+	condition.min_run_length = 3
+	# Rows R R G / B G R / G B R — swapping (2,0) with (2,1) completes R R R on top.
+	var state := _board(3, 3, "RRGBGRGBR")
+	var swap := SwapInteraction.new()
+	swap.match_condition = condition
+	var move: Array[Vector2i] = SwapSolver.best_move(state, swap)
+	assert_array(move).is_not_empty()
+	assert_bool(_swap_makes_match(state, condition, move[0], move[1])).is_true()
+
+# A board too small for any run returns no move (the dead-board signal to pass).
+func test_solver_returns_empty_when_no_swap_matches() -> void:
+	var condition := MatchLineCondition.new()
+	condition.min_run_length = 3
+	var state := _board(2, 2, "RGBY")
+	var swap := SwapInteraction.new()
+	swap.match_condition = condition
+	assert_array(SwapSolver.best_move(state, swap)).is_empty()
+
+const _KIND_IDS := {"R": 0, "G": 1, "B": 2, "Y": 3}
+
+# Builds a single-layer GridState from a row-major string of kind letters
+# (index 0 is cell (0, 0), filling left-to-right then top-to-bottom).
+func _board(width: int, height: int, kinds: String) -> GridState:
+	var state := GridState.new(width, height, 1)
+	for i: int in kinds.length():
+		var cells: Array[Vector2i] = [Vector2i(i % width, i / width)]
+		state.place_object(0, GridObjectState.new(cells, {"kind": _KIND_IDS[kinds[i]]}))
+	return state
+
+# Whether swapping the two cells' kinds forms a match at either — mirrors the
+# solver's own gate, used to re-validate the move it picked.
+func _swap_makes_match(state: GridState, condition: MatchLineCondition, a: Vector2i, b: Vector2i) -> bool:
+	var object_a: GridObjectState = state.get_object_at(0, a.x, a.y)
+	var object_b: GridObjectState = state.get_object_at(0, b.x, b.y)
+	var kind_a: Variant = object_a.state.get("kind")
+	var kind_b: Variant = object_b.state.get("kind")
+	object_a.state["kind"] = kind_b
+	object_b.state["kind"] = kind_a
+	var matches: Array[Vector2i] = condition.find_matches(state)
+	object_a.state["kind"] = kind_a
+	object_b.state["kind"] = kind_b
+	return matches.has(a) or matches.has(b)

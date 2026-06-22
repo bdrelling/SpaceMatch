@@ -29,6 +29,9 @@ const _SCRAP_KIND: int = 4
 @export var input_mode: MatchBoardView.InputMode = MatchBoardView.InputMode.SWAP
 ## Count diagonals as adjacent (matches, swaps, connect steps). The one knob.
 @export var allow_diagonal: bool = false
+## How long the AI opponent "thinks" before playing its swap, so the move reads as
+## a deliberate beat rather than an instant jump. Zero plays immediately.
+@export var opponent_move_delay: float = 0.6
 
 @onready var _canvas: BoardCanvas = %BoardCanvas
 @onready var _player_portrait: PortraitPanel = %PlayerPortrait
@@ -71,8 +74,9 @@ func _ready() -> void:
 	_canvas.set_board(_view, _view.content_size())
 	_match_view.setup(_session, _grid, _make_tile, _spawn_tile)
 	_match_view.move_resolved.connect(_on_move_resolved)
-	# The canvas feeds pointer events to the view from its _gui_input.
-	_canvas.input_handler = _match_view.handle_event
+	# The canvas feeds pointer events to the view from its _gui_input, gated so the
+	# human can't move during the AI opponent's turn.
+	_canvas.input_handler = _on_board_input
 
 	# Tally cleared tiles by kind: hook each clear pass so every popped tile banks into the active
 	# combatant's readouts (SWAP / LINE_SHIFT modes use a MatchClearPassive; CONNECT clears inline, so it won't tally).
@@ -228,9 +232,10 @@ func _unlock() -> void:
 func _compose_status() -> void:
 	status_text = _message
 
-# A resolved move ends the active combatant's turn and hands the board to the next (both human for
-# now — same board, just whose turn it is). A failed swap doesn't burn a turn. Tallied matches bank
-# into the portrait readouts and update between turns.
+# A resolved move ends the active combatant's turn and hands the board to the next. The player and the
+# AI opponent both resolve through here — the opponent's swap re-enters this on completion, handing the
+# turn back, so the volley stops once it's the player's turn again. A failed swap doesn't burn a turn.
+# Tallied matches bank into the portrait readouts and update between turns.
 func _on_move_resolved(made_match: bool, cells_cleared: int) -> void:
 	if not made_match:
 		_message = "No match — try another move."
@@ -247,6 +252,61 @@ func _on_move_resolved(made_match: bool, cells_cleared: int) -> void:
 	else:
 		_message = "%s moved — %s's turn." % [mover, _active_name()]
 	_compose_status()
+	_take_opponent_turn_if_needed()
+
+#region AI opponent
+
+# Routes pointer events to the board, but only when the human may act — the AI
+# opponent's turn (its think beat and its move) is hands-off so the player can't
+# move on its behalf.
+func _on_board_input(event: InputEvent) -> bool:
+	if not _accepts_player_input():
+		return false
+	return _match_view.handle_event(event)
+
+func _accepts_player_input() -> bool:
+	if _encounter == null or not _ai_controls_opponent():
+		return true
+	return _encounter.active_combatant() == EncounterState.Combatant.PLAYER
+
+# The AI plays the opponent only on a swap board for now; the other input modes
+# keep the opponent human-controlled on the shared board.
+func _ai_controls_opponent() -> bool:
+	return input_mode == MatchBoardView.InputMode.SWAP
+
+# When the turn has passed to the AI opponent, think for a beat, then play the best
+# swap the solver can find. Fire-and-forget: the resulting move re-enters
+# [method _on_move_resolved], which hands the turn back to the player.
+func _take_opponent_turn_if_needed() -> void:
+	if not _ai_controls_opponent() or _match_view == null:
+		return
+	if _encounter == null or _encounter.active_combatant() != EncounterState.Combatant.OPPONENT:
+		return
+	if opponent_move_delay > 0.0:
+		await get_tree().create_timer(opponent_move_delay).timeout
+	# State can shift during the think beat (e.g. gravity unlocked) — re-check before moving.
+	if _encounter.active_combatant() != EncounterState.Combatant.OPPONENT:
+		return
+	if _gravity != null and _gravity.is_active():
+		return
+	var swap := _session.find_interaction(GridInteraction.Gesture.SWIPE) as SwapInteraction
+	var move: Array[Vector2i] = SwapSolver.best_move(_session.state, swap)
+	if move.is_empty():
+		_pass_opponent_turn()
+		return
+	await _match_view.perform_move(move)
+
+# A dead board (no swap makes a match) — skip the opponent's move so play doesn't
+# stall, handing the turn straight back to the player.
+func _pass_opponent_turn() -> void:
+	var passer: String = _active_name()
+	if _encounter != null:
+		_encounter.advance_turn()
+		_refresh_turn_tracker()
+	_message = "%s has no move — %s's turn." % [passer, _active_name()]
+	_compose_status()
+
+#endregion
 
 # Per-clear hook on the [MatchClearPassive]: bank each popped tile into the active combatant's
 # running tally. Fires once per cascade step with the cells about to be removed, so the kinds are
