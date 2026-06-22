@@ -12,9 +12,10 @@ signal status_changed(text: String)
 signal inventory_changed()
 ## The [method actions] list changed (e.g. a mode toggle relabelled a button) — the shell rebuilds them.
 signal actions_changed()
-## The stage asked the shell to drill into the next screen (e.g. Encounter's "Player" box opening
-## Outfitting). The stage names no destination — it just requests the drill; the shell decides where.
-signal drill_requested()
+## The stage asked the shell to drill into the next screen (e.g. an Encounter portrait opening that
+## combatant's loadout in Outfitting), passing the [StarshipState] to inspect there. The stage names no
+## screen — it just requests the drill and whose ship to show; the shell decides where.
+signal drill_requested(starship: StarshipState)
 
 var status_text: String = "":
 	set(value):

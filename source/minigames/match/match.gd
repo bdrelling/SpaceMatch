@@ -35,10 +35,16 @@ const _SCRAP_KIND: int = 4
 @onready var _opponent_portrait: PortraitPanel = %OpponentPortrait
 @onready var _round_label: Label = %RoundLabel
 @onready var _turn_label: Label = %TurnLabel
+@onready var _actions: HBoxContainer = %Actions
 
 var _message: String = ""
 var _game_session: GameSession
 var _encounter: EncounterState
+
+# Running per-kind count of tiles cleared by each combatant this encounter; added onto the portrait
+# stat readouts so matches visibly bank into the numbers.
+var _player_tally := PackedInt32Array()
+var _opponent_tally := PackedInt32Array()
 
 var _session: GridSession
 var _view: GridView
@@ -68,6 +74,13 @@ func _ready() -> void:
 	# The canvas feeds pointer events to the view from its _gui_input.
 	_canvas.input_handler = _match_view.handle_event
 
+	# Tally cleared tiles by kind: hook each clear pass so every popped tile banks into the active
+	# combatant's readouts (SWAP / LINE_SHIFT modes use a MatchClearPassive; CONNECT clears inline, so it won't tally).
+	_player_tally.resize(_KIND_COUNT)
+	_opponent_tally.resize(_KIND_COUNT)
+	for clearer: MatchClearPassive in _session.find_rules(MatchClearPassive):
+		clearer.on_clear = _on_cells_cleared
+
 	# The "unlock" mechanic: an idle physics overlay mounted alongside the board, woken by a keypress.
 	_gravity = MatchGravity.new()
 	_gravity.setup(_CELL_SIZE, _BOARD_WIDTH, _BOARD_HEIGHT, _session, _spawn_tile)
@@ -78,10 +91,9 @@ func _ready() -> void:
 	_message = _prompt_for_mode()
 	_compose_status()
 
-	# Tapping your own portrait drills into Outfitting (read-only viewing is TBD); tapping the opponent
-	# opens their intel (TBD — no opponent entity yet). The board names no destination — it just asks the
-	# shell to drill (see [signal Minigame.drill_requested]).
-	_player_portrait.pressed.connect(func() -> void: drill_requested.emit())
+	# Tapping a portrait drills into that combatant's module grid. The board names no screen — it just
+	# asks the shell to drill and hands it whose ship to show (see [signal Minigame.drill_requested]).
+	_player_portrait.pressed.connect(_on_player_pressed)
 	_opponent_portrait.pressed.connect(_on_opponent_pressed)
 
 	# A transient encounter so the screen stands alone (e.g. running match.tscn directly); a bound
@@ -90,6 +102,10 @@ func _ready() -> void:
 		_encounter = EncounterState.new()
 	_refresh_portraits()
 	_refresh_turn_tracker()
+
+	# The four action buttons under the board are placeholders — each just reports itself for now.
+	for button: Button in _actions.get_children():
+		button.pressed.connect(_on_action_pressed.bind(button.text))
 
 func actions() -> Array[MinigameAction]:
 	var none: Array[MinigameAction] = []
@@ -111,37 +127,40 @@ func bind_session(session: GameSession) -> void:
 func _refresh_portraits() -> void:
 	if _player_portrait != null:
 		_player_portrait.set_readouts(_player_readouts())
+		_player_portrait.set_module_grid(_grid_of(_player_starship()))
 	if _opponent_portrait != null:
 		_opponent_portrait.set_readouts(_opponent_readouts())
+		_opponent_portrait.set_module_grid(_grid_of(_opponent_starship()))
 
 # The six readouts beneath the player portrait, tile-kind ordered: four starship stats, the scrap
-# balance, and the anomaly placeholder.
+# balance, and the anomaly placeholder — each with the tiles the player matched of that kind added on.
 func _player_readouts() -> PackedStringArray:
 	var scrap: int = 0
-	var starship: StarshipState = null
-	if _game_session != null and _game_session.state != null:
-		starship = _game_session.state.starship
-		if _game_session.state.wallet != null:
-			scrap = _game_session.state.wallet.scrap
-	return _readouts_for(_profile_for(starship), scrap)
+	if _game_session != null and _game_session.state != null and _game_session.state.wallet != null:
+		scrap = _game_session.state.wallet.scrap
+	return _readouts_for(_profile_for(_player_starship()), scrap, _player_tally)
 
 # The opponent's readouts, read from the encounter's ship. It owns no [Wallet], so scrap shows "—".
+# Adds the tiles the opponent matched of each kind.
 func _opponent_readouts() -> PackedStringArray:
-	var starship: StarshipState = _encounter.opponent if _encounter != null else null
-	return _readouts_for(_profile_for(starship), -1)
+	return _readouts_for(_profile_for(_opponent_starship()), -1, _opponent_tally)
 
 # Lays a stat profile out as the six tile-kind-ordered readouts: four stats, scrap (negative ⇒ "—",
-# for combatants with no wallet), and the anomaly placeholder.
-func _readouts_for(profile: StatBlock, scrap: int) -> PackedStringArray:
+# for combatants with no wallet), and the anomaly placeholder. Adds that combatant's running tally to
+# every readout, scrap included — a wallet-less combatant just shows "—" with no tally.
+func _readouts_for(profile: StatBlock, scrap: int, tally: PackedInt32Array) -> PackedStringArray:
 	var out := PackedStringArray()
 	for kind: int in MatchTile.KIND_COUNT:
+		var base: int = 0
 		if kind == _SCRAP_KIND:
-			out.append(str(scrap) if scrap >= 0 else "—")
+			if scrap < 0:
+				out.append("—")  # no wallet (opponent) — no scrap resource
+				continue
+			base = scrap
 		elif _STAT_FOR_KIND.has(kind):
 			var stat: Stat.Type = _STAT_FOR_KIND[kind]
-			out.append(str(profile.value(stat)))
-		else:
-			out.append("—")  # anomaly — no stat yet (TBD)
+			base = profile.value(stat)
+		out.append(str(base + _tally_at(tally, kind)))
 	return out
 
 # A starship's summed stat profile (zeros when null or no modules are slotted). Summed here in the
@@ -155,10 +174,35 @@ func _profile_for(starship: StarshipState) -> StatBlock:
 			total.add(placed.module.stats)
 	return total
 
-# Tapping the opponent will open their intel (module layout / skills / hints) — TBD, no opponent yet.
+# A kind's running matched-tile count from a combatant's tally (zero before the tally is sized in _ready).
+func _tally_at(tally: PackedInt32Array, kind: int) -> int:
+	if kind < 0 or kind >= tally.size():
+		return 0
+	return tally[kind]
+
+# Drills into a combatant's module grid: hands the shell that combatant's ship so the Outfitting stage
+# opens it. No ship (e.g. running this scene standalone, no bound session) ⇒ no drill.
+func _on_player_pressed() -> void:
+	var starship: StarshipState = _player_starship()
+	if starship != null:
+		drill_requested.emit(starship)
+
 func _on_opponent_pressed() -> void:
-	_message = "Opponent intel — TBD."
-	_compose_status()
+	var starship: StarshipState = _opponent_starship()
+	if starship != null:
+		drill_requested.emit(starship)
+
+# The player's ship (the game's persistent starship) and the opponent's (the encounter's), null-safe.
+func _player_starship() -> StarshipState:
+	if _game_session != null and _game_session.state != null:
+		return _game_session.state.starship
+	return null
+
+func _opponent_starship() -> StarshipState:
+	return _encounter.opponent if _encounter != null else null
+
+func _grid_of(starship: StarshipState) -> ModuleGrid:
+	return starship.module_grid if starship != null else null
 
 #endregion
 
@@ -185,13 +229,16 @@ func _compose_status() -> void:
 	status_text = _message
 
 # A resolved move ends the active combatant's turn and hands the board to the next (both human for
-# now — same board, just whose turn it is). A failed swap doesn't burn a turn.
+# now — same board, just whose turn it is). A failed swap doesn't burn a turn. Tallied matches bank
+# into the portrait readouts and update between turns.
 func _on_move_resolved(made_match: bool, cells_cleared: int) -> void:
 	if not made_match:
 		_message = "No match — try another move."
 		_compose_status()
 		return
 	var mover: String = _active_name()
+	# The tally grew during the cascade (via _on_cells_cleared) — fold the new totals into the readouts.
+	_refresh_portraits()
 	if _encounter != null:
 		_encounter.advance_turn()
 		_refresh_turn_tracker()
@@ -199,6 +246,26 @@ func _on_move_resolved(made_match: bool, cells_cleared: int) -> void:
 		_message = "%s cleared %d tiles — %s's turn." % [mover, cells_cleared, _active_name()]
 	else:
 		_message = "%s moved — %s's turn." % [mover, _active_name()]
+	_compose_status()
+
+# Per-clear hook on the [MatchClearPassive]: bank each popped tile into the active combatant's
+# running tally. Fires once per cascade step with the cells about to be removed, so the kinds are
+# still readable on the board.
+func _on_cells_cleared(board: GridState, cells: Array[Vector2i]) -> void:
+	if _encounter == null:
+		return
+	var active: int = _encounter.active_combatant()
+	for cell: Vector2i in cells:
+		var kind: int = _kind_at(board, cell.x, cell.y)
+		if kind < 0 or kind >= _player_tally.size():
+			continue
+		if active == EncounterState.Combatant.PLAYER:
+			_player_tally[kind] += 1
+		else:
+			_opponent_tally[kind] += 1
+
+func _on_action_pressed(action_name: String) -> void:
+	_message = "%s — TBD." % action_name
 	_compose_status()
 
 # Repaints the top row (round, turn-of-round, whose turn) and highlights the active portrait.

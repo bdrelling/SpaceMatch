@@ -98,3 +98,33 @@ theme_override_styles/panel = ExtResource("3_board")
 unique_name_in_owner = true
 layout_mode = 2
 script = ExtResource("2_canvas")
+
+[node name="Actions" type="HBoxContainer" parent="Margins/Body"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 96)
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Action1" type="Button" parent="Margins/Body/Actions"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
+text = "Ability 1"
+
+[node name="Action2" type="Button" parent="Margins/Body/Actions"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
+text = "Ability 2"
+
+[node name="Action3" type="Button" parent="Margins/Body/Actions"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
+text = "Ability 3"
+
+[node name="Action4" type="Button" parent="Margins/Body/Actions"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
+text = "Ability 4"

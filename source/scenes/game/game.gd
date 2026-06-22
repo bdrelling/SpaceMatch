@@ -189,9 +189,26 @@ func _refresh_actions() -> void:
 	if _bound_minigame != null:
 		_top_bar.set_actions(_bound_minigame.actions())
 
-# A stage asked to drill into the next screen (Encounter's "Player" box) — open the last stage (Outfitting).
-func _on_drill_requested() -> void:
+# A stage asked to drill into a combatant's loadout — point Outfitting at that ship, then open it (the
+# last stage). With no ship, Outfitting keeps whatever grid it was last bound to (the player's, by default).
+func _on_drill_requested(starship: StarshipState) -> void:
+	var outfitting: OutfittingMinigame = _outfitting_stage()
+	if outfitting != null and starship != null:
+		outfitting.show_starship(starship)
 	_show_stage(_stage_indices.size() - 1)
+
+# The OutfittingMinigame behind the last playable stage, or null if it isn't one (defensive — the
+# drill target is always Outfitting today).
+func _outfitting_stage() -> OutfittingMinigame:
+	if _stage_indices.is_empty():
+		return null
+	var index: int = _stage_indices[_stage_indices.size() - 1]
+	if index < 0 or index >= _pager.screens.size():
+		return null
+	var screen: GameScreen = _pager.screens[index]
+	if screen is MinigameScreen:
+		return (screen as MinigameScreen).minigame() as OutfittingMinigame
+	return null
 
 func _unbind_minigame() -> void:
 	if _bound_minigame == null:
