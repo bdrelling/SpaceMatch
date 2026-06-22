@@ -46,3 +46,17 @@ func test_module_at_and_remove() -> void:
 	assert_object(grid.module_at(Vector2i(0, 0))).is_null()
 	assert_object(grid.remove_at(Vector2i(1, 0))).is_same(module)
 	assert_int(grid.filled_cell_count()).is_equal(0)
+
+func test_generator_stamps_blueprint_modules() -> void:
+	var placement := ModulePlacement.new()
+	placement.module = _module([Vector2i(0, 0), Vector2i(1, 0)])
+	placement.origin = Vector2i(1, 1)
+	var blueprint := ModuleGridBlueprint.new()
+	blueprint.columns = 3
+	blueprint.rows = 3
+	var placements: Array[ModulePlacement] = [placement]
+	blueprint.modules = placements
+	var grid := ModuleGridGenerator.generate(blueprint)
+	assert_int(grid.placed_modules().size()).is_equal(1)
+	assert_object(grid.module_at(Vector2i(1, 1))).is_same(placement.module)
+	assert_object(grid.module_at(Vector2i(2, 1))).is_same(placement.module)

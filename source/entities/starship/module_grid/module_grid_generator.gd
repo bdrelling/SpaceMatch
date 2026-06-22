@@ -13,4 +13,7 @@ static func generate(blueprint: ModuleGridBlueprint) -> ModuleGrid:
 	shaped.height = blueprint.rows
 	shaped.usable_cells = blueprint.cells
 	module_grid.grid = shaped.generate()
+	for placement: ModulePlacement in blueprint.modules:
+		if placement != null and placement.module != null:
+			module_grid.place(placement.module, placement.origin, placement.rotation)
 	return module_grid

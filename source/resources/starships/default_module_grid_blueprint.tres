@@ -1,9 +1,46 @@
-[gd_resource type="Resource" script_class="ModuleGridBlueprint" format=3]
+[gd_resource type="Resource" script_class="ModuleGridBlueprint" format=3 load_steps=13]
 
 [ext_resource type="Script" path="res://entities/starship/module_grid/module_grid_blueprint.gd" id="1"]
+[ext_resource type="Script" path="res://entities/starship/module_grid/module_placement.gd" id="2_place"]
+[ext_resource type="Resource" uid="uid://dlkraq4yc71s4" path="res://resources/items/modules/shield_generator_item_blueprint.tres" id="3_shield"]
+[ext_resource type="Resource" uid="uid://bjnpt3i63vbq3" path="res://resources/items/modules/life_support_item_blueprint.tres" id="4_life"]
+[ext_resource type="Resource" uid="uid://dlpn238vek5di" path="res://resources/items/modules/reactor_item_blueprint.tres" id="5_reactor"]
+[ext_resource type="Resource" uid="uid://5g0yw4m0f1b1" path="res://resources/items/modules/sensor_array_item_blueprint.tres" id="6_sensor"]
+[ext_resource type="Resource" uid="uid://bltio0cybawhi" path="res://resources/items/modules/engine_item_blueprint.tres" id="7_engine"]
+
+[sub_resource type="Resource" id="Place_shield"]
+script = ExtResource("2_place")
+module = ExtResource("3_shield")
+origin = Vector2i(2, 0)
+rotation = 0
+
+[sub_resource type="Resource" id="Place_life"]
+script = ExtResource("2_place")
+module = ExtResource("4_life")
+origin = Vector2i(2, 1)
+rotation = 0
+
+[sub_resource type="Resource" id="Place_reactor"]
+script = ExtResource("2_place")
+module = ExtResource("5_reactor")
+origin = Vector2i(2, 2)
+rotation = 0
+
+[sub_resource type="Resource" id="Place_sensor"]
+script = ExtResource("2_place")
+module = ExtResource("6_sensor")
+origin = Vector2i(4, 2)
+rotation = 0
+
+[sub_resource type="Resource" id="Place_engine"]
+script = ExtResource("2_place")
+module = ExtResource("7_engine")
+origin = Vector2i(2, 4)
+rotation = 0
 
 [resource]
 script = ExtResource("1")
 columns = 6
 rows = 6
 cells = Array[Vector2i]([Vector2i(2, 0), Vector2i(3, 0), Vector2i(1, 1), Vector2i(2, 1), Vector2i(3, 1), Vector2i(4, 1), Vector2i(0, 2), Vector2i(1, 2), Vector2i(2, 2), Vector2i(3, 2), Vector2i(4, 2), Vector2i(5, 2), Vector2i(0, 3), Vector2i(1, 3), Vector2i(2, 3), Vector2i(3, 3), Vector2i(4, 3), Vector2i(5, 3), Vector2i(0, 4), Vector2i(1, 4), Vector2i(2, 4), Vector2i(3, 4), Vector2i(4, 4), Vector2i(5, 4), Vector2i(1, 5), Vector2i(2, 5), Vector2i(3, 5), Vector2i(4, 5)])
+modules = Array[ModulePlacement]([SubResource("Place_shield"), SubResource("Place_life"), SubResource("Place_reactor"), SubResource("Place_sensor"), SubResource("Place_engine")])
