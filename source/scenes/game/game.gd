@@ -240,6 +240,23 @@ func _start_game() -> void:
 	for screen: GameScreen in _pager.screens:
 		screen.bind(session)
 
+	# Mirror the wallet into the nav-bar scrap counter, repainting whenever scrap is earned or spent.
+	_wire_wallet()
+
+# Connects the session's wallet to the top bar's scrap counter and paints the opening balance. Re-runs
+# on restart against the fresh wallet; the old wallet's connection dies with it.
+func _wire_wallet() -> void:
+	var wallet: Wallet = session.state.wallet if session != null and session.state != null else null
+	if wallet != null and not wallet.scrap_changed.is_connected(_on_wallet_changed):
+		wallet.scrap_changed.connect(_on_wallet_changed)
+	_on_wallet_changed()
+
+func _on_wallet_changed() -> void:
+	var scrap: int = 0
+	if session != null and session.state != null and session.state.wallet != null:
+		scrap = session.state.wallet.scrap
+	_top_bar.set_scrap(scrap)
+
 func _teardown_game() -> void:
 	if _clock != null:
 		_clock.queue_free()

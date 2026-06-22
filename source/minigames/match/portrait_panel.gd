@@ -1,20 +1,25 @@
 class_name PortraitPanel
 extends Button
 ## A combatant portrait in the encounter HUD: a thumbnail of that ship's module grid, a name, and a
-## strip of six stat readouts (one per tile kind) along the bottom. Tappable — the encounter decides
-## what a tap opens (each combatant's module grid). Player on the left, opponent on the right,
-## Puzzle-Quest style.
+## strip of the four stat readouts (the four colored stat tiles — combat, propulsion, science, defense)
+## along the bottom. Scrap, damage, and anomaly aren't ship stats, so they don't appear here. Tappable —
+## the encounter decides what a tap opens (each combatant's module grid). Player on the left, opponent on
+## the right, Puzzle-Quest style.
 ##
 ## The thumbnail (its hull and modules drawn in their grid colors) is the portrait art; until a grid is
 ## bound it falls back to a glyph. The host sets the grid, readouts, name, and health.
 
 const _STYLE_NORMAL := preload("res://ui/styles/hud_placeholder.tres")
 const _STYLE_ACTIVE := preload("res://ui/styles/hud_box_active.tres")
-const _STYLE_BAR_FILL := preload("res://ui/styles/stat_bar.tres")
 ## Side length of each tiny tile in the readout strip.
 const _TILE_PX: float = 44.0
 ## Height of the health bar under the name.
 const _BAR_PX: float = 24.0
+## Health bar fill — red, so damage reads at a glance.
+const _HEALTH_FILL := Color(0.86, 0.27, 0.30)
+## The tile kinds shown in the readout strip — the four colored stat tiles, in [MatchTile] kind order.
+## Kept in step with [MatchMinigame]'s readout order, which feeds [method set_readouts].
+const _READOUT_KINDS: Array[int] = [0, 1, 2, 3]
 
 ## Big glyph shown above the name — a stand-in portrait.
 @export var glyph: String = "▦"
@@ -37,8 +42,8 @@ func _ready() -> void:
 	add_theme_stylebox_override("pressed", _STYLE_ACTIVE)
 	_build()
 
-# Builds the portrait's contents once: glyph, name, and a row of six tile readouts. The strip is
-# data-driven (one cell per tile kind), so it's assembled in code rather than authored cell-by-cell.
+# Builds the portrait's contents once: glyph, name, and a row of the four stat-tile readouts. The strip
+# is data-driven (one cell per readout kind), so it's assembled in code rather than authored cell-by-cell.
 func _build() -> void:
 	var margins := MarginContainer.new()
 	margins.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -90,7 +95,10 @@ func _build() -> void:
 	bar_bg.bg_color = Color(0.12, 0.13, 0.21, 0.6)
 	bar_bg.set_corner_radius_all(int(_BAR_PX * 0.5))
 	_health_bar.add_theme_stylebox_override("background", bar_bg)
-	_health_bar.add_theme_stylebox_override("fill", _STYLE_BAR_FILL)
+	var bar_fill := StyleBoxFlat.new()
+	bar_fill.bg_color = _HEALTH_FILL
+	bar_fill.set_corner_radius_all(int(_BAR_PX * 0.5))
+	_health_bar.add_theme_stylebox_override("fill", bar_fill)
 	column.add_child(_health_bar)
 
 	var strip := HBoxContainer.new()
@@ -100,7 +108,7 @@ func _build() -> void:
 	column.add_child(strip)
 
 	_value_labels.clear()
-	for kind: int in MatchTile.KIND_COUNT:
+	for kind: int in _READOUT_KINDS:
 		var cell := VBoxContainer.new()
 		cell.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		cell.add_theme_constant_override("separation", 2)
@@ -119,7 +127,7 @@ func _build() -> void:
 		cell.add_child(value)
 		_value_labels.append(value)
 
-## Sets the six readouts, tile-kind ordered (combat, propulsion, science, defense, scrap, anomaly).
+## Sets the four stat readouts, in [constant _READOUT_KINDS] order (combat, propulsion, science, defense).
 func set_readouts(values: PackedStringArray) -> void:
 	for i: int in mini(values.size(), _value_labels.size()):
 		_value_labels[i].text = values[i]

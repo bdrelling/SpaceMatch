@@ -53,18 +53,18 @@ func _show_grid(module_grid: ModuleGrid) -> void:
 		_module_grid.changed.connect(_rebuild_stats)
 	_rebuild_stats()
 
-# The stat readout, in display order: the four tile-backed stats first (shown with their tile), then the
-# tile-less stats. Each entry is [stat, label, tile kind] — tile kind -1 means the stat has no tile yet.
+# The stat readout: one row per match tile kind, each shown beside its tile, in [MatchTile] kind order.
+# Each entry is [stat, label, tile kind] — every kind links to a stat (the four colored stat tiles, plus
+# scrap, anomaly, and damage).
 func _stat_rows() -> Array:
 	return [
 		[Stat.Type.POWER, "Power", 0],
 		[Stat.Type.SPEED, "Speed", 1],
 		[Stat.Type.SENSORS, "Sensors", 2],
 		[Stat.Type.SHIELDS, "Shields", 3],
-		[Stat.Type.LIFE_SUPPORT, "Life Support", -1],
-		[Stat.Type.ARMOR, "Armor", -1],
-		[Stat.Type.CARGO, "Cargo", -1],
-		[Stat.Type.FUEL, "Fuel", -1],
+		[Stat.Type.SCRAP, "Scrap", 4],
+		[Stat.Type.ANOMALY, "Anomaly", 5],
+		[Stat.Type.DAMAGE, "Damage", 6],
 	]
 
 # Repopulates the stat list from the grid's current loadout: one row per stat, tile + name + value.

@@ -1,17 +1,17 @@
 class_name MatchTile
 extends GridTile
-## A component tile for the match-3 board: one of six glyphs (combat, propulsion, science, defense,
-## scrap, anomaly) chosen by [member kind], drawn centred on the node origin in unit cell-space so a pop
-## scales about the centre. Filled with [member tint] when the host sets it, else a built-in palette.
+## A component tile for the match-3 board: one of seven glyphs (combat, propulsion, science, defense,
+## scrap, anomaly, damage) chosen by [member kind], drawn centred on the node origin in unit cell-space
+## so a pop scales about the centre. Filled with [member tint] when the host sets it, else a built-in palette.
 ##
 ## Scrap is the only hexagon (flat-top, with a bolt hole); Science is an atom (three rounded oval orbits
-## around a nucleus), so the glyphs stay distinct at a glance.
+## around a nucleus); Damage is a spiky starburst — so the glyphs stay distinct at a glance.
 
-const KIND_COUNT: int = 6
+const KIND_COUNT: int = 7
 
-## Display names per kind, index-aligned with [constant _COLORS]. The purple pentagon has no role yet —
-## it's an unnamed placeholder, labelled by its shape until one is assigned.
-const NAMES: Array[String] = ["Combat", "Propulsion", "Science", "Defense", "Scrap", "Pentagon"]
+## Display names per kind, index-aligned with [constant _COLORS]. The anomaly (a purple pentagon) is an
+## unnamed placeholder, labelled by its role until one is assigned.
+const NAMES: Array[String] = ["Combat", "Propulsion", "Science", "Defense", "Scrap", "Anomaly", "Damage"]
 
 const _COLORS: Array[Color] = [
 	Color(0.88, 0.33, 0.34),  # combat — red diamond
@@ -19,7 +19,8 @@ const _COLORS: Array[Color] = [
 	Color(0.44, 0.78, 0.50),  # science — green atom (three oval orbits)
 	Color(0.35, 0.68, 0.92),  # defense — teal-blue shield
 	Color(0.60, 0.64, 0.70),  # scrap — grey nut (flat-top hexagon + bolt hole)
-	Color(0.66, 0.47, 0.86),  # (unassigned) — purple pentagon
+	Color(0.66, 0.47, 0.86),  # anomaly — purple pentagon
+	Color(0.96, 0.50, 0.18),  # damage — orange starburst (explosion)
 ]
 ## Glyph half-extent in cell units; leaves a margin inside the cell.
 const _HALF: float = 0.40
@@ -63,6 +64,10 @@ func _draw() -> void:
 			_draw_shield(color)
 		4:
 			_draw_nut(color, detail)
+		5:
+			_draw_pentagon(color)
+		6:
+			_draw_explosion(color)
 		_:
 			_draw_pentagon(color)
 	if _highlighted:
@@ -141,6 +146,20 @@ func _draw_nut(color: Color, detail: Color) -> void:
 # Anomaly — a pointy-top pentagon (placeholder kind).
 func _draw_pentagon(color: Color) -> void:
 	draw_colored_polygon(_ngon(5, _HALF, -PI / 2.0), color)
+
+# Damage — a spiky starburst (an explosion): eight points alternating a long and short radius, with a
+# hot, lightened core.
+func _draw_explosion(color: Color) -> void:
+	var spikes: int = 8
+	var outer: float = _HALF
+	var inner: float = _HALF * 0.46
+	var burst := PackedVector2Array()
+	for index: int in spikes * 2:
+		var radius: float = outer if index % 2 == 0 else inner
+		var angle: float = -PI / 2.0 + float(index) * PI / float(spikes)
+		burst.append(Vector2(cos(angle), sin(angle)) * radius)
+	draw_colored_polygon(burst, color)
+	draw_circle(Vector2.ZERO, _HALF * 0.34, color.lightened(0.5))
 
 # --- shape builders ---
 

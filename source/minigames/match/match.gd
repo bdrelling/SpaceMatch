@@ -12,15 +12,14 @@ const _CELL_SIZE: float = 64.0
 const _MIN_RUN: int = 3
 const _KIND_COUNT: int = MatchTile.KIND_COUNT
 
-# Tile kind → the starship stat shown beneath the player portrait, in [MatchTile] kind order. Scrap
-# (kind 4) shows the currency balance instead; the sixth tile (anomaly) has no stat yet (TBD).
-const _STAT_FOR_KIND := {
-	0: Stat.Type.POWER,    # combat — red
-	1: Stat.Type.SPEED,    # propulsion — yellow
-	2: Stat.Type.SENSORS,  # science — green
-	3: Stat.Type.SHIELDS,  # defense — blue
-}
+# The four colored stat tiles (combat, propulsion, science, defense) whose match counts show as
+# resources beneath the portraits, in [MatchTile] kind order — index-aligned with PortraitPanel's strip.
+# The other three kinds route elsewhere: scrap (kind 4) banks into the wallet, damage (kind 6) depletes
+# the opposing combatant's health, and anomaly (kind 5) is inert for now.
+const _STAT_KINDS: Array[int] = [0, 1, 2, 3]
 const _SCRAP_KIND: int = 4
+const _ANOMALY_KIND: int = 5
+const _DAMAGE_KIND: int = 6
 
 ## Forwarded to the blueprint as the board's seed. Zero rolls a fresh board each generation.
 @export var board_seed: int = 0
@@ -32,6 +31,9 @@ const _SCRAP_KIND: int = 4
 ## How long the AI opponent "thinks" before playing its swap, so the move reads as
 ## a deliberate beat rather than an instant jump. Zero plays immediately.
 @export var opponent_move_delay: float = 0.6
+## The swappable rules for this encounter — spawn weights and the extra-turn threshold. Left unset, the
+## board falls back to [method MatchRules.default] (the standard SpaceMatch set) so it plays standalone.
+@export var rules: MatchRules
 
 @onready var _canvas: BoardCanvas = %BoardCanvas
 @onready var _player_portrait: PortraitPanel = %PlayerPortrait
@@ -56,7 +58,19 @@ var _match_view: MatchBoardView
 var _gravity: MatchGravity
 var _rng := RandomNumberGenerator.new()
 
+# Every tile kind, cached as the default spawn pool so refills don't rebuild the list each cascade step.
+var _all_kinds: Array[int] = []
+# The longest straight run cleared during the move in progress, accumulated across its cascade steps in
+# [method _on_cells_cleared] and read by [method _on_move_resolved] for the extra-turn rule.
+var _move_max_run: int = 0
+
 func _ready() -> void:
+	# Fall back to the standard ruleset so the board plays when mounted without one (e.g. standalone).
+	if rules == null:
+		rules = MatchRules.default()
+	for kind: int in _KIND_COUNT:
+		_all_kinds.append(kind)
+
 	var blueprint := MatchBlueprint.new()
 	blueprint.rng_seed = board_seed
 	blueprint.input_mode = input_mode
@@ -135,48 +149,33 @@ func _refresh_portraits() -> void:
 	if _opponent_portrait != null:
 		_opponent_portrait.set_readouts(_opponent_readouts())
 		_opponent_portrait.set_module_grid(_grid_of(_opponent_starship()))
+	_refresh_health()
 
-# The six readouts beneath the player portrait, tile-kind ordered: four starship stats, the scrap
-# balance, and the anomaly placeholder — each with the tiles the player matched of that kind added on.
+# Repaints both portraits' health bars from the encounter's current health.
+func _refresh_health() -> void:
+	if _encounter == null:
+		return
+	if _player_portrait != null:
+		_player_portrait.set_health(_encounter.player_health, _encounter.max_health)
+	if _opponent_portrait != null:
+		_opponent_portrait.set_health(_encounter.opponent_health, _encounter.max_health)
+
+# The four resource readouts beneath the player portrait, in [constant _STAT_KINDS] order (combat,
+# propulsion, science, defense): the tiles the player has matched of each kind this encounter. Starts at
+# zero — these are matched-this-fight resources, not the ship's base stats (those live on the stats screen).
 func _player_readouts() -> PackedStringArray:
-	var scrap: int = 0
-	if _game_session != null and _game_session.state != null and _game_session.state.wallet != null:
-		scrap = _game_session.state.wallet.scrap
-	return _readouts_for(_profile_for(_player_starship()), scrap, _player_tally)
+	return _readouts_for(_player_tally)
 
-# The opponent's readouts, read from the encounter's ship. It owns no [Wallet], so scrap shows "—".
-# Adds the tiles the opponent matched of each kind.
+# The opponent's four resource readouts — its own matched-this-encounter tally.
 func _opponent_readouts() -> PackedStringArray:
-	return _readouts_for(_profile_for(_opponent_starship()), -1, _opponent_tally)
+	return _readouts_for(_opponent_tally)
 
-# Lays a stat profile out as the six tile-kind-ordered readouts: four stats, scrap (negative ⇒ "—",
-# for combatants with no wallet), and the anomaly placeholder. Adds that combatant's running tally to
-# every readout, scrap included — a wallet-less combatant just shows "—" with no tally.
-func _readouts_for(profile: StatBlock, scrap: int, tally: PackedInt32Array) -> PackedStringArray:
+# Lays a combatant's tally out as the four stat-tile readouts: the count matched of each kind this fight.
+func _readouts_for(tally: PackedInt32Array) -> PackedStringArray:
 	var out := PackedStringArray()
-	for kind: int in MatchTile.KIND_COUNT:
-		var base: int = 0
-		if kind == _SCRAP_KIND:
-			if scrap < 0:
-				out.append("—")  # no wallet (opponent) — no scrap resource
-				continue
-			base = scrap
-		elif _STAT_FOR_KIND.has(kind):
-			var stat: Stat.Type = _STAT_FOR_KIND[kind]
-			base = profile.value(stat)
-		out.append(str(base + _tally_at(tally, kind)))
+	for kind: int in _STAT_KINDS:
+		out.append(str(_tally_at(tally, kind)))
 	return out
-
-# A starship's summed stat profile (zeros when null or no modules are slotted). Summed here in the
-# view rather than on [ModuleGrid] — the grid is owned elsewhere; this just reads it.
-func _profile_for(starship: StarshipState) -> StatBlock:
-	var total := StatBlock.new()
-	if starship == null or starship.module_grid == null:
-		return total
-	for placed: PlacedModule in starship.module_grid.placed_modules():
-		if placed.module != null:
-			total.add(placed.module.stats)
-	return total
 
 # A kind's running matched-tile count from a combatant's tally (zero before the tally is sized in _ready).
 func _tally_at(tally: PackedInt32Array, kind: int) -> int:
@@ -232,22 +231,32 @@ func _unlock() -> void:
 func _compose_status() -> void:
 	status_text = _message
 
-# A resolved move ends the active combatant's turn and hands the board to the next. The player and the
-# AI opponent both resolve through here — the opponent's swap re-enters this on completion, handing the
-# turn back, so the volley stops once it's the player's turn again. A failed swap doesn't burn a turn.
-# Tallied matches bank into the portrait readouts and update between turns.
+# A resolved move ends the active combatant's turn and hands the board to the next — unless the move
+# cleared a run long enough for the [member MatchRules.extra_turn_min_match] rule, which keeps the board
+# with the mover for another go. The player and the AI opponent both resolve through here — the
+# opponent's swap re-enters this on completion, handing the turn back (or taking another), so the volley
+# stops once it's the player's turn again. A failed swap doesn't burn a turn. Tallied matches bank into
+# the portrait readouts and update between turns.
 func _on_move_resolved(made_match: bool, cells_cleared: int) -> void:
 	if not made_match:
+		_move_max_run = 0
 		_message = "No match — try another move."
 		_compose_status()
 		return
 	var mover: String = _active_name()
+	# Read and reset the move's longest run before the next move starts accumulating into it.
+	var max_run: int = _move_max_run
+	_move_max_run = 0
 	# The tally grew during the cascade (via _on_cells_cleared) — fold the new totals into the readouts.
 	_refresh_portraits()
-	if _encounter != null:
+	# The extra-turn rule: a long enough run lets the mover keep the board instead of passing it.
+	var go_again: bool = rules.extra_turn_min_match > 0 and max_run >= rules.extra_turn_min_match
+	if _encounter != null and not go_again:
 		_encounter.advance_turn()
 		_refresh_turn_tracker()
-	if cells_cleared > 0:
+	if go_again:
+		_message = "%s cleared %d tiles — match-%d, go again!" % [mover, cells_cleared, max_run]
+	elif cells_cleared > 0:
 		_message = "%s cleared %d tiles — %s's turn." % [mover, cells_cleared, _active_name()]
 	else:
 		_message = "%s moved — %s's turn." % [mover, _active_name()]
@@ -312,17 +321,45 @@ func _pass_opponent_turn() -> void:
 # running tally. Fires once per cascade step with the cells about to be removed, so the kinds are
 # still readable on the board.
 func _on_cells_cleared(board: GridState, cells: Array[Vector2i]) -> void:
+	# Track the longest straight run this move clears (across cascade steps) for the extra-turn rule.
+	_move_max_run = maxi(_move_max_run, _longest_run(board, cells))
 	if _encounter == null:
 		return
 	var active: int = _encounter.active_combatant()
+	var scrap_cleared: int = 0
+	var damage_cleared: int = 0
 	for cell: Vector2i in cells:
 		var kind: int = _kind_at(board, cell.x, cell.y)
-		if kind < 0 or kind >= _player_tally.size():
-			continue
-		if active == EncounterState.Combatant.PLAYER:
-			_player_tally[kind] += 1
-		else:
-			_opponent_tally[kind] += 1
+		match kind:
+			_SCRAP_KIND:
+				scrap_cleared += 1
+			_DAMAGE_KIND:
+				damage_cleared += 1
+			_ANOMALY_KIND:
+				pass  # anomaly is inert for now — matched, but wired to nothing
+			_:
+				_bank_stat_tile(active, kind)
+	# Scrap banks into the player's wallet (the opponent has none); damage depletes the other's health.
+	if scrap_cleared > 0 and active == EncounterState.Combatant.PLAYER:
+		_earn_scrap(scrap_cleared)
+	if damage_cleared > 0:
+		_encounter.deal_damage(_encounter.opponent_of(active), damage_cleared)
+		# Apply to the bar immediately, on the match — not deferred to when the move resolves.
+		_refresh_health()
+
+# Banks one matched stat tile into the active combatant's running tally (the portrait readouts).
+func _bank_stat_tile(active: int, kind: int) -> void:
+	if kind < 0 or kind >= _player_tally.size():
+		return
+	if active == EncounterState.Combatant.PLAYER:
+		_player_tally[kind] += 1
+	else:
+		_opponent_tally[kind] += 1
+
+# Adds matched scrap to the player's wallet (a no-op without a bound session, e.g. the standalone scene).
+func _earn_scrap(amount: int) -> void:
+	if _game_session != null and _game_session.state != null and _game_session.state.wallet != null:
+		_game_session.state.wallet.earn(amount)
 
 func _on_action_pressed(action_name: String) -> void:
 	_message = "%s — TBD." % action_name
@@ -383,13 +420,13 @@ func _generate_board() -> GridState:
 			state.place_object(0, _TileState.new(cells, _pick_kind_avoiding_runs(state, x, y)))
 	return state
 
-# An equal-frequency kind for a refill — the board is a generator, so it can't stall and a refill may
-# roll a fresh match (the cascades).
+# A weighted kind for a refill — the board is a generator, so it can't stall and a refill may roll a
+# fresh match (the cascades). Weights come from the encounter [member rules].
 func _pick_kind() -> int:
-	return _rng.randi_range(0, _KIND_COUNT - 1)
+	return _weighted_choice(_all_kinds)
 
 # A kind for cell (x, y) that doesn't complete a 3-run there, so a freshly generated board starts
-# stable; equal-frequency among the safe kinds.
+# stable; weighted (per the rules) among the safe kinds.
 func _pick_kind_avoiding_runs(state: GridState, x: int, y: int) -> int:
 	var safe: Array[int] = []
 	for kind: int in _KIND_COUNT:
@@ -397,7 +434,23 @@ func _pick_kind_avoiding_runs(state: GridState, x: int, y: int) -> int:
 			safe.append(kind)
 	if safe.is_empty():
 		return _pick_kind()
-	return safe[_rng.randi_range(0, safe.size() - 1)]
+	return _weighted_choice(safe)
+
+# Roulette-wheel pick over [param candidates], each kind weighted by the rules' spawn weight and drawn
+# from the board's seeded stream so generation stays reproducible. Falls back to a uniform pick when the
+# candidates carry no weight at all.
+func _weighted_choice(candidates: Array[int]) -> int:
+	var total: int = 0
+	for kind: int in candidates:
+		total += rules.weight_for(kind)
+	if total <= 0:
+		return candidates[_rng.randi_range(0, candidates.size() - 1)]
+	var roll: int = _rng.randi_range(0, total - 1)
+	for kind: int in candidates:
+		roll -= rules.weight_for(kind)
+		if roll < 0:
+			return kind
+	return candidates[candidates.size() - 1]
 
 func _would_complete_run(state: GridState, x: int, y: int, kind: int) -> bool:
 	if x >= 2 and _kind_at(state, x - 1, y) == kind and _kind_at(state, x - 2, y) == kind:
@@ -411,6 +464,30 @@ func _kind_at(state: GridState, x: int, y: int) -> int:
 	if tile == null:
 		return -1
 	return tile.kind
+
+# The length of the longest straight same-kind run within a cleared batch — what the extra-turn rule
+# measures a "match-N" by. Walks each axis from the cells that start a run (no same-kind predecessor),
+# so every maximal run is counted once. Diagonals are included for boards that match along them.
+func _longest_run(board: GridState, cells: Array[Vector2i]) -> int:
+	if cells.is_empty():
+		return 0
+	var kinds: Dictionary[Vector2i, int] = {}
+	for cell: Vector2i in cells:
+		kinds[cell] = _kind_at(board, cell.x, cell.y)
+	var axes: Array[Vector2i] = [Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1), Vector2i(1, -1)]
+	var best: int = 1
+	for cell: Vector2i in cells:
+		var kind: int = kinds[cell]
+		for axis: Vector2i in axes:
+			if kinds.get(cell - axis, -1) == kind:
+				continue  # not this run's head along the axis — it's measured from the head
+			var length: int = 1
+			var probe: Vector2i = cell + axis
+			while kinds.get(probe, -1) == kind:
+				length += 1
+				probe += axis
+			best = maxi(best, length)
+	return best
 
 func _on_regenerated() -> void:
 	if _grid == null:
