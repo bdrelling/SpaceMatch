@@ -31,6 +31,32 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 24
 
+[node name="TurnTracker" type="HBoxContainer" parent="Margins/Body"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="RoundLabel" type="Label" parent="Margins/Body/TurnTracker"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.66, 0.72, 0.85, 1)
+theme_override_font_sizes/font_size = 26
+text = "ROUND 1"
+vertical_alignment = 1
+
+[node name="Spacer" type="Control" parent="Margins/Body/TurnTracker"]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="TurnLabel" type="Label" parent="Margins/Body/TurnTracker"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.66, 0.72, 0.85, 1)
+theme_override_font_sizes/font_size = 26
+text = "TURN 1 / 2 · PLAYER"
+horizontal_alignment = 2
+vertical_alignment = 1
+
 [node name="Hud" type="HBoxContainer" parent="Margins/Body"]
 custom_minimum_size = Vector2(0, 420)
 layout_mode = 2

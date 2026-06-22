@@ -33,9 +33,12 @@ const _SCRAP_KIND: int = 4
 @onready var _canvas: BoardCanvas = %BoardCanvas
 @onready var _player_portrait: PortraitPanel = %PlayerPortrait
 @onready var _opponent_portrait: PortraitPanel = %OpponentPortrait
+@onready var _round_label: Label = %RoundLabel
+@onready var _turn_label: Label = %TurnLabel
 
 var _message: String = ""
 var _game_session: GameSession
+var _encounter: EncounterState
 
 var _session: GridSession
 var _view: GridView
@@ -80,7 +83,13 @@ func _ready() -> void:
 	# shell to drill (see [signal Minigame.drill_requested]).
 	_player_portrait.pressed.connect(func() -> void: drill_requested.emit())
 	_opponent_portrait.pressed.connect(_on_opponent_pressed)
+
+	# A transient encounter so the screen stands alone (e.g. running match.tscn directly); a bound
+	# session swaps in its own in [method bind_session].
+	if _encounter == null:
+		_encounter = EncounterState.new()
 	_refresh_portraits()
+	_refresh_turn_tracker()
 
 func actions() -> Array[MinigameAction]:
 	var none: Array[MinigameAction] = []
@@ -88,11 +97,16 @@ func actions() -> Array[MinigameAction]:
 
 #region Portraits
 
-## Binds the running game so the player portrait can read the starship's stats and [Wallet]. Called by
-## [MinigameScreen] when the game mounts this page.
+## Binds the running game so the portraits can read each ship's stats and the player's [Wallet], and
+## the top row can track the encounter's turns. Called by [MinigameScreen] when the game mounts this
+## page. Adopts the session's [EncounterState] (creating one if the encounter hasn't started).
 func bind_session(session: GameSession) -> void:
 	_game_session = session
+	if _game_session.state.encounter == null:
+		_game_session.state.encounter = EncounterState.new()
+	_encounter = _game_session.state.encounter
 	_refresh_portraits()
+	_refresh_turn_tracker()
 
 func _refresh_portraits() -> void:
 	if _player_portrait != null:
@@ -103,14 +117,26 @@ func _refresh_portraits() -> void:
 # The six readouts beneath the player portrait, tile-kind ordered: four starship stats, the scrap
 # balance, and the anomaly placeholder.
 func _player_readouts() -> PackedStringArray:
-	var profile := _starship_profile()
 	var scrap: int = 0
-	if _game_session != null and _game_session.state != null and _game_session.state.wallet != null:
-		scrap = _game_session.state.wallet.scrap
+	var starship: StarshipState = null
+	if _game_session != null and _game_session.state != null:
+		starship = _game_session.state.starship
+		if _game_session.state.wallet != null:
+			scrap = _game_session.state.wallet.scrap
+	return _readouts_for(_profile_for(starship), scrap)
+
+# The opponent's readouts, read from the encounter's ship. It owns no [Wallet], so scrap shows "—".
+func _opponent_readouts() -> PackedStringArray:
+	var starship: StarshipState = _encounter.opponent if _encounter != null else null
+	return _readouts_for(_profile_for(starship), -1)
+
+# Lays a stat profile out as the six tile-kind-ordered readouts: four stats, scrap (negative ⇒ "—",
+# for combatants with no wallet), and the anomaly placeholder.
+func _readouts_for(profile: StatBlock, scrap: int) -> PackedStringArray:
 	var out := PackedStringArray()
 	for kind: int in MatchTile.KIND_COUNT:
 		if kind == _SCRAP_KIND:
-			out.append(str(scrap))
+			out.append(str(scrap) if scrap >= 0 else "—")
 		elif _STAT_FOR_KIND.has(kind):
 			var stat: Stat.Type = _STAT_FOR_KIND[kind]
 			out.append(str(profile.value(stat)))
@@ -118,20 +144,10 @@ func _player_readouts() -> PackedStringArray:
 			out.append("—")  # anomaly — no stat yet (TBD)
 	return out
 
-# Opponent readouts are placeholders — there's no opponent entity yet (TBD).
-func _opponent_readouts() -> PackedStringArray:
-	var out := PackedStringArray()
-	for _kind: int in MatchTile.KIND_COUNT:
-		out.append("?")
-	return out
-
-# The player starship's summed stat profile (zeros when nothing is bound or no modules are slotted).
-# Summed here in the view rather than on [ModuleGrid] — the grid is owned elsewhere; this just reads it.
-func _starship_profile() -> StatBlock:
+# A starship's summed stat profile (zeros when null or no modules are slotted). Summed here in the
+# view rather than on [ModuleGrid] — the grid is owned elsewhere; this just reads it.
+func _profile_for(starship: StarshipState) -> StatBlock:
 	var total := StatBlock.new()
-	if _game_session == null or _game_session.state == null:
-		return total
-	var starship := _game_session.state.starship
 	if starship == null or starship.module_grid == null:
 		return total
 	for placed: PlacedModule in starship.module_grid.placed_modules():
@@ -168,14 +184,47 @@ func _unlock() -> void:
 func _compose_status() -> void:
 	status_text = _message
 
+# A resolved move ends the active combatant's turn and hands the board to the next (both human for
+# now — same board, just whose turn it is). A failed swap doesn't burn a turn.
 func _on_move_resolved(made_match: bool, cells_cleared: int) -> void:
 	if not made_match:
 		_message = "No match — try another move."
-	elif cells_cleared > 0:
-		_message = "Cleared %d tiles." % cells_cleared
+		_compose_status()
+		return
+	var mover: String = _active_name()
+	if _encounter != null:
+		_encounter.advance_turn()
+		_refresh_turn_tracker()
+	if cells_cleared > 0:
+		_message = "%s cleared %d tiles — %s's turn." % [mover, cells_cleared, _active_name()]
 	else:
-		_message = "Moved."
+		_message = "%s moved — %s's turn." % [mover, _active_name()]
 	_compose_status()
+
+# Repaints the top row (round, turn-of-round, whose turn) and highlights the active portrait.
+func _refresh_turn_tracker() -> void:
+	if _encounter == null:
+		return
+	if _round_label != null:
+		_round_label.text = "ROUND %d" % _encounter.round_number
+	if _turn_label != null:
+		var who: String = _name_for(_encounter.active_combatant()).to_upper()
+		_turn_label.text = "TURN %d / %d · %s" % [_encounter.turn_in_round, EncounterState.TURNS_PER_ROUND, who]
+	if _player_portrait != null:
+		_player_portrait.set_active(_encounter.active_combatant() == EncounterState.Combatant.PLAYER)
+	if _opponent_portrait != null:
+		_opponent_portrait.set_active(_encounter.active_combatant() == EncounterState.Combatant.OPPONENT)
+
+# The display name of the combatant whose turn it currently is.
+func _active_name() -> String:
+	if _encounter == null:
+		return _player_portrait.portrait_name
+	return _name_for(_encounter.active_combatant())
+
+func _name_for(combatant: EncounterState.Combatant) -> String:
+	if combatant == EncounterState.Combatant.OPPONENT:
+		return _opponent_portrait.portrait_name
+	return _player_portrait.portrait_name
 
 ## The how-to-play line for the active input mode.
 func _prompt_for_mode() -> String:

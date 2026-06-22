@@ -88,3 +88,9 @@ func _build() -> void:
 func set_readouts(values: PackedStringArray) -> void:
 	for i: int in mini(values.size(), _value_labels.size()):
 		_value_labels[i].text = values[i]
+
+## Frames this portrait as the active combatant (whose turn it is) by swapping in the active box.
+func set_active(active: bool) -> void:
+	var style: StyleBox = _STYLE_ACTIVE if active else _STYLE_NORMAL
+	add_theme_stylebox_override("normal", style)
+	add_theme_stylebox_override("focus", style)
