@@ -92,6 +92,44 @@ func test_settings_done_button_resumes_and_closes() -> void:
 	assert_bool(game._settings_overlay.visible).is_false()
 	game.queue_free()
 
+func test_settings_restart_button_resumes_and_replaces_session() -> void:
+	var game := Game.create()
+	add_child(game)
+	await await_idle_frame()
+	var first := game.session
+	PauseMonitor.pause()
+	var settings := game._settings_overlay.get_node("Settings") as SettingsScreen
+	# Restart from the panel resumes the game and rebuilds the session in place.
+	settings._restart_button.pressed.emit()
+	assert_bool(PauseMonitor.is_paused).is_false()
+	assert_object(game.session).is_not_same(first)
+	game.queue_free()
+
+func test_settings_quit_button_is_wired_to_the_shell() -> void:
+	var game := Game.create()
+	add_child(game)
+	await await_idle_frame()
+	var settings := game._settings_overlay.get_node("Settings") as SettingsScreen
+	# Quit transitions out through the real SceneLoader (which would free the test's current scene), so
+	# the press isn't fired here — assert the screen's signal reaches the shell's quit handler instead.
+	assert_bool(settings.quit_pressed.is_connected(game._on_settings_quit)).is_true()
+	game.queue_free()
+
+func test_settings_screen_buttons_emit_owner_actions() -> void:
+	# The screen only emits Restart/Quit; the shell acts on them. Verified on a standalone screen so no
+	# shell handler is attached to fire the real (scene-changing) quit.
+	var settings := (load("res://scenes/game/screens/settings_screen/settings_screen.tscn") as PackedScene).instantiate() as SettingsScreen
+	add_child(settings)
+	await await_idle_frame()
+	var fired := {"restart": false, "quit": false}
+	settings.restart_pressed.connect(func() -> void: fired["restart"] = true)
+	settings.quit_pressed.connect(func() -> void: fired["quit"] = true)
+	settings._restart_button.pressed.emit()
+	settings._quit_button.pressed.emit()
+	assert_bool(fired["restart"]).is_true()
+	assert_bool(fired["quit"]).is_true()
+	settings.queue_free()
+
 func test_trackpad_pan_pages_between_screens() -> void:
 	var pager := GamePager.new()
 	add_child(pager)

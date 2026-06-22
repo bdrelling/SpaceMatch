@@ -18,4 +18,6 @@ func _ready() -> void:
 			get_window().size = Vector2i((points * DeviceUtils.PREVIEW_SCALE).round())
 
 	Game.apply_window(get_window())
+	# Boots straight into the game for a fast dev loop. Eventually this lands on the title screen first
+	# (`SceneLoader.transition_to(MainMenu.create())`), which Play then advances into the game.
 	SceneLoader.transition_to(Game.create())

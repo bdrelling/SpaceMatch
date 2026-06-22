@@ -79,13 +79,16 @@ func _index_screens() -> void:
 		if _pager.screens[index] is MinigameScreen:
 			_stage_indices.append(index)
 
-# Connects the chrome: the cog opens Settings, the leading button drills/steps back between stages.
+# Connects the chrome: the cog opens Settings, the leading button drills/steps back between stages,
+# the Settings panel's Restart/Quit are handled by the shell (they touch the session and scene).
 func _wire_chrome() -> void:
 	_top_bar.settings_pressed.connect(_on_settings_pressed)
 	_top_bar.leading_pressed.connect(_on_leading_pressed)
 	PauseMonitor.paused.connect(_open_settings)
 	PauseMonitor.unpaused.connect(_close_settings)
 	_settings_dim().gui_input.connect(_on_settings_dim_input)
+	_settings_screen().restart_pressed.connect(_on_settings_restart)
+	_settings_screen().quit_pressed.connect(_on_settings_quit)
 	_pager.page_changed.connect(_on_page_changed)
 
 # Debug capture hook: `--tab=N` lands the game on the Nth playable stage at boot so a single
@@ -130,11 +133,26 @@ func _close_settings() -> void:
 func _settings_dim() -> Control:
 	return _settings_overlay.get_node("Dim")
 
+func _settings_screen() -> SettingsScreen:
+	return _settings_overlay.get_node("Settings") as SettingsScreen
+
 func _on_settings_dim_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and (event as InputEventMouseButton).pressed:
 		PauseMonitor.unpause()
 	elif event is InputEventScreenTouch and (event as InputEventScreenTouch).pressed:
 		PauseMonitor.unpause()
+
+# Restart from the Settings panel: resume first (the new game must run unpaused), then rebuild the
+# session in place — the chrome and pages persist.
+func _on_settings_restart() -> void:
+	PauseMonitor.unpause()
+	restart()
+
+# Quit from the Settings panel: resume so the tree isn't left paused under the menu, then transition
+# out of the game shell back to the main menu.
+func _on_settings_quit() -> void:
+	PauseMonitor.unpause()
+	SceneLoader.transition_to(MainMenu.create())
 
 # Shows the back arrow on a sub-screen and hides the leading button on the primary stage (which drills
 # from its own HUD), then points the chrome's actions and inventory strip at the page now visible.
