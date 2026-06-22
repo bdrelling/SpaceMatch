@@ -1,0 +1,22 @@
+class_name Wallet
+extends Resource
+## The player's currency — scrap for now. A named resource rather than a loose int on [GameState] so it
+## serializes cleanly and can move whole onto a per-player object later (e.g. co-op) without touching
+## callers.
+
+@export var scrap: int = 0
+
+## True when [param cost] scrap is affordable.
+func can_afford(cost: int) -> bool:
+	return scrap >= cost
+
+## Deducts [param cost] and returns true; leaves the wallet untouched and returns false if short.
+func spend(cost: int) -> bool:
+	if not can_afford(cost):
+		return false
+	scrap -= cost
+	return true
+
+## Adds [param amount] scrap.
+func earn(amount: int) -> void:
+	scrap += amount

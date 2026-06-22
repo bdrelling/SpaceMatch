@@ -1,7 +1,7 @@
 class_name ModuleBlueprint
 extends Resource
 ## Static data for a ship module: its identity, look, footprint [PieceShape], and the [StatBlock] it
-## contributes to a ship's stat profile when slotted into a [ShipModuleGrid]. One shared resource per
+## contributes to a ship's stat profile when slotted into a [ModuleGrid]. One shared resource per
 ## module type.
 
 @export var id: int = -1

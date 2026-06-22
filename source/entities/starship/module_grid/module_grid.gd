@@ -1,4 +1,4 @@
-class_name ShipModuleGrid
+class_name ModuleGrid
 extends Resource
 ## A ship's module grid: a grid_system [GridState] (its silhouette plus the modules packed into it)
 ## wrapped in a module-level API. The grid owns placement — a placed module is a [GridObjectState]

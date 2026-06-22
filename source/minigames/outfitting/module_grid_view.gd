@@ -1,6 +1,6 @@
-class_name ShipGridView
+class_name ModuleGridView
 extends Node2D
-## Draws a [ShipModuleGrid]: the bay's existing cells as a framed grid (missing cells leave gaps,
+## Draws a [ModuleGrid]: the bay's existing cells as a framed grid (missing cells leave gaps,
 ## carving the hull silhouette), the packed modules as colored footprints, and a destination
 ## preview. Drawn from the local origin so a [BoardCanvas] frames, centers, and scales it.
 
@@ -12,12 +12,12 @@ const _INVALID_PREVIEW := Color(0.9, 0.35, 0.3, 0.45)
 const _CELL_INSET := 1.0
 
 var cell_size: float = 96.0
-var grid: ShipModuleGrid
+var grid: ModuleGrid
 
 var _preview_cells: Array[Vector2i] = []
 var _preview_valid := false
 
-func configure(module_grid: ShipModuleGrid, cell_size_px: float) -> void:
+func configure(module_grid: ModuleGrid, cell_size_px: float) -> void:
 	grid = module_grid
 	cell_size = cell_size_px
 	if not grid.changed.is_connected(queue_redraw):
@@ -29,7 +29,7 @@ func content_size() -> Vector2:
 	return Vector2(grid.columns * cell_size, grid.rows * cell_size) if grid != null else Vector2.ZERO
 
 ## Bay cell under [param global_position] (a [BoardCanvas]-forwarded global point), or (-1, -1)
-## outside the bounding grid. Holes return their coordinate too; callers gate on [ShipModuleGrid].
+## outside the bounding grid. Holes return their coordinate too; callers gate on [ModuleGrid].
 func cell_at(global_position: Vector2) -> Vector2i:
 	if grid == null:
 		return Vector2i(-1, -1)

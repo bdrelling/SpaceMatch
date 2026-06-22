@@ -1,6 +1,6 @@
 class_name PlacedModule
 extends RefCounted
-## A module as placed on a [ShipModuleGrid]: its [ModuleBlueprint] and the absolute cells it covers.
+## A module as placed on a [ModuleGrid]: its [ModuleBlueprint] and the absolute cells it covers.
 ## A read-only projection of a grid occupant — the grid owns the placement; this is built on read.
 
 var module: ModuleBlueprint

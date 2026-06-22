@@ -1,12 +1,12 @@
 extends GdUnitTestSuite
-## Tests ShipModuleGrid placement against its grid_system silhouette.
+## Tests ModuleGrid placement against its grid_system silhouette.
 
-func _grid(cells: Array[Vector2i]) -> ShipModuleGrid:
+func _grid(cells: Array[Vector2i]) -> ModuleGrid:
 	var generator := ShapedGridGenerator.new()
 	generator.width = 3
 	generator.height = 3
 	generator.usable_cells = cells
-	var module_grid := ShipModuleGrid.new()
+	var module_grid := ModuleGrid.new()
 	module_grid.grid = generator.generate()
 	return module_grid
 

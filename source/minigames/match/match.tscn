@@ -1,10 +1,9 @@
-[gd_scene load_steps=6 format=3 uid="uid://b8match0001"]
+[gd_scene load_steps=5 format=3 uid="uid://b8match0001"]
 
 [ext_resource type="Script" path="res://minigames/match/match.gd" id="1_match"]
 [ext_resource type="Script" uid="uid://bhhb1ur48vcvr" path="res://addons/grid_system/view/board_canvas.gd" id="2_canvas"]
-[ext_resource type="StyleBoxFlat" path="res://ui/styles/hud_placeholder.tres" id="3_hud"]
-[ext_resource type="StyleBoxFlat" path="res://ui/styles/board_panel.tres" id="4_board"]
-[ext_resource type="StyleBoxFlat" path="res://ui/styles/hud_box_active.tres" id="5_active"]
+[ext_resource type="StyleBoxFlat" path="res://ui/styles/board_panel.tres" id="3_board"]
+[ext_resource type="Script" path="res://minigames/match/portrait_panel.gd" id="4_portrait"]
 
 [node name="Match" type="Control"]
 layout_mode = 3
@@ -38,102 +37,36 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 16
 
-[node name="PlayerBox" type="Button" parent="Margins/Body/Hud"]
+[node name="PlayerPortrait" type="Button" parent="Margins/Body/Hud"]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-focus_mode = 0
-theme_override_styles/focus = ExtResource("3_hud")
-theme_override_styles/hover = ExtResource("5_active")
-theme_override_styles/pressed = ExtResource("5_active")
-theme_override_styles/normal = ExtResource("3_hud")
+script = ExtResource("4_portrait")
+glyph = "▦"
+portrait_name = "Player"
 
-[node name="Center" type="CenterContainer" parent="Margins/Body/Hud/PlayerBox"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-
-[node name="Column" type="VBoxContainer" parent="Margins/Body/Hud/PlayerBox/Center"]
+[node name="Versus" type="Label" parent="Margins/Body/Hud"]
 layout_mode = 2
-mouse_filter = 2
-theme_override_constants/separation = 8
-alignment = 1
-
-[node name="Icon" type="Label" parent="Margins/Body/Hud/PlayerBox/Center/Column"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_colors/font_color = Color(0.78, 0.82, 0.95, 1)
-theme_override_font_sizes/font_size = 72
-horizontal_alignment = 1
-text = "▦"
-
-[node name="Name" type="Label" parent="Margins/Body/Hud/PlayerBox/Center/Column"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_colors/font_color = Color(0.66, 0.72, 0.85, 1)
-theme_override_font_sizes/font_size = 30
-horizontal_alignment = 1
-text = "Player"
-
-[node name="HudCenter" type="PanelContainer" parent="Margins/Body/Hud"]
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 3
-mouse_filter = 2
-theme_override_styles/panel = ExtResource("3_hud")
-
-[node name="Label" type="Label" parent="Margins/Body/Hud/HudCenter"]
-layout_mode = 2
-mouse_filter = 2
 theme_override_colors/font_color = Color(0.42, 0.47, 0.64, 1)
 theme_override_font_sizes/font_size = 36
-horizontal_alignment = 1
+text = "VS"
 vertical_alignment = 1
-text = "HUD / TBD"
 
-[node name="RightBox" type="PanelContainer" parent="Margins/Body/Hud"]
+[node name="OpponentPortrait" type="Button" parent="Margins/Body/Hud"]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-mouse_filter = 2
-theme_override_styles/panel = ExtResource("3_hud")
-
-[node name="Center" type="CenterContainer" parent="Margins/Body/Hud/RightBox"]
-layout_mode = 2
-mouse_filter = 2
-
-[node name="Column" type="VBoxContainer" parent="Margins/Body/Hud/RightBox/Center"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_constants/separation = 8
-alignment = 1
-
-[node name="Icon" type="Label" parent="Margins/Body/Hud/RightBox/Center/Column"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_colors/font_color = Color(0.42, 0.47, 0.64, 1)
-theme_override_font_sizes/font_size = 60
-horizontal_alignment = 1
-text = "✦"
-
-[node name="Name" type="Label" parent="Margins/Body/Hud/RightBox/Center/Column"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_colors/font_color = Color(0.42, 0.47, 0.64, 1)
-theme_override_font_sizes/font_size = 30
-horizontal_alignment = 1
-text = "TBD"
+script = ExtResource("4_portrait")
+glyph = "✦"
+portrait_name = "Opponent"
 
 [node name="BoardPanel" type="PanelContainer" parent="Margins/Body"]
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
-theme_override_styles/panel = ExtResource("4_board")
+theme_override_styles/panel = ExtResource("3_board")
 
 [node name="BoardCanvas" type="Control" parent="Margins/Body/BoardPanel"]
 unique_name_in_owner = true

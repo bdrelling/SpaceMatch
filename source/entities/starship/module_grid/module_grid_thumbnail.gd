@@ -1,13 +1,13 @@
-class_name ShipGridThumbnail
+class_name ModuleGridThumbnail
 extends Control
-## Low-resolution, read-only sample of a [ShipModuleGrid]: the hull silhouette plus its packed modules,
+## Low-resolution, read-only sample of a [ModuleGrid]: the hull silhouette plus its packed modules,
 ## scaled to fit this control. For at-a-glance previews (e.g. an outpost's landing pads); the
-## interactive board is [ShipGridView].
+## interactive board is [ModuleGridView].
 
 const _CELL := Color(0.27, 0.33, 0.51)
 const _CELL_BORDER := Color(0.35, 0.41, 0.57, 0.6)
 
-var grid: ShipModuleGrid:
+var grid: ModuleGrid:
 	set(value):
 		grid = value
 		queue_redraw()

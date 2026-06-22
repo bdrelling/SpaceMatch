@@ -3,13 +3,24 @@ extends Minigame
 ## Match-3 minigame. A board of tiles: grab a tile and drag it toward a neighbour to swap
 ## ([[SwapInteraction]]), line up three-or-more of one kind and they pop ([[MatchClearPassive]]). Tiles
 ## fall and fresh ones stream in ([[GravityPassive]]); the board is an equal-frequency generator, so it
-## never stalls. Self-contained — it owns its tiles and rules and references nothing outside this folder.
+## never stalls. The board owns its tiles and rules; the encounter HUD around it (the two portraits)
+## reads the bound game's starship stats and [Wallet] once a session is bound.
 
 const _BOARD_WIDTH: int = 8
 const _BOARD_HEIGHT: int = 8
 const _CELL_SIZE: float = 64.0
 const _MIN_RUN: int = 3
 const _KIND_COUNT: int = MatchTile.KIND_COUNT
+
+# Tile kind → the starship stat shown beneath the player portrait, in [MatchTile] kind order. Scrap
+# (kind 4) shows the currency balance instead; the sixth tile (anomaly) has no stat yet (TBD).
+const _STAT_FOR_KIND := {
+	0: Stat.Type.POWER,    # combat — red
+	1: Stat.Type.SPEED,    # propulsion — yellow
+	2: Stat.Type.SENSORS,  # science — green
+	3: Stat.Type.SHIELDS,  # defense — blue
+}
+const _SCRAP_KIND: int = 4
 
 ## Forwarded to the blueprint as the board's seed. Zero rolls a fresh board each generation.
 @export var board_seed: int = 0
@@ -20,13 +31,17 @@ const _KIND_COUNT: int = MatchTile.KIND_COUNT
 @export var allow_diagonal: bool = false
 
 @onready var _canvas: BoardCanvas = %BoardCanvas
+@onready var _player_portrait: PortraitPanel = %PlayerPortrait
+@onready var _opponent_portrait: PortraitPanel = %OpponentPortrait
 
 var _message: String = ""
+var _game_session: GameSession
 
 var _session: GridSession
 var _view: GridView
 var _grid: Grid
 var _match_view: MatchBoardView
+var _gravity: MatchGravity
 var _rng := RandomNumberGenerator.new()
 
 func _ready() -> void:
@@ -50,18 +65,103 @@ func _ready() -> void:
 	# The canvas feeds pointer events to the view from its _gui_input.
 	_canvas.input_handler = _match_view.handle_event
 
+	# The "unlock" mechanic: an idle physics overlay mounted alongside the board, woken by a keypress.
+	_gravity = MatchGravity.new()
+	_gravity.setup(_CELL_SIZE, _BOARD_WIDTH, _BOARD_HEIGHT, _session, _spawn_tile)
+	_canvas.add_child(_gravity)
+
 	_session.regenerated.connect(_on_regenerated)
 	_session.regenerate()
 	_message = _prompt_for_mode()
 	_compose_status()
 
-	# The "Player" box in the HUD drills into Outfitting. The board names no destination — it just asks
-	# the shell to drill (see [signal Minigame.drill_requested]).
-	(%PlayerBox as Button).pressed.connect(func() -> void: drill_requested.emit())
+	# Tapping your own portrait drills into Outfitting (read-only viewing is TBD); tapping the opponent
+	# opens their intel (TBD — no opponent entity yet). The board names no destination — it just asks the
+	# shell to drill (see [signal Minigame.drill_requested]).
+	_player_portrait.pressed.connect(func() -> void: drill_requested.emit())
+	_opponent_portrait.pressed.connect(_on_opponent_pressed)
+	_refresh_portraits()
 
 func actions() -> Array[MinigameAction]:
 	var none: Array[MinigameAction] = []
 	return none
+
+#region Portraits
+
+## Binds the running game so the player portrait can read the starship's stats and [Wallet]. Called by
+## [MinigameScreen] when the game mounts this page.
+func bind_session(session: GameSession) -> void:
+	_game_session = session
+	_refresh_portraits()
+
+func _refresh_portraits() -> void:
+	if _player_portrait != null:
+		_player_portrait.set_readouts(_player_readouts())
+	if _opponent_portrait != null:
+		_opponent_portrait.set_readouts(_opponent_readouts())
+
+# The six readouts beneath the player portrait, tile-kind ordered: four starship stats, the scrap
+# balance, and the anomaly placeholder.
+func _player_readouts() -> PackedStringArray:
+	var profile := _starship_profile()
+	var scrap: int = 0
+	if _game_session != null and _game_session.state != null and _game_session.state.wallet != null:
+		scrap = _game_session.state.wallet.scrap
+	var out := PackedStringArray()
+	for kind: int in MatchTile.KIND_COUNT:
+		if kind == _SCRAP_KIND:
+			out.append(str(scrap))
+		elif _STAT_FOR_KIND.has(kind):
+			var stat: Stat.Type = _STAT_FOR_KIND[kind]
+			out.append(str(profile.value(stat)))
+		else:
+			out.append("—")  # anomaly — no stat yet (TBD)
+	return out
+
+# Opponent readouts are placeholders — there's no opponent entity yet (TBD).
+func _opponent_readouts() -> PackedStringArray:
+	var out := PackedStringArray()
+	for _kind: int in MatchTile.KIND_COUNT:
+		out.append("?")
+	return out
+
+# The player starship's summed stat profile (zeros when nothing is bound or no modules are slotted).
+# Summed here in the view rather than on [ModuleGrid] — the grid is owned elsewhere; this just reads it.
+func _starship_profile() -> StatBlock:
+	var total := StatBlock.new()
+	if _game_session == null or _game_session.state == null:
+		return total
+	var starship := _game_session.state.starship
+	if starship == null or starship.module_grid == null:
+		return total
+	for placed: PlacedModule in starship.module_grid.placed_modules():
+		if placed.module != null:
+			total.add(placed.module.stats)
+	return total
+
+# Tapping the opponent will open their intel (module layout / skills / hints) — TBD, no opponent yet.
+func _on_opponent_pressed() -> void:
+	_message = "Opponent intel — TBD."
+	_compose_status()
+
+#endregion
+
+# Press G to unlock gravity — the tiles fall off the board into a physics heap. One-way for now.
+func _unhandled_key_input(event: InputEvent) -> void:
+	if _gravity == null or _gravity.is_active():
+		return
+	var key := event as InputEventKey
+	if key != null and key.pressed and not key.echo and key.keycode == KEY_G:
+		_unlock()
+		get_viewport().set_input_as_handled()
+
+# Mount the overlay on the board's current on-screen framing, hand physics the tiles, and kill swap input.
+func _unlock() -> void:
+	_gravity.position = _view.position
+	_gravity.unlock(_grid, _view.scale.x)
+	_canvas.input_handler = func(_event: InputEvent) -> bool: return false
+	_message = "Gravity unlocked — the tiles broke free."
+	_compose_status()
 
 #region Match-3
 
