@@ -30,6 +30,8 @@ func action() -> Button:
 func _build() -> void:
 	if _catalog == null:
 		return
+	if not _catalog.directory.is_empty():
+		add_child(DebugRow.nav("Regenerate from disk", "", _on_regenerate))
 	var items := _catalog.entries()
 	if items.is_empty():
 		var empty := Label.new()
@@ -51,3 +53,7 @@ func _on_add() -> void:
 	rebuild()
 	if entry != null:
 		_open(entry)
+
+func _on_regenerate() -> void:
+	_catalog.regenerate()
+	rebuild()

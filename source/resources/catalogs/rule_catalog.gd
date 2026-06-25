@@ -1,8 +1,9 @@
 class_name RuleCatalog
 extends Catalog
 ## The catalog of [MatchRules] — named rule sets a match can run. The first entry is the active set the
-## board uses (see [DebugConfig.match_rules]); its `default.tres` seed is the standard SpaceMatch rules.
-## The editor edits a set via the existing [MatchRulesView].
+## board uses (see [DebugConfig.match_rules]). Rule sets are hand-authored (the catalog has no directory,
+## so [method regenerate] is a no-op); its code-built default is the standard SpaceMatch rules. The editor
+## edits a set via the existing [MatchRulesView].
 
 @export var rulesets: Array[MatchRules] = []
 

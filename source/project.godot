@@ -30,7 +30,7 @@ SceneLoader="*uid://b1w3ce6q6lcos"
 PauseMonitor="*uid://0lyw7qh8m2oe"
 ScreenshotCapture="*uid://bm5r8pmyrk1vs"
 DeviceOrientation="*res://addons/utilities/device/device_orientation.gd"
-Catalogs="*res://catalogs/catalogs.gd"
+Catalogs="*res://resources/catalogs/catalogs.gd"
 DebugConfig="*res://scenes/debug/debug_config.gd"
 
 [debug]

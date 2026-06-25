@@ -1,19 +1,11 @@
 class_name ModuleCatalog
 extends Catalog
-## The catalog of [ModuleBlueprint]s — every module that can be slotted into a grid. Its `default.tres`
-## seed gathers the authored module resources; the editor can add and edit modules in memory.
+## The catalog of [ModuleBlueprint]s — every module that can be slotted into a grid. It gathers every
+## authored module resource from its directory; the editor can add and edit modules in memory.
+
+const _DIRECTORY := "res://resources/items/modules"
 
 @export var modules: Array[ModuleBlueprint] = []
-
-# The authored module resources the default catalog ships with.
-const _DEFAULT_PATHS: Array[String] = [
-	"res://resources/items/modules/reactor_item_blueprint.tres",
-	"res://resources/items/modules/engine_item_blueprint.tres",
-	"res://resources/items/modules/shield_generator_item_blueprint.tres",
-	"res://resources/items/modules/sensor_array_item_blueprint.tres",
-	"res://resources/items/modules/life_support_item_blueprint.tres",
-	"res://resources/items/modules/laser_cannon_item_blueprint.tres",
-]
 
 func entries() -> Array:
 	return modules
@@ -38,6 +30,9 @@ func remove_entry(entry: Resource) -> void:
 	if module != null:
 		modules.erase(module)
 
+func matches(entry: Resource) -> bool:
+	return entry is ModuleBlueprint
+
 # The next free id above the modules already present (ids are 1000+).
 func _next_id() -> int:
 	var highest := 999
@@ -48,8 +43,6 @@ func _next_id() -> int:
 static func default() -> ModuleCatalog:
 	var catalog := ModuleCatalog.new()
 	catalog.catalog_name = "Modules"
-	for path: String in _DEFAULT_PATHS:
-		var module: ModuleBlueprint = load(path)
-		if module != null:
-			catalog.modules.append(module)
+	catalog.directory = _DIRECTORY
+	catalog.regenerate()
 	return catalog

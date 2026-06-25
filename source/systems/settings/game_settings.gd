@@ -3,7 +3,7 @@ extends RefCounted
 ## Typed accessor for the [code]game[/code] settings group.
 ##
 ## Reads resolve to the player's explicit override when one exists, otherwise to
-## the shipped default from [member DEFAULTS_PATH]. Assigning a property records
+## the shipped default from [member DEFAULTS]. Assigning a property records
 ## an override and persists it; [method clear] drops an override so the setting
 ## falls back to the default again. Only overridden keys are written to
 ## [member SAVE_PATH], so changing a default later still reaches players who
@@ -11,15 +11,17 @@ extends RefCounted
 
 signal changed
 
-const DEFAULTS_PATH: String = "res://systems/settings/game_settings_defaults.tres"
+## The shipped default for each setting, keyed by name. Reads fall back here when
+## the player has no override. Empty for now — the 3D camera/player options
+## (camera_mode, invert_y_axis, sprint_mode) were removed with the overworld; add
+## 2D game settings here as they arrive.
+const DEFAULTS: Dictionary = {}
 const SAVE_PATH: String = "user://game_settings.cfg"
 const SECTION: String = "game"
 
-var _defaults: GameSettingsData
 var _overrides: Dictionary
 
 func _init() -> void:
-	_load_defaults()
 	_load_overrides()
 
 ## Returns [code]true[/code] when [param key] has no override and resolves to the default.
@@ -28,7 +30,7 @@ func is_default(key: StringName) -> bool:
 
 ## Returns the shipped default value for [param key], ignoring any override.
 func get_default(key: StringName) -> Variant:
-	return _defaults.get(key)
+	return DEFAULTS.get(key)
 
 ## Drops all overrides so every setting falls back to its shipped default.
 func clear_all() -> void:
@@ -52,14 +54,6 @@ func _set_override(key: StringName, value: Variant) -> void:
 	_overrides[key] = value
 	_save()
 	changed.emit()
-
-func _load_defaults() -> void:
-	var resource: Resource = load(DEFAULTS_PATH)
-	var defaults: GameSettingsData = resource as GameSettingsData
-	if defaults == null:
-		Log.warning("GameSettings: defaults missing at %s; using built-in defaults." % DEFAULTS_PATH)
-		defaults = GameSettingsData.new()
-	_defaults = defaults
 
 func _load_overrides() -> void:
 	_overrides = {}

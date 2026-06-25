@@ -1,12 +1,12 @@
 class_name ModuleGridCatalog
 extends Catalog
 ## The catalog of [ModuleGridBlueprint]s — bay layouts (dimensions, hull silhouette, and the modules
-## stamped into them). Its `default.tres` seed holds the standard bay; the editor can add grids and
+## stamped into them). It gathers every authored bay from its directory; the editor can add grids and
 ## (next step) arrange modules in them.
 
-@export var grids: Array[ModuleGridBlueprint] = []
+const _DIRECTORY := "res://resources/starships"
 
-const _DEFAULT_PATH := "res://resources/starships/default_module_grid_blueprint.tres"
+@export var grids: Array[ModuleGridBlueprint] = []
 
 func entries() -> Array:
 	return grids
@@ -27,10 +27,12 @@ func remove_entry(entry: Resource) -> void:
 	if grid != null:
 		grids.erase(grid)
 
+func matches(entry: Resource) -> bool:
+	return entry is ModuleGridBlueprint
+
 static func default() -> ModuleGridCatalog:
 	var catalog := ModuleGridCatalog.new()
 	catalog.catalog_name = "Module Grids"
-	var grid: ModuleGridBlueprint = load(_DEFAULT_PATH)
-	if grid != null:
-		catalog.grids.append(grid)
+	catalog.directory = _DIRECTORY
+	catalog.regenerate()
 	return catalog

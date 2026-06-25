@@ -1,11 +1,11 @@
 class_name StarshipCatalog
 extends Catalog
-## The catalog of [StarshipBlueprint]s — named ships, each pairing a name with a module-grid layout. Its
-## `default.tres` seed holds the standard ship; the editor can add ships and (next step) assign grids.
+## The catalog of [StarshipBlueprint]s — named ships, each pairing a name with a module-grid layout. It
+## gathers every authored ship from its directory; the editor can add ships and (next step) assign grids.
+
+const _DIRECTORY := "res://resources/starships"
 
 @export var starships: Array[StarshipBlueprint] = []
-
-const _DEFAULT_PATH := "res://resources/starships/default_starship_blueprint.tres"
 
 func entries() -> Array:
 	return starships
@@ -27,10 +27,12 @@ func remove_entry(entry: Resource) -> void:
 	if ship != null:
 		starships.erase(ship)
 
+func matches(entry: Resource) -> bool:
+	return entry is StarshipBlueprint
+
 static func default() -> StarshipCatalog:
 	var catalog := StarshipCatalog.new()
 	catalog.catalog_name = "Starships"
-	var ship: StarshipBlueprint = load(_DEFAULT_PATH)
-	if ship != null:
-		catalog.starships.append(ship)
+	catalog.directory = _DIRECTORY
+	catalog.regenerate()
 	return catalog

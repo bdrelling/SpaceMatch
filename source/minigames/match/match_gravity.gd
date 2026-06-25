@@ -15,8 +15,11 @@ extends Node2D
 ## bake it into one effective cell size.
 
 const _MIN_RUN: int = 3
-## Glyph half-extent in cell units, matching [constant MatchTile._HALF]. Colliders are cut to this.
+## Glyph half-extent in cell units, matching [constant MatchTile._HALF]. Used by the fallback collider
+## for kinds without baked art.
 const _HALF: float = 0.40
+## Sprite-traced collision outlines, one per art kind, in unit cell-space. See [TileCollisionSet].
+const _COLLISION_SET: TileCollisionSet = preload("res://minigames/match/tile_collision_set.tres")
 ## Wall thickness (px) and how far the side walls rise above the board to corral a tall pile.
 const _WALL: float = 40.0
 const _CEILING_RISE: float = 1024.0
@@ -239,44 +242,24 @@ func _attach_body(tile: MatchTile, kind: int, object: GridObjectState, pos: Vect
 	rec.object = object
 	_by_body[body] = rec
 
-# A collider cut to the kind's glyph silhouette so shapes interlock as they pile. Convex per kind, so the
-# physics server never has to decompose; the atom is a disc (its orbits are mostly empty space).
+# A collider cut to the kind's sprite silhouette so shapes interlock as they pile. The outline is
+# traced from the tile art (see [TileCollisionSet]) and scaled to our effective cell; build_mode SOLIDS
+# lets the physics server convex-decompose a concave silhouette. Kinds without baked art (damage) fall
+# back to a plain pentagon.
 func _collider_for(kind: int) -> Node2D:
-	if kind == 2:
-		var shape := CollisionShape2D.new()
-		var circle := CircleShape2D.new()
-		circle.radius = _HALF * _eff_cell
-		shape.shape = circle
-		return shape
 	var poly := CollisionPolygon2D.new()
 	poly.polygon = _outline_for(kind)
 	return poly
 
 func _outline_for(kind: int) -> PackedVector2Array:
-	var cs: float = _eff_cell
-	match kind:
-		0:  # combat — tall diamond
-			var w: float = _HALF * 0.82 * cs
-			var h: float = _HALF * cs
-			return PackedVector2Array([Vector2(0, -h), Vector2(w, 0), Vector2(0, h), Vector2(-w, 0)])
-		1:  # propulsion — engine-pod silhouette (domed top, flared skirt)
-			var bw: float = _HALF * 0.42 * cs
-			var dome_y: float = (-_HALF + _HALF * 0.42) * cs
-			var skirt: float = _HALF * 0.95 * cs
-			return PackedVector2Array([
-				Vector2(0, -_HALF * cs), Vector2(bw, dome_y), Vector2(bw * 1.25, skirt),
-				Vector2(-bw * 1.25, skirt), Vector2(-bw, dome_y)])
-		3:  # defense — shield kite (flat top, point bottom)
-			var w: float = _HALF * 0.85 * cs
-			var top: float = -_HALF * 0.8 * cs
-			var bottom: float = _HALF * 0.9 * cs
-			var mid: float = _HALF * 0.22 * cs
-			return PackedVector2Array([
-				Vector2(-w, top), Vector2(w, top), Vector2(w, mid), Vector2(0, bottom), Vector2(-w, mid)])
-		4:  # scrap — flat-top hexagon
-			return _ngon(6, _HALF * cs, 0.0)
-		_:  # pentagon
-			return _ngon(5, _HALF * cs, -PI / 2.0)
+	var baked: PackedVector2Array = _COLLISION_SET.outline_for(kind)
+	if not baked.is_empty():
+		var scaled := PackedVector2Array()
+		for point: Vector2 in baked:
+			scaled.append(point * _eff_cell)
+		return scaled
+	# No art for this kind — a plain pentagon stands in.
+	return _ngon(5, _HALF * _eff_cell, -PI / 2.0)
 
 func _ngon(sides: int, radius: float, rotation: float) -> PackedVector2Array:
 	var points := PackedVector2Array()
