@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ModuleGridCatalog" format=3]
+
+[ext_resource type="Script" path="res://entities/starship/module_grid/module_grid_blueprint.gd" id="1_kk581"]
+[ext_resource type="Resource" path="res://resources/starships/default_module_grid_blueprint.tres" id="2_yvpn2"]
+[ext_resource type="Script" path="res://catalogs/module_grid_catalog.gd" id="3_dttnl"]
+
+[resource]
+script = ExtResource("3_dttnl")
+grids = Array[ExtResource("1_kk581")]([ExtResource("2_yvpn2")])
+catalog_name = "Module Grids"

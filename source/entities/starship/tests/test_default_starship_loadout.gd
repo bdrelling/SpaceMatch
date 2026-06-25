@@ -1,19 +1,23 @@
 extends GdUnitTestSuite
-## The default starship spawns pre-outfitted: five modules laid into its bay. Player and opponent both
-## generate from this same blueprint, so they start with an identical loadout. Guards the authored
-## default — wired through [StarshipGenerator] from the .tres, so a broken placement or a deleted module
-## fails here.
+## The default starships spawn with a loadout laid into the bay. The player default carries a Warp Core (its
+## entry into warp); the computer default deliberately doesn't, so the AI can't Jump (a human PvP opponent
+## would use the player default instead). Guards the authored loadouts — wired through [StarshipGenerator]
+## from the .tres, so a broken placement or a deleted module fails here.
 
 const _DEFAULT_STARSHIP := preload("res://resources/starships/default_starship_blueprint.tres")
+const _COMPUTER_STARSHIP := preload("res://resources/starships/computer_default_starship_blueprint.tres")
 
 func _default_grid() -> ModuleGrid:
 	return StarshipGenerator.generate(_DEFAULT_STARSHIP).module_grid
 
-func test_default_ship_has_five_modules() -> void:
+func _computer_grid() -> ModuleGrid:
+	return StarshipGenerator.generate(_COMPUTER_STARSHIP).module_grid
+
+func test_default_ship_has_six_modules() -> void:
 	var grid := _default_grid()
-	assert_int(grid.placed_modules().size()).is_equal(5)
-	# shield 2 + life support 2 + reactor 4 + sensor 1 + engine 4
-	assert_int(grid.filled_cell_count()).is_equal(13)
+	assert_int(grid.placed_modules().size()).is_equal(6)
+	# shield 2 + life support 2 + reactor 4 + sensor 1 + engine 4 + warp core 1
+	assert_int(grid.filled_cell_count()).is_equal(14)
 
 func test_default_modules_sit_where_authored() -> void:
 	var grid := _default_grid()
@@ -22,24 +26,43 @@ func test_default_modules_sit_where_authored() -> void:
 	assert_str(grid.module_at(Vector2i(2, 2)).name).is_equal("Reactor")
 	assert_str(grid.module_at(Vector2i(4, 2)).name).is_equal("Sensor Array")
 	assert_str(grid.module_at(Vector2i(2, 4)).name).is_equal("Engine")
+	assert_str(grid.module_at(Vector2i(4, 3)).name).is_equal("Warp Core")
 
 func test_default_stat_profile() -> void:
 	var total := StatBlock.new()
 	for placed: PlacedModule in _default_grid().placed_modules():
 		total.add(placed.module.stats)
-	assert_int(total.power).is_equal(0)         # reactor +5, engine -2, shield -2, sensor -1
+	assert_int(total.power).is_equal(0)         # power is combat power; no default (non-weapon) module grants it
 	assert_int(total.speed).is_equal(4)          # engine
 	assert_int(total.shields).is_equal(4)        # shield generator
 	assert_int(total.sensors).is_equal(4)        # sensor array
 	assert_int(total.life_support).is_equal(5)   # life support
+	assert_int(total.warp_capacity).is_equal(4)  # warp core
 	assert_int(total.cargo).is_equal(0)
 	assert_int(total.fuel).is_equal(0)
 	assert_int(total.armor).is_equal(0)
 
-func test_player_and_opponent_share_the_same_loadout() -> void:
-	var player := _default_grid()
-	var opponent := _default_grid()
-	assert_int(opponent.placed_modules().size()).is_equal(player.placed_modules().size())
-	for placed: PlacedModule in player.placed_modules():
-		for cell: Vector2i in placed.cells:
-			assert_str(opponent.module_at(cell).name).is_equal(placed.module.name)
+# The ship carries its own base stat block (its hull's health), separate from modules; effective stats are
+# the ship block plus the module profile. HP is ship-driven from here, not a constant.
+func test_default_ship_stat_block_drives_health() -> void:
+	var ship := StarshipGenerator.generate(_DEFAULT_STARSHIP)
+	assert_object(ship.stats).is_not_null()
+	assert_int(ship.stats.health).is_equal(25)  # hull health lives on the ship, not a module
+	var effective := StatBlock.new()
+	effective.add(ship.stats)
+	effective.add(ship.module_grid.profile())
+	assert_int(effective.health).is_equal(25)         # ship hull
+	assert_int(effective.speed).is_equal(4)           # engine module
+	assert_int(effective.warp_capacity).is_equal(4)   # warp core module
+
+# The computer default is the player default minus the Warp Core: same five base modules, no warp capacity,
+# so the AI can't Jump. (A human PvP opponent would use the player default and keep its warp core.)
+func test_computer_default_has_no_warp_core() -> void:
+	var grid := _computer_grid()
+	assert_int(grid.placed_modules().size()).is_equal(5)
+	for placed: PlacedModule in grid.placed_modules():
+		assert_str(placed.module.name).is_not_equal("Warp Core")
+	var total := StatBlock.new()
+	for placed: PlacedModule in grid.placed_modules():
+		total.add(placed.module.stats)
+	assert_int(total.warp_capacity).is_equal(0)

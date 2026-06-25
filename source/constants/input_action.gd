@@ -18,7 +18,7 @@ const INTERACT := &"interact"
 
 #endregion
 
-#region Outfitting
+#region Loadout
 
 const ROTATE_ITEM := &"rotate_item"
 const QUICKBAR_SLOTS: Array[StringName] = [

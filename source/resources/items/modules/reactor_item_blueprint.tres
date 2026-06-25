@@ -6,7 +6,7 @@
 
 [sub_resource type="Resource" id="Stats_reactor"]
 script = ExtResource("2_stats")
-power = 5
+energy = 2
 
 [sub_resource type="Resource" id="Shape_reactor"]
 script = ExtResource("3_shape")

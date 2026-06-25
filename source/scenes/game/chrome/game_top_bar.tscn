@@ -56,10 +56,13 @@ theme_override_constants/separation = 12
 
 [node name="Settings" type="Button" parent="Content"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(76, 76)
+custom_minimum_size = Vector2(96, 96)
 layout_mode = 2
 size_flags_vertical = 4
 focus_mode = 0
-flat = true
 theme_override_font_sizes/font_size = 44
-text = "⚙"
+theme_override_styles/focus = ExtResource("2_btn")
+theme_override_styles/hover = ExtResource("3_btn_active")
+theme_override_styles/pressed = ExtResource("3_btn_active")
+theme_override_styles/normal = ExtResource("2_btn")
+text = "≡"

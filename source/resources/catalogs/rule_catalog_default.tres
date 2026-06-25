@@ -1,0 +1,50 @@
+[gd_resource type="Resource" script_class="RuleCatalog" format=3]
+
+[ext_resource type="Script" path="res://minigames/match/match_rules.gd" id="1_s0smk"]
+[ext_resource type="Script" path="res://addons/grid_system/rules/rule.gd" id="10_b4yk3"]
+[ext_resource type="Script" path="res://minigames/match/rules/resource_grant_rule.gd" id="11_nf01d"]
+[ext_resource type="Script" path="res://minigames/match/rules/scrap_grant_rule.gd" id="12_rl5s0"]
+[ext_resource type="Script" path="res://minigames/match/rules/damage_rule.gd" id="13_gx2qr"]
+[ext_resource type="Script" path="res://minigames/match/rules/warp_rule.gd" id="14_orhq5"]
+[ext_resource type="Script" path="res://addons/grid_system/rules/ruleset.gd" id="16_y33fv"]
+[ext_resource type="Script" path="res://minigames/match/scoring_formula.gd" id="17_4i7yb"]
+[ext_resource type="Script" path="res://catalogs/rule_catalog.gd" id="18_fgsn2"]
+
+[sub_resource type="Resource" id="Resource_m8frm"]
+script = ExtResource("11_nf01d")
+kinds = PackedInt32Array(0, 1, 2, 3)
+spawn_weights = PackedInt32Array(20, 20, 20, 20)
+rule_name = &"resource_grant"
+phase = &"on_clear"
+
+[sub_resource type="Resource" id="Resource_axiyt"]
+script = ExtResource("12_rl5s0")
+rule_name = &"scrap_grant"
+phase = &"on_clear"
+
+[sub_resource type="Resource" id="Resource_qay3i"]
+script = ExtResource("13_gx2qr")
+rule_name = &"damage"
+phase = &"on_clear"
+
+[sub_resource type="Resource" id="Resource_rotrx"]
+script = ExtResource("14_orhq5")
+rule_name = &"warp"
+phase = &"on_clear"
+
+[sub_resource type="Resource" id="Resource_usagn"]
+script = ExtResource("16_y33fv")
+rules = Array[ExtResource("10_b4yk3")]([SubResource("Resource_m8frm"), SubResource("Resource_axiyt"), SubResource("Resource_qay3i"), SubResource("Resource_rotrx")])
+
+[sub_resource type="Resource" id="Resource_vk6bp"]
+script = ExtResource("17_4i7yb")
+
+[sub_resource type="Resource" id="Resource_qdq82"]
+script = ExtResource("1_s0smk")
+ruleset = SubResource("Resource_usagn")
+scoring = SubResource("Resource_vk6bp")
+
+[resource]
+script = ExtResource("18_fgsn2")
+rulesets = Array[ExtResource("1_s0smk")]([SubResource("Resource_qdq82")])
+catalog_name = "Rules"

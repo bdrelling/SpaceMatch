@@ -119,13 +119,13 @@ release-web: export-web deploy-web ## Export and deploy web build
 # Desktop preview window. `--resolution` opens it at a device-faithful size so the game boots straight
 # into the right shape; `--device`/`--orientation` are read by main.gd, which sizes the window from
 # armory's DeviceUtils (the source of truth). The px below DUPLICATE DeviceUtils.DEVICE_RESOLUTIONS ×
-# PREVIEW_SCALE — when those change, update these to match.
-#   iPhone 17 Pro 402×874 pt → 536×1165    iPad Pro 11" 834×1194 pt → 1112×1592   (× 4/3)
+# the device's preview scale — when those change, update these to match.
+#   iPhone 17 Pro 402×874 pt → 724×1573 (× 1.8)    iPad Pro 11" 834×1194 pt → 1112×1592 (× 4/3)
 DEVICE_WINDOW_MODE        ?= tablet
 DEVICE_WINDOW_ORIENTATION ?= portrait
 
-PHONE_WINDOW_WIDTH   := 536
-PHONE_WINDOW_HEIGHT  := 1165
+PHONE_WINDOW_WIDTH   := 724
+PHONE_WINDOW_HEIGHT  := 1573
 TABLET_WINDOW_WIDTH  := 1112
 TABLET_WINDOW_HEIGHT := 1592
 

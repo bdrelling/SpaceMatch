@@ -1,0 +1,68 @@
+[gd_scene load_steps=5 format=3 uid="uid://b8loadout00001"]
+
+[ext_resource type="Script" uid="uid://c05b4s2m66j65" path="res://minigames/loadout/loadout.gd" id="1_loadout"]
+[ext_resource type="Script" uid="uid://bhhb1ur48vcvr" path="res://addons/grid_system/view/board_canvas.gd" id="2_canvas"]
+[ext_resource type="StyleBoxFlat" path="res://ui/styles/board_panel.tres" id="3_board"]
+[ext_resource type="StyleBoxFlat" path="res://ui/styles/hud_placeholder.tres" id="4_hud"]
+
+[node name="Loadout" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("1_loadout")
+
+[node name="Margins" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 36
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 36
+theme_override_constants/margin_bottom = 36
+
+[node name="Body" type="VBoxContainer" parent="Margins"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 24
+
+[node name="StatsPanel" type="PanelContainer" parent="Margins/Body"]
+custom_minimum_size = Vector2(0, 560)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = ExtResource("4_hud")
+
+[node name="Stats" type="VBoxContainer" parent="Margins/Body/StatsPanel"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 24
+
+[node name="Heading" type="Label" parent="Margins/Body/StatsPanel/Stats"]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.66, 0.72, 0.85, 1)
+theme_override_font_sizes/font_size = 32
+text = "STATS"
+
+[node name="StatList" type="VBoxContainer" parent="Margins/Body/StatsPanel/Stats"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="BoardPanel" type="PanelContainer" parent="Margins/Body"]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_styles/panel = ExtResource("3_board")
+
+[node name="BoardCanvas" type="Control" parent="Margins/Body/BoardPanel"]
+unique_name_in_owner = true
+layout_mode = 2
+script = ExtResource("2_canvas")

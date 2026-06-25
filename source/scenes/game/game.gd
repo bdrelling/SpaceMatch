@@ -3,7 +3,7 @@ extends Control
 ## The 2D game shell — the production entry shipped to mobile/web, NOT the debug grid playground
 ## switcher. The chrome (a full-bleed gradient background, the [GameTopBar], a swipeable [GamePager] of
 ## stage pages, and the context [GameInventoryBar]) is authored in [code]game.tscn[/code]; the top bar's
-## leading button drills from the primary stage into Outfitting and steps back, so there's no tab bar.
+## leading button drills from the primary stage into Loadout and steps back, so there's no tab bar.
 ## Each bar bleeds its background through the device safe area while holding
 ## its content inside it. This script wires the chrome to the pages and owns the live game state: one
 ## [GameSession] and a [Clock] (the game's tick
@@ -89,6 +89,7 @@ func _wire_chrome() -> void:
 	_settings_dim().gui_input.connect(_on_settings_dim_input)
 	_settings_screen().restart_pressed.connect(_on_settings_restart)
 	_settings_screen().quit_pressed.connect(_on_settings_quit)
+	_settings_screen().debug_pressed.connect(_on_settings_debug)
 	_pager.page_changed.connect(_on_page_changed)
 
 # Debug capture hook: `--tab=N` lands the game on the Nth playable stage at boot so a single
@@ -109,7 +110,7 @@ func _show_stage(stage: int) -> void:
 func _primary_screen_index() -> int:
 	return _stage_indices[0] if not _stage_indices.is_empty() else 0
 
-# The leading button drills from the primary stage into Outfitting (grid glyph) and steps back from a
+# The leading button drills from the primary stage into Loadout (grid glyph) and steps back from a
 # sub-screen (back arrow). Two stages today, so the drill target is the last stage and "back" is stage 0.
 func _on_leading_pressed() -> void:
 	if _current_index() == _primary_screen_index():
@@ -141,6 +142,14 @@ func _on_settings_dim_input(event: InputEvent) -> void:
 		PauseMonitor.unpause()
 	elif event is InputEventScreenTouch and (event as InputEventScreenTouch).pressed:
 		PauseMonitor.unpause()
+
+# Debug from the Settings panel: open the debug navigator over the (still paused) game, drawn above the
+# Settings overlay. Its pages edit the same shared config the running board uses, so changes apply live;
+# Done (or back from the root) frees it, revealing Settings underneath.
+func _on_settings_debug() -> void:
+	var navigator := DebugNavigator.create(DebugHomeView.new())
+	navigator.closed.connect(navigator.queue_free)
+	_settings_overlay.add_child(navigator)
 
 # Restart from the Settings panel: resume first (the new game must run unpaused), then rebuild the
 # session in place — the chrome and pages persist.
@@ -189,17 +198,17 @@ func _refresh_actions() -> void:
 	if _bound_minigame != null:
 		_top_bar.set_actions(_bound_minigame.actions())
 
-# A stage asked to drill into a combatant's loadout — point Outfitting at that ship, then open it (the
-# last stage). With no ship, Outfitting keeps whatever grid it was last bound to (the player's, by default).
+# A stage asked to drill into a combatant's loadout — point Loadout at that ship, then open it (the
+# last stage). With no ship, Loadout keeps whatever grid it was last bound to (the player's, by default).
 func _on_drill_requested(starship: StarshipState) -> void:
-	var outfitting: OutfittingMinigame = _outfitting_stage()
-	if outfitting != null and starship != null:
-		outfitting.show_starship(starship)
+	var loadout: LoadoutMinigame = _loadout_stage()
+	if loadout != null and starship != null:
+		loadout.show_starship(starship)
 	_show_stage(_stage_indices.size() - 1)
 
-# The OutfittingMinigame behind the last playable stage, or null if it isn't one (defensive — the
-# drill target is always Outfitting today).
-func _outfitting_stage() -> OutfittingMinigame:
+# The LoadoutMinigame behind the last playable stage, or null if it isn't one (defensive — the
+# drill target is always Loadout today).
+func _loadout_stage() -> LoadoutMinigame:
 	if _stage_indices.is_empty():
 		return null
 	var index: int = _stage_indices[_stage_indices.size() - 1]
@@ -207,7 +216,7 @@ func _outfitting_stage() -> OutfittingMinigame:
 		return null
 	var screen: GameScreen = _pager.screens[index]
 	if screen is MinigameScreen:
-		return (screen as MinigameScreen).minigame() as OutfittingMinigame
+		return (screen as MinigameScreen).minigame() as LoadoutMinigame
 	return null
 
 func _unbind_minigame() -> void:

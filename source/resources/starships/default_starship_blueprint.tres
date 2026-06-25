@@ -1,9 +1,15 @@
-[gd_resource type="Resource" script_class="StarshipBlueprint" format=3 load_steps=3]
+[gd_resource type="Resource" script_class="StarshipBlueprint" format=3 load_steps=5]
 
 [ext_resource type="Script" path="res://entities/starship/starship_blueprint.gd" id="1"]
 [ext_resource type="Resource" path="res://resources/starships/default_module_grid_blueprint.tres" id="2"]
+[ext_resource type="Script" uid="uid://ha1rkn84cbir" path="res://entities/starship/stats/stat_block.gd" id="3_stats"]
+
+[sub_resource type="Resource" id="Stats_default"]
+script = ExtResource("3_stats")
+health = 25
 
 [resource]
 script = ExtResource("1")
 name = "Default"
+stats = SubResource("Stats_default")
 module_grid = ExtResource("2")

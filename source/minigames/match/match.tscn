@@ -2,8 +2,9 @@
 
 [ext_resource type="Script" path="res://minigames/match/match.gd" id="1_match"]
 [ext_resource type="Script" uid="uid://bhhb1ur48vcvr" path="res://addons/grid_system/view/board_canvas.gd" id="2_canvas"]
-[ext_resource type="StyleBoxFlat" path="res://ui/styles/board_panel.tres" id="3_board"]
 [ext_resource type="Script" path="res://minigames/match/portrait_panel.gd" id="4_portrait"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_board"]
 
 [node name="Match" type="Control"]
 layout_mode = 3
@@ -21,9 +22,9 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-theme_override_constants/margin_left = 36
+theme_override_constants/margin_left = 24
 theme_override_constants/margin_top = 24
-theme_override_constants/margin_right = 36
+theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 36
 
 [node name="Body" type="VBoxContainer" parent="Margins"]
@@ -58,7 +59,7 @@ horizontal_alignment = 2
 vertical_alignment = 1
 
 [node name="Hud" type="HBoxContainer" parent="Margins/Body"]
-custom_minimum_size = Vector2(0, 420)
+custom_minimum_size = Vector2(0, 448)
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 16
@@ -92,16 +93,17 @@ portrait_name = "Opponent"
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
-theme_override_styles/panel = ExtResource("3_board")
+theme_override_styles/panel = SubResource("StyleBoxEmpty_board")
 
 [node name="BoardCanvas" type="Control" parent="Margins/Body/BoardPanel"]
 unique_name_in_owner = true
 layout_mode = 2
 script = ExtResource("2_canvas")
+padding = 8.0
 
 [node name="Actions" type="HBoxContainer" parent="Margins/Body"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 96)
+custom_minimum_size = Vector2(0, 112)
 layout_mode = 2
 theme_override_constants/separation = 16
 
@@ -128,3 +130,9 @@ layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 28
 text = "Ability 4"
+
+[node name="Action5" type="Button" parent="Margins/Body/Actions"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
+text = "Ability 5"

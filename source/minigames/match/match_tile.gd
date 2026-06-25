@@ -1,7 +1,7 @@
 class_name MatchTile
 extends GridTile
 ## A component tile for the match-3 board: one of seven glyphs (combat, propulsion, science, defense,
-## scrap, anomaly, damage) chosen by [member kind], drawn centred on the node origin in unit cell-space
+## scrap, warp, damage) chosen by [member kind], drawn centred on the node origin in unit cell-space
 ## so a pop scales about the centre. Filled with [member tint] when the host sets it, else a built-in palette.
 ##
 ## Scrap is the only hexagon (flat-top, with a bolt hole); Science is an atom (three rounded oval orbits
@@ -9,9 +9,9 @@ extends GridTile
 
 const KIND_COUNT: int = 7
 
-## Display names per kind, index-aligned with [constant _COLORS]. The anomaly (a purple pentagon) is an
-## unnamed placeholder, labelled by its role until one is assigned.
-const NAMES: Array[String] = ["Combat", "Propulsion", "Science", "Defense", "Scrap", "Anomaly", "Damage"]
+## Display names per kind, index-aligned with [constant _COLORS]. Warp (a purple pentagon) charges the
+## encounter's warp meter rather than a ship stat.
+const NAMES: Array[String] = ["Combat", "Propulsion", "Science", "Defense", "Scrap", "Warp", "Damage"]
 
 const _COLORS: Array[Color] = [
 	Color(0.88, 0.33, 0.34),  # combat — red diamond
@@ -19,7 +19,7 @@ const _COLORS: Array[Color] = [
 	Color(0.44, 0.78, 0.50),  # science — green atom (three oval orbits)
 	Color(0.35, 0.68, 0.92),  # defense — teal-blue shield
 	Color(0.60, 0.64, 0.70),  # scrap — grey nut (flat-top hexagon + bolt hole)
-	Color(0.66, 0.47, 0.86),  # anomaly — purple pentagon
+	Color(0.66, 0.47, 0.86),  # warp — purple pentagon
 	Color(0.96, 0.50, 0.18),  # damage — orange starburst (explosion)
 ]
 ## Glyph half-extent in cell units; leaves a margin inside the cell.
@@ -143,7 +143,7 @@ func _draw_nut(color: Color, detail: Color) -> void:
 	draw_colored_polygon(_ngon(6, _HALF, 0.0), color)
 	draw_circle(Vector2.ZERO, _HALF * 0.4, detail)
 
-# Anomaly — a pointy-top pentagon (placeholder kind).
+# Warp — a pointy-top pentagon.
 func _draw_pentagon(color: Color) -> void:
 	draw_colored_polygon(_ngon(5, _HALF, -PI / 2.0), color)
 

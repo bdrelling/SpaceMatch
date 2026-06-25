@@ -24,9 +24,17 @@ const _CEILING_RISE: float = 1024.0
 ## linear threshold — for [constant _CALM_NEEDED] continuous seconds before matches are evaluated, so a
 ## cluster of four-or-more gets a chance to form instead of popping the instant three touch. A jittery
 ## pile that never fully stills is force-resolved after [constant _MAX_WAIT] so it never drags on.
-const _CALM_NEEDED: float = 0.25
+const _CALM_NEEDED: float = 0.18
 const _MAX_WAIT: float = 2.5
 const _ANGULAR_STILL: float = 1.0
+## Unlock burst. On release each tile is flung outward from the board centre with a tumble — an
+## explosion, not a limp drop — and then a heavier-than-default [member RigidBody2D.gravity_scale]
+## yanks the heap down so it still settles fast. The blast is biased outward-and-down (never up, since
+## the top is open) so the scatter stays corralled within the board walls.
+const _BURST_SPEED_MIN: float = 5.0  # outward kick, in cell-units/sec
+const _BURST_SPEED_MAX: float = 11.0
+const _BURST_SPIN: float = 7.0       # random tumble, rad/sec
+const _GRAVITY_SCALE: float = 1.8
 ## Pop animation, mirroring the board's match pop ([code]MatchBoardView._animate_pop[/code]).
 const _POP_SCALE: float = 1.5
 const _POP_DURATION: float = 0.13
@@ -95,7 +103,22 @@ func unlock(grid: Grid, display_scale: float) -> void:
 		grid.remove_child(tile)
 		grid._tiles.erase(tile)
 		_attach_body(tile, tile.kind, object, local_pos * display_scale)
+	_burst_bodies()
 	set_physics_process(true)
+
+# Fling the freshly-detached tiles outward from the board centre with a tumble so the unlock reads as
+# an explosion rather than a drop. Vertical is forced downward (the top is open, so an upward kick would
+# fountain past it) while horizontal keeps each tile's outward direction — the scatter stays in the walls.
+func _burst_bodies() -> void:
+	var center := Vector2(_columns * _eff_cell, _rows * _eff_cell) * 0.5
+	for body: RigidBody2D in _by_body.keys():
+		var dir: Vector2 = body.position - center
+		if dir.length() < 1.0:
+			dir = Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0))
+		dir.y = absf(dir.y) * 0.4 + 0.2
+		dir = dir.normalized()
+		body.linear_velocity = dir * randf_range(_BURST_SPEED_MIN, _BURST_SPEED_MAX) * _eff_cell
+		body.angular_velocity = randf_range(-_BURST_SPIN, _BURST_SPIN)
 
 func _physics_process(delta: float) -> void:
 	if not _active or _idle:
@@ -197,7 +220,8 @@ func _attach_body(tile: MatchTile, kind: int, object: GridObjectState, pos: Vect
 	body.physics_material_override = _material
 	body.contact_monitor = true
 	body.max_contacts_reported = 8
-	body.linear_damp = 0.2
+	body.gravity_scale = _GRAVITY_SCALE
+	body.linear_damp = 0.3
 	body.angular_damp = 0.5
 	body.continuous_cd = RigidBody2D.CCD_MODE_CAST_RAY
 	add_child(body)

@@ -2,32 +2,72 @@ class_name MatchRules
 extends Resource
 ## Tunable, swappable rules for one match-3 encounter — the knobs that change how a board plays without
 ## touching its code. Author a `.tres` per encounter (or call [method default] for the standard
-## SpaceMatch set) and hand it to [MatchMinigame] as [member MatchMinigame.rules]; each field is one
-## rule the encounter can turn on, off, or retune. Holds the extra-turn threshold and the per-kind
-## spawn weights today; more rules land here as they're designed.
+## SpaceMatch set) and hand it to [MatchMinigame] as [member MatchMinigame.rules]. Some rules are flat
+## config (spawn weights, scoring formula); behavioural rules that fire at a phase of play live in
+## [member ruleset] as plug-in [Rule]s (see [MatchPhase]).
 
-## A straight run of at least this many tiles lets the mover take another turn instead of passing it.
-## Zero disables the rule — every match hands the board to the next combatant.
-@export var extra_turn_min_match: int = 0
+## The match-scope rules that fire at phases of play: the baseline grant rules (resources, scrap, damage,
+## warp on [constant MatchPhase.ON_CLEAR]) plus whatever the encounter adds (e.g. extra turns). A swappable
+## [Ruleset] — drop, retune, or add rules per encounter, or at runtime mid-game. Seeded with the baseline
+## on construction; replace it wholesale in a `.tres` to author a fundamentally different match.
+@export var ruleset: Ruleset
 
-## Relative spawn weight per [MatchTile] kind, index-aligned to kind order. Heavier kinds fill the board
-## more often; a weight of 0 never spawns. Weights are relative — they needn't sum to anything. An empty
-## array, or a kind past the array's end, falls back to weight 1 (uniform).
-@export var spawn_weights: PackedInt32Array = PackedInt32Array()
+func _init() -> void:
+	# Seed the always-on baseline so a fresh ruleset already banks matches, deals damage and charges warp.
+	# An authored .tres that stores its own ruleset overrides this.
+	if ruleset == null:
+		ruleset = baseline_ruleset()
 
-## The standard SpaceMatch ruleset: a run of four or more grants another turn, and the spawn pool favors
-## the four stat tiles while the anomaly is the rarest find.
-static func default() -> MatchRules:
-	var rules := MatchRules.new()
-	rules.extra_turn_min_match = 4
-	# Index-aligned to MatchTile kinds: combat / propulsion / science / defense (20 each — the common
-	# stat tiles), scrap (10), anomaly (5 — rarest), damage (10).
-	rules.spawn_weights = PackedInt32Array([20, 20, 20, 20, 10, 5, 10])
+## A ruleset carrying just the baseline ON_CLEAR grant rules — what every match does before any encounter-
+## specific rules are layered on. Resources bank into the mover's tally, scrap into the wallet, damage into
+## the foe, warp into the shared meter.
+static func baseline_ruleset() -> Ruleset:
+	var rules := Ruleset.new()
+	rules.add(ResourceGrantRule.new())  # the four stat tiles -> the mover's tally
+	rules.add(ScrapGrantRule.new())     # scrap -> the player's wallet
+	rules.add(DamageRule.new())         # damage -> the opposing combatant's health
+	rules.add(WarpRule.new())           # warp -> the shared warp meter
 	return rules
 
-## The weight to roll [param kind] with — its authored weight, clamped non-negative, or 1 when the kind
-## has no entry (so an unconfigured pool spawns every kind uniformly).
-func weight_for(kind: int) -> int:
-	if kind < 0 or kind >= spawn_weights.size():
-		return 1
-	return maxi(0, spawn_weights[kind])
+## How a match's tile count becomes its reward. The default [ScoringFormula] is one-to-one (a match of N
+## is worth N); assign a [FibonacciScoringFormula] to make bigger matches pay off super-linearly. Applies
+## to every banked kind (stat tiles, scrap, damage). Left null, scoring falls back to one-to-one.
+@export var scoring: ScoringFormula
+
+## When true, reloading a dead board first splits its tiles between the two combatants as resources
+## (floor of half each, the odd one discarded) before the fresh board pours in — so a stalemate still pays
+## out instead of vanishing. ("Optional but default on.")
+@export var reload_splits_resources: bool = true
+
+## The board's default tile-selection rule (swap / slide / path / teleport). Left unset, the board falls
+## back to [MatchMinigame]'s legacy mode export. A starship's [member StarshipState.selection_override]
+## takes precedence on that ship's turn, so selection can change with whoever is acting (see [SelectionRule]).
+@export var default_selection: SelectionRule
+
+## The standard SpaceMatch match-scope ruleset: the baseline economy (resource/scrap/damage/warp grants) plus
+## scoring, with a spawn pool that favors the four stat tiles and makes warp the rarest find. Extra turns and
+## abilities are NOT here — they belong to the starship (its hull kit and modules), composed in per turn over
+## these defaults (see [StarshipGenerator] and [method MatchMinigame._effective_ruleset]).
+static func default() -> MatchRules:
+	var rules := MatchRules.new()  # _init seeded the baseline grant rules (which carry their own spawn weights)
+	rules.scoring = ScoringFormula.new()  # one-to-one: a match of N is worth N
+	rules.reload_splits_resources = true
+	return rules
+
+## The composed spawn pool: each enabled rule's declared tile weights merged into one {kind: weight} map.
+## Rules own what spawns, so dropping or disabling a rule drops its tiles from the board — the same match
+## engine makes a different game (other combat, a puzzle) by swapping which rules are in play. The host may
+## still gate a kind on top of this (e.g. warp only rolls when a ship can warp).
+func spawn_table() -> Dictionary:
+	var table := {}
+	if ruleset == null:
+		return table
+	for rule: Rule in ruleset.rules:
+		if rule == null or not rule.enabled or not rule.has_method(&"spawn_contribution"):
+			continue
+		var contribution: Dictionary = rule.call(&"spawn_contribution")
+		for kind: int in contribution:
+			var added: int = contribution[kind]
+			var running: int = table.get(kind, 0)
+			table[kind] = running + added
+	return table

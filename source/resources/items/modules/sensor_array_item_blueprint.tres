@@ -6,7 +6,6 @@
 
 [sub_resource type="Resource" id="Stats_sensor_array"]
 script = ExtResource("2_stats")
-power = -1
 sensors = 4
 
 [sub_resource type="Resource" id="Shape_sensor_array"]

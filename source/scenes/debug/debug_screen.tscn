@@ -1,0 +1,7 @@
+[gd_scene load_steps=3 format=3 uid="uid://vmu1hu4z1r3re"]
+
+[ext_resource type="Script" uid="uid://c8q0o6baxk7wt" path="res://scenes/debug/debug_screen.gd" id="1_debug"]
+[ext_resource type="PackedScene" uid="uid://32b3txwt87yow" path="res://ui/screen_frame/screen_frame.tscn" id="2_frame"]
+
+[node name="DebugScreen" instance=ExtResource("2_frame")]
+script = ExtResource("1_debug")

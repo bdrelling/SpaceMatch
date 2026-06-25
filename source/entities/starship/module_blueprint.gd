@@ -9,3 +9,9 @@ extends Resource
 @export var color: Color = Color.WHITE
 @export var shape: PieceShape
 @export var stats: StatBlock
+## Abilities this module grants its ship — e.g. a Repair module granting a Repair ability. Aggregated into the
+## ship's ability set while the module is enabled (see [method ModuleGrid.abilities]).
+@export var abilities: Array[MatchAbility] = []
+## Phase rules this module grants its ship — board behaviour that rides on having the module installed.
+## Aggregated into the ship's rules while the module is enabled (see [method ModuleGrid.rules]).
+@export var rules: Array[Rule] = []

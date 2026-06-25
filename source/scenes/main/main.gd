@@ -15,7 +15,7 @@ func _ready() -> void:
 		)
 		if DeviceUtils.DEVICE_RESOLUTIONS.has(device):
 			var points: Vector2 = DeviceUtils.DEVICE_RESOLUTIONS[device]
-			get_window().size = Vector2i((points * DeviceUtils.PREVIEW_SCALE).round())
+			get_window().size = Vector2i((points * DeviceUtils.get_preview_scale(device)).round())
 
 	Game.apply_window(get_window())
 	# Boots straight into the game for a fast dev loop. Eventually this lands on the title screen first

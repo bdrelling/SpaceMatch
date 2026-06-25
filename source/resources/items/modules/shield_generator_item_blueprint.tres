@@ -6,8 +6,8 @@
 
 [sub_resource type="Resource" id="Stats_shield_generator"]
 script = ExtResource("2_stats")
-power = -2
 shields = 4
+energy = -1
 
 [sub_resource type="Resource" id="Shape_shield_generator"]
 script = ExtResource("3_shape")

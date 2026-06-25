@@ -1,0 +1,26 @@
+[gd_scene load_steps=4 format=3 uid="uid://d2wrqdsha3dgi"]
+
+[ext_resource type="Script" uid="uid://duu8g3kkycsxi" path="res://ui/screen_container/screen_container.gd" id="1_sc"]
+[ext_resource type="PackedScene" uid="uid://zt6frzjvgtj8f" path="res://ui/background/background.tscn" id="2_bg"]
+[ext_resource type="Script" uid="uid://dks2wphvw6r5i" path="res://addons/utilities/device/safe_area_container.gd" id="3_safe"]
+
+[node name="ScreenContainer" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_sc")
+
+[node name="Background" parent="." instance=ExtResource("2_bg")]
+
+[node name="SafeArea" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_safe")

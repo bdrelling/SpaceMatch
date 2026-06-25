@@ -37,14 +37,14 @@ func test_pager_has_every_stage() -> void:
 	for screen: GameScreen in game._pager.screens:
 		titles.append(screen.title)
 	# Settings is a top-most overlay now, not a page — the pager holds only the playable stages.
-	assert_array(titles).contains_exactly_in_any_order(["Match", "Outfitting"])
+	assert_array(titles).contains_exactly_in_any_order(["Match", "Loadout"])
 	game.queue_free()
 
-func test_drill_into_outfitting_and_back() -> void:
+func test_drill_into_loadout_and_back() -> void:
 	var game := Game.create()
 	add_child(game)
 	await await_idle_frame()
-	# The primary stage drills into Outfitting via its own drill request (the HUD "Player" box),
+	# The primary stage drills into Loadout via its own drill request (the HUD "Player" box),
 	# handing the shell the combatant whose loadout to show.
 	var match_screen := game._pager.screens[0] as MinigameScreen
 	match_screen.minigame().drill_requested.emit(game.session.state.starship)
@@ -81,14 +81,14 @@ func test_pause_opens_and_closes_the_settings_overlay() -> void:
 	assert_bool(game._settings_overlay.visible).is_false()
 	game.queue_free()
 
-func test_settings_done_button_resumes_and_closes() -> void:
+func test_settings_resume_button_resumes_and_closes() -> void:
 	var game := Game.create()
 	add_child(game)
 	await await_idle_frame()
 	PauseMonitor.pause()
 	var settings := game._settings_overlay.get_node("Settings") as SettingsScreen
-	# Done is the screen's exit — it resumes the game, which hides the overlay.
-	settings._done_button.pressed.emit()
+	# Resume is the screen's exit — it resumes the game, which hides the overlay.
+	settings._resume_button.pressed.emit()
 	assert_bool(PauseMonitor.is_paused).is_false()
 	assert_bool(game._settings_overlay.visible).is_false()
 	game.queue_free()

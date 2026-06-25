@@ -1,0 +1,13 @@
+[gd_scene load_steps=4 format=3 uid="uid://2671vfj24omk1"]
+
+[ext_resource type="Script" uid="uid://xexpkicyx8em" path="res://scenes/encounter_screen/encounter_screen.gd" id="1_es"]
+[ext_resource type="PackedScene" uid="uid://32b3txwt87yow" path="res://ui/screen_frame/screen_frame.tscn" id="2_frame"]
+[ext_resource type="PackedScene" uid="uid://b8match0001" path="res://minigames/match/match.tscn" id="3_match"]
+
+[node name="EncounterScreen" instance=ExtResource("2_frame")]
+script = ExtResource("1_es")
+
+[node name="Match" parent="SafeArea/Body/Content" instance=ExtResource("3_match")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3

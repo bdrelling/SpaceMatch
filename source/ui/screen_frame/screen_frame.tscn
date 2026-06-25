@@ -1,0 +1,40 @@
+[gd_scene load_steps=5 format=3 uid="uid://32b3txwt87yow"]
+
+[ext_resource type="Script" uid="uid://hmt7p3j7b4c3" path="res://ui/screen_frame/screen_frame.gd" id="1_frame"]
+[ext_resource type="PackedScene" uid="uid://zt6frzjvgtj8f" path="res://ui/background/background.tscn" id="2_bg"]
+[ext_resource type="Script" uid="uid://dks2wphvw6r5i" path="res://addons/utilities/device/safe_area_container.gd" id="3_safe"]
+[ext_resource type="PackedScene" uid="uid://35kvumkkn1zca" path="res://ui/screen_top_bar/screen_top_bar.tscn" id="4_topbar"]
+
+[node name="ScreenFrame" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_frame")
+
+[node name="Background" parent="." instance=ExtResource("2_bg")]
+
+[node name="SafeArea" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_safe")
+
+[node name="Body" type="VBoxContainer" parent="SafeArea"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TopBar" parent="SafeArea/Body" instance=ExtResource("4_topbar")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Content" type="MarginContainer" parent="SafeArea/Body"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3

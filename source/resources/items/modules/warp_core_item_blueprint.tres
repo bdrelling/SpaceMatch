@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="ModuleBlueprint" format=3 uid="uid://bw1rp8c0re7vk"]
+
+[ext_resource type="Script" uid="uid://daxrkag063tph" path="res://entities/starship/module_blueprint.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://ha1rkn84cbir" path="res://entities/starship/stats/stat_block.gd" id="2_stats"]
+[ext_resource type="Script" uid="uid://dy25mpv7s2ajw" path="res://addons/grid_system/data/piece_shape.gd" id="3_shape"]
+
+[sub_resource type="Resource" id="Stats_warp_core"]
+script = ExtResource("2_stats")
+warp_capacity = 4
+
+[sub_resource type="Resource" id="Shape_warp_core"]
+script = ExtResource("3_shape")
+offsets = Array[Vector2i]([Vector2i(0, 0)])
+
+[resource]
+script = ExtResource("1_script")
+stats = SubResource("Stats_warp_core")
+id = 1005
+name = "Warp Core"
+color = Color(0.66, 0.47, 0.86, 1)
+shape = SubResource("Shape_warp_core")

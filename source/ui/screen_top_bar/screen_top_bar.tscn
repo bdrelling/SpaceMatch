@@ -1,0 +1,62 @@
+[gd_scene load_steps=4 format=3 uid="uid://35kvumkkn1zca"]
+
+[ext_resource type="Script" uid="uid://cd8wice7q4ysw" path="res://ui/screen_top_bar/screen_top_bar.gd" id="1_stb"]
+[ext_resource type="StyleBoxFlat" path="res://ui/styles/chrome_button.tres" id="2_btn"]
+[ext_resource type="StyleBoxFlat" path="res://ui/styles/chrome_button_active.tres" id="3_btn_active"]
+
+[node name="ScreenTopBar" type="Control"]
+custom_minimum_size = Vector2(0, 96)
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_stb")
+
+[node name="Content" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_right = -24.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 16
+
+[node name="Back" type="Button" parent="Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(76, 76)
+layout_mode = 2
+size_flags_vertical = 4
+focus_mode = 0
+theme_override_font_sizes/font_size = 40
+theme_override_styles/focus = ExtResource("2_btn")
+theme_override_styles/hover = ExtResource("3_btn_active")
+theme_override_styles/pressed = ExtResource("3_btn_active")
+theme_override_styles/normal = ExtResource("2_btn")
+text = "←"
+
+[node name="Title" type="Label" parent="Content"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 4
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_font_sizes/font_size = 40
+text = "Title"
+
+[node name="Action" type="Button" parent="Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 76)
+layout_mode = 2
+size_flags_vertical = 4
+focus_mode = 0
+theme_override_font_sizes/font_size = 40
+theme_override_styles/focus = ExtResource("2_btn")
+theme_override_styles/hover = ExtResource("3_btn_active")
+theme_override_styles/pressed = ExtResource("3_btn_active")
+theme_override_styles/normal = ExtResource("2_btn")
+text = "Action"

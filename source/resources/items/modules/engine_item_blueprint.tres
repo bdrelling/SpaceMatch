@@ -6,7 +6,6 @@
 
 [sub_resource type="Resource" id="Stats_engine"]
 script = ExtResource("2_stats")
-power = -2
 speed = 4
 
 [sub_resource type="Resource" id="Shape_engine"]

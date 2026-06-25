@@ -13,7 +13,7 @@ signal inventory_changed()
 ## The [method actions] list changed (e.g. a mode toggle relabelled a button) — the shell rebuilds them.
 signal actions_changed()
 ## The stage asked the shell to drill into the next screen (e.g. an Encounter portrait opening that
-## combatant's loadout in Outfitting), passing the [StarshipState] to inspect there. The stage names no
+## combatant's loadout in the Loadout screen), passing the [StarshipState] to inspect there. The stage names no
 ## screen — it just requests the drill and whose ship to show; the shell decides where.
 signal drill_requested(starship: StarshipState)
 
@@ -41,6 +41,6 @@ func inventory_detail() -> Control:
 	return null
 
 ## When true the detail is shown pinned open with no tap-to-expand — for a stage whose inventory IS the
-## interface, like outfitting's module grid.
+## interface, like the Loadout screen's module grid.
 func inventory_pinned() -> bool:
 	return false

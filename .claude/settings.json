@@ -21,12 +21,6 @@
       ]
     }
   },
-  "model": "opus",
-  "effortLevel": "xhigh",
-  "worktree": {
-    "baseRef": "head",
-    "bgIsolation": "none"
-  },
   "permissions": {
     "allow": [
       "Read(**)",
