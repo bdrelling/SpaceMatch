@@ -7,7 +7,7 @@ extends Control
 const _CELL := Color(0.27, 0.33, 0.51)
 const _CELL_BORDER := Color(0.35, 0.41, 0.57, 0.6)
 
-var grid: ModuleGrid:
+var grid: ModuleGridState:
 	set(value):
 		grid = value
 		queue_redraw()
@@ -24,13 +24,13 @@ func _draw() -> void:
 	for cell: Vector2i in grid.existing_cells():
 		draw_rect(_cell_rect(origin, cell_size, cell), _CELL)
 		draw_rect(_cell_rect(origin, cell_size, cell), _CELL_BORDER, false, 1.0)
-	for placed: PlacedModule in grid.placed_modules():
-		_draw_module(origin, cell_size, placed)
+	for module_state: ModuleState in grid.modules:
+		_draw_module(origin, cell_size, module_state, grid.cells_of(module_state))
 
-func _draw_module(origin: Vector2, cell_size: float, placed: PlacedModule) -> void:
-	var fill: Color = placed.module.color
+func _draw_module(origin: Vector2, cell_size: float, module_state: ModuleState, cells: Array[Vector2i]) -> void:
+	var fill: Color = module_state.blueprint.color
 	fill.a = 1.0
-	for cell: Vector2i in placed.cells:
+	for cell: Vector2i in cells:
 		draw_rect(_cell_rect(origin, cell_size, cell), fill)
 
 func _cell_rect(origin: Vector2, cell_size: float, cell: Vector2i) -> Rect2:

@@ -21,12 +21,13 @@ func _ready() -> void:
 func minigame() -> Minigame:
 	return _minigame as Minigame
 
-# Forwards the running game to a minigame that opts in via bind_session; inert for those that don't.
-func bind(session: GameSession) -> void:
+# Mounts a minigame that opts in via bind_session (it reads the running game from the GameSession autoload);
+# inert for those that don't.
+func bind() -> void:
 	if _minigame != null and _minigame.has_method("bind_session"):
 		# Dynamic call: _minigame is typed Node and bind_session lives on the concrete minigame,
 		# so a direct call trips the unsafe-method-call warning (treated as an error here).
-		_minigame.call("bind_session", session)
+		_minigame.call("bind_session")
 
 # Only the visible page runs; hidden pages stop processing and input so off-screen minigames don't
 # advance (a falling-piece stage would otherwise top out unseen).

@@ -18,18 +18,10 @@ const TURNS_PER_ROUND: int = 2
 ## resource arrays; a fresh encounter starts them all at zero.
 const RESOURCE_KINDS: int = 7
 
-## The computer opponent's ship — its own default, distinct from the player's. Named "computer" (not
-## "opponent") because a human PvP opponent would use the player default instead, warp core and all; the
-## computer default deliberately carries no warp core, so the AI can't Jump. A real roster lands later.
-const _DEFAULT_OPPONENT := preload("res://resources/starships/computer_default_starship_blueprint.tres")
-
-## The default the player's fight ship falls back to when no session seeds one — the standalone match scene
-## and unit tests. In a real game the match clones [member GameState.starship] over this at setup.
-const _DEFAULT_PLAYER := preload("res://resources/starships/default_starship_blueprint.tres")
-
-## The two ships fighting this encounter. Both are encounter-scoped clones: the match deep-copies the player's
-## persistent [member GameState.starship] into [member player] at setup, so combat damage and Debug edits hit
-## the clone and a fresh fight starts from a fresh copy. Each ship owns its own [member StarshipState.health].
+## The two ships fighting this encounter — pure data; the [Encounter] node builds them (see
+## [method Encounter.create]). Both are encounter-scoped clones: the player's persistent ship is deep-copied
+## into [member player] so combat damage and Debug edits hit the clone and a fresh fight starts from a fresh
+## copy. Each ship owns its own [member StarshipState.health].
 @export var player: StarshipState
 ## The opponent's ship — its own default, distinct from the player's. Human-controlled for now; AI lands later.
 @export var opponent: StarshipState
@@ -95,10 +87,7 @@ var opponent_max_health: int:
 @export var warp_winner: int = -1
 
 func _init() -> void:
-	if player == null:
-		player = StarshipGenerator.generate(_DEFAULT_PLAYER)
-	if opponent == null:
-		opponent = StarshipGenerator.generate(_DEFAULT_OPPONENT)
+	# Pure-data defaults only — the combatant ships are built by the [Encounter] node, never fabricated here.
 	if player_resources.is_empty():
 		player_resources.resize(RESOURCE_KINDS)
 	if opponent_resources.is_empty():

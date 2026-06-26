@@ -1,28 +1,35 @@
 class_name EncounterScreen
 extends ScreenFrame
 ## The encounter — the match presented as its own screen: a [ScreenFrame] hosting the raw match feature
-## scene ([code]match.tscn[/code]) in its content slot, with a session bound in. The same match content the
-## [Game] shell mounts, here in the lightweight standard frame instead. Reached from [LoadoutScreen]'s
-## Launch (carrying the loadout the player set); Back returns to the [MainMenu].
+## scene ([code]match.tscn[/code]) in its content slot. The same match content the [Game] shell mounts, here
+## in the lightweight standard frame instead. Reached from [LoadoutScreen]'s Launch, so it reads the running
+## game (the [code]GameSession[/code] autoload) the player just set up; Back returns to the [MainMenu].
 
 const SCENE_PATH := "res://scenes/encounter_screen/encounter_screen.tscn"
 
 @onready var _match: MatchMinigame = %Match
 
-# The game to play — handed in from the pre-match loadout via [method use_session] so the encounter uses
-# exactly that loadout; a fresh default game when launched on its own.
-var _pending_session: GameSession
+# The encounter this screen hosts (a clone of the running ship vs the computer default). Owned here so the
+# match screen only renders it; pointed into GameSession.game_state.encounter.
+var _encounter: Encounter
 
 func _ready() -> void:
 	super._ready()  # wire the frame's bar signals
-	var session: GameSession = _pending_session if _pending_session != null else GameSession.new_game()
-	_match.bind_session(session)
+	_open_encounter()
+	_match.bind_session()
+	# This screen owns the encounter, so the match's Restart reopens it here.
+	_match.restart_requested.connect(_open_encounter)
 	configure_bar("Encounter")
 	back_pressed.connect(_on_back)
 
-## Hands the encounter the session to play — set right after [method create], before it enters the tree.
-func use_session(session: GameSession) -> void:
-	_pending_session = session
+# Opens the encounter this screen hosts: a fresh [Encounter] with a clone of the running ship, pointed into
+# the session so the match reads it.
+func _open_encounter() -> void:
+	var player_clone: StarshipState = GameSession.game_state.starship.clone() if GameSession.game_state.starship != null else null
+	_encounter = Encounter.create(player_clone)
+	_encounter.name = "Encounter"
+	add_child(_encounter)
+	GameSession.game_state.encounter = _encounter.state
 
 func _on_back() -> void:
 	SceneLoader.transition_to(MainMenu.create())

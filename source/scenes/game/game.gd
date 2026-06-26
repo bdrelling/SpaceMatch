@@ -22,9 +22,6 @@ const SCENE_PATH := "res://scenes/game/game.tscn"
 
 #region Properties
 
-## The running game's live state — a fresh single-player game, rebuilt by [method restart].
-var session: GameSession
-
 # The chrome — authored in the scene, injected here.
 @export var _pager: GamePager
 @export var _top_bar: GameTopBar
@@ -34,6 +31,13 @@ var session: GameSession
 @export var _settings_overlay: CanvasLayer
 
 var _clock: Clock
+
+# The game's entity nodes, owned by the shell and living in its subtree so the running game is inspectable.
+# They wrap the slices of GameSession.game_state (reference type), so editing through node or state is the
+# same edit. The encounter owns its two combatant Starship nodes (see [Encounter]).
+var _starship: Starship
+var _wallet_node: Wallet
+var _encounter: Encounter
 
 # Pager indices of the playable stages, in tree order — [0] is the primary stage (Encounter), the rest
 # are drilled into from it. Drives the leading button's drill/back and the --tab debug hook. Settings is
@@ -193,6 +197,8 @@ func _bind_chrome(screen: GameScreen) -> void:
 	game.inventory_changed.connect(_inventory_bar.refresh)
 	game.actions_changed.connect(_refresh_actions)
 	game.drill_requested.connect(_on_drill_requested)
+	# The shell owns the encounter, so a stage's Restart reopens it here, then the stage re-reads the result.
+	game.restart_requested.connect(_open_encounter)
 
 func _refresh_actions() -> void:
 	if _bound_minigame != null:
@@ -228,6 +234,8 @@ func _unbind_minigame() -> void:
 		_bound_minigame.actions_changed.disconnect(_refresh_actions)
 	if _bound_minigame.drill_requested.is_connected(_on_drill_requested):
 		_bound_minigame.drill_requested.disconnect(_on_drill_requested)
+	if _bound_minigame.restart_requested.is_connected(_open_encounter):
+		_bound_minigame.restart_requested.disconnect(_open_encounter)
 	_bound_minigame = null
 
 func _current_index() -> int:
@@ -237,9 +245,9 @@ func _current_index() -> int:
 	return 0
 
 func _start_game() -> void:
-	session = GameSession.new_game()
-	# The active encounter's slice of the save — state the 3D game never reads.
-	session.state.encounter = EncounterState.new()
+	# Start a fresh run on the global session, then build the entity nodes this shell owns from its state.
+	GameSession.start_new_game()
+	_build_entities()
 
 	# The game's tick heartbeat. Nothing drives scrap yet — resource production (a tap now, an
 	# upgraded interval later) subscribes to `_clock.ticked` when it lands.
@@ -247,7 +255,7 @@ func _start_game() -> void:
 	add_child(_clock)
 
 	for screen: GameScreen in _pager.screens:
-		screen.bind(session)
+		screen.bind()
 
 	# Mirror the wallet into the nav-bar scrap counter, repainting whenever scrap is earned or spent.
 	_wire_wallet()
@@ -255,21 +263,55 @@ func _start_game() -> void:
 # Connects the session's wallet to the top bar's scrap counter and paints the opening balance. Re-runs
 # on restart against the fresh wallet; the old wallet's connection dies with it.
 func _wire_wallet() -> void:
-	var wallet: Wallet = session.state.wallet if session != null and session.state != null else null
+	var wallet: WalletState = GameSession.game_state.wallet if GameSession.game_state != null else null
 	if wallet != null and not wallet.scrap_changed.is_connected(_on_wallet_changed):
 		wallet.scrap_changed.connect(_on_wallet_changed)
 	_on_wallet_changed()
 
 func _on_wallet_changed() -> void:
 	var scrap: int = 0
-	if session != null and session.state != null and session.state.wallet != null:
-		scrap = session.state.wallet.scrap
+	if GameSession.game_state != null and GameSession.game_state.wallet != null:
+		scrap = GameSession.game_state.wallet.scrap
 	_top_bar.set_scrap(scrap)
+
+# Builds the shell's entity nodes from the fresh session state: the player [Starship] and [Wallet] wrap their
+# state slices; the [Encounter] is opened with a clone of the player ship so combat never touches the saved
+# ship. All live under Game; their states are pointed back into GameSession.game_state.
+func _build_entities() -> void:
+	_starship = Starship.with_state(GameSession.game_state.starship)
+	_starship.name = "Starship"
+	add_child(_starship)
+
+	_wallet_node = Wallet.create(GameSession.game_state.wallet)
+	_wallet_node.name = "Wallet"
+	add_child(_wallet_node)
+
+	_open_encounter()
+
+# Opens (or reopens) the encounter the shell owns: a fresh [Encounter] node with a clone of the player ship,
+# pointed into GameSession.game_state. Frees any prior encounter so a restart doesn't leak it.
+func _open_encounter() -> void:
+	if _encounter != null:
+		_encounter.queue_free()
+	var player_clone: StarshipState = GameSession.game_state.starship.clone() if GameSession.game_state.starship != null else null
+	_encounter = Encounter.create(player_clone)
+	_encounter.name = "Encounter"
+	add_child(_encounter)
+	GameSession.game_state.encounter = _encounter.state
 
 func _teardown_game() -> void:
 	if _clock != null:
 		_clock.queue_free()
 	_clock = null
+	if _starship != null:
+		_starship.queue_free()
+	_starship = null
+	if _wallet_node != null:
+		_wallet_node.queue_free()
+	_wallet_node = null
+	if _encounter != null:
+		_encounter.queue_free()
+	_encounter = null
 
 static func create() -> Game:
 	var scene: PackedScene = load(SCENE_PATH)

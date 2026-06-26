@@ -35,9 +35,8 @@ const _LOSS_COLOR := Color(0.96, 0.55, 0.45)
 @onready var _stat_list: VBoxContainer = %StatList
 
 var _mode: Mode = Mode.READ_ONLY
-var _session: GameSession
 var _grid_view: ModuleGridView
-var _module_grid: ModuleGrid
+var _module_grid: ModuleGridState
 
 # The module the player tapped to inspect (null when nothing is focused). Its footprint is outlined on
 # the board and its per-stat contribution is split out of each stat total.
@@ -56,17 +55,18 @@ func _ready() -> void:
 	# loadout and its stats render. As a mounted page the parent is a [MinigameScreen] (which binds the
 	# real session via [method bind_session]), and this guard is false.
 	if not (get_parent() is MinigameScreen):
-		bind_session(GameSession.new_game())
+		GameSession.start_new_game()
+		bind_session()
 
 ## Mounts the player's module grid as the board and lists the stats its modules sum to. Called by
-## [MinigameScreen] when the page mounts; defaults to an editable mode (the player's own loadout). The
-## shell re-points this at another combatant's ship via [method show_starship] when a portrait drills in.
-func bind_session(session: GameSession) -> void:
-	if session == null or session.state == null:
+## [MinigameScreen] when the page mounts; reads the running game from the [code]GameSession[/code] autoload
+## and defaults to an editable mode (the player's own loadout). The shell re-points this at another
+## combatant's ship via [method show_starship] when a portrait drills in.
+func bind_session() -> void:
+	if GameSession.game_state == null or GameSession.game_state.starship == null:
 		return
-	_session = session
 	set_mode(Mode.EDIT if DEBUG_DEFAULT_EDIT else Mode.READ_ONLY)
-	_show_grid(session.state.starship.module_grid)
+	_show_grid(GameSession.game_state.starship.module_grid)
 
 ## Re-points the board at [param starship]'s module grid — the shell calls this when a portrait drills
 ## in mid-combat, so the loadout is shown [constant Mode.READ_ONLY]. Rebuilds the board and stats.
@@ -88,7 +88,7 @@ func set_mode(mode: Mode) -> void:
 # Rebuilds the board and stat list for [param module_grid], freeing the prior view first
 # ([BoardCanvas.set_board] detaches the old board but doesn't free it, so re-pointing would otherwise
 # leak views) and re-pointing the stats at the shown ship.
-func _show_grid(module_grid: ModuleGrid) -> void:
+func _show_grid(module_grid: ModuleGridState) -> void:
 	if module_grid == null:
 		return
 	if _module_grid != null and _module_grid.changed.is_connected(_on_grid_changed):
@@ -141,12 +141,12 @@ func _on_board_input(event: InputEvent) -> bool:
 # The footprint preview only appears on an editable board (the player's own ship, between combats).
 func _press(global_position: Vector2) -> bool:
 	var cell := _grid_view.cell_at(global_position)
-	var placed := _module_grid.placed_at(cell) if cell.x != -1 else null
-	if placed == null or placed.module == null:
+	var placed := _module_grid.state_at(cell) if cell.x != -1 else null
+	if placed == null or placed.blueprint == null:
 		_set_focus(null)
 		return false
 	_grabbed_cell = cell
-	_grabbed_cells = placed.cells
+	_grabbed_cells = _module_grid.cells_at(cell)
 	if _editable():
 		_preview_at(cell)
 	return true
@@ -219,9 +219,9 @@ func _focused_cells() -> Array[Vector2i]:
 	var result: Array[Vector2i] = []
 	if _focused_module == null or _module_grid == null:
 		return result
-	for placed: PlacedModule in _module_grid.placed_modules():
-		if placed.module == _focused_module:
-			return placed.cells
+	for module_state: ModuleState in _module_grid.modules:
+		if module_state.blueprint == _focused_module:
+			return _module_grid.cells_of(module_state)
 	return result
 
 #endregion
@@ -291,10 +291,10 @@ func _energy_row() -> HBoxContainer:
 	var used := 0
 	var generated := 0
 	if _module_grid != null:
-		for placed: PlacedModule in _module_grid.placed_modules():
-			if placed.module == null or not placed.enabled:
+		for module_state: ModuleState in _module_grid.modules:
+			if module_state.blueprint == null or not _module_grid.enabled(module_state):
 				continue
-			var contribution := placed.module.stats.energy
+			var contribution := module_state.blueprint.stats.energy
 			if contribution > 0:
 				generated += contribution
 			else:

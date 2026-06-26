@@ -24,7 +24,7 @@ func test_game_boots_a_session_and_is_2d_only() -> void:
 	var game := Game.create()
 	add_child(game)
 	await await_idle_frame()
-	assert_object(game.session).is_not_null()
+	assert_object(GameSession.game_state).is_not_null()
 	assert_bool(_has_node3d(game)).override_failure_message(
 		"Game must be 2D-only, but a Node3D was found in its tree.").is_false()
 	game.queue_free()
@@ -47,7 +47,7 @@ func test_drill_into_loadout_and_back() -> void:
 	# The primary stage drills into Loadout via its own drill request (the HUD "Player" box),
 	# handing the shell the combatant whose loadout to show.
 	var match_screen := game._pager.screens[0] as MinigameScreen
-	match_screen.minigame().drill_requested.emit(game.session.state.starship)
+	match_screen.minigame().drill_requested.emit(GameSession.game_state.starship)
 	assert_bool(game._pager.screens[1].visible).is_true()
 	assert_bool(game._pager.screens[0].visible).is_false()
 	# ...and the top-bar back button steps back to the primary stage.
@@ -97,13 +97,13 @@ func test_settings_restart_button_resumes_and_replaces_session() -> void:
 	var game := Game.create()
 	add_child(game)
 	await await_idle_frame()
-	var first := game.session
+	var first := GameSession.game_state
 	PauseMonitor.pause()
 	var settings := game._settings_overlay.get_node("Settings") as SettingsScreen
 	# Restart from the panel resumes the game and rebuilds the session in place.
 	settings._restart_button.pressed.emit()
 	assert_bool(PauseMonitor.is_paused).is_false()
-	assert_object(game.session).is_not_same(first)
+	assert_object(GameSession.game_state).is_not_same(first)
 	game.queue_free()
 
 func test_settings_quit_button_is_wired_to_the_shell() -> void:
@@ -193,9 +193,9 @@ func test_restart_replaces_the_session() -> void:
 	var game := Game.create()
 	add_child(game)
 	await await_idle_frame()
-	var first := game.session
+	var first := GameSession.game_state
 	game.restart()
-	assert_object(game.session).is_not_same(first)
+	assert_object(GameSession.game_state).is_not_same(first)
 	game.queue_free()
 
 func _has_node3d(node: Node) -> bool:

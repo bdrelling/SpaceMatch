@@ -16,6 +16,10 @@ signal actions_changed()
 ## combatant's loadout in the Loadout screen), passing the [StarshipState] to inspect there. The stage names no
 ## screen — it just requests the drill and whose ship to show; the shell decides where.
 signal drill_requested(starship: StarshipState)
+## The stage asked its host to reopen the active encounter — the host owns the [Encounter], so it rebuilds it
+## (a fresh fight) and the stage re-reads [code]GameSession.game_state.encounter[/code]. Used by the match's
+## end-overlay Restart; a stage standing alone (no host) handles its own restart instead.
+signal restart_requested()
 
 var status_text: String = "":
 	set(value):

@@ -228,7 +228,7 @@ func set_readouts(values: PackedStringArray) -> void:
 
 ## Shows this combatant's module grid as the portrait thumbnail (modules in their grid colors). A null
 ## grid falls back to the glyph — e.g. before a session binds, or running this scene standalone.
-func set_module_grid(grid: ModuleGrid) -> void:
+func set_module_grid(grid: ModuleGridState) -> void:
 	if _grid_thumbnail == null:
 		return
 	_grid_thumbnail.grid = grid

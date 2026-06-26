@@ -47,7 +47,7 @@ static func baseline_ruleset() -> Ruleset:
 ## The standard SpaceMatch match-scope ruleset: the baseline economy (resource/scrap/damage/warp grants) plus
 ## scoring, with a spawn pool that favors the four stat tiles and makes warp the rarest find. Extra turns and
 ## abilities are NOT here — they belong to the starship (its hull kit and modules), composed in per turn over
-## these defaults (see [StarshipGenerator] and [method MatchMinigame._effective_ruleset]).
+## these defaults (see [method Starship.apply_blueprint] and [method MatchMinigame._effective_ruleset]).
 static func default() -> MatchRules:
 	var rules := MatchRules.new()  # _init seeded the baseline grant rules (which carry their own spawn weights)
 	rules.scoring = ScoringFormula.new()  # one-to-one: a match of N is worth N

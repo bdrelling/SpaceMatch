@@ -1,7 +1,7 @@
 class_name StarshipBlueprint
 extends Resource
-## Authored preset for a starship: its name and module-grid layout. Pure data — a [StarshipGenerator]
-## reads it to build a [StarshipState].
+## Authored preset for a starship: its name and module-grid layout. Pure data — [method Starship.create]
+## reads it to build a [Starship] (and its [StarshipState]).
 
 @export var name: String = ""
 ## The ship's own base stats — what it brings before any modules: its starting health and any intrinsic
@@ -9,9 +9,9 @@ extends Resource
 ## [StarshipState]'s effective stats are this block plus its slotted modules' blocks.
 @export var stats: StatBlock
 @export var module_grid: ModuleGridBlueprint
-## The ship's phase rules (its extra-turn rule, hull behaviour). Left null, [StarshipGenerator] gives the ship
-## the standard hull kit. Author a [Ruleset] here to give a hull its own rules.
+## The ship's phase rules (its extra-turn rule, hull behaviour). Left null, [method Starship.apply_blueprint] gives
+## the ship the standard hull kit. Author a [Ruleset] here to give a hull its own rules.
 @export var ruleset: Ruleset
-## The ship's hull abilities. Left empty, [StarshipGenerator] grants the standard set. Modules add more on top
+## The ship's hull abilities. Left empty, [method Starship.apply_blueprint] grants the standard set. Modules add more on top
 ## (see [member ModuleBlueprint.abilities]). Author here to give a hull its own kit.
 @export var abilities: Array[MatchAbility] = []

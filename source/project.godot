@@ -31,6 +31,7 @@ PauseMonitor="*uid://0lyw7qh8m2oe"
 ScreenshotCapture="*uid://bm5r8pmyrk1vs"
 DeviceOrientation="*res://addons/utilities/device/device_orientation.gd"
 Catalogs="*res://resources/catalogs/catalogs.gd"
+GameSession="*res://systems/game_session/game_session.gd"
 DebugConfig="*res://scenes/debug/debug_config.gd"
 
 [debug]

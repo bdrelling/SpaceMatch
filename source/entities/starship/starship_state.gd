@@ -6,10 +6,10 @@ extends Resource
 ## The ship's own base stats — its hull's starting health and any intrinsic bonuses/restrictions, before
 ## modules. Effective stats are this plus the module grid's profile (see [method EncounterState.effective_stats]).
 @export var stats: StatBlock
-@export var module_grid: ModuleGrid
+@export var module_grid: ModuleGridState
 ## The ship's current hull — what depletes as it takes damage in an encounter. At zero the ship is destroyed
 ## and its pilot loses: the starship itself is the thing that dies, so combat damage lives here rather than on
-## a per-side counter. Seeded to [method max_health] when the ship is generated (see [StarshipGenerator]).
+## a per-side counter. Seeded to [method max_health] when the ship is built (see [method Starship.apply_blueprint]).
 @export var health: int = 0
 ## An optional tile-selection rule this ship forces on its turn, overriding the encounter's default
 ## (see [SelectionRule]). Null means it plays by the board's default selection.
@@ -17,11 +17,11 @@ extends Resource
 ## Phase rules this ship brings to a match — its extra-turn rule and any module/hull behaviour. On the ship's
 ## turn these layer over (and override, by [member Rule.rule_name]) the match's default ruleset, the same way
 ## [member selection_override] overrides the default selection. The match composes ship + module rules per
-## turn (see [method MatchMinigame._effective_ruleset]); modules add more via [method ModuleGrid.rules].
+## turn (see [method MatchMinigame._effective_ruleset]); modules add more via [method ModuleGridState.rules].
 @export var ruleset: Ruleset
 ## Abilities this ship can use — its hull kit plus whatever its modules grant. Abilities are a property of the
 ## ship, never the match: the acting ship's set drives its ability bar (player) or AI pick (opponent). Modules
-## contribute more via [method ModuleGrid.abilities].
+## contribute more via [method ModuleGridState.abilities].
 @export var abilities: Array[MatchAbility] = []
 
 ## A fight copy of this ship for an encounter: its own [member stats] block and [member health], so combat and

@@ -35,8 +35,8 @@ var damage_cells: Array[Vector2i] = []
 var warp_bars: int = 0
 ## The encounter's scoring formula (null = one-to-one). Use [method reward_for] rather than reading directly.
 var scoring: ScoringFormula
-## The player's wallet, when a session is bound (else null) — where scrap banks.
-var wallet: Wallet
+## The player's wallet state, when a session is bound (else null) — where scrap banks.
+var wallet: WalletState
 
 # --- ON_CLEAR results ---
 ## Visual events the rules emit for the host to render (popups, flying damage). Each is a Dictionary with a

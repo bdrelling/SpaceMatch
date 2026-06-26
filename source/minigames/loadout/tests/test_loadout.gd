@@ -41,18 +41,15 @@ func test_select_mode_is_editable() -> void:
 	assert_bool(minigame._editable()).is_true()
 
 func test_binding_the_player_page_is_editable() -> void:
-	# The player's own loadout page defaults to an editable mode (DEBUG_DEFAULT_EDIT).
-	var session := GameSession.new_game()
+	# The player's own loadout page defaults to an editable mode (DEBUG_DEFAULT_EDIT). Mounted outside a
+	# MinigameScreen, the scene self-binds a fresh game in _ready.
 	var scene := _scene()
-	scene.bind_session(session)
 	assert_bool(scene._editable()).is_true()
 
 func test_combat_drill_in_is_read_only() -> void:
 	# show_starship is the mid-combat drill-in path, so the shown loadout is locked.
-	var session := GameSession.new_game()
 	var scene := _scene()
-	scene.bind_session(session)
-	scene.show_starship(session.state.starship)
+	scene.show_starship(GameSession.game_state.starship)
 	assert_bool(scene._editable()).is_false()
 
 func test_standalone_mount_self_binds_a_default_session() -> void:
@@ -62,14 +59,12 @@ func test_standalone_mount_self_binds_a_default_session() -> void:
 	var scene := _scene()
 	assert_object(scene._module_grid).is_not_null()
 	assert_object(scene._grid_view).is_not_null()
-	assert_int(scene._module_grid.placed_modules().size()).is_greater(0)
+	assert_int(scene._module_grid.modules.size()).is_greater(0)
 
 func test_tapping_a_module_focuses_it() -> void:
 	# The tapped module becomes the focus (outlined on the board and split out of the stat totals); its
 	# name is lettered on the footprint by the view, not shown in the stats panel.
-	var session := GameSession.new_game()
 	var scene := _scene()
-	scene.bind_session(session)
-	var module: ModuleBlueprint = session.state.starship.module_grid.placed_modules()[0].module
+	var module: ModuleBlueprint = GameSession.game_state.starship.module_grid.modules[0].blueprint
 	scene._set_focus(module)
 	assert_object(scene._focused_module).is_same(module)

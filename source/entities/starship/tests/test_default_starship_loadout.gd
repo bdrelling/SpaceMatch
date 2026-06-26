@@ -1,21 +1,21 @@
 extends GdUnitTestSuite
 ## The default starships spawn with a loadout laid into the bay. The player default carries a Warp Core (its
 ## entry into warp); the computer default deliberately doesn't, so the AI can't Jump (a human PvP opponent
-## would use the player default instead). Guards the authored loadouts — wired through [StarshipGenerator]
+## would use the player default instead). Guards the authored loadouts — wired through [method Starship.create]
 ## from the .tres, so a broken placement or a deleted module fails here.
 
 const _DEFAULT_STARSHIP := preload("res://resources/starships/default_starship_blueprint.tres")
 const _COMPUTER_STARSHIP := preload("res://resources/starships/computer_default_starship_blueprint.tres")
 
-func _default_grid() -> ModuleGrid:
-	return StarshipGenerator.generate(_DEFAULT_STARSHIP).module_grid
+func _default_grid() -> ModuleGridState:
+	return auto_free(Starship.create(_DEFAULT_STARSHIP)).state.module_grid
 
-func _computer_grid() -> ModuleGrid:
-	return StarshipGenerator.generate(_COMPUTER_STARSHIP).module_grid
+func _computer_grid() -> ModuleGridState:
+	return auto_free(Starship.create(_COMPUTER_STARSHIP)).state.module_grid
 
 func test_default_ship_has_six_modules() -> void:
 	var grid := _default_grid()
-	assert_int(grid.placed_modules().size()).is_equal(6)
+	assert_int(grid.modules.size()).is_equal(6)
 	# shield 2 + life support 2 + reactor 4 + sensor 1 + engine 4 + warp core 1
 	assert_int(grid.filled_cell_count()).is_equal(14)
 
@@ -30,8 +30,8 @@ func test_default_modules_sit_where_authored() -> void:
 
 func test_default_stat_profile() -> void:
 	var total := StatBlock.new()
-	for placed: PlacedModule in _default_grid().placed_modules():
-		total.add(placed.module.stats)
+	for module_state: ModuleState in _default_grid().modules:
+		total.add(module_state.blueprint.stats)
 	assert_int(total.power).is_equal(0)         # power is combat power; no default (non-weapon) module grants it
 	assert_int(total.speed).is_equal(4)          # engine
 	assert_int(total.shields).is_equal(4)        # shield generator
@@ -45,7 +45,7 @@ func test_default_stat_profile() -> void:
 # The ship carries its own base stat block (its hull's health), separate from modules; effective stats are
 # the ship block plus the module profile. HP is ship-driven from here, not a constant.
 func test_default_ship_stat_block_drives_health() -> void:
-	var ship := StarshipGenerator.generate(_DEFAULT_STARSHIP)
+	var ship := auto_free(Starship.create(_DEFAULT_STARSHIP)).state
 	assert_object(ship.stats).is_not_null()
 	assert_int(ship.stats.health).is_equal(25)  # hull health lives on the ship, not a module
 	var effective := StatBlock.new()
@@ -59,10 +59,10 @@ func test_default_ship_stat_block_drives_health() -> void:
 # so the AI can't Jump. (A human PvP opponent would use the player default and keep its warp core.)
 func test_computer_default_has_no_warp_core() -> void:
 	var grid := _computer_grid()
-	assert_int(grid.placed_modules().size()).is_equal(5)
-	for placed: PlacedModule in grid.placed_modules():
-		assert_str(placed.module.name).is_not_equal("Warp Core")
+	assert_int(grid.modules.size()).is_equal(5)
+	for module_state: ModuleState in grid.modules:
+		assert_str(module_state.blueprint.name).is_not_equal("Warp Core")
 	var total := StatBlock.new()
-	for placed: PlacedModule in grid.placed_modules():
-		total.add(placed.module.stats)
+	for module_state: ModuleState in grid.modules:
+		total.add(module_state.blueprint.stats)
 	assert_int(total.warp_capacity).is_equal(0)

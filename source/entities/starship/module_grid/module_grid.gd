@@ -1,159 +1,69 @@
 class_name ModuleGrid
-extends Resource
-## A ship's module grid: a grid_system [GridState] (its silhouette plus the modules packed into it)
-## wrapped in a module-level API. The grid owns placement — a placed module is a [GridObjectState]
-## occupant whose state carries the [ModuleBlueprint]. Persists with the save via [member grid].
+extends Node
+## A ship's module-grid entity — the [Node] that represents a [ModuleGridState] in the hierarchy (a child of
+## the [Starship] whose grid it is). Built from a [ModuleGridBlueprint] via [method create] (stamping the hull
+## silhouette and its authored modules), or wrapped around existing state via [method with_state]. Logic reads
+## the grid off [member state]; this node makes the grid inspectable and places it in the tree.
 
-const _LAYER := 0
-const _MODULE_KEY := &"module"
+const SCENE_PATH := "res://entities/starship/module_grid/module_grid.tscn"
+const SCENE: PackedScene = preload(SCENE_PATH)
 
-@export var grid: GridState
+@export var state: ModuleGridState
 
-var columns: int:
-	get:
-		return grid.width if grid != null else 0
+# The placed modules as child [Module] nodes (one per [member ModuleGridState.modules] entry, sharing the same
+# [ModuleState] by reference). Rebuilt from the state whenever it changes, so [member modules] mirrors it.
+var _modules: Array[Module] = []
 
-var rows: int:
-	get:
-		return grid.height if grid != null else 0
+## The placed modules as nodes in the hierarchy. Each wraps a [ModuleState] from [member state]'s modules.
+var modules: Array[Module]:
+	get: return _modules
 
-## The hull silhouette's usable cells.
-func existing_cells() -> Array[Vector2i]:
-	var result: Array[Vector2i] = []
-	if grid != null:
-		for cell: Vector2i in grid.usable_cells:
-			result.append(cell)
-	return result
+#region Blueprinting
 
-func cell_exists(cell: Vector2i) -> bool:
-	return grid != null and grid.is_usable(cell.x, cell.y)
+## Builds the grid state from [param _blueprint]: stamps the hull silhouette, then its authored modules in
+## order (a placement that doesn't fit is skipped). A null blueprint yields an empty grid.
+func apply_blueprint(_blueprint: ModuleGridBlueprint) -> void:
+	if _blueprint == null:
+		_adopt(ModuleGridState.new())
+		return
+	var grid_state := ModuleGridState.new(_blueprint.columns, _blueprint.rows, 1)
+	for cell: Vector2i in _blueprint.cells:
+		grid_state.usable_cells[cell] = true
+	for placement: ModulePlacement in _blueprint.modules:
+		if placement != null and placement.module != null:
+			grid_state.place(placement.module, placement.origin, placement.rotation)
+	_adopt(grid_state)
 
-func tile_count() -> int:
-	return grid.usable_cells.size() if grid != null else 0
+static func create(_blueprint: ModuleGridBlueprint) -> ModuleGrid:
+	var module_grid: ModuleGrid = SCENE.instantiate()
+	module_grid.apply_blueprint(_blueprint)
+	return module_grid
 
-func filled_cell_count() -> int:
-	var count := 0
-	if grid != null:
-		for occupant: GridObjectState in grid.objects_on_layer(_LAYER):
-			count += occupant.cells.size()
-	return count
+## Wraps an existing [param _state] in a fresh node — the load/clone path, where the grid data already exists.
+static func with_state(_state: ModuleGridState) -> ModuleGrid:
+	var module_grid: ModuleGrid = SCENE.instantiate()
+	module_grid._adopt(_state)
+	return module_grid
 
-func can_place(shape: PieceShape, origin: Vector2i, rotation: int) -> bool:
-	if grid == null or shape == null:
-		return false
-	return grid.can_place(_LAYER, shape.cells_at(origin, rotation))
+# Points this node at [param grid_state], mounts a [Module] child per placed module, and re-mounts them
+# whenever the grid changes (a module placed, moved, or removed).
+func _adopt(grid_state: ModuleGridState) -> void:
+	state = grid_state
+	if state != null and not state.changed.is_connected(_mount_modules):
+		state.changed.connect(_mount_modules)
+	_mount_modules()
 
-func place(module: ModuleBlueprint, origin: Vector2i, rotation: int) -> bool:
-	if module == null or not can_place(module.shape, origin, rotation):
-		return false
-	var occupant := GridObjectState.new(module.shape.cells_at(origin, rotation), {_MODULE_KEY: module})
-	occupant.shape = module.shape
-	occupant.shape_rotation = rotation
-	grid.place_object(_LAYER, occupant)
-	emit_changed()
-	return true
+# Frees the prior [Module] children and mounts one per [member ModuleGridState.modules] entry, each wrapping
+# the same [ModuleState] the grid holds — so editing through the node or the grid is the same edit.
+func _mount_modules() -> void:
+	for module: Module in _modules:
+		module.queue_free()
+	_modules.clear()
+	if state == null:
+		return
+	for module_state: ModuleState in state.modules:
+		var module := Module.with_state(module_state)
+		add_child(module)
+		_modules.append(module)
 
-## The module covering [param cell], or null.
-func module_at(cell: Vector2i) -> ModuleBlueprint:
-	if grid == null:
-		return null
-	var occupant := grid.get_object_at(_LAYER, cell.x, cell.y)
-	if occupant == null:
-		return null
-	var module: ModuleBlueprint = occupant.state.get(_MODULE_KEY)
-	return module
-
-## Removes and returns the module covering [param cell] (null when the cell is empty).
-func remove_at(cell: Vector2i) -> ModuleBlueprint:
-	if grid == null:
-		return null
-	var occupant := grid.get_object_at(_LAYER, cell.x, cell.y)
-	if occupant == null:
-		return null
-	var module: ModuleBlueprint = occupant.state.get(_MODULE_KEY)
-	grid.remove_object(_LAYER, occupant)
-	emit_changed()
-	return module
-
-## The placed modules as read-only projections (module + the cells it covers + whether it's enabled), for
-## views and stat counting. A module is enabled unless one of its cells is in [param disabled_cells] — a
-## single disabled cell deactivates the whole module that covers it.
-func placed_modules(disabled_cells: Array[Vector2i] = []) -> Array[PlacedModule]:
-	var result: Array[PlacedModule] = []
-	if grid != null:
-		for occupant: GridObjectState in grid.objects_on_layer(_LAYER):
-			var module: ModuleBlueprint = occupant.state.get(_MODULE_KEY)
-			result.append(PlacedModule.new(module, occupant.cells, _cells_enabled(occupant.cells, disabled_cells)))
-	return result
-
-## The stat profile this grid's modules sum to — the ship's contribution to its stats. Only modules whose
-## every cell is enabled count; a module with any cell in [param disabled_cells] is deactivated and adds
-## nothing. The one place the "all cells enabled to count" rule lives.
-func profile(disabled_cells: Array[Vector2i] = []) -> StatBlock:
-	var total := StatBlock.new()
-	for placed: PlacedModule in placed_modules(disabled_cells):
-		if placed.module != null and placed.enabled:
-			total.add(placed.module.stats)
-	return total
-
-## The abilities this grid's enabled modules grant the ship — same "all cells enabled to count" rule as
-## [method profile]. A disabled module grants nothing.
-func abilities(disabled_cells: Array[Vector2i] = []) -> Array[MatchAbility]:
-	var result: Array[MatchAbility] = []
-	for placed: PlacedModule in placed_modules(disabled_cells):
-		if placed.module != null and placed.enabled:
-			result.append_array(placed.module.abilities)
-	return result
-
-## The phase rules this grid's enabled modules grant the ship — same enabled rule as [method profile].
-func rules(disabled_cells: Array[Vector2i] = []) -> Array[Rule]:
-	var result: Array[Rule] = []
-	for placed: PlacedModule in placed_modules(disabled_cells):
-		if placed.module != null and placed.enabled:
-			result.append_array(placed.module.rules)
-	return result
-
-func _cells_enabled(cells: Array[Vector2i], disabled_cells: Array[Vector2i]) -> bool:
-	for cell: Vector2i in cells:
-		if disabled_cells.has(cell):
-			return false
-	return true
-
-## A read-only projection of the module covering [param cell] (module + the cells it covers), or null
-## when the cell is empty — for a host to grab a placed module by one of its cells.
-func placed_at(cell: Vector2i) -> PlacedModule:
-	if grid == null:
-		return null
-	var occupant := grid.get_object_at(_LAYER, cell.x, cell.y)
-	if occupant == null:
-		return null
-	var module: ModuleBlueprint = occupant.state.get(_MODULE_KEY)
-	return PlacedModule.new(module, occupant.cells)
-
-## True when the module covering [param from_cell] could be translated by (to_cell - from_cell) — its
-## footprint lands on usable cells and collides with nothing but itself. False when from_cell is empty.
-func can_move(from_cell: Vector2i, to_cell: Vector2i) -> bool:
-	if grid == null:
-		return false
-	var occupant := grid.get_object_at(_LAYER, from_cell.x, from_cell.y)
-	if occupant == null:
-		return false
-	return grid.can_place(_LAYER, _translated(occupant.cells, to_cell - from_cell), occupant)
-
-## Translates the module covering [param from_cell] by (to_cell - from_cell), preserving its rotation.
-## Returns true on success; leaves the grid untouched and returns false when the move isn't valid.
-func move(from_cell: Vector2i, to_cell: Vector2i) -> bool:
-	if not can_move(from_cell, to_cell):
-		return false
-	var occupant := grid.get_object_at(_LAYER, from_cell.x, from_cell.y)
-	grid.remove_object(_LAYER, occupant)
-	occupant.cells = _translated(occupant.cells, to_cell - from_cell)
-	grid.place_object(_LAYER, occupant)
-	emit_changed()
-	return true
-
-func _translated(cells: Array[Vector2i], delta: Vector2i) -> Array[Vector2i]:
-	var result: Array[Vector2i] = []
-	for cell: Vector2i in cells:
-		result.append(cell + delta)
-	return result
+#endregion

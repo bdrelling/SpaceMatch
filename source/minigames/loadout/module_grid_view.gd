@@ -25,13 +25,13 @@ const _NAME_OUTLINE_SIZE := 4
 const _NAME_PADDING := 4.0
 
 var cell_size: float = 96.0
-var grid: ModuleGrid
+var grid: ModuleGridState
 
 var _preview_cells: Array[Vector2i] = []
 var _preview_valid := false
 var _focus_cells: Array[Vector2i] = []
 
-func configure(module_grid: ModuleGrid, cell_size_px: float) -> void:
+func configure(module_grid: ModuleGridState, cell_size_px: float) -> void:
 	grid = module_grid
 	cell_size = cell_size_px
 	if not grid.changed.is_connected(queue_redraw):
@@ -79,8 +79,8 @@ func _draw() -> void:
 		var rect := _cell_rect(cell)
 		draw_rect(rect, _CELL)
 		draw_rect(rect, _CELL_BORDER, false, 1.0)
-	for placed: PlacedModule in grid.placed_modules():
-		_draw_module(placed)
+	for module_state: ModuleState in grid.modules:
+		_draw_module(module_state, grid.cells_of(module_state))
 	if not _focus_cells.is_empty():
 		_draw_footprint_outline(_focus_cells, _FOCUS_OUTLINE, _FOCUS_WIDTH)
 	for cell: Vector2i in _preview_cells:
@@ -88,14 +88,13 @@ func _draw() -> void:
 
 # A module as one cohesive piece: its cells filled seamlessly (internal seams meet at full cell extent),
 # a single outline around the whole footprint, and its name lettered across it.
-func _draw_module(placed: PlacedModule) -> void:
-	var cells := placed.cells
-	var fill: Color = placed.module.color
+func _draw_module(module_state: ModuleState, cells: Array[Vector2i]) -> void:
+	var fill: Color = module_state.blueprint.color
 	fill.a = 1.0
 	for cell: Vector2i in cells:
 		draw_rect(_module_cell_rect(cell, cells), fill)
-	_draw_footprint_outline(cells, placed.module.color.lightened(0.4), _MODULE_BORDER_WIDTH)
-	_draw_module_name(placed)
+	_draw_footprint_outline(cells, module_state.blueprint.color.lightened(0.4), _MODULE_BORDER_WIDTH)
+	_draw_module_name(module_state, cells)
 
 # A cell's fill rect within its module: pulled in by [_MODULE_GAP] on sides that face outside the
 # footprint, but flush to the cell edge on sides shared with another cell of the same module — so
@@ -129,16 +128,16 @@ func _draw_footprint_outline(cells: Array[Vector2i], color: Color, width: float)
 
 # Letters the module's name across its footprint, centred and wrapped to the footprint width, with a
 # dark outline so it stays legible over any module colour.
-func _draw_module_name(placed: PlacedModule) -> void:
-	if placed.module == null or placed.module.name.is_empty():
+func _draw_module_name(module_state: ModuleState, cells: Array[Vector2i]) -> void:
+	if module_state.blueprint == null or module_state.blueprint.name.is_empty():
 		return
 	var font := ThemeDB.fallback_font
 	if font == null:
 		return
-	var bounds := _footprint_bounds(placed.cells)
+	var bounds := _footprint_bounds(cells)
 	var font_size := maxi(12, roundi(cell_size * 0.2))
 	var wrap_width := bounds.size.x - (_MODULE_GAP + _NAME_PADDING) * 2.0
-	var text := placed.module.name
+	var text := module_state.blueprint.name
 	var text_size := font.get_multiline_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, wrap_width, font_size)
 	var origin_x := bounds.position.x + _MODULE_GAP + _NAME_PADDING
 	var baseline_y := bounds.position.y + (bounds.size.y - text_size.y) * 0.5 + font.get_ascent(font_size)

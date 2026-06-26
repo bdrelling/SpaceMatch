@@ -60,10 +60,13 @@ const _FLY_STAGGER: float = 0.07
 @onready var _actions: HBoxContainer = %Actions
 
 var _message: String = ""
-var _game_session: GameSession
 # The encounter holds the per-combatant state — health, shields, dodge, the temporary stat-buff layer, and
-# the matched-tile resources the readouts show and abilities spend. Recreating it (e.g. on restart) resets all.
+# the matched-tile resources the readouts show and abilities spend. The match only renders it; a host (the
+# [Game] shell or [EncounterScreen]) owns the [Encounter] node and points this at it via [method bind_session].
 var _encounter: EncounterState
+# A fallback [Encounter] the match owns ONLY when it stands alone (raw match.tscn, no host) — built in
+# [method _ready] so the board renders, and replaced by the host's encounter on bind. Null when hosted.
+var _fallback_encounter: Encounter
 
 var _session: GridSession
 var _view: GridView
@@ -182,10 +185,10 @@ func _ready() -> void:
 	_player_portrait.pressed.connect(_on_player_pressed)
 	_opponent_portrait.pressed.connect(_on_opponent_pressed)
 
-	# A transient encounter so the screen stands alone (e.g. running match.tscn directly); a bound
-	# session swaps in its own in [method bind_session].
+	# Stand alone until a host binds: open a fallback encounter (raw match.tscn run directly) so the board
+	# renders. A host replaces it in [method bind_session] with the encounter it owns.
 	if _encounter == null:
-		_encounter = EncounterState.new()
+		_open_fallback_encounter()
 	_watch_encounter()
 	_configure_warp()
 	# The meter is built only when warp is actually in play (rule on, a ship can warp); _spawn_table keeps
@@ -232,19 +235,18 @@ func _open_rules() -> void:
 
 #region Portraits
 
-## Binds the running game so the portraits can read each ship's stats and the player's [Wallet], and
-## the top row can track the encounter's turns. Called by [MinigameScreen] when the game mounts this
-## page. Adopts the session's [EncounterState] (creating one if the encounter hasn't started).
-func bind_session(session: GameSession) -> void:
-	_game_session = session
-	if _game_session.state.encounter == null:
-		var fresh := EncounterState.new()
-		_seed_player_ship(fresh)
-		_game_session.state.encounter = fresh
-	_encounter = _game_session.state.encounter
+## Mounts the running game (read from the [code]GameSession[/code] autoload) so the portraits show each ship's
+## stats and the player's wallet, and the top row tracks the encounter's turns. Called by the host when it
+## mounts this page; the host owns the [Encounter] node, so the match drops any standalone fallback and renders
+## the host's encounter.
+func bind_session() -> void:
+	if _fallback_encounter != null:
+		_fallback_encounter.queue_free()
+		_fallback_encounter = null
+	_encounter = GameSession.game_state.encounter
 	_watch_encounter()
 	# Hand the live state to the Debug panel so the stat editor can tune this encounter's health and stats.
-	DebugConfig.active_state = _game_session.state
+	DebugConfig.active_state = GameSession.game_state
 	_configure_warp()
 	# Now the bound ship is known — drive starting HP from it, then build the warp meter if warp's in play.
 	_configure_health()
@@ -353,17 +355,26 @@ func _player_starship() -> StarshipState:
 func _opponent_starship() -> StarshipState:
 	return _encounter.opponent if _encounter != null else null
 
-# Clones the player's persistent starship into [param encounter] as its fight ship, so combat damage and Debug
-# edits hit the copy and every fresh fight starts from a fresh clone. With no session (the standalone scene) the
-# encounter keeps the default ship its own _init generated.
-func _seed_player_ship(encounter: EncounterState) -> void:
-	if _game_session != null and _game_session.state != null and _game_session.state.starship != null:
-		encounter.player = _game_session.state.starship.clone()
+# Opens the match's own fallback encounter, used ONLY when it stands alone (raw match.tscn, no host). The
+# player combatant clones the running ship (so a fresh fight starts from a fresh copy), the opponent is the
+# computer default; the [Encounter] node parents the two combatant [Starship] nodes under the match so the
+# fight lives in the hierarchy, and its state is pointed into the session. Frees any prior fallback first.
+func _open_fallback_encounter() -> void:
+	if _fallback_encounter != null:
+		_fallback_encounter.queue_free()
+	var player_clone: StarshipState = null
+	if GameSession.game_state != null and GameSession.game_state.starship != null:
+		player_clone = GameSession.game_state.starship.clone()
+	_fallback_encounter = Encounter.create(player_clone)
+	add_child(_fallback_encounter)
+	_encounter = _fallback_encounter.state
+	if GameSession.game_state != null:
+		GameSession.game_state.encounter = _encounter
 
 func _starship_for(combatant: int) -> StarshipState:
 	return _player_starship() if combatant == EncounterState.Combatant.PLAYER else _opponent_starship()
 
-func _grid_of(starship: StarshipState) -> ModuleGrid:
+func _grid_of(starship: StarshipState) -> ModuleGridState:
 	return starship.module_grid if starship != null else null
 
 # The acting [param combatant]'s phase rules: its ship's ruleset plus its enabled modules' rules. The match
@@ -378,7 +389,7 @@ func _ship_rules(combatant: int) -> Array[Rule]:
 		return result
 	if ship.ruleset != null:
 		result.append_array(ship.ruleset.rules)
-	var grid: ModuleGrid = _grid_of(ship)
+	var grid: ModuleGridState = _grid_of(ship)
 	if grid != null and _encounter != null:
 		result.append_array(grid.rules(_encounter.disabled_cells_of(combatant)))
 	return result
@@ -393,7 +404,7 @@ func _ship_abilities(combatant: int) -> Array[MatchAbility]:
 	if ship == null:
 		return result
 	result.append_array(ship.abilities)
-	var grid: ModuleGrid = _grid_of(ship)
+	var grid: ModuleGridState = _grid_of(ship)
 	if grid != null and _encounter != null:
 		result.append_array(grid.abilities(_encounter.disabled_cells_of(combatant)))
 	return result
@@ -409,7 +420,7 @@ func _effective_stats(combatant: int) -> StatBlock:
 	var base := StatBlock.new()
 	if ship != null and ship.stats != null:
 		base.add(ship.stats)
-	var grid: ModuleGrid = _grid_of(ship)
+	var grid: ModuleGridState = _grid_of(ship)
 	if grid != null:
 		base.add(grid.profile(_encounter.disabled_cells_of(combatant)))
 	return _encounter.effective_stats(combatant, base)
@@ -648,11 +659,9 @@ func _render_clear_visuals(ctx: MatchRuleContext) -> void:
 	if charged:
 		_refresh_warp()
 
-# The player's wallet when a session is bound, else null (e.g. the standalone scene).
-func _wallet() -> Wallet:
-	if _game_session != null and _game_session.state != null:
-		return _game_session.state.wallet
-	return null
+# The player's wallet state from the running game, or null when there's no game state.
+func _wallet() -> WalletState:
+	return GameSession.game_state.wallet if GameSession.game_state != null else null
 
 # A match's reward for clearing [param count] tiles of a kind, per the encounter's [member MatchRules.scoring]
 # formula (one-to-one by default; a [FibonacciScoringFormula] makes bigger matches pay super-linearly). Falls
@@ -660,10 +669,10 @@ func _wallet() -> Wallet:
 func _reward_for(count: int) -> int:
 	return rules.scoring.reward_for(count) if rules.scoring != null else maxi(0, count)
 
-# Adds matched scrap to the player's wallet (a no-op without a bound session, e.g. the standalone scene).
+# Adds matched scrap to the player's wallet (a no-op when there's no wallet).
 func _earn_scrap(amount: int) -> void:
-	if _game_session != null and _game_session.state != null and _game_session.state.wallet != null:
-		_game_session.state.wallet.earn(amount)
+	if GameSession.game_state != null and GameSession.game_state.wallet != null:
+		GameSession.game_state.wallet.earn(amount)
 
 #region Abilities
 
@@ -862,18 +871,18 @@ func _drain_resources(combatant: int, amount: int) -> void:
 # the module from the board's seeded RNG so it's reproducible; a no-op when the target has no grid or every
 # module is already down.
 func _disable_opponent_module(target: int, turns: int) -> void:
-	var grid: ModuleGrid = _grid_of(_starship_for(target))
+	var grid: ModuleGridState = _grid_of(_starship_for(target))
 	if grid == null:
 		return
 	var disabled: Array[Vector2i] = _encounter.disabled_cells_of(target)
-	var live: Array[PlacedModule] = []
-	for placed: PlacedModule in grid.placed_modules(disabled):
-		if placed.module != null and placed.enabled and not placed.cells.is_empty():
-			live.append(placed)
+	var live: Array[ModuleState] = []
+	for module_state: ModuleState in grid.modules:
+		if module_state.blueprint != null and grid.enabled(module_state, disabled) and not grid.cells_of(module_state).is_empty():
+			live.append(module_state)
 	if live.is_empty():
 		return
-	var pick: PlacedModule = live[_rng.randi_range(0, live.size() - 1)]
-	_encounter.disable_cell(target, pick.cells[0], turns)
+	var pick: ModuleState = live[_rng.randi_range(0, live.size() - 1)]
+	_encounter.disable_cell(target, grid.cells_of(pick)[0], turns)
 
 # The popup text for an attack: "Dodged!" when the target evaded it (result < 0), else the damage dealt.
 func _damage_text(result: int, dealt: int) -> String:
@@ -1013,7 +1022,7 @@ func _on_encounter_changed() -> void:
 # The encounter is the running game's, not this node's — drop the Debug panel's handle to it when the board
 # leaves the tree (back to the menu) so the stat editor reads "no encounter" instead of a stale one.
 func _exit_tree() -> void:
-	if _game_session != null and DebugConfig.active_state == _game_session.state:
+	if DebugConfig.active_state == GameSession.game_state:
 		DebugConfig.active_state = null
 
 # Builds the warp meter — a row of [method _max_warp_segments] segment cells — and slots it into the layout
@@ -1370,12 +1379,15 @@ func _show_end_overlay() -> void:
 # Restarts the Quick Match on a fresh board: clears the overlay, resets the encounter and both tallies, and
 # pours in a new board. Wired to the overlay's Restart button. (Campaign would replace this with its own flow.)
 func _restart_encounter() -> void:
-	# A fresh encounter (full health, no shields, zero resources) — state recreated from the patterns, not
-	# hand-reset field by field. A bound session adopts the new encounter too.
-	_encounter = EncounterState.new()
-	if _game_session != null and _game_session.state != null:
-		_seed_player_ship(_encounter)
-		_game_session.state.encounter = _encounter
+	# A fresh encounter (full health, no shields, zero resources) — a new [Encounter] node and state, not a
+	# hand-reset of fields. The host owns the encounter, so ask it to reopen one and re-read the result; when
+	# standalone (no host) the match reopens its own fallback.
+	if _fallback_encounter != null:
+		_open_fallback_encounter()
+	else:
+		restart_requested.emit()
+		_encounter = GameSession.game_state.encounter
+	_watch_encounter()
 	_restart_board()
 
 # Starts the match over on a fresh board against the current [member _encounter]: clears the end overlay and

@@ -2,6 +2,23 @@ extends GdUnitTestSuite
 ## MatchMinigame (match-3). The board is an equal-frequency generator, so it always lays down a full
 ## field of tiles.
 
+# Reset the shared GameSession singleton before each test so a fresh default game (ship + wallet) backs the
+# run and tests don't leak state into each other.
+func before_test() -> void:
+	GameSession.start_new_game()
+
+# A standalone encounter with default combatant ships, freed at test end. The [Encounter] node builds the two
+# [Starship] nodes; tests operate on its [EncounterState] directly (resources, no node-reaching).
+func _encounter() -> EncounterState:
+	return auto_free(Encounter.create()).state
+
+# Acts as a host mounting the match: opens an encounter on the session (a clone of the player ship vs the
+# computer default) and binds the match to it, the way [Game] / [EncounterScreen] do.
+func _host_bind(game: MatchMinigame) -> void:
+	var enc := auto_free(Encounter.create(GameSession.game_state.starship.clone()))
+	GameSession.game_state.encounter = enc.state
+	game.bind_session()
+
 func _make(rules: MatchRules = null, mode := MatchBoardView.InputMode.SWAP, ai := true) -> MatchMinigame:
 	var scene: PackedScene = load("res://minigames/match/match.tscn")
 	var game: MatchMinigame = scene.instantiate()
@@ -53,15 +70,14 @@ func test_portrait_shows_only_four_stat_readouts() -> void:
 # Matching scrap tiles on the player's turn banks scrap into the wallet (the nav-bar currency).
 func test_scrap_match_earns_wallet() -> void:
 	var game := _make()
-	game.bind_session(GameSession.new_game())
 	await await_idle_frame()
 	var board: GridState = game._session.state
 	var cells: Array[Vector2i] = [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0)]
 	_force_kind(board, cells, _SCRAP_KIND)
-	var before: int = game._game_session.state.wallet.scrap
+	var before: int = GameSession.game_state.wallet.scrap
 	# Turn 1 is the player's — scrap goes to their wallet.
 	game._on_cells_cleared(board, cells)
-	assert_int(game._game_session.state.wallet.scrap).is_equal(before + 3)
+	assert_int(GameSession.game_state.wallet.scrap).is_equal(before + 3)
 	game.queue_free()
 
 # Matching damage tiles on the player's turn deals that much damage to the opponent's health.
@@ -510,7 +526,7 @@ func test_ability_unaffordable_does_nothing() -> void:
 
 # Shield soaks damage before health, and overflow spills through to health.
 func test_shield_absorbs_damage_before_health() -> void:
-	var enc := EncounterState.new()
+	var enc := _encounter()
 	enc.add_shield(EncounterState.Combatant.PLAYER, 10)
 	assert_int(enc.deal_damage(EncounterState.Combatant.PLAYER, 6)).is_equal(0)  # fully soaked
 	assert_int(enc.player_shield).is_equal(4)
@@ -521,7 +537,7 @@ func test_shield_absorbs_damage_before_health() -> void:
 
 # Dodge negates the next attack whole and is then spent; the one after lands normally.
 func test_dodge_negates_the_next_attack() -> void:
-	var enc := EncounterState.new()
+	var enc := _encounter()
 	enc.set_dodge(EncounterState.Combatant.PLAYER, true)
 	assert_int(enc.deal_damage(EncounterState.Combatant.PLAYER, 8)).is_equal(-1)  # dodged
 	assert_int(enc.player_health).is_equal(enc.player_max_health)
@@ -532,7 +548,7 @@ func test_dodge_negates_the_next_attack() -> void:
 # Dodge guards only the opponent's turn that follows it: it survives into the opponent's turn, then expires
 # when the owner's turn comes back around (so it can't last forever).
 func test_dodge_expires_when_owners_turn_returns() -> void:
-	var enc := EncounterState.new()
+	var enc := _encounter()
 	enc.set_dodge(EncounterState.Combatant.PLAYER, true)
 	enc.advance_turn()  # player's turn → opponent's; the player is still evading through it
 	assert_bool(enc.player_dodge).is_true()
@@ -602,7 +618,7 @@ func test_dodge_survives_extra_turns_then_clears_on_handover() -> void:
 
 # The encounter is over once a combatant is out of health, and names the loser.
 func test_encounter_over_when_a_combatant_falls() -> void:
-	var enc := EncounterState.new()
+	var enc := _encounter()
 	assert_bool(enc.is_over()).is_false()
 	enc.deal_damage(EncounterState.Combatant.OPPONENT, enc.opponent_max_health)
 	assert_bool(enc.is_over()).is_true()
@@ -610,7 +626,7 @@ func test_encounter_over_when_a_combatant_falls() -> void:
 
 # Filling warp lets the player Jump — expending the meter and winning the encounter outright.
 func test_player_jump_at_full_warp_wins() -> void:
-	var enc := EncounterState.new()
+	var enc := _encounter()
 	enc.player_warp_max = 4  # a warp core grants capacity (modules seed this in a real encounter)
 	enc.add_warp(EncounterState.Combatant.PLAYER, enc.player_warp_max)
 	assert_bool(enc.can_jump(EncounterState.Combatant.PLAYER)).is_true()
@@ -621,7 +637,7 @@ func test_player_jump_at_full_warp_wins() -> void:
 
 # The opponent can only Jump in a tug (Quick Match); Campaign never lets their warp win.
 func test_opponent_jump_only_in_a_tug() -> void:
-	var enc := EncounterState.new()
+	var enc := _encounter()
 	enc.opponent_warp_max = 4
 	enc.warp_tug = false
 	enc.warp = -enc.opponent_warp_max
@@ -633,14 +649,14 @@ func test_opponent_jump_only_in_a_tug() -> void:
 
 # Without a warp core (zero capacity) a ship can't warp at all: matched warp banks nothing and Jump stays out.
 func test_no_warp_without_a_core() -> void:
-	var enc := EncounterState.new()  # a fresh encounter carries no warp capacity
+	var enc := _encounter()  # a fresh encounter carries no warp capacity
 	enc.add_warp(EncounterState.Combatant.PLAYER, 10)
 	assert_int(enc.warp).is_equal(0)  # clamped to a zero capacity — nothing banks
 	assert_bool(enc.can_jump(EncounterState.Combatant.PLAYER)).is_false()
 
 # Each side fills toward its own capacity: a six-bar core and a four-bar core Jump at different fills.
 func test_warp_capacity_is_per_side() -> void:
-	var enc := EncounterState.new()
+	var enc := _encounter()
 	enc.warp_tug = true
 	enc.player_warp_max = 4
 	enc.opponent_warp_max = 6
@@ -688,7 +704,7 @@ func test_target_lock_buffs_tile_damage() -> void:
 
 # The effective DAMAGE stat is permanent profile + temporary buffs: a ship that contributes damage hits for it.
 func test_effective_stats_layer_buffs_on_base() -> void:
-	var enc := EncounterState.new()
+	var enc := _encounter()
 	var base := StatBlock.new()
 	base.power = 3
 	enc.add_buff(EncounterState.Combatant.PLAYER, Stat.Type.POWER, 2)
@@ -724,7 +740,6 @@ func test_matched_tile_resource_includes_stat_bonus() -> void:
 # loadout's Engine gives +4 Speed (propulsion tile); disable its cell and a propulsion match loses that bonus.
 func test_disabling_a_module_lowers_its_tile_haul() -> void:
 	var game := _make()
-	game.bind_session(GameSession.new_game())
 	await await_idle_frame()
 	var board: GridState = game._session.state
 	var cells: Array[Vector2i] = [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0)]
@@ -762,18 +777,18 @@ func test_disruptor_disables_an_opponent_module() -> void:
 	game._use_ability(EncounterState.Combatant.PLAYER, disrupt)
 	var disabled: Array[Vector2i] = game._encounter.disabled_cells_of(EncounterState.Combatant.OPPONENT)
 	assert_int(disabled.size()).is_equal(1)
-	var grid: ModuleGrid = game._opponent_starship().module_grid
+	var grid: ModuleGridState = game._opponent_starship().module_grid
 	assert_object(grid.module_at(disabled[0])).is_not_null()  # it landed on a real module
 	var down: int = 0
-	for placed: PlacedModule in grid.placed_modules(disabled):
-		if not placed.enabled:
+	for module_state: ModuleState in grid.modules:
+		if not grid.enabled(module_state, disabled):
 			down += 1
 	assert_int(down).is_equal(1)  # exactly the one module is deactivated
 	game.queue_free()
 
 # A disabled cell counts down one per turn and re-enables when it hits zero — and only on the targeted side.
 func test_disabled_cell_counts_down_and_re_enables() -> void:
-	var enc := EncounterState.new()
+	var enc := _encounter()
 	enc.disable_cell(EncounterState.Combatant.OPPONENT, Vector2i(2, 0), 3)
 	assert_array(enc.disabled_cells_of(EncounterState.Combatant.OPPONENT)).contains([Vector2i(2, 0)])
 	enc.advance_turn()  # 3 -> 2
@@ -817,13 +832,13 @@ func test_restart_resets_the_encounter() -> void:
 # because bind_session only swapped the encounter and left the frozen board (and _game_over) standing.
 func test_rebind_restarts_a_finished_match() -> void:
 	var game := _make()
-	game.bind_session(GameSession.new_game())  # initial mount
+	_host_bind(game)  # initial mount
 	await await_idle_frame()
 	game._encounter.player_health = 3
 	game._game_over = true
 	game._ended = true
-	# The shell rebinds with a brand-new session on Restart.
-	game.bind_session(GameSession.new_game())
+	# The shell reopens the encounter and rebinds on Restart.
+	_host_bind(game)
 	await await_idle_frame()
 	assert_bool(game._game_over).is_false()
 	assert_bool(game._ended).is_false()
@@ -940,7 +955,7 @@ func test_ruleset_swaps_rules_at_runtime() -> void:
 # A grant rule banks matched tiles straight into the mover's tally — the migrated default "a match of N is
 # worth N" (one-to-one with no scoring formula), now a unit-testable rule with no scene.
 func test_resource_grant_rule_banks_matched_tiles() -> void:
-	var enc := EncounterState.new()
+	var enc := _encounter()
 	var ctx := MatchRuleContext.new()
 	ctx.encounter = enc
 	ctx.combatant = EncounterState.Combatant.PLAYER
