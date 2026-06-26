@@ -1,7 +1,7 @@
 class_name SettingsScreen
 extends Control
-## The Settings screen — the panel the [SettingsOverlay] shows over the frozen game when the player
-## pauses. Resume resumes the game; the overlay's dim also dismisses on a tap outside the panel. Restart
+## The Settings screen — the full-screen menu the [SettingsOverlay] shows over the frozen game when the
+## player pauses. Resume resumes the game (touch has no ESC/joypad, so its button is the way out). Restart
 ## and Quit are owned by [Game] (they touch the session and scene), so this screen just emits them and
 ## lets the shell act. Opened by pausing, not a page in the pager.
 

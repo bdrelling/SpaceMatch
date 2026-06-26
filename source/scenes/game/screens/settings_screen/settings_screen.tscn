@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://023jhm0a681"]
+[gd_scene load_steps=4 format=3 uid="uid://023jhm0a681"]
 
 [ext_resource type="Script" uid="uid://byk7rg5633kk1" path="res://scenes/game/screens/settings_screen/settings_screen.gd" id="1_settings"]
-[ext_resource type="Script" uid="uid://dks2wphvw6r5i" path="res://addons/utilities/device/safe_area_container.gd" id="2_safearea"]
+[ext_resource type="PackedScene" uid="uid://d2wrqdsha3dgi" path="res://ui/screen_container/screen_container.tscn" id="2_sc"]
+[ext_resource type="Theme" uid="uid://uy3znkll7jlqy" path="res://ui/themes/menu_theme.tres" id="3_theme"]
 
 [node name="SettingsScreen" type="Control"]
 layout_mode = 3
@@ -10,72 +11,60 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 2
+theme = ExtResource("3_theme")
 script = ExtResource("1_settings")
 
-[node name="SafeArea" type="MarginContainer" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-script = ExtResource("2_safearea")
+[node name="ScreenContainer" parent="." instance=ExtResource("2_sc")]
 
-[node name="Center" type="CenterContainer" parent="SafeArea"]
+[node name="Center" type="CenterContainer" parent="ScreenContainer/SafeArea"]
 layout_mode = 2
-mouse_filter = 2
 
-[node name="Panel" type="PanelContainer" parent="SafeArea/Center"]
+[node name="Content" type="VBoxContainer" parent="ScreenContainer/SafeArea/Center"]
 custom_minimum_size = Vector2(640, 0)
 layout_mode = 2
+theme_override_constants/separation = 32
 
-[node name="Margin" type="MarginContainer" parent="SafeArea/Center/Panel"]
+[node name="Title" type="Label" parent="ScreenContainer/SafeArea/Center/Content"]
 layout_mode = 2
-theme_override_constants/margin_left = 48
-theme_override_constants/margin_top = 48
-theme_override_constants/margin_right = 48
-theme_override_constants/margin_bottom = 48
-
-[node name="Content" type="VBoxContainer" parent="SafeArea/Center/Panel/Margin"]
-layout_mode = 2
-theme_override_constants/separation = 24
-
-[node name="Title" type="Label" parent="SafeArea/Center/Panel/Margin/Content"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 64
+theme_override_colors/font_color = Color(0.901961, 0.92549, 1, 1)
+theme_override_font_sizes/font_size = 96
 horizontal_alignment = 1
 text = "Settings"
 
-[node name="ResumeButton" type="Button" parent="SafeArea/Center/Panel/Margin/Content"]
+[node name="Spacer" type="Control" parent="ScreenContainer/SafeArea/Center/Content"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+
+[node name="ResumeButton" type="Button" parent="ScreenContainer/SafeArea/Center/Content"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 focus_mode = 0
+theme_type_variation = &"PrimaryButton"
 text = "Resume"
 
-[node name="RestartButton" type="Button" parent="SafeArea/Center/Panel/Margin/Content"]
+[node name="RestartButton" type="Button" parent="ScreenContainer/SafeArea/Center/Content"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 focus_mode = 0
 text = "Restart"
 
-[node name="DebugButton" type="Button" parent="SafeArea/Center/Panel/Margin/Content"]
+[node name="DebugButton" type="Button" parent="ScreenContainer/SafeArea/Center/Content"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 focus_mode = 0
 text = "Debug"
 
-[node name="QuitSpacer" type="Control" parent="SafeArea/Center/Panel/Margin/Content"]
-custom_minimum_size = Vector2(0, 48)
+[node name="QuitSpacer" type="Control" parent="ScreenContainer/SafeArea/Center/Content"]
+custom_minimum_size = Vector2(0, 24)
 layout_mode = 2
 
-[node name="QuitButton" type="Button" parent="SafeArea/Center/Panel/Margin/Content"]
+[node name="QuitButton" type="Button" parent="ScreenContainer/SafeArea/Center/Content"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 focus_mode = 0
+theme_type_variation = &"DangerButton"
 text = "Quit to Menu"

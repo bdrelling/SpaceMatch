@@ -74,12 +74,4 @@ process_mode = 3
 layer = 10
 visible = false
 
-[node name="Dim" type="ColorRect" parent="SettingsOverlay" unique_id=2141901286]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0, 0, 0, 0.55)
-
 [node name="Settings" parent="SettingsOverlay" unique_id=1051888034 instance=ExtResource("5_settings")]

@@ -27,6 +27,8 @@ const SCENE_PATH := "res://scenes/main_menu/main_menu.tscn"
 @onready var _quick_match_button: Button = %QuickMatchButton
 @onready var _back_button: Button = %BackButton
 
+@onready var _footnote: Label = %Footnote
+
 #endregion
 
 #region Lifecycle
@@ -44,6 +46,8 @@ func _ready() -> void:
 	_campaign_button.pressed.connect(_on_loadout_requested)
 	_quick_match_button.pressed.connect(_on_loadout_requested)
 	_back_button.pressed.connect(_on_back_pressed)
+
+	_footnote.text = _build_stamp()
 
 #endregion
 
@@ -72,6 +76,20 @@ func _on_debug_pressed() -> void:
 
 func _on_quit_pressed() -> void:
 	get_tree().quit()
+
+# When this build was produced, read off the running binary's timestamp. On an exported build (e.g. the
+# phone) that's the actual build time; in the editor there's no build step, so we fall back to project.godot's
+# mtime as the closest "last touched" proxy. Shown local, since it's a human-facing footnote.
+func _build_stamp() -> String:
+	var path := OS.get_executable_path()
+	if OS.has_feature("editor"):
+		path = ProjectSettings.globalize_path("res://project.godot")
+	var unix := FileAccess.get_modified_time(path)
+	if unix == 0:
+		return ""
+	var bias: int = Time.get_time_zone_from_system().bias
+	var t := Time.get_datetime_dict_from_unix_time(int(unix) + bias * 60)
+	return "Built %04d-%02d-%02d %02d:%02d" % [t.year, t.month, t.day, t.hour, t.minute]
 
 static func create() -> MainMenu:
 	var scene: PackedScene = load(SCENE_PATH)

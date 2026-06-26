@@ -12,6 +12,9 @@ signal closed()
 
 const _TITLE_FONT := 44
 const _BUTTON_FONT := 32
+# The shared menu button language (teal/navy), applied at the root so every page, section header, nav
+# row, and dropdown picks it up.
+const _THEME_PATH := "res://ui/themes/menu_theme.tres"
 
 # The view the navigator opens on, set by create() before it enters the tree.
 var _root: DebugView
@@ -30,6 +33,7 @@ static func create(root: DebugView) -> DebugNavigator:
 func _ready() -> void:
 	# Stay live even when the game tree is paused (the in-match overlay sits over a paused board).
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	theme = load(_THEME_PATH)
 	# Size to the viewport explicitly rather than via anchors: the navigator mounts under a plain Node or a
 	# CanvasLayer, where anchor-stretch doesn't reliably give it a rect — and the full-bleed background
 	# needs a real rect to fill (its children otherwise collapse to zero while min-sized content still shows).
@@ -96,6 +100,7 @@ func _build_header() -> Control:
 	var done := Button.new()
 	done.text = "Done"
 	done.focus_mode = Control.FOCUS_NONE
+	done.theme_type_variation = &"PrimaryButton"
 	done.add_theme_font_size_override("font_size", _BUTTON_FONT)
 	done.pressed.connect(func() -> void: closed.emit())
 	row.add_child(done)

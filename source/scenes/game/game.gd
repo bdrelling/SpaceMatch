@@ -90,7 +90,6 @@ func _wire_chrome() -> void:
 	_top_bar.leading_pressed.connect(_on_leading_pressed)
 	PauseMonitor.paused.connect(_open_settings)
 	PauseMonitor.unpaused.connect(_close_settings)
-	_settings_dim().gui_input.connect(_on_settings_dim_input)
 	_settings_screen().restart_pressed.connect(_on_settings_restart)
 	_settings_screen().quit_pressed.connect(_on_settings_quit)
 	_settings_screen().debug_pressed.connect(_on_settings_debug)
@@ -127,25 +126,16 @@ func _on_leading_pressed() -> void:
 func _on_settings_pressed() -> void:
 	PauseMonitor.pause()
 
-# Settings is a top-most overlay shown while paused — the screen's Done button resumes, and tapping the
-# dim outside the panel does too (touch has no ESC/joypad). Resuming hides it.
+# Settings is a top-most full-screen overlay shown while paused — its Resume button (PauseMonitor.unpause)
+# is the way out (touch has no ESC/joypad). Resuming hides it.
 func _open_settings() -> void:
 	_settings_overlay.visible = true
 
 func _close_settings() -> void:
 	_settings_overlay.visible = false
 
-func _settings_dim() -> Control:
-	return _settings_overlay.get_node("Dim")
-
 func _settings_screen() -> SettingsScreen:
 	return _settings_overlay.get_node("Settings") as SettingsScreen
-
-func _on_settings_dim_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and (event as InputEventMouseButton).pressed:
-		PauseMonitor.unpause()
-	elif event is InputEventScreenTouch and (event as InputEventScreenTouch).pressed:
-		PauseMonitor.unpause()
 
 # Debug from the Settings panel: open the debug navigator over the (still paused) game, drawn above the
 # Settings overlay. Its pages edit the same shared config the running board uses, so changes apply live;
