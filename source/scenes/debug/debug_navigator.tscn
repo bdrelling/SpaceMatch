@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://dn8debugnav01"]
+[gd_scene format=3 uid="uid://dn8debugnav01"]
 
 [ext_resource type="Script" uid="uid://c56cksgsnxfxa" path="res://scenes/debug/debug_navigator.gd" id="1_nav"]
 [ext_resource type="Theme" uid="uid://b8debugtheme01" path="res://ui/themes/debug.tres" id="2_theme"]

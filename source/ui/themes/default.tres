@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=14 format=3 uid="uid://uy3znkll7jlqy"]
+[gd_resource type="Theme" format=3 uid="uid://bn2npa0dei7x5"]
 
 ; The one theme for all UI — menus, encounter, loadout, the game shell and its bars all share it, so the
 ; whole app is one visual system and swapping this resource reskins everything. Debug screens/overlays use

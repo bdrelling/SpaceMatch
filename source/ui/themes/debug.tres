@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=10 format=3 uid="uid://b8debugtheme01"]
+[gd_resource type="Theme" format=3 uid="uid://bngith66r6i41"]
 
 ; The debug theme — used by debug-only screens and overlays so debug UI can diverge from the shipped look
 ; without touching default.tres. Buttons mirror default.tres (no restyle); the debug-only text variations:

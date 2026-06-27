@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://b8r2x7m4qw0pn"]
+[gd_scene format=3 uid="uid://b8r2x7m4qw0pn"]
 
 [ext_resource type="Script" uid="uid://col63my0q1tl" path="res://minigames/match/portrait_panel.gd" id="1_panel"]
 [ext_resource type="StyleBox" path="res://ui/styles/hud_placeholder.tres" id="2_normal"]
