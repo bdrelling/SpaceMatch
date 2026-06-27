@@ -3,10 +3,10 @@ extends Control
 ## A full-window presentation container: the app's themed [Background] behind a [SafeAreaContainer] that
 ## insets its content to the device safe area. Wrap any standalone screen in one so it presents the same
 ## way every time — same background, same safe-area insets, the project theme — without pulling in the
-## [Game] shell and its chrome. The reusable answer to "this screen has no background / runs into the
+## [Game] shell and its bars. The reusable answer to "this screen has no background / runs into the
 ## notch": present it with [code]SceneLoader.transition_to(ScreenContainer.create(content))[/code].
 ##
-## Its only job is the background and the safe area. It deliberately adds no chrome (no top bar, no nav);
+## Its only job is the background and the safe area. It deliberately adds no bars (no top bar, no nav);
 ## a screen that needs those owns them itself, or lives in the [Game] shell.
 
 #region Constants

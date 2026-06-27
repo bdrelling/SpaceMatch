@@ -1290,11 +1290,8 @@ func _build_move_debug() -> void:
 	style.set_content_margin_all(6)
 	panel.add_theme_stylebox_override("panel", style)
 	var label := Label.new()
-	var mono := SystemFont.new()
-	mono.font_names = PackedStringArray(["Menlo", "Courier New", "monospace"])
-	label.add_theme_font_override("font", mono)
-	label.add_theme_font_size_override("font_size", 20)
-	label.add_theme_color_override("font_color", Color.WHITE)
+	label.theme = load("res://ui/themes/debug.tres")
+	label.theme_type_variation = &"DebugLabel"
 	label.text = "moves: ?"
 	panel.add_child(label)
 	add_child(panel)

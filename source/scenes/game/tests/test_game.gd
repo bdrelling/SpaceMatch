@@ -163,7 +163,7 @@ func test_keyboard_arrows_do_not_page() -> void:
 	pager.queue_free()
 
 func test_top_bar_buttons_are_not_keyboard_focusable() -> void:
-	# Focusable chrome buttons would let arrow keys walk focus across them, stealing left/right from
+	# Focusable bar buttons would let arrow keys walk focus across them, stealing left/right from
 	# the minigame; the leading and settings buttons are tap-driven only — authored FOCUS_NONE.
 	var game := Game.create()
 	add_child(game)

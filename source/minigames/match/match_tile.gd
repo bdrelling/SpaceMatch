@@ -20,7 +20,7 @@ const _TEXTURES: Array[Texture2D] = [
 	preload("res://assets/tiles/warp.png"),
 ]
 
-## Fallback palette for kinds without art (and the source of [method color_of] for HUD chrome).
+## Fallback palette for kinds without art (and the source of [method color_of] for HUD readouts).
 const _COLORS: Array[Color] = [
 	Color(0.88, 0.33, 0.34),  # combat
 	Color(0.97, 0.80, 0.30),  # propulsion

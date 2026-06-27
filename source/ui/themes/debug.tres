@@ -1,11 +1,9 @@
-[gd_resource type="Theme" load_steps=12 format=3 uid="uid://uy3znkll7jlqy"]
+[gd_resource type="Theme" load_steps=10 format=3 uid="uid://b8debugtheme01"]
 
-; Shared menu theme — the teal/navy button language for the main menu, settings screen,
-; and debug navigator. Applied at each of those screen roots, so it never touches the in-game
-; HUD (which keeps its own chrome styles). Three button looks:
-;   Button         — secondary navy card (default for every button on these screens)
-;   PrimaryButton  — filled teal call-to-action (Play, Resume, Done)
-;   DangerButton   — red-outlined destructive (Quit to Menu)
+; The debug theme — used by debug-only screens and overlays so debug UI can diverge from the shipped look
+; without touching default.tres. Buttons mirror default.tres (no restyle); the debug-only text variations:
+;   DebugLabel     — the encounter "matches" count readout (debug builds only)
+;   DebugWatermark — the on-screen version stamp (debug builds only)
 
 [sub_resource type="StyleBoxFlat" id="btn_normal"]
 content_margin_left = 28.0
@@ -113,56 +111,8 @@ corner_radius_bottom_right = 18
 corner_radius_bottom_left = 18
 anti_aliasing = false
 
-[sub_resource type="StyleBoxFlat" id="danger_normal"]
-content_margin_left = 28.0
-content_margin_top = 22.0
-content_margin_right = 28.0
-content_margin_bottom = 22.0
-bg_color = Color(0.27, 0.11, 0.13, 0.55)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.871, 0.224, 0.224, 0.55)
-corner_radius_top_left = 18
-corner_radius_top_right = 18
-corner_radius_bottom_right = 18
-corner_radius_bottom_left = 18
-anti_aliasing = false
-
-[sub_resource type="StyleBoxFlat" id="danger_hover"]
-content_margin_left = 28.0
-content_margin_top = 22.0
-content_margin_right = 28.0
-content_margin_bottom = 22.0
-bg_color = Color(0.35, 0.13, 0.15, 0.7)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.871, 0.224, 0.224, 0.85)
-corner_radius_top_left = 18
-corner_radius_top_right = 18
-corner_radius_bottom_right = 18
-corner_radius_bottom_left = 18
-anti_aliasing = false
-
-[sub_resource type="StyleBoxFlat" id="danger_pressed"]
-content_margin_left = 28.0
-content_margin_top = 22.0
-content_margin_right = 28.0
-content_margin_bottom = 22.0
-bg_color = Color(0.22, 0.09, 0.1, 0.85)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.871, 0.224, 0.224, 0.9)
-corner_radius_top_left = 18
-corner_radius_top_right = 18
-corner_radius_bottom_right = 18
-corner_radius_bottom_left = 18
-anti_aliasing = false
+[sub_resource type="SystemFont" id="mono"]
+font_names = PackedStringArray("Menlo", "Courier New", "monospace")
 
 [resource]
 Button/colors/font_color = Color(0.85, 0.88, 0.96, 1)
@@ -184,19 +134,10 @@ PrimaryButton/styles/normal = SubResource("primary_normal")
 PrimaryButton/styles/hover = SubResource("primary_hover")
 PrimaryButton/styles/pressed = SubResource("primary_pressed")
 PrimaryButton/styles/focus = SubResource("btn_focus")
-DangerButton/base_type = &"Button"
-DangerButton/colors/font_color = Color(0.92, 0.45, 0.45, 1)
-DangerButton/colors/font_hover_color = Color(0.98, 0.6, 0.6, 1)
-DangerButton/colors/font_pressed_color = Color(0.85, 0.4, 0.4, 1)
-DangerButton/font_sizes/font_size = 34
-DangerButton/styles/normal = SubResource("danger_normal")
-DangerButton/styles/hover = SubResource("danger_hover")
-DangerButton/styles/pressed = SubResource("danger_pressed")
-DangerButton/styles/focus = SubResource("btn_focus")
-OptionButton/colors/font_color = Color(0.85, 0.88, 0.96, 1)
-OptionButton/colors/font_hover_color = Color(0.96, 0.98, 1, 1)
-OptionButton/colors/font_pressed_color = Color(0.498, 0.894, 0.878, 1)
-OptionButton/styles/normal = SubResource("btn_normal")
-OptionButton/styles/hover = SubResource("btn_hover")
-OptionButton/styles/pressed = SubResource("btn_pressed")
-OptionButton/styles/focus = SubResource("btn_focus")
+DebugLabel/base_type = &"Label"
+DebugLabel/colors/font_color = Color(1, 1, 1, 1)
+DebugLabel/font_sizes/font_size = 20
+DebugLabel/fonts/font = SubResource("mono")
+DebugWatermark/base_type = &"Label"
+DebugWatermark/colors/font_color = Color(1, 1, 1, 0.3)
+DebugWatermark/font_sizes/font_size = 24

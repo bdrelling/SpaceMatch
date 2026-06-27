@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://b8loadout00001"]
+[gd_scene load_steps=6 format=3 uid="uid://b8loadout00001"]
 
 [ext_resource type="Script" uid="uid://c05b4s2m66j65" path="res://minigames/loadout/loadout.gd" id="1_loadout"]
 [ext_resource type="Script" uid="uid://bhhb1ur48vcvr" path="res://addons/grid_system/view/board_canvas.gd" id="2_canvas"]
 [ext_resource type="StyleBoxFlat" path="res://ui/styles/board_panel.tres" id="3_board"]
 [ext_resource type="StyleBoxFlat" path="res://ui/styles/hud_placeholder.tres" id="4_hud"]
+[ext_resource type="Theme" uid="uid://uy3znkll7jlqy" path="res://ui/themes/default.tres" id="5_theme"]
 
 [node name="Loadout" type="Control"]
 layout_mode = 3
@@ -11,6 +12,7 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
+theme = ExtResource("5_theme")
 script = ExtResource("1_loadout")
 
 [node name="Margins" type="MarginContainer" parent="."]
@@ -45,7 +47,7 @@ theme_override_constants/separation = 24
 [node name="Heading" type="Label" parent="Margins/Body/StatsPanel/Stats"]
 layout_mode = 2
 mouse_filter = 2
-theme_override_colors/font_color = Color(0.66, 0.72, 0.85, 1)
+theme_type_variation = &"Heading"
 theme_override_font_sizes/font_size = 32
 text = "STATS"
 

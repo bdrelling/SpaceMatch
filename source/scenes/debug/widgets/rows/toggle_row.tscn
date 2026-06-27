@@ -1,0 +1,21 @@
+[gd_scene load_steps=2 format=3 uid="uid://3573odv2174xt"]
+
+[ext_resource type="Script" uid="uid://p3ze78q2i28tu" path="res://scenes/debug/widgets/rows/toggle_row.gd" id="1_toggle"]
+
+[node name="ToggleRow" type="HBoxContainer"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+script = ExtResource("1_toggle")
+
+[node name="Label" type="Label" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(360, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 32
+
+[node name="Switch" type="CheckButton" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+focus_mode = 0

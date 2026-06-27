@@ -16,9 +16,12 @@ signal debug_pressed()
 @onready var _restart_button: Button = %RestartButton
 @onready var _debug_button: Button = %DebugButton
 @onready var _quit_button: Button = %QuitButton
+@onready var _footnote: Label = %Footnote
 
 func _ready() -> void:
 	_resume_button.pressed.connect(PauseMonitor.unpause)
 	_restart_button.pressed.connect(func() -> void: restart_pressed.emit())
 	_debug_button.pressed.connect(func() -> void: debug_pressed.emit())
 	_quit_button.pressed.connect(func() -> void: quit_pressed.emit())
+
+	_footnote.text = BuildInfo.stamp()

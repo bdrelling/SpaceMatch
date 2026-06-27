@@ -3,7 +3,7 @@ extends Control
 ## The standard on-screen frame: the app [Background] and device safe area, a [ScreenTopBar], and a
 ## content slot below it. Composite screens (the loadout, the encounter, debug, …) instance this and drop
 ## a raw feature scene — e.g. [code]match.tscn[/code] — into the content slot, so feature scenes stay
-## chrome-less and the frame is authored once.
+## bar-less and the frame is authored once.
 ##
 ## Mount content authored in the scene under the [code]Content[/code] node, or at runtime with
 ## [method set_content]. Configure the bar with [method configure_bar], or drop it entirely with
@@ -39,7 +39,7 @@ func _ready() -> void:
 func configure_bar(title: String, action_text: String = "") -> void:
 	_top_bar.configure(title, action_text)
 
-## Hides the whole bar — for a frame that wants the background and safe area but no chrome.
+## Hides the whole bar — for a frame that wants the background and safe area but no bar.
 func hide_bar() -> void:
 	_top_bar.visible = false
 

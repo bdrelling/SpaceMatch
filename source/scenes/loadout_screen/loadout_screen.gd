@@ -23,10 +23,11 @@ func _ready() -> void:
 func _on_back() -> void:
 	SceneLoader.transition_to(MainMenu.create())
 
-# Launch: enter the encounter with the loadout just set. The encounter reads the same running session, so the
-# match's player ship is exactly this loadout.
+# Launch: enter the full game shell with the loadout just set. The shell reuses the running session (it only
+# resets on restart), so the match's player ship is exactly this loadout — and it carries the encounter bars
+# (settings cog, Rules), matching the boot-into-game experience.
 func _on_launch() -> void:
-	SceneLoader.transition_to(EncounterScreen.create())
+	SceneLoader.transition_to(Game.create())
 
 static func create() -> LoadoutScreen:
 	var scene: PackedScene = load(SCENE_PATH)

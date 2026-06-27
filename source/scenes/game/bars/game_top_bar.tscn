@@ -1,8 +1,8 @@
 [gd_scene load_steps=4 format=3 uid="uid://b1topbar00001"]
 
-[ext_resource type="Script" uid="uid://b5rx3m2u8dkkg" path="res://scenes/game/chrome/game_top_bar.gd" id="1_topbar"]
-[ext_resource type="StyleBoxFlat" path="res://ui/styles/chrome_button.tres" id="2_btn"]
-[ext_resource type="StyleBoxFlat" path="res://ui/styles/chrome_button_active.tres" id="3_btn_active"]
+[ext_resource type="Script" uid="uid://b5rx3m2u8dkkg" path="res://scenes/game/bars/game_top_bar.gd" id="1_topbar"]
+[ext_resource type="Theme" uid="uid://uy3znkll7jlqy" path="res://ui/themes/default.tres" id="2_theme"]
+[ext_resource type="Script" uid="uid://b0c5o0vac8twb" path="res://minigames/match/tile_icon.gd" id="3_tile"]
 
 [node name="GameTopBar" type="Control"]
 layout_mode = 3
@@ -11,6 +11,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("2_theme")
 script = ExtResource("1_topbar")
 
 [node name="Background" type="ColorRect" parent="."]
@@ -37,11 +38,7 @@ custom_minimum_size = Vector2(76, 76)
 layout_mode = 2
 size_flags_vertical = 4
 focus_mode = 0
-theme_override_font_sizes/font_size = 40
-theme_override_styles/focus = ExtResource("2_btn")
-theme_override_styles/hover = ExtResource("3_btn_active")
-theme_override_styles/pressed = ExtResource("3_btn_active")
-theme_override_styles/normal = ExtResource("2_btn")
+theme_type_variation = &"BarButton"
 text = "←"
 
 [node name="Spacer" type="Control" parent="Content"]
@@ -54,15 +51,33 @@ layout_mode = 2
 size_flags_vertical = 4
 theme_override_constants/separation = 12
 
+[node name="Scrap" type="HBoxContainer" parent="Content"]
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+theme_override_constants/separation = 10
+
+[node name="Icon" type="Control" parent="Content/Scrap"]
+custom_minimum_size = Vector2(48, 48)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("3_tile")
+kind = 4
+
+[node name="ScrapValue" type="Label" parent="Content/Scrap"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 4
+theme_type_variation = &"ScrapValue"
+text = "0"
+vertical_alignment = 1
+
 [node name="Settings" type="Button" parent="Content"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(96, 96)
 layout_mode = 2
 size_flags_vertical = 4
 focus_mode = 0
-theme_override_font_sizes/font_size = 44
-theme_override_styles/focus = ExtResource("2_btn")
-theme_override_styles/hover = ExtResource("3_btn_active")
-theme_override_styles/pressed = ExtResource("3_btn_active")
-theme_override_styles/normal = ExtResource("2_btn")
+theme_type_variation = &"BarButton"
 text = "≡"

@@ -1,16 +1,16 @@
 class_name Game
 extends Control
 ## The 2D game shell — the production entry shipped to mobile/web, NOT the debug grid playground
-## switcher. The chrome (a full-bleed gradient background, the [GameTopBar], a swipeable [GamePager] of
+## switcher. The shell UI (a full-bleed gradient background, the [GameTopBar], a swipeable [GamePager] of
 ## stage pages, and the context [GameInventoryBar]) is authored in [code]game.tscn[/code]; the top bar's
 ## leading button drills from the primary stage into Loadout and steps back, so there's no tab bar.
 ## Each bar bleeds its background through the device safe area while holding
-## its content inside it. This script wires the chrome to the pages and owns the live game state: one
+## its content inside it. This script wires the bars to the pages and owns the live game state: one
 ## [GameSession] and a [Clock] (the game's tick
 ## heartbeat). A mobile app — no escape key, no 3D world.
 ##
 ## A stage is just its board plus a small view-model ([Minigame]); the shell reads the active stage's
-## title, status, actions, and inventory and renders them in the chrome, so no stage draws its own bars.
+## title, status, actions, and inventory and renders them in the bars, so no stage draws its own bars.
 
 #region Constants
 
@@ -22,7 +22,7 @@ const SCENE_PATH := "res://scenes/game/game.tscn"
 
 #region Properties
 
-# The chrome — authored in the scene, injected here.
+# The bars — authored in the scene, injected here.
 @export var _pager: GamePager
 @export var _top_bar: GameTopBar
 @export var _inventory_bar: GameInventoryBar
@@ -43,7 +43,7 @@ var _encounter: Encounter
 # are drilled into from it. Drives the leading button's drill/back and the --tab debug hook. Settings is
 # not a page but a top-most overlay (opened by pausing), so it isn't indexed here.
 var _stage_indices: Array[int] = []
-# The stage whose view-model is wired to the chrome right now; tracked so its signals are disconnected
+# The stage whose view-model is wired to the bars right now; tracked so its signals are disconnected
 # before another page binds.
 var _bound_minigame: Minigame
 
@@ -58,8 +58,11 @@ const _DESIGN_SIZE := Vector2i(1080, 1920)
 
 func _ready() -> void:
 	_index_screens()
-	_wire_chrome()
-	_start_game()
+	_wire_bars()
+	# Reuse the running session on entry rather than wiping it: fresh on a direct boot (the GameSession
+	# autoload seeds one), or the loadout the player just set when arriving from the Loadout screen. Restart
+	# is the one path that forces a brand-new run.
+	_start_game(false)
 	_on_page_changed(_current_index())
 	_apply_launch_tab()
 
@@ -67,12 +70,12 @@ func _ready() -> void:
 
 #region Methods
 
-## Tears down the current game and starts a fresh one. The chrome and its pages persist — only the
-## session, inventory, and clock are rebuilt, then the pages are rebound to them and the chrome
+## Tears down the current game and starts a fresh one. The bars and its pages persist — only the
+## session, inventory, and clock are rebuilt, then the pages are rebound to them and the bars
 ## refreshed against the active stage.
 func restart() -> void:
 	_teardown_game()
-	_start_game()
+	_start_game(true)
 	_on_page_changed(_current_index())
 
 # Collects the pager indices of the playable stages in tree order, so the leading button and the --tab
@@ -83,9 +86,9 @@ func _index_screens() -> void:
 		if _pager.screens[index] is MinigameScreen:
 			_stage_indices.append(index)
 
-# Connects the chrome: the cog opens Settings, the leading button drills/steps back between stages,
+# Connects the bars: the cog opens Settings, the leading button drills/steps back between stages,
 # the Settings panel's Restart/Quit are handled by the shell (they touch the session and scene).
-func _wire_chrome() -> void:
+func _wire_bars() -> void:
 	_top_bar.settings_pressed.connect(_on_settings_pressed)
 	_top_bar.leading_pressed.connect(_on_leading_pressed)
 	PauseMonitor.paused.connect(_open_settings)
@@ -146,7 +149,7 @@ func _on_settings_debug() -> void:
 	_settings_overlay.add_child(navigator)
 
 # Restart from the Settings panel: resume first (the new game must run unpaused), then rebuild the
-# session in place — the chrome and pages persist.
+# session in place — the bars and pages persist.
 func _on_settings_restart() -> void:
 	PauseMonitor.unpause()
 	restart()
@@ -158,7 +161,7 @@ func _on_settings_quit() -> void:
 	SceneLoader.transition_to(MainMenu.create())
 
 # Shows the back arrow on a sub-screen and hides the leading button on the primary stage (which drills
-# from its own HUD), then points the chrome's actions and inventory strip at the page now visible.
+# from its own HUD), then points the bars's actions and inventory strip at the page now visible.
 func _on_page_changed(index: int) -> void:
 	if index == _primary_screen_index():
 		_top_bar.hide_leading()
@@ -167,9 +170,9 @@ func _on_page_changed(index: int) -> void:
 	var screen: GameScreen = null
 	if index >= 0 and index < _pager.screens.size():
 		screen = _pager.screens[index]
-	_bind_chrome(screen)
+	_bind_bars(screen)
 
-func _bind_chrome(screen: GameScreen) -> void:
+func _bind_bars(screen: GameScreen) -> void:
 	_unbind_minigame()
 	if screen == null:
 		return
@@ -234,9 +237,11 @@ func _current_index() -> int:
 			return index
 	return 0
 
-func _start_game() -> void:
-	# Start a fresh run on the global session, then build the entity nodes this shell owns from its state.
-	GameSession.start_new_game()
+func _start_game(reset_session: bool) -> void:
+	# Build the entity nodes this shell owns from the session state. Reset the session first only when asked
+	# (restart); on entry we reuse the existing session so a loadout set just before launch survives.
+	if reset_session:
+		GameSession.start_new_game()
 	_build_entities()
 
 	# The game's tick heartbeat. Nothing drives scrap yet — resource production (a tap now, an
@@ -319,23 +324,12 @@ static func create() -> Game:
 ## rather than squashing the view square or landscape.
 static func apply_window(window: Window) -> void:
 	window.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
-	if OS.has_feature("mobile"):
+	if DeviceInfo.is_handheld():
 		window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
 		window.content_scale_size = _DESIGN_SIZE
 	else:
 		window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP
 		var aspect: float = float(window.size.x) / float(window.size.y)
 		window.content_scale_size = Vector2i(roundi(_DESIGN_SIZE.y * aspect), _DESIGN_SIZE.y)
-
-## The safe area the chrome insets its content against. On a handheld this is the device's real safe
-## area. Desktop and web report none, so a launch that emulates a handheld — a portrait window, as the
-## `make play`/`play-phone` targets open — substitutes a mocked mobile safe area; an ordinary landscape
-## desktop window is left as-is with no insets.
-static func safe_area(viewport: Viewport) -> SafeArea:
-	if not OS.has_feature("mobile"):
-		var size := viewport.get_visible_rect().size
-		if size.y > size.x:
-			return SafeArea.mocked_mobile()
-	return DeviceUtils.get_safe_area(viewport)
 
 #endregion

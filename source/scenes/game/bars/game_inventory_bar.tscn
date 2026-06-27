@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3 uid="uid://b1invbar000001"]
+[gd_scene load_steps=3 format=3 uid="uid://b1invbar000001"]
 
-[ext_resource type="Script" uid="uid://df2orxjpkxcwm" path="res://scenes/game/chrome/game_inventory_bar.gd" id="1_invbar"]
+[ext_resource type="Script" uid="uid://df2orxjpkxcwm" path="res://scenes/game/bars/game_inventory_bar.gd" id="1_invbar"]
+[ext_resource type="Theme" uid="uid://uy3znkll7jlqy" path="res://ui/themes/default.tres" id="2_theme"]
 
 [node name="GameInventoryBar" type="Control"]
 layout_mode = 3
@@ -9,6 +10,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("2_theme")
 script = ExtResource("1_invbar")
 
 [node name="Background" type="ColorRect" parent="."]

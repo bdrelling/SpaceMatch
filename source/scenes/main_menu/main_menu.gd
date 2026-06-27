@@ -34,9 +34,9 @@ const SCENE_PATH := "res://scenes/main_menu/main_menu.tscn"
 #region Lifecycle
 
 func _ready() -> void:
-	# Quit is a desktop affordance — a mobile app is exited by the OS, not an in-app button. Hidden on
-	# mobile, shown on desktop (matching the platform split [Game.apply_window] keys off).
-	_quit_button.visible = not OS.has_feature("mobile")
+	# Quit is a desktop affordance — a handheld app is exited by the OS, not an in-app button. Hidden on
+	# phone/tablet (real or a `make play-phone`/`play-tablet` preview), shown on desktop.
+	_quit_button.visible = not DeviceInfo.is_handheld()
 
 	_play_button.pressed.connect(_on_play_pressed)
 	_debug_button.pressed.connect(_on_debug_pressed)
@@ -47,7 +47,7 @@ func _ready() -> void:
 	_quick_match_button.pressed.connect(_on_loadout_requested)
 	_back_button.pressed.connect(_on_back_pressed)
 
-	_footnote.text = _build_stamp()
+	_footnote.text = BuildInfo.stamp()
 
 #endregion
 
@@ -76,20 +76,6 @@ func _on_debug_pressed() -> void:
 
 func _on_quit_pressed() -> void:
 	get_tree().quit()
-
-# When this build was produced, read off the running binary's timestamp. On an exported build (e.g. the
-# phone) that's the actual build time; in the editor there's no build step, so we fall back to project.godot's
-# mtime as the closest "last touched" proxy. Shown local, since it's a human-facing footnote.
-func _build_stamp() -> String:
-	var path := OS.get_executable_path()
-	if OS.has_feature("editor"):
-		path = ProjectSettings.globalize_path("res://project.godot")
-	var unix := FileAccess.get_modified_time(path)
-	if unix == 0:
-		return ""
-	var bias: int = Time.get_time_zone_from_system().bias
-	var t := Time.get_datetime_dict_from_unix_time(int(unix) + bias * 60)
-	return "Built %04d-%02d-%02d %02d:%02d" % [t.year, t.month, t.day, t.hour, t.minute]
 
 static func create() -> MainMenu:
 	var scene: PackedScene = load(SCENE_PATH)

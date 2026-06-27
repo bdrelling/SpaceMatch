@@ -8,6 +8,7 @@ extends ScreenFrame
 const SCENE_PATH := "res://scenes/encounter_screen/encounter_screen.tscn"
 
 @onready var _match: MatchMinigame = %Match
+@onready var _footnote: Label = %Footnote
 
 # The encounter this screen hosts (a clone of the running ship vs the computer default). Owned here so the
 # match screen only renders it; pointed into GameSession.game_state.encounter.
@@ -21,6 +22,11 @@ func _ready() -> void:
 	_match.restart_requested.connect(_open_encounter)
 	configure_bar("Encounter")
 	back_pressed.connect(_on_back)
+
+	# Build watermark — debug builds only; released encounters stay clean.
+	_footnote.visible = OS.is_debug_build()
+	if _footnote.visible:
+		_footnote.text = BuildInfo.stamp()
 
 # Opens the encounter this screen hosts: a fresh [Encounter] with a clone of the running ship, pointed into
 # the session so the match reads it.

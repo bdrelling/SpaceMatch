@@ -1,9 +1,11 @@
+@tool
 class_name DebugShapeEditor
 extends Control
 ## A simple 4×4 footprint editor: tap a cell to toggle whether it's part of the shape. Custom-drawn (filled
 ## cells in the module's accent, empty cells outlined) so it reads clearly and works the same on touch and
-## desktop. On every change it hands back the active cells as offsets; the caller turns them into a
-## [PieceShape]. Local cell state is the source of truth while open, so toggling never makes the grid jump.
+## desktop. [code]@tool[/code] so the empty grid renders in the editor. On every change it hands back the
+## active cells as offsets; the caller turns them into a [PieceShape]. Local cell state is the source of
+## truth while open, so toggling never makes the grid jump.
 
 const GRID := 4
 const _CELL := 104.0
@@ -32,8 +34,13 @@ func _ready() -> void:
 	var side := GRID * _CELL
 	custom_minimum_size = Vector2(side, side)
 	size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	# In the editor the cell state is never seeded by create(); fill it so the empty grid draws.
+	if _active.is_empty():
+		_active.resize(GRID * GRID)
 
 func _gui_input(event: InputEvent) -> void:
+	if Engine.is_editor_hint():
+		return
 	var position := Vector2.INF
 	if event is InputEventMouseButton:
 		var button := event as InputEventMouseButton
@@ -56,6 +63,8 @@ func _gui_input(event: InputEvent) -> void:
 	_emit()
 
 func _draw() -> void:
+	if _active.is_empty():
+		_active.resize(GRID * GRID)
 	for y: int in GRID:
 		for x: int in GRID:
 			var rect := Rect2(x * _CELL + _GAP, y * _CELL + _GAP, _CELL - 2.0 * _GAP, _CELL - 2.0 * _GAP)
@@ -66,6 +75,8 @@ func _draw() -> void:
 				draw_rect(rect, _BORDER, false, 1.0)
 
 func _emit() -> void:
+	if Engine.is_editor_hint() or not _on_changed.is_valid():
+		return
 	var offsets: Array[Vector2i] = []
 	for y: int in GRID:
 		for x: int in GRID:

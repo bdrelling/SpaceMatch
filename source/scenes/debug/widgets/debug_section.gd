@@ -1,55 +1,42 @@
 class_name DebugSection
 extends VBoxContainer
 ## A collapsible group in a debug view: a tappable header that shows or hides its body of rows. Lets a page
-## stay a short list of section headers on a phone until you drill into the one you want. Built off-tree by
-## [method create] so a view can add rows to [method body] before it's mounted. Default collapsed.
+## stay a short list of section headers on a phone until you drill into the one you want. Scene-backed by
+## [code]debug_section.tscn[/code] so it renders in the editor; built off-tree by [method create] so a view
+## can add rows to [method body] before it's mounted. Default collapsed.
 
-const _HEADER_FONT := 36
+const _SCENE := preload("res://scenes/debug/widgets/debug_section.tscn")
 
-var _body: VBoxContainer
-var _header: Button
 var _label_text: String
 var _expanded: bool
 
 ## Builds a section titled [param label_text], collapsed unless [param expanded].
 static func create(label_text: String, expanded: bool = false) -> DebugSection:
-	var section := DebugSection.new()
+	var section := _SCENE.instantiate() as DebugSection
 	section._label_text = label_text
 	section._expanded = expanded
-	section._build()
+	section._refresh()
 	return section
 
-func _build() -> void:
-	size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	add_theme_constant_override("separation", 8)
-
-	_header = Button.new()
-	_header.focus_mode = Control.FOCUS_NONE
-	_header.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	_header.custom_minimum_size = Vector2(0, 72)
-	_header.add_theme_font_size_override("font_size", _HEADER_FONT)
-	_header.pressed.connect(_toggle)
-	add_child(_header)
-
-	_body = VBoxContainer.new()
-	_body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_body.add_theme_constant_override("separation", 12)
-	add_child(_body)
-
+func _ready() -> void:
+	_header().pressed.connect(_toggle)
 	_refresh()
 
 ## The container rows are added to (directly or via [method add_row]).
 func body() -> VBoxContainer:
-	return _body
+	return %Body
 
 ## Appends [param row] to the section body.
 func add_row(row: Control) -> void:
-	_body.add_child(row)
+	body().add_child(row)
+
+func _header() -> Button:
+	return %Header
 
 func _toggle() -> void:
 	_expanded = not _expanded
 	_refresh()
 
 func _refresh() -> void:
-	_header.text = "%s  %s" % ["▾" if _expanded else "▸", _label_text]
-	_body.visible = _expanded
+	_header().text = "%s  %s" % ["▾" if _expanded else "▸", _label_text]
+	body().visible = _expanded

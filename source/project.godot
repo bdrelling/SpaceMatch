@@ -15,6 +15,8 @@ compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 [application]
 
 config/name="SpaceMatch"
+config/version="1.0.0"
+config/build=1
 run/main_scene="res://scenes/main/main.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 config/icon="res://assets/icon.svg"
@@ -60,7 +62,7 @@ enabled=PackedStringArray("res://addons/command_line/plugin.cfg", "res://addons/
 [gui]
 
 theme/default_theme_scale=2.0
-theme/custom="uid://d3o1x2mw7l8bn"
+theme/custom="uid://uy3znkll7jlqy"
 
 [input]
 

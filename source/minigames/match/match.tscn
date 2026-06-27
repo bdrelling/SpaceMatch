@@ -1,8 +1,9 @@
-[gd_scene load_steps=5 format=3 uid="uid://b8match0001"]
+[gd_scene load_steps=6 format=3 uid="uid://b8match0001"]
 
 [ext_resource type="Script" path="res://minigames/match/match.gd" id="1_match"]
 [ext_resource type="Script" uid="uid://bhhb1ur48vcvr" path="res://addons/grid_system/view/board_canvas.gd" id="2_canvas"]
-[ext_resource type="Script" path="res://minigames/match/portrait_panel.gd" id="4_portrait"]
+[ext_resource type="PackedScene" uid="uid://b8r2x7m4qw0pn" path="res://minigames/match/portrait_panel.tscn" id="4_portrait"]
+[ext_resource type="Theme" uid="uid://uy3znkll7jlqy" path="res://ui/themes/default.tres" id="5_theme"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_board"]
 
@@ -12,6 +13,7 @@ anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 mouse_filter = 2
+theme = ExtResource("5_theme")
 script = ExtResource("1_match")
 
 [node name="Margins" type="MarginContainer" parent="."]
@@ -39,7 +41,7 @@ mouse_filter = 2
 [node name="RoundLabel" type="Label" parent="Margins/Body/TurnTracker"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.66, 0.72, 0.85, 1)
+theme_type_variation = &"Heading"
 theme_override_font_sizes/font_size = 26
 text = "ROUND 1"
 vertical_alignment = 1
@@ -52,7 +54,7 @@ mouse_filter = 2
 [node name="TurnLabel" type="Label" parent="Margins/Body/TurnTracker"]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.66, 0.72, 0.85, 1)
+theme_type_variation = &"Heading"
 theme_override_font_sizes/font_size = 26
 text = "TURN 1 / 2 · PLAYER"
 horizontal_alignment = 2
@@ -64,28 +66,26 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 16
 
-[node name="PlayerPortrait" type="Button" parent="Margins/Body/Hud"]
+[node name="PlayerPortrait" parent="Margins/Body/Hud" instance=ExtResource("4_portrait")]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-script = ExtResource("4_portrait")
 glyph = "▦"
 portrait_name = "Player"
 
 [node name="Versus" type="Label" parent="Margins/Body/Hud"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.42, 0.47, 0.64, 1)
+theme_type_variation = &"Caption"
 theme_override_font_sizes/font_size = 36
 text = "VS"
 vertical_alignment = 1
 
-[node name="OpponentPortrait" type="Button" parent="Margins/Body/Hud"]
+[node name="OpponentPortrait" parent="Margins/Body/Hud" instance=ExtResource("4_portrait")]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-script = ExtResource("4_portrait")
 glyph = "✦"
 portrait_name = "Opponent"
 

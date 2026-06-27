@@ -1,5 +1,5 @@
 extends GdUnitTestSuite
-## Board gestures must dispatch through the minigame's own input routing — chrome
+## Board gestures must dispatch through the minigame's own input routing — the bars
 ## above the board (game pager, screen, layout) otherwise swallows pointer
 ## events before _unhandled_input. A fixed-size SubViewport pins the coordinate
 ## space so pushed touches land where the board reports its cells.

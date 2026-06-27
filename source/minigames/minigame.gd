@@ -1,10 +1,10 @@
 class_name Minigame
 extends Control
 ## Base for every game stage: a self-contained board plus a small view-model the shell reads to fill
-## its chrome. The minigame owns its board, canvas, and input; it never draws the title bar, tab bar, or
+## its bars. The minigame owns its board, canvas, and input; it never draws the title bar, tab bar, or
 ## inventory strip. It only exposes [member status_text], its [method actions], and its
 ## [method inventory_chips] / [method inventory_detail], and the [Game] shell renders them — so the
-## same chrome frames every stage and a stage stays just its board and rules.
+## same bars frame every stage and a stage stays just its board and rules.
 
 ## The one-line status the shell shows under the page title; assigning it pushes the new text out.
 signal status_changed(text: String)
