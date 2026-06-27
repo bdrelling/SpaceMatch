@@ -19,14 +19,6 @@ script = ExtResource("1_mainmenu")
 [node name="Center" type="CenterContainer" parent="ScreenContainer/SafeArea"]
 layout_mode = 2
 
-[node name="Footnote" type="Label" parent="ScreenContainer/SafeArea"]
-unique_name_in_owner = true
-layout_mode = 2
-mouse_filter = 2
-theme_override_colors/font_color = Color(1, 1, 1, 0.3)
-theme_override_font_sizes/font_size = 24
-horizontal_alignment = 1
-vertical_alignment = 2
 
 [node name="Content" type="VBoxContainer" parent="ScreenContainer/SafeArea/Center"]
 custom_minimum_size = Vector2(640, 0)
@@ -99,3 +91,20 @@ custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 focus_mode = 0
 text = "Back"
+
+[node name="Footnote" type="Label" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -84.0
+offset_bottom = -44.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 0.3)
+theme_override_font_sizes/font_size = 24
+horizontal_alignment = 1
+vertical_alignment = 1
