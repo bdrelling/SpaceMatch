@@ -1,0 +1,13 @@
+{
+  "name": "whiteboard",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "@excalidraw/excalidraw": "0.18.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.21.5"
+  }
+}
