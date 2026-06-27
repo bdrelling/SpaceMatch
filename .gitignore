@@ -48,6 +48,7 @@ logs/
 # Obsidian
 **/.obsidian/workspace.json
 **/.obsidian/workspace-*.json
+/docs/obsidian
 
 # Playtests
 .playtests/

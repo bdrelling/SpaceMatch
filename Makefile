@@ -179,11 +179,11 @@ test-debug: ## Run tests with debug output
 # =============================================================================
 
 setup: ## Link docs/obsidian to $OBSIDIAN_VAULT
-	@if [ -z "$$OBSIDIAN_VAULT" ]; then \
+	@if [ -z "$(OBSIDIAN_VAULT)" ]; then \
 		echo "ERROR: OBSIDIAN_VAULT is not set. Set it in .env.local or your shell."; \
 		exit 1; \
 	fi
-	@target=`echo "$$OBSIDIAN_VAULT" | sed "s|^ *~|$$HOME|; s|^ *||"`; \
+	@target=`echo "$(OBSIDIAN_VAULT)" | sed "s|^ *~|$$HOME|; s|^ *||"`; \
 		ln -sfn "$$target" docs/obsidian; \
 		echo "Linked docs/obsidian -> $$target"
 
