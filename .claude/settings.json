@@ -2,11 +2,16 @@
   "sandbox": {
     "filesystem": {
       "denyRead": [
-        "~/"
+        "~/",
+        "./.env.local",
+        "**/.env.local",
+        "./.mcp.json"
       ],
       "allowRead": [
         ".",
-        "~/.claude"
+        "~/.claude",
+        "${OBSIDIAN_VAULT}",
+        "docs/obsidian"
       ],
       "denyWrite": [
         "."
@@ -94,7 +99,11 @@
       "Bash(git checkout *)",
       "Bash(git reset *)"
     ],
-    "ask": []
+    "ask": [],
+    "additionalDirectories": [
+      "${OBSIDIAN_VAULT}",
+      "docs/obsidian"
+    ]
   },
   "hooks": {
     "PreToolUse": [

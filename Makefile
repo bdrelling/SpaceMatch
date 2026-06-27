@@ -13,7 +13,7 @@
 # USAGE
 # =============================================================================
 
-.PHONY: help play play-tablet play-phone playtest test test-debug export-macos export-ios export-android export-linux export-web deploy-macos deploy-ios-store deploy-ios-sim deploy-iphone deploy-ipad deploy-android deploy-linux deploy-web release-macos release-ios release-android release-linux release-web clean
+.PHONY: help setup play play-tablet play-phone playtest test test-debug export-macos export-ios export-android export-linux export-web deploy-macos deploy-ios-store deploy-ios-sim deploy-iphone deploy-ipad deploy-android deploy-linux deploy-web release-macos release-ios release-android release-linux release-web clean
 
 help: ## Show available commands
 	@echo "MACOS:"
@@ -39,6 +39,9 @@ help: ## Show available commands
 	@echo ""
 	@echo "CLAUDOT:"
 	@grep -hE '^claudot-[a-zA-Z_-]*:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
+	@echo ""
+	@echo "SETUP:"
+	@grep -E '^setup:.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
 	@echo ""
 	@echo "CLEANUP:"
 	@grep -E '^clean:.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -174,6 +177,15 @@ test-debug: ## Run tests with debug output
 # =============================================================================
 # CLEANUP
 # =============================================================================
+
+setup: ## Link docs/obsidian to $OBSIDIAN_VAULT
+	@if [ -z "$$OBSIDIAN_VAULT" ]; then \
+		echo "ERROR: OBSIDIAN_VAULT is not set. Set it in .env.local or your shell."; \
+		exit 1; \
+	fi
+	@target=`echo "$$OBSIDIAN_VAULT" | sed "s|^ *~|$$HOME|; s|^ *||"`; \
+		ln -sfn "$$target" docs/obsidian; \
+		echo "Linked docs/obsidian -> $$target"
 
 clean: ## Clean build artifacts
 	@rm -rf reports/
