@@ -117,13 +117,5 @@
         ]
       }
     ]
-  },
-  "disabledMcpjsonServers": [
-    "claude_ai_Figma",
-    "claude_ai_Notion",
-    "claude_ai_Atlassian_Rovo",
-    "claude_ai_Gmail",
-    "claude_ai_Google_Calendar",
-    "claude_ai_Google_Drive"
-  ]
+  }
 }
