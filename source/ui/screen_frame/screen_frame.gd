@@ -50,6 +50,14 @@ func hide_bar() -> void:
 func show_settings(shown: bool) -> void:
 	_navigation_bar.show_settings(shown)
 
+## Shows or hides the bar's currency (scrap) readout (off by default). Set its value with [method set_scrap].
+func show_scrap(shown: bool) -> void:
+	_navigation_bar.show_scrap(shown)
+
+## Sets the bar's currency (scrap) readout value. Only visible once [method show_scrap] is on.
+func set_scrap(amount: int) -> void:
+	_navigation_bar.set_scrap(amount)
+
 ## Mounts [param content] in the slot below the bar, replacing anything already there.
 func set_content(content: Control) -> void:
 	for child: Node in _content.get_children():

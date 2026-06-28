@@ -14,6 +14,8 @@ signal settings_pressed
 @onready var _back_button: Button = %Back
 @onready var _title_label: Label = %Title
 @onready var _action_button: Button = %Action
+@onready var _scrap: HBoxContainer = %Scrap
+@onready var _scrap_value: Label = %ScrapValue
 @onready var _settings_button: Button = %Settings
 
 func _ready() -> void:
@@ -32,3 +34,12 @@ func configure(title: String, action_text: String = "") -> void:
 ## plain back/title/action bar stays clean). Shown screens get [signal settings_pressed].
 func show_settings(shown: bool) -> void:
 	_settings_button.visible = shown
+
+## Shows or hides the trailing currency (scrap) readout — off by default. The encounter shows it so the
+## player's scrap balance is visible over the board; set the value with [method set_scrap].
+func show_scrap(shown: bool) -> void:
+	_scrap.visible = shown
+
+## Sets the currency (scrap) readout's value. Only visible once [method show_scrap] is on.
+func set_scrap(amount: int) -> void:
+	_scrap_value.text = str(amount)

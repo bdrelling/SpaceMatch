@@ -1,7 +1,7 @@
 extends Node
 ## The bootstrapper — the app's entry point. Sets up scene loading, device orientation/safe area, and the
-## window's content scaling, then transitions into the [MainMenuScreen]. Holds no game state; every screen is its
-## own scene reached from the menu.
+## window's content scaling, then transitions into the first screen (see [method _boot]). Holds no game state;
+## every screen is its own scene reached from the menu.
 
 # Portrait design resolution the responsive UI is authored against. Mobile scales the whole UI to fill the
 # device screen from this base; desktop keeps the height and derives the width from the launched window's
@@ -30,11 +30,13 @@ func _ready() -> void:
 	_apply_window(get_window())
 	_boot()
 
-## Opens the first screen. The shipped app passes no flag and lands on the title screen ([MainMenuScreen]);
-## a [code]--boot=<screen>[/code] launch flag jumps straight to a screen for a fast dev loop — [code]make
-## play[/code] uses [code]--boot=encounter[/code] to drop into a default match, the way booting used to.
+## Opens the first screen. Debug builds — the editor's Play and every [code]make play[/code] target — drop
+## straight into the [EncounterScreen] so every launch lands on the match we're iterating on; release builds
+## land on the title screen ([MainMenuScreen]). A [code]--boot=<screen>[/code] launch flag overrides that
+## default (menu, encounter, or loadout) for a one-off dev loop.
 func _boot() -> void:
-	match CommandLine.get_launch_argument_value("boot", "menu"):
+	var fallback: String = "encounter" if OS.is_debug_build() else "menu"
+	match CommandLine.get_launch_argument_value("boot", fallback):
 		"encounter":
 			SceneLoader.transition_to(EncounterScreen.create())
 		"loadout":

@@ -33,6 +33,7 @@ vertical_alignment = 1
 
 [node name="SettingsOverlay" type="CanvasLayer" parent="."]
 unique_name_in_owner = true
+process_mode = 3
 layer = 10
 visible = false
 

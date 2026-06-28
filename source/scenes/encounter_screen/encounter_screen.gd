@@ -23,17 +23,47 @@ func _ready() -> void:
 	_match.bind_session()
 	# This screen owns the encounter, so the match's Restart reopens it here.
 	_match.restart_requested.connect(_open_encounter)
-	configure_bar("Encounter")
+	_wire_actions()
 	# The cog is the only way to pause on touch (no ESC/joypad), so the encounter shows it.
 	show_settings(true)
 	settings_pressed.connect(_on_settings_pressed)
 	back_pressed.connect(_on_back)
 	_wire_settings()
+	_wire_wallet()
 
 	# Build watermark — debug builds only; released encounters stay clean.
 	_footnote.visible = OS.is_debug_build()
 	if _footnote.visible:
 		_footnote.text = BuildInfo.stamp()
+
+# Mounts the match's player-facing actions onto the bar's trailing action button — today just "Rules", a
+# read-only summary of the rules in force. The match owns what a press does (it opens the view over its own
+# board); this screen only surfaces the button. Falls back to a plain titled bar if the match offers none.
+func _wire_actions() -> void:
+	var list: Array[MinigameAction] = _match.actions()
+	if list.is_empty():
+		configure_bar("Encounter")
+		return
+	var action: MinigameAction = list[0]
+	configure_bar("Encounter", action.label)
+	action_pressed.connect(action.on_pressed)
+
+# Wires the bar's currency readout to the running game's wallet so the scrap balance shows over the board and
+# repaints as matches bank scrap. The wallet is campaign-scoped (it outlives a restart), so this binds once.
+func _wire_wallet() -> void:
+	show_scrap(true)
+	var wallet := _wallet()
+	if wallet != null and not wallet.scrap_changed.is_connected(_on_wallet_changed):
+		wallet.scrap_changed.connect(_on_wallet_changed)
+	_on_wallet_changed()
+
+func _on_wallet_changed() -> void:
+	var wallet := _wallet()
+	set_scrap(wallet.scrap if wallet != null else 0)
+
+# The running game's wallet, or null when there's no game state.
+func _wallet() -> WalletState:
+	return GameSession.game_state.wallet if GameSession.game_state != null else null
 
 # Connects the Settings overlay: pausing shows it, resuming hides it, and its panel buttons restart/quit
 # the encounter or open Debug over the (still paused) board.
@@ -70,10 +100,13 @@ func _close_settings() -> void:
 func _settings_screen() -> SettingsScreen:
 	return _settings_overlay.get_node("Settings") as SettingsScreen
 
-# Restart from Settings: resume first (the new match must run unpaused), then reopen the encounter in place.
+# Restart from Settings: resume first (the new match must run unpaused), reopen the encounter in place, then
+# rebind the match so it drops the finished board and restarts on the fresh encounter (bind_session sees the
+# match is already bound and runs its restart path). Without the rebind the menu closes but the board never resets.
 func _on_settings_restart() -> void:
 	PauseMonitor.unpause()
 	_open_encounter()
+	_match.bind_session()
 
 # Quit from Settings: resume so the tree isn't left paused under the menu, then return to the main menu.
 func _on_settings_quit() -> void:
