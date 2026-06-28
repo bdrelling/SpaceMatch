@@ -3,6 +3,7 @@
 ## Critical
 
 - Read all docs on demand, not up front.
+- This repo uses symlinked directories on purpose — the Obsidian vault (`docs/obsidian/` → external iCloud vault) and code (`source/addons/*`, `scripts/armory`, `.claude/skills`). Their contents are first-class and you're expected to find them. The harness Glob/Grep tools and a plain `find` do NOT cross symlinks, so they silently miss these trees. When a search must reach a symlinked dir, drop to Bash with a symlink-following command: `find -L …`, `rg --follow …`, or `grep -R …`. Never assume a symlinked subfolder's layout from memory — list its root first.
 - For work with 3+ distinct steps, keep a todo list and update it as you go. Skip it for one-off or trivial edits.
 - Never edit the GDD (`docs/gdd/`) without explicit permission — it is design documentation, not a place for code, prototype artifacts, or screenshots. Screenshots and playtest output go in `.playtests/`.
 

@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://col63my0q1tl" path="res://minigames/match/portrait_panel.gd" id="1_panel"]
 [ext_resource type="StyleBox" path="res://ui/styles/hud_placeholder.tres" id="2_normal"]
 [ext_resource type="StyleBox" path="res://ui/styles/hud_box_active.tres" id="3_active"]
-[ext_resource type="Script" uid="uid://d4hc4056kk7xa" path="res://entities/starship/module_grid/module_grid_thumbnail.gd" id="4_thumb"]
+[ext_resource type="Script" uid="uid://d4hc4056kk7xa" path="res://entities/module_grid/module_grid_thumbnail.gd" id="4_thumb"]
 [ext_resource type="Script" uid="uid://b0c5o0vac8twb" path="res://minigames/match/tile_icon.gd" id="5_tile"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bar"]

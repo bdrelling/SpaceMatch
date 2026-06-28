@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="ModuleGridBlueprint" format=3 load_steps=15]
 
-[ext_resource type="Script" path="res://entities/starship/module_grid/module_grid_blueprint.gd" id="1"]
-[ext_resource type="Script" path="res://entities/starship/module_grid/module_placement.gd" id="2_place"]
+[ext_resource type="Script" path="res://entities/module_grid/module_grid_blueprint.gd" id="1"]
+[ext_resource type="Script" path="res://entities/module_grid/module_placement.gd" id="2_place"]
 [ext_resource type="Resource" uid="uid://dlkraq4yc71s4" path="res://resources/items/modules/shield_generator_item_blueprint.tres" id="3_shield"]
 [ext_resource type="Resource" uid="uid://bjnpt3i63vbq3" path="res://resources/items/modules/life_support_item_blueprint.tres" id="4_life"]
 [ext_resource type="Resource" uid="uid://dlpn238vek5di" path="res://resources/items/modules/reactor_item_blueprint.tres" id="5_reactor"]

@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://entities/starship/starship_blueprint.gd" id="1"]
 [ext_resource type="Resource" path="res://resources/starships/computer_default_module_grid_blueprint.tres" id="2"]
-[ext_resource type="Script" uid="uid://ha1rkn84cbir" path="res://entities/starship/stats/stat_block.gd" id="3_stats"]
+[ext_resource type="Script" uid="uid://ha1rkn84cbir" path="res://entities/stat/stat_block.gd" id="3_stats"]
 
 [sub_resource type="Resource" id="Stats_computer"]
 script = ExtResource("3_stats")

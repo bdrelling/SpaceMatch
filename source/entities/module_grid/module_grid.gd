@@ -5,7 +5,7 @@ extends Node
 ## silhouette and its authored modules), or wrapped around existing state via [method with_state]. Logic reads
 ## the grid off [member state]; this node makes the grid inspectable and places it in the tree.
 
-const SCENE_PATH := "res://entities/starship/module_grid/module_grid.tscn"
+const SCENE_PATH := "res://entities/module_grid/module_grid.tscn"
 const SCENE: PackedScene = preload(SCENE_PATH)
 
 @export var state: ModuleGridState

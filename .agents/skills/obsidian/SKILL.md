@@ -7,12 +7,14 @@ description: Orient in this repo's Obsidian vault — where notes/config/drawing
 
 The vault is `docs/obsidian/`. Notes are plain Markdown — **to read or edit a note, just use Read/Edit/Write directly.** Reach for the CLI only when a task needs the live app (search, templates, dataview, the vault API).
 
+**`docs/obsidian/` is a SYMLINK** into an external iCloud vault. Plain `find`, `rg`, and the harness Glob/Grep tools do NOT cross symlinks — they're blind to the entire vault. To search it from a Bash shell, follow symlinks: `find -L docs/obsidian …`, `rg --follow … docs/obsidian`, or `grep -R … docs/obsidian`. Never guess a subfolder from memory — `ls docs/obsidian/` (the root) first.
+
 ## Where things live
 
 ```
 docs/obsidian/
   .obsidian/          vault config — app.json, plugins/, themes/, templates.json (don't hand-edit unless asked)
-  copilot/            Copilot custom prompts
+  notes/              design/system notes (e.g. effect-system.md) — the plain-markdown docs
   data/               game data notes (stats, victories, starship-archetypes)
   research/           design research (match-3 modifiers, effects, puzzle design, starship modules)
   drawings/           Excalidraw drawings → use the `excalidraw` skill, NOT this one

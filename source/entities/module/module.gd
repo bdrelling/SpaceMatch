@@ -5,7 +5,7 @@ extends Node
 ## around existing state via [method with_state]. The grid shares the same [ModuleState] by reference, so an
 ## edit through the module or the grid is the same edit.
 
-const SCENE_PATH := "res://entities/starship/module/module.tscn"
+const SCENE_PATH := "res://entities/module/module.tscn"
 const SCENE: PackedScene = preload(SCENE_PATH)
 
 @export var state: ModuleState

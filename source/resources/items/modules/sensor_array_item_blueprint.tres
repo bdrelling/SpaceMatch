@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="ModuleBlueprint" format=3 uid="uid://5g0yw4m0f1b1"]
 
-[ext_resource type="Script" uid="uid://daxrkag063tph" path="res://entities/starship/module_blueprint.gd" id="1_script"]
-[ext_resource type="Script" uid="uid://ha1rkn84cbir" path="res://entities/starship/stats/stat_block.gd" id="2_stats"]
+[ext_resource type="Script" uid="uid://daxrkag063tph" path="res://entities/module/module_blueprint.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://ha1rkn84cbir" path="res://entities/stat/stat_block.gd" id="2_stats"]
 [ext_resource type="Script" uid="uid://dy25mpv7s2ajw" path="res://addons/grid_system/data/piece_shape.gd" id="3_shape"]
 
 [sub_resource type="Resource" id="Stats_sensor_array"]

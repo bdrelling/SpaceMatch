@@ -60,6 +60,35 @@ function text(x, y, str, o = {}) {
   };
 }
 
+// ---- schema/ER box (Swagger-style: title header + `field : Type` rows) ----
+// Returns { elements, geometry }. Push elements, then wire refs with link() using
+// the returned anchors: `.right`/`.left`/`.top`/`.bottom`/`.cx`/`.cy` and `.rowY(i)`
+// (vertical center of field row i — connect a reference field straight to its target).
+// opts.note → a centered annotation line under the title (e.g. "extends GridState"),
+// set apart by the hand-drawn font (Excalidraw text has no real italic) + a gap before fields.
+function schema(x, y, w, title, fields, o = {}) {
+  const HEADH = 30, ROWH = 22, PAD = 8, NOTEH = o.note ? 34 : 0;
+  const h = HEADH + NOTEH + fields.length * ROWH + PAD;
+  const stroke = o.strokeColor || '#c9d1d9';
+  const els = [
+    rect(x, y, w, h, { strokeColor: stroke, backgroundColor: o.backgroundColor || '#161b22', roughness: 0, strokeWidth: 1 }),
+    rect(x, y, w, HEADH, { strokeColor: stroke, backgroundColor: o.headColor || '#30363d', roughness: 0, strokeWidth: 1 }),
+    text(x, y + 7, title, { fontSize: 16, fontFamily: 2, textAlign: 'center', width: w, strokeColor: o.titleColor || '#ffffff' }),
+  ];
+  if (o.note) els.push(text(x, y + HEADH + 7, o.note, { fontSize: 13, fontFamily: 1, textAlign: 'center', width: w, strokeColor: '#8b949e' }));
+  const fieldTop = y + HEADH + NOTEH;
+  fields.forEach((f, i) => els.push(text(x + 12, fieldTop + i * ROWH + 4, f, { fontSize: 13, fontFamily: 3, textAlign: 'left', width: w - 20, strokeColor: o.fieldColor || '#c9d1d9' })));
+  return {
+    elements: els, x, y, w, h,
+    left: x, right: x + w, top: y, bottom: y + h, cx: x + w / 2, cy: y + h / 2,
+    rowY: i => fieldTop + i * ROWH + ROWH / 2,
+  };
+}
+// foreign-key arrow between two absolute points (thin, clean, gray by default)
+function link(ax, ay, bx, by, o = {}) {
+  return arrow(ax, ay, [[0, 0], [bx - ax, by - ay]], { strokeColor: o.strokeColor || '#8b949e', roughness: 0, strokeWidth: 1, ...o });
+}
+
 // ---- io ----
 const fileFor = name => path.join(DRAWINGS_DIR, `${name || 'whiteboard'}.excalidraw.md`);
 
@@ -108,4 +137,4 @@ function read(name) {
   throw new Error('no drawing block found');
 }
 
-module.exports = { rect, ellipse, diamond, poly, arrow, text, write, read, fileFor, DRAWINGS_DIR, REPO_ROOT };
+module.exports = { rect, ellipse, diamond, poly, arrow, text, schema, link, write, read, fileFor, DRAWINGS_DIR, REPO_ROOT };
