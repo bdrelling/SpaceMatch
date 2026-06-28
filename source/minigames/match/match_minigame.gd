@@ -41,10 +41,11 @@ const _FLY_STAGGER: float = 0.07
 ## How long an ability's effect and animation play out before the turn passes, so the action finishes
 ## resolving before the next combatant acts. Zero hands over immediately.
 @export var action_resolve_delay: float = 0.5
-## The swappable rules for this encounter — spawn weights and the extra-turn threshold. Left unset, the
-## board falls back to [member DebugConfig.match_rules] (the standard SpaceMatch set, live-tunable from the
+## The mode this match plays — one swappable [Ruleset] of composable [Rule]s (the economy grants, scoring,
+## board fill, turn-start knobs, …). Authored as a `.tres` and edited as a plain rule array; left unset, the
+## board falls back to [member DebugConfig.match_ruleset] (the standard SpaceMatch set, live-tunable from the
 ## Debug panel) so it plays standalone.
-@export var rules: MatchRules
+@export var ruleset: Ruleset
 ## The board-level config — size, shortest run, and whether warp is in play. Left unset, the board falls
 ## back to [member DebugConfig.match_config] (shared, live-tunable from the Debug panel) so it plays standalone.
 @export var config: MatchConfig
@@ -121,12 +122,19 @@ var _fallback: SelectionRule
 # The selection rule currently applied to the board, so per-turn re-syncs only re-point the view when the
 # active rule actually changes (player ↔ opponent with different selection overrides).
 var _applied_selection: SelectionRule
+# The board-fill rule currently applied, so per-turn re-syncs only retune gravity when the active refill
+# direction actually changes (e.g. each side filling from its own edge on a shared board). Sourced from the
+# effective ruleset, so it composes like every other rule.
+var _applied_fill: BoardFillRule
+# The territory rule in force this turn (tile ownership + team colours), or null when the mode isn't a
+# shared-board fight — gates whether refilled tiles are tagged and tinted by side.
+var _territory: TerritoryRule
 
 func _ready() -> void:
 	# Fall back to the shared debug rules so the board plays when mounted without authored rules of its own,
 	# and so the Debug panel's live edits reach the running board (it shares this instance).
-	if rules == null:
-		rules = DebugConfig.match_rules
+	if ruleset == null:
+		ruleset = DebugConfig.match_ruleset
 	# Same fallback for the board-level config, so size / min-run / warp tune live from the Debug panel.
 	if config == null:
 		config = DebugConfig.match_config
@@ -228,7 +236,7 @@ func _open_rules() -> void:
 	layer.layer = 5
 	# Show the match's defaults plus the player starship's own rules (extra turn, module rules) — the set actually
 	# in force on the player's turn, not just the match scope.
-	var navigator := DebugNavigator.create(RulesView.create(rules, _starship_rules(EncounterState.Combatant.PLAYER)))
+	var navigator := DebugNavigator.create(RulesView.create(ruleset, _starship_rules(EncounterState.Combatant.PLAYER)))
 	navigator.closed.connect(layer.queue_free)
 	layer.add_child(navigator)
 	add_child(layer)
@@ -639,7 +647,8 @@ func _resolve_clear(board: GridState, cells: Array[Vector2i], is_path: bool) -> 
 	match_context.centers = centers
 	match_context.damage_cells = damage_cells
 	match_context.warp_bars = warp_bars
-	match_context.scoring = rules.scoring if rules != null else null
+	var scoring_rule := _rule_of(ScoringRule, _effective_ruleset(active)) as ScoringRule
+	match_context.scoring = scoring_rule.formula if scoring_rule != null else null
 	# The mover's scoring offset (set at turn start by an OffsetScoringRule; zero by default) shifts every
 	# match's reward down — read here so reward_for honors it without depending on rule-firing order.
 	var actor_starship: EncounterStarshipState = _encounter.starship_of(active)
@@ -684,11 +693,13 @@ func _render_clear_visuals(match_context: MatchRuleContext) -> void:
 func _wallet() -> WalletState:
 	return GameSession.game_state.wallet if GameSession.game_state != null else null
 
-# A match's reward for clearing [param count] tiles of a kind, per the encounter's [member MatchRules.scoring]
-# formula (one-to-one by default; a [FibonacciScoringFormula] makes bigger matches pay super-linearly). Falls
-# back to one-to-one when no formula is set.
+# A match's reward for clearing [param count] tiles of a kind, per the active [ScoringRule]'s formula (one-to-
+# one by default; a [FibonacciScoringFormula] makes bigger matches pay super-linearly). Falls back to one-to-
+# one when no scoring rule is in play.
 func _reward_for(count: int) -> int:
-	return rules.scoring.reward_for(count) if rules.scoring != null else maxi(0, count)
+	var combatant: int = _encounter.active_combatant() if _encounter != null else EncounterState.Combatant.PLAYER
+	var scoring_rule := _rule_of(ScoringRule, _effective_ruleset(combatant)) as ScoringRule
+	return scoring_rule.reward_for(count) if scoring_rule != null else maxi(0, count)
 
 # Adds matched scrap to the player's wallet (a no-op when there's no wallet).
 func _earn_scrap(amount: int) -> void:
@@ -1030,9 +1041,9 @@ func _warp_active() -> bool:
 # The active WarpRule in the encounter's ruleset, or null if warp isn't ruled in — its enabled flag is the
 # match-level warp switch (see [method _warp_active]).
 func _find_warp_rule() -> WarpRule:
-	if rules == null or rules.ruleset == null:
+	if ruleset == null:
 		return null
-	for rule: Rule in rules.ruleset.rules:
+	for rule: Rule in ruleset.rules:
 		if rule is WarpRule:
 			return rule as WarpRule
 	return null
@@ -1277,19 +1288,16 @@ func _reshuffle_board() -> void:
 # the player's wallet; damage and warp aren't bankable resources, so they're left out. A no-op when the
 # rule is off. Players call this a stalemate payout — the board you couldn't clear isn't simply lost.
 func _split_board_resources() -> void:
-	if not rules.reload_splits_resources or _encounter == null or _session == null:
+	var rule := _rule_of(ReloadSplitRule) as ReloadSplitRule
+	if rule == null or _encounter == null or _session == null:
 		return
 	var board: GridState = _session.state
 	if board == null:
 		return
-	var counts: Dictionary[int, int] = {}
-	for y: int in config.board_height:
-		for x: int in config.board_width:
-			var kind: int = _kind_at(board, x, y)
-			if kind >= 0:
-				counts[kind] = counts.get(kind, 0) + 1
-	for kind: int in counts:
-		var each: int = counts[kind] / 2  # floor; the odd leftover tile is discarded
+	# The rule owns the share computation; the host applies it — which kind banks where is the host's economy.
+	var shares: Dictionary = rule.shares(board)
+	for kind: int in shares:
+		var each: int = shares[kind]
 		if each <= 0:
 			continue
 		match kind:
@@ -1462,6 +1470,9 @@ func _hide_end_overlay() -> void:
 func _refresh_turn_tracker() -> void:
 	# Whose turn it is decides which selection rule the board plays by — re-sync before repainting.
 	_sync_selection()
+	# Likewise the board-level rules (refill direction, territory ownership): re-derive them from the effective
+	# ruleset so they compose with ship/module rules and change with whoever is acting.
+	_sync_board_rules()
 	if _encounter == null:
 		return
 	if _round_label != null:
@@ -1492,8 +1503,8 @@ func _run_phase(phase: StringName, context: MatchRuleContext) -> void:
 # with the acting starship and its enabled modules.
 func _effective_ruleset(combatant: int) -> Ruleset:
 	var composed := Ruleset.new()
-	if rules != null and rules.ruleset != null:
-		for rule: Rule in rules.ruleset.rules:
+	if ruleset != null:
+		for rule: Rule in ruleset.rules:
 			composed.add(rule)
 	for rule: Rule in _starship_rules(combatant):
 		if rule == null:
@@ -1502,6 +1513,19 @@ func _effective_ruleset(combatant: int) -> Ruleset:
 			composed.remove_named(rule.rule_name)
 		composed.add(rule)
 	return composed
+
+# The last enabled rule that is [param type] in [param source] (the match ruleset when omitted), or null.
+# Config-style rules — scoring, selection default, board fill, territory, reload split — are read out of the
+# ruleset this way, so a rule layered in later (a ship's, added last) wins, the same as override-by-name.
+func _rule_of(type: Variant, source: Ruleset = null) -> Rule:
+	var search: Ruleset = source if source != null else ruleset
+	if search == null:
+		return null
+	var found: Rule = null
+	for rule: Rule in search.rules:
+		if rule != null and rule.enabled and is_instance_of(rule, type):
+			found = rule
+	return found
 
 # A minimal context for a lifecycle phase (no per-clear payload): the encounter and the active combatant.
 func _phase_context() -> MatchRuleContext:
@@ -1544,8 +1568,9 @@ func _active_selection() -> SelectionRule:
 	var starship: StarshipState = _active_starship()
 	if starship != null and starship.selection_override != null:
 		return starship.selection_override
-	if rules != null and rules.default_selection != null:
-		return rules.default_selection
+	var default_rule := _rule_of(SelectionDefaultRule) as SelectionDefaultRule
+	if default_rule != null and default_rule.selection != null:
+		return default_rule.selection
 	return _fallback
 
 # Re-points the board at the active turn's selection rule, but only when it actually changed — so a board
@@ -1593,6 +1618,35 @@ func _apply_selection(rule: SelectionRule) -> void:
 
 #endregion
 
+#region Board rules
+
+# Re-derives the board-level rules that depend on whose turn it is — refill direction and territory ownership —
+# from the effective ruleset (the same compose that drives every phase), applying fill only when it changed so
+# a board whose combatants share one direction never churns gravity. Sourcing from the ruleset is what makes
+# these compose: a mode authors them into its ruleset, a ship overrides by [member Rule.rule_name] on its turn.
+func _sync_board_rules() -> void:
+	if _session == null:
+		return
+	var combatant: int = _encounter.active_combatant() if _encounter != null else EncounterState.Combatant.PLAYER
+	var effective: Ruleset = _effective_ruleset(combatant)
+	# Both are the last enabled rule of their kind in the composed ruleset, so a ship/module rule layered over
+	# the match default wins on that ship's turn.
+	var fill := _rule_of(BoardFillRule, effective) as BoardFillRule
+	if fill != _applied_fill:
+		_apply_fill(fill)
+		_applied_fill = fill
+	# Territory's presence is what turns on tile ownership and tinting; null leaves an ordinary board.
+	_territory = _rule_of(TerritoryRule, effective) as TerritoryRule
+
+# Sets the gravity direction live on every gravity rule in the session — the one knob that decides which way
+# tiles settle and which edge fresh tiles stream in. Null fill = the default downward fall.
+func _apply_fill(fill: BoardFillRule) -> void:
+	var dir: Vector2i = fill.direction_vector() if fill != null else Vector2i(0, 1)
+	for gravity: GravityPassive in _session.find_rules(GravityPassive):
+		gravity.direction = dir
+
+#endregion
+
 # The display name of the combatant whose turn it currently is.
 func _active_name() -> String:
 	if _encounter == null:
@@ -1620,11 +1674,25 @@ func _make_tile(object: GridObjectState) -> Node2D:
 	var tile := MatchTile.new()
 	var tile_state := object as _TileState
 	tile.kind = tile_state.kind if tile_state != null else 0
+	if tile_state != null:
+		tile.owner_outline = _owner_color(tile_state.owner)
 	return tile
 
 func _spawn_tile(_board: GridState, cell: Vector2i) -> GridObjectState:
 	var cells: Array[Vector2i] = [cell]
-	return _TileState.new(cells, _pick_kind())
+	# Only a territory match tags ownership; ordinary modes spawn neutral tiles (no owner, no outline).
+	var owner: int = _refill_owner() if _territory != null else -1
+	return _TileState.new(cells, _pick_kind(), owner)
+
+# The combatant a freshly refilled tile belongs to: whoever is clearing now drives the refill, so new tiles
+# enter owned by the active side. Neutral (-1) with no encounter — the standalone board has no sides.
+func _refill_owner() -> int:
+	return _encounter.active_combatant() if _encounter != null else -1
+
+# The outline tint marking which side owns a tile, from the active [TerritoryRule] (which carries the team
+# colours). Transparent — no ring — for neutral tiles or any match without a territory rule.
+func _owner_color(owner: int) -> Color:
+	return _territory.color_for(owner) if _territory != null else Color(0, 0, 0, 0)
 
 func _generate_board() -> GridState:
 	var state := GridState.new(config.board_width, config.board_height, 1)
@@ -1675,7 +1743,7 @@ func _weighted_choice(candidates: Array[int]) -> int:
 # forced off unless a starship can actually warp (rule on + a warp core). Rebuilt per refill, so a live rule edit
 # — adding, dropping, or retuning a rule — reshapes the board immediately.
 func _spawn_table() -> Dictionary:
-	var table: Dictionary = rules.spawn_table() if rules != null else {}
+	var table: Dictionary = ruleset.aggregate(&"spawn_contribution") if ruleset != null else {}
 	if not _warp_active():
 		table[_WARP_KIND] = 0
 	return table
@@ -1773,8 +1841,13 @@ func _on_regenerated() -> void:
 ## resolver matches on.
 class _TileState extends GridObjectState:
 	var kind: int
+	## Which combatant owns this tile on a shared board (EncounterState.Combatant), or -1 for neutral. Doubles
+	## into `state["owner"]` so a board scan (e.g. a future occupation-scoring rule) can read it generically.
+	var owner: int
 
-	func _init(occupied_cells: Array[Vector2i] = [], tile_kind: int = 0) -> void:
+	func _init(occupied_cells: Array[Vector2i] = [], tile_kind: int = 0, tile_owner: int = -1) -> void:
 		super (occupied_cells)
 		kind = tile_kind
+		owner = tile_owner
 		state["kind"] = tile_kind
+		state["owner"] = tile_owner

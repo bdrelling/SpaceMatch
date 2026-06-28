@@ -1,12 +1,12 @@
 # AUTOLOAD: DebugConfig
 extends Node
-## The board's view of the editable config. [member match_rules] is the active rule set from the
-## [RuleCatalog] ([Catalogs.rules]) — a match with no authored rules of its own falls back to it (see
-## [MatchMinigame]), and the debug/read-only rule views edit/show that same instance, so there's one source
-## of truth. A thin indirection so the match needn't know about the catalog layer.
+## The board's view of the editable config. [member match_ruleset] is the active mode from the [RuleCatalog]
+## ([Catalogs.rules]) — a match with no authored ruleset of its own falls back to it (see [MatchMinigame]), and
+## the debug/read-only rule views edit/show that same instance, so there's one source of truth. A thin
+## indirection so the match needn't know about the catalog layer.
 
-## The active rule set the board reads — the [RuleCatalog]'s first entry.
-var match_rules: MatchRules:
+## The active mode the board reads — the [RuleCatalog]'s first entry (a [Ruleset]).
+var match_ruleset: Ruleset:
 	get:
 		return Catalogs.rules.active()
 

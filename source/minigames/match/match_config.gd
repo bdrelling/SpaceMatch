@@ -1,7 +1,7 @@
 class_name MatchConfig
 extends Resource
 ## Board-level settings for one match — the geometry that shapes the board itself, separate from the
-## behavioural [MatchRules] (what tiles do) and the per-starship stats. Author a `.tres` and hand it to
+## behavioural [Ruleset] (what tiles do) and the per-starship stats. Author a `.tres` and hand it to
 ## [MatchMinigame] as [member MatchMinigame.config], or leave it unset and the board falls back to the shared
 ## [member DebugConfig.match_config] so the Debug panel tunes it without a recompile. Geometry changes
 ## (width / height / min run) apply when the board next builds — i.e. on the next match or a restart — since

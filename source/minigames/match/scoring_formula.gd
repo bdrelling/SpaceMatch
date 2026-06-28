@@ -2,7 +2,7 @@ class_name ScoringFormula
 extends Resource
 ## Maps a match's tile count to its reward — the one knob that decides whether a bigger match pays off
 ## one-for-one or super-linearly. The base formula is one-to-one (a match of N is worth N); subclass and
-## override [method reward_for] to reshape it (see [FibonacciScoringFormula]). Held by [MatchRules] and
+## override [method reward_for] to reshape it (see [FibonacciScoringFormula]). Held by a [ScoringRule] and
 ## applied to every banked kind (the four stat tiles, scrap, damage). Built as a swappable [Resource] so
 ## scoring can later be overridden per kind or by player modifiers — the rules pick which formula a kind
 ## scores on, and the formula only ever answers "what is a match of this size worth".

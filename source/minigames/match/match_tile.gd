@@ -54,6 +54,14 @@ var tint: Color = Color(0, 0, 0, 0):
 		tint = value
 		queue_redraw()
 
+## Owner outline painted by the host on a shared board — the colour of the side that owns this tile (blue
+## player, red opponent). Zero alpha means unowned/neutral and draws no ring. Drawn distinct from the white
+## selection highlight, which still draws over it.
+var owner_outline: Color = Color(0, 0, 0, 0):
+	set(value):
+		owner_outline = value
+		queue_redraw()
+
 var _highlighted: bool = false
 
 func _init() -> void:
@@ -76,6 +84,9 @@ func _draw() -> void:
 		# Damage (kind 6) has no art yet — fall back to the hand-drawn starburst.
 		var color: Color = tint if tint.a > 0.0 else _COLORS[clampi(kind, 0, _COLORS.size() - 1)]
 		_draw_explosion(color)
+	if owner_outline.a > 0.0:
+		var owner_inset: float = _HALF + 0.02
+		draw_rect(Rect2(Vector2(-owner_inset, -owner_inset), Vector2(owner_inset * 2.0, owner_inset * 2.0)), owner_outline, false, _LINE * 1.6)
 	if _highlighted:
 		var inset: float = _HALF + 0.05
 		draw_rect(Rect2(Vector2(-inset, -inset), Vector2(inset * 2.0, inset * 2.0)), Color.WHITE, false, _LINE * 1.4)

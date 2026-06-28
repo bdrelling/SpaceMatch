@@ -2,7 +2,7 @@ class_name SelectionRuleView
 extends DebugView
 ## The selection-rule editor — how tiles get picked on the board (swap / slide / trace / teleport) plus the
 ## adjacency, run-length and teleport-range knobs that turn one match engine into a different game. Edits the
-## active rules' [member MatchRules.default_selection]; each change assigns a fresh [SelectionRule] so the
+## active ruleset's [SelectionDefaultRule]; each change assigns a fresh [SelectionRule] so the
 ## board re-points to it on the next turn (see [member MatchMinigame] — its per-turn re-sync only fires when
 ## the active rule's reference changes). A starship's [member StarshipState.selection_override] still wins on
 ## that starship's turn.
@@ -17,11 +17,12 @@ func title() -> String:
 	return "Selection"
 
 func _build() -> void:
-	var rules := DebugConfig.match_rules
-	if rules == null:
+	var ruleset := DebugConfig.match_ruleset
+	if ruleset == null:
 		return
 	if _selection == null:
-		_selection = rules.default_selection.duplicate() if rules.default_selection != null else SelectionRule.make()
+		var rule := _default_rule(ruleset)
+		_selection = rule.selection.duplicate() if rule != null and rule.selection != null else SelectionRule.make()
 
 	# Mode swaps which interaction the board enables; rebuild so the teleport-range row tracks the choice.
 	add_child(DebugRow.option("Mode", _MODE_LABELS, _selection.mode,
@@ -54,6 +55,21 @@ func _build() -> void:
 # Push a fresh copy onto the active rules: the board's per-turn re-sync only re-points when the active rule's
 # reference changes, so an in-place edit to the live rule wouldn't take — a new instance always does.
 func _apply() -> void:
-	var rules := DebugConfig.match_rules
-	if rules != null:
-		rules.default_selection = _selection.duplicate()
+	var ruleset := DebugConfig.match_ruleset
+	if ruleset == null:
+		return
+	var rule := _default_rule(ruleset, true)
+	if rule != null:
+		rule.selection = _selection.duplicate()
+
+# The default-selection rule in [param ruleset], creating and adding one when [param create] and none exists —
+# so the debug editor can set a board default even on a mode authored without one.
+func _default_rule(ruleset: Ruleset, create: bool = false) -> SelectionDefaultRule:
+	for rule: Rule in ruleset.rules:
+		if rule is SelectionDefaultRule:
+			return rule as SelectionDefaultRule
+	if create:
+		var made := SelectionDefaultRule.new()
+		ruleset.add(made)
+		return made
+	return null

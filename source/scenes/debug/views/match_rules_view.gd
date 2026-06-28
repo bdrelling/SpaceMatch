@@ -1,6 +1,6 @@
 class_name MatchRulesView
 extends DebugView
-## The match-tuning page. Each rule in the shared [DebugConfig.match_rules] ruleset is drawn as a named,
+## The match-tuning page. Each rule in the shared [DebugConfig.match_ruleset] is drawn as a named,
 ## dashed [DebugRuleCard] — title from its [member Rule.rule_name], accent from the resource it acts on, and
 ## a row per configurable field (introspected). Resource-bound rules read in their tile's colour; independent
 ## ones (e.g. extra turns) stand on their own. Spawn weights and scoring follow as match-level config cards.
@@ -9,12 +9,12 @@ extends DebugView
 # Base [Rule] fields shown as the card's on/off and title rather than generic config rows.
 const _SKIP_PROPS: Array[String] = ["rule_name", "phase", "enabled"]
 
-var _rules: MatchRules
+var _ruleset: Ruleset
 
-## Builds an editor for [param rules] (a ruleset from the [RuleCatalog]).
-static func create(rules: MatchRules) -> MatchRulesView:
+## Builds an editor for [param ruleset] (a mode from the [RuleCatalog]).
+static func create(ruleset: Ruleset) -> MatchRulesView:
 	var view := MatchRulesView.new()
-	view._rules = rules
+	view._ruleset = ruleset
 	return view
 
 func title() -> String:
@@ -30,24 +30,15 @@ func action() -> Button:
 	return button
 
 func _build() -> void:
-	var rules := _rules
-	if rules == null:
+	if _ruleset == null:
 		return
 
-	for rule: Rule in rules.ruleset.rules:
+	for rule: Rule in _ruleset.rules:
 		if rule == null:
 			continue
 		var card := DebugRuleCard.create(RulePresentation.display_name(rule), RulePresentation.accent_for(rule))
 		add_child(card)
 		_add_rule_rows(card, rule)
-
-	# Scoring is a single-slot "interaction" — one per scope, starship over match. Linear vs super-linear.
-	var scoring := DebugRuleCard.create("Scoring", Color.WHITE)
-	add_child(scoring)
-	scoring.add_row(DebugRow.option("Match reward", ["Linear (N→N)", "Fibonacci"],
-		1 if rules.scoring is FibonacciScoringFormula else 0,
-		func(index: int) -> void:
-			rules.scoring = FibonacciScoringFormula.new() if index == 1 else ScoringFormula.new()))
 
 # Builds a card's rows: an on/off toggle, then a control per configurable field, read off the rule by type.
 func _add_rule_rows(card: DebugRuleCard, rule: Rule) -> void:
@@ -93,6 +84,14 @@ func _add_rule_rows(card: DebugRuleCard, rule: Rule) -> void:
 					_add_spawn_weight_rows(card, r)
 				else:
 					card.add_row(_kinds_label(label, r.get(p)))
+
+	# Scoring's formula is a resource, not a scalar field — surface it as a Linear / Fibonacci pick.
+	if rule is ScoringRule:
+		var scoring := rule as ScoringRule
+		card.add_row(DebugRow.option("Match reward", ["Linear (N→N)", "Fibonacci"],
+			1 if scoring.formula is FibonacciScoringFormula else 0,
+			func(index: int) -> void:
+				scoring.formula = FibonacciScoringFormula.new() if index == 1 else ScoringFormula.new()))
 
 # A read-only summary of a kinds array as resource names (multi-kind editing comes with the catalog work).
 func _kinds_label(label: String, raw: Variant) -> Label:

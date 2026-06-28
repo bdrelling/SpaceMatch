@@ -9,7 +9,7 @@ extends Resource
 ## How many matched tiles of [member kind] one use spends.
 @export var amount: int = 5
 
-## Builds a cost in one line — for [method MatchRules.default] and tests.
+## Builds a cost in one line — for code-built defaults and tests.
 static func make(tile_kind: int, tile_amount: int) -> AbilityCost:
 	var cost := AbilityCost.new()
 	cost.kind = tile_kind

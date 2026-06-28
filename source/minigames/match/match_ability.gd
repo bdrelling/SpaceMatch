@@ -16,7 +16,7 @@ extends Resource
 ## parameters — there is no shared magnitude, so an effect with no amount (a [DodgeEffect]) is natural.
 @export var effects: Array[AbilityEffect] = []
 
-## Builds an ability with a single cost and a single effect — the common case, for [method MatchRules.default]
+## Builds an ability with a single cost and a single effect — the common case, for code-built defaults
 ## and tests. For multi-cost or multi-effect abilities, assign [member costs]/[member effects] directly.
 static func make(display_name: String, cost: AbilityCost, effect: AbilityEffect) -> MatchAbility:
 	var ability := MatchAbility.new()

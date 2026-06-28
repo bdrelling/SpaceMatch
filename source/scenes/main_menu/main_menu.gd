@@ -70,7 +70,7 @@ func _on_loadout_requested() -> void:
 	SceneLoader.transition_to(LoadoutScreen.create())
 
 # Debug opens the on-device tuning screen (match-rules sliders today). The edits land on the shared
-# [DebugConfig.match_rules], so they're in force the next time a match starts.
+# [DebugConfig.match_ruleset], so they're in force the next time a match starts.
 func _on_debug_pressed() -> void:
 	SceneLoader.transition_to(DebugScreen.create())
 

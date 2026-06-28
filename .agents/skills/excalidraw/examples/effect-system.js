@@ -12,7 +12,8 @@
 // throwaway; the engine (../scripts/build.js) is what's reusable. Source can be a markdown
 // note OR a conversation — the engine doesn't care where the data came from.
 
-const { Diagram, HBOX } = require("../scripts/build.js");
+const { Diagram, HBOX, boxW } = require("../scripts/build.js");
+const E = require("../excalidraw.js");
 const ext = t => "extends " + t;
 
 const TREE = {
@@ -21,7 +22,7 @@ const TREE = {
       { n: "ShipStats", f: ["hull : int", "tactical_systems : int"], note: ext("StatBlock") } ] },
     { n: "StatusStack", f: ["status : Status", "count : int"], fromRow: 2, kids: [
       { n: "Status", fromRow: 0,
-        f: ["name : StringName", "sign : Sign", "cap : int", "stack_rule : StackRule", "decay_rule : DecayRule", "effects : Array[TriggeredEffect]", "modifiers : Array[Modifier]"],
+        f: ["name : StringName", "sign : Sign", "cap : int", "stack_rule : StackRule", "decay_rule : DecayRule", "effects : Array[TriggeredEffect]", "modifiers : Array[Modifier]", "damage_steps : Array[DamageStep]"],
         kids: [
           { n: "Sign", f: ["POSITIVE", "NEGATIVE"], note: "enum", fromRow: 1 },
           { n: "StackRule", note: "base", fromRow: 3, riders: [
@@ -36,15 +37,16 @@ const TREE = {
               { n: "PhaseTrigger", f: ["phase : Phase"], note: ext("Trigger") },
               { n: "HookTrigger", f: ["hook : Hook"], note: ext("Trigger") },
               { n: "CountTrigger", f: ["value : int"], note: ext("Trigger") } ] },
-            { n: "Effect", f: ["target : Target", "action : Action", "conditions : Array[Condition]"], fromRow: 1, kids: [
-              { n: "Condition", note: "base", fromRow: 2, riders: [
+            { n: "Effect", f: ["target : Target", "action : Action", "conditions : Array[Condition]", "resolve(ctx)"], fromRow: 1, kids: [
+              { n: "Condition", f: ["holds(ctx) : bool"], note: "base", fromRow: 2, riders: [
                 { n: "HasStatus", f: ["target : Target", "status : StringName"], note: ext("Condition") },
                 { n: "StatThreshold", f: ["target : Target", "stat : StringName", "comparison : Comparison", "value : int"], note: ext("Condition") } ] },
-              { n: "Target", note: "base", fromRow: 0, riders: [
+              { n: "Target", f: ["resolve(ctx) : Array[Entity]"], note: "base", fromRow: 0, riders: [
                 { n: "SelfTarget", note: ext("Target") }, { n: "EnemyTarget", note: ext("Target") },
                 { n: "AllEnemiesTarget", note: ext("Target") }, { n: "AttackerTarget", note: ext("Target") },
-                { n: "SidesTarget", f: ["radius : int"], note: ext("Target") } ] },
-              { n: "Action", note: "base", fromRow: 1, riders: [
+                { n: "SidesTarget", f: ["radius : int"], note: ext("Target") },
+                { n: "RandomEnemyTarget", note: ext("Target") }, { n: "ChosenTarget", note: ext("Target") } ] },
+              { n: "Action", f: ["resolve(ctx, target)"], note: "base", fromRow: 1, riders: [
                 { n: "DealDamage", f: ["amount : Amount", "damage_type : StringName"], note: ext("Action") },
                 { n: "Heal", f: ["amount : Amount"], note: ext("Action") },
                 { n: "ApplyStatus", f: ["status : StringName", "count : int"], note: ext("Action") },
@@ -74,7 +76,8 @@ d.stack(laneCx - laneW / 2, laneW, d.box.Hook.bottom + d.rvgap, [
 
 const amtW = 200, amtX = d.box.Action.right + 70;
 const amtCy = (d.box.DealDamage.cy + d.box.Heal.cy + d.box.Gain.cy) / 3;
-d.place("Amount", amtX, amtCy - HBOX([], "base") / 2, amtW, [], "base");
+const amtF = ["evaluate(ctx) : int"];
+d.place("Amount", amtX, amtCy - HBOX(amtF, "base") / 2, amtW, amtF, "base");
 d.stack(amtX, amtW, d.box.Amount.bottom + d.rvgap, [
   { n: "ConstantAmount", f: ["value : int"], note: ext("Amount") }, { n: "StatAmount", f: ["stat : StringName"], note: ext("Amount") }]);
 
@@ -83,6 +86,45 @@ d.place("Ability", d.box.TriggeredEffect.right + 24, d.box.TriggeredEffect.top, 
 // Comparison enum — referenced by StatThreshold (an enum, like Sign / Operation)
 d.place("Comparison", d.box.StatThreshold.left, d.box.StatThreshold.bottom + 18, 170, ["LESS", "EQUAL", "GREATER"], "enum");
 
+// ── Runtime layer: resolution context + damage pipeline ──────────────
+// The runtime types from effect-system.md (stat awareness & runtime targeting).
+// Placed in a band below the tree, then wired back via the references the doc
+// spells out (see the linkBoxes/fk calls under "edges").
+const bandY = Math.max(...Object.values(d.box).map(b => b.bottom)) + 90;
+const GAP = 64;
+let bx = d.left0;
+
+const rcF = ["source : Entity", "allies : Array[Entity]", "enemies : Array[Entity]", "attacker : Entity", "rng : RandomNumberGenerator", "chooser : EffectChooser", "health_stat : StringName"];
+d.place("ResolutionContext", bx, bandY, boxW("ResolutionContext", rcF), rcF);
+bx = d.box.ResolutionContext.right + GAP;
+
+const chF = ["choose(candidates, source) : Entity"];
+const chW = boxW("EffectChooser", chF, "base");
+d.place("EffectChooser", bx, bandY, chW, chF, "base");
+d.stack(bx, chW, d.box.EffectChooser.bottom + d.rvgap, [{ n: "AutoChooser", note: ext("EffectChooser") }]);
+
+// damage-pipeline cluster, pushed right so it sits roughly under DealDamage / Action
+bx = Math.max(d.box.EffectChooser.right + GAP * 2, d.box.Effect.left);
+const pktF = ["source : Entity", "target : Entity", "amount : int", "damage_type : StringName"];
+d.place("DamagePacket", bx, bandY, boxW("DamagePacket", pktF), pktF);
+bx = d.box.DamagePacket.right + GAP;
+
+const pipeF = ["resolve(packet, ctx) : int"];
+d.place("DamagePipeline", bx, bandY, boxW("DamagePipeline", pipeF), pipeF);
+bx = d.box.DamagePipeline.right + GAP;
+
+const dsF = ["phase() : DamageStep.Phase", "modify(packet, ctx)"];
+const dsW = boxW("DamageStep", dsF, "base");
+d.place("DamageStep", bx, bandY, dsW, dsF, "base");
+d.stack(bx, dsW, d.box.DamageStep.bottom + d.rvgap, [
+  { n: "MultiplierStep", f: ["factor : float"], note: ext("DamageStep") },
+  { n: "FlatMitigationStep", f: ["stat : StringName"], note: ext("DamageStep") },
+  { n: "AbsorbStep", f: ["stat : StringName"], note: ext("DamageStep") },
+  { n: "ClampStep", f: ["minimum : int", "maximum : int"], note: ext("DamageStep") }]);
+
+const phF = ["AMPLIFY", "MITIGATE", "ABSORB", "CLAMP"];
+d.place("DamageStep.Phase", d.box.DamageStep.right + GAP, bandY, boxW("DamageStep.Phase", phF, "enum"), phF, "enum");
+
 // edges
 d.treeEdges(TREE);
 d.fk("Ability", 2, "Effect");
@@ -90,6 +132,21 @@ d.fk("TimingDecayRule", 0, "Phase"); d.fk("PhaseTrigger", 0, "Phase");
 d.fk("TriggerDecayRule", 0, "Hook"); d.fk("HookTrigger", 0, "Hook");
 d.fk("DealDamage", 0, "Amount"); d.fk("Heal", 0, "Amount"); d.fk("Gain", 1, "Amount");
 d.fk("StatThreshold", 2, "Comparison");
+
+// wire the runtime band back into the tree (relationships per effect-system.md)
+const linkBoxes = (a, b) => {
+  const A = d.box[a], B = d.box[b];
+  if (B.top >= A.bottom) d.els.push(E.link(A.cx, A.bottom, B.cx, B.top));
+  else if (B.left >= A.right) d.els.push(E.link(A.right, A.cy, B.left, B.cy));
+  else if (B.right <= A.left) d.els.push(E.link(A.left, A.cy, B.right, B.cy));
+  else d.els.push(E.link(A.cx, A.top, B.cx, B.bottom));
+};
+d.fk("ResolutionContext", 5, "EffectChooser");   // chooser : EffectChooser
+d.fk("DamageStep", 0, "DamageStep.Phase");        // phase() : DamageStep.Phase
+linkBoxes("ChosenTarget", "EffectChooser");       // ChosenTarget resolves through ctx.chooser
+linkBoxes("DealDamage", "DamagePipeline");        // DealDamage builds a packet, runs the pipeline
+linkBoxes("DamagePipeline", "DamagePacket");      // ... mutating the packet
+linkBoxes("DamagePipeline", "DamageStep");        // ... through each step
 
 d.title("Effect System", "mirrors notes/effect-system.md  ·  composition flows top-down");
 d.key([["root", "Base / structural type"], ["sub", "Variant — shipped example"], ["enum", "Enum"]]);

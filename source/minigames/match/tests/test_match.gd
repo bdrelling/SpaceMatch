@@ -20,14 +20,14 @@ func _host_bind(game: MatchMinigame) -> void:
 	GameSession.game_state.encounter = enc.state
 	game.bind_session()
 
-func _make(rules: MatchRules = null, mode := MatchBoardView.InputMode.SWAP, ai := true) -> MatchMinigame:
+func _make(ruleset: Ruleset = null, mode := MatchBoardView.InputMode.SWAP, ai := true) -> MatchMinigame:
 	var scene: PackedScene = load("res://minigames/match/match_minigame.tscn")
 	var game: MatchMinigame = scene.instantiate()
 	game.board_seed = 4242
 	game.input_mode = mode
 	# Insulate the existing behaviour tests from the spawn weights and extra-turn rule: a neutral
 	# ruleset (no extra turns, uniform spawn) unless a test asks for a specific one.
-	game.rules = rules if rules != null else MatchRules.new()
+	game.ruleset = ruleset if ruleset != null else RuleCatalog.default_ruleset()
 	# Resolve actions instantly in tests so an ability's turn-handover isn't gated behind an animation beat.
 	game.action_resolve_delay = 0.0
 	# Most turn/ability tests isolate the logic from the AI opponent — a hot-seat opponent never auto-plays.
@@ -257,15 +257,17 @@ func test_opponent_takes_its_turn_automatically() -> void:
 # The standard MATCH-scope config: one-to-one scoring, reload split on, and warp (kind 5) rarer than every
 # stat tile. Extra turns and abilities are NOT here — they're the starship's now (see the starship tests below).
 func test_default_rules_match_the_designed_config() -> void:
-	var rules := MatchRules.default()
+	var ruleset := RuleCatalog.default_ruleset()
 	# Extra turns moved off the match onto the starship — the match's own ruleset no longer carries one.
-	assert_object(rules.ruleset.find(&"extra_turn")).is_null()
-	# Scoring is one-to-one by default — a match of N is worth N (the Fibonacci formula is opt-in).
-	assert_int(rules.scoring.reward_for(6)).is_equal(6)
-	assert_bool(rules.scoring is FibonacciScoringFormula).is_false()
-	assert_bool(rules.reload_splits_resources).is_true()
+	assert_object(ruleset.find(&"extra_turn")).is_null()
+	# Scoring is its own rule, one-to-one by default — a match of N is worth N (Fibonacci is opt-in).
+	var scoring := ruleset.find(&"scoring") as ScoringRule
+	assert_int(scoring.reward_for(6)).is_equal(6)
+	assert_bool(scoring.formula is FibonacciScoringFormula).is_false()
+	# Reloading a dead board splits it between both sides — the rule is present.
+	assert_object(ruleset.find(&"reload_split")).is_not_null()
 	# Spawn weights live on the rules now, composed into one pool — warp is rarer than any stat tile.
-	var weights := rules.spawn_table()
+	var weights := ruleset.aggregate(&"spawn_contribution")
 	var warp_weight: int = weights[_WARP_KIND]
 	for stat_kind: int in 4:
 		var stat_weight: int = weights[stat_kind]
@@ -303,7 +305,7 @@ func test_match_below_threshold_passes_the_turn() -> void:
 # Extra turns are the acting starship's, composed into the match per turn. With NO extra-turn rule on the
 # match (neutral), a player starship that carries one still keeps the board on a 4-match.
 func test_extra_turn_rule_is_starship_based() -> void:
-	var game := _make(MatchRules.new(), MatchBoardView.InputMode.LINE_SHIFT, false)
+	var game := _make(RuleCatalog.default_ruleset(), MatchBoardView.InputMode.LINE_SHIFT, false)
 	await await_idle_frame()
 	var starship_set := Ruleset.new()
 	var rule := ExtraTurnRule.new()
@@ -384,7 +386,7 @@ func test_match_size_diagonal_runs_follow_the_knob() -> void:
 # Spawn weights bias the pool: with the default ruleset the weight-2 warp tile is drawn far less often
 # than a weight-20 stat tile over many refills.
 func test_spawn_weights_bias_the_pool() -> void:
-	var game := _make(MatchRules.default())
+	var game := _make(RuleCatalog.default_ruleset())
 	await await_idle_frame()
 	var warp: int = 0
 	var combat: int = 0
@@ -422,7 +424,7 @@ func test_default_starship_defines_the_standard_abilities() -> void:
 # Using an ability spends its tiles from the player's tally and deals its damage to the opponent. Line-shift
 # keeps the AI from auto-playing the handed-off turn, so the spend/damage are read without async interference.
 func test_ability_use_spends_gems_and_deals_damage() -> void:
-	var game := _make(MatchRules.new(), MatchBoardView.InputMode.LINE_SHIFT, false)
+	var game := _make(RuleCatalog.default_ruleset(), MatchBoardView.InputMode.LINE_SHIFT, false)
 	await await_idle_frame()
 	var ability := MatchAbility.make("Test", AbilityCost.make(_COMBAT_KIND, 10), AttackEffect.make(5))
 	game._encounter.player.resources[_COMBAT_KIND] = 12
@@ -435,7 +437,7 @@ func test_ability_use_spends_gems_and_deals_damage() -> void:
 # Using an ability ends the user's turn, handing the board over. (Keeping the turn is no longer an ability
 # flag — it'll come from a future extra-turn effect.)
 func test_using_an_ability_ends_the_turn() -> void:
-	var game := _make(MatchRules.new(), MatchBoardView.InputMode.LINE_SHIFT, false)
+	var game := _make(RuleCatalog.default_ruleset(), MatchBoardView.InputMode.LINE_SHIFT, false)
 	await await_idle_frame()
 	var ability := MatchAbility.make("Test", AbilityCost.make(_COMBAT_KIND, 5), AttackEffect.make(5))
 	game._encounter.player.resources[_COMBAT_KIND] = 10
@@ -447,7 +449,7 @@ func test_using_an_ability_ends_the_turn() -> void:
 # The opponent picks the affordable attack on its turn — nothing when broke, an attack it can pay for once
 # it has the tiles (the AI's ability use).
 func test_opponent_picks_an_affordable_ability() -> void:
-	var game := _make(MatchRules.default())
+	var game := _make(RuleCatalog.default_ruleset())
 	await await_idle_frame()
 	assert_object(game._best_affordable_ability(EncounterState.Combatant.OPPONENT)).is_null()
 	game._encounter.opponent.resources[1] = 5  # enough for Evasive Maneuvers (kind 1, the cost-5 ability)
@@ -459,7 +461,7 @@ func test_opponent_picks_an_affordable_ability() -> void:
 # The AI won't refresh a dodge it already has — so it can't sit on Evasive Maneuvers every turn and make the
 # dodge feel permanent. With only enough for Evasive and a dodge already up, it picks nothing (and plays the board).
 func test_opponent_does_not_recast_an_active_dodge() -> void:
-	var game := _make(MatchRules.default())
+	var game := _make(RuleCatalog.default_ruleset())
 	await await_idle_frame()
 	game._encounter.opponent.resources[1] = 5  # enough for Evasive Maneuvers only
 	assert_object(game._best_affordable_ability(EncounterState.Combatant.OPPONENT)).is_not_null()
@@ -471,9 +473,9 @@ func test_opponent_does_not_recast_an_active_dodge() -> void:
 
 # The Fibonacci formula rewards a match by its size on the sequence (3→3, 4→5, 5→8, 6→13, 7→21).
 func test_fibonacci_match_rewards() -> void:
-	var rules := MatchRules.new()
-	rules.scoring = FibonacciScoringFormula.new()
-	var game := _make(rules)
+	var ruleset := RuleCatalog.default_ruleset()
+	(ruleset.find(&"scoring") as ScoringRule).formula = FibonacciScoringFormula.new()
+	var game := _make(ruleset)
 	await await_idle_frame()
 	assert_int(game._reward_for(3)).is_equal(3)
 	assert_int(game._reward_for(4)).is_equal(5)
@@ -482,9 +484,9 @@ func test_fibonacci_match_rewards() -> void:
 	assert_int(game._reward_for(7)).is_equal(21)
 	game.queue_free()
 
-# Scoring is one-to-one by default (neutral rules leave the formula unset): a match rewards one per tile.
+# Scoring is one-to-one by default (the default ruleset's ScoringRule is linear): a match rewards one per tile.
 func test_rewards_are_linear_by_default() -> void:
-	var game := _make()  # neutral rules — no scoring formula set
+	var game := _make()  # default ruleset — linear scoring
 	await await_idle_frame()
 	assert_int(game._reward_for(4)).is_equal(4)
 	assert_int(game._reward_for(7)).is_equal(7)
@@ -493,9 +495,7 @@ func test_rewards_are_linear_by_default() -> void:
 # Reloading a dead board splits its tiles between the combatants — each gets floor(count / 2) of every stat
 # kind into their tally.
 func test_reload_splits_board_resources_between_players() -> void:
-	var rules := MatchRules.new()
-	rules.reload_splits_resources = true
-	var game := _make(rules)
+	var game := _make()  # the default ruleset includes the reload-split rule
 	await await_idle_frame()
 	var board: GridState = game._session.state
 	var expected: Dictionary = {}
@@ -678,7 +678,7 @@ func test_warp_core_module_grants_capacity() -> void:
 
 # Shields grants shield, which then soaks a hit before health.
 func test_shield_ability_grants_and_absorbs() -> void:
-	var game := _make(MatchRules.new(), MatchBoardView.InputMode.LINE_SHIFT, false)
+	var game := _make(RuleCatalog.default_ruleset(), MatchBoardView.InputMode.LINE_SHIFT, false)
 	await await_idle_frame()
 	var shield_ability := MatchAbility.make("Shields", AbilityCost.make(3, 5), ShieldEffect.make(10))
 	game._encounter.player.resources[3] = 5
@@ -756,7 +756,7 @@ func test_disabling_a_module_lowers_its_tile_haul() -> void:
 
 # Siphon removes its magnitude from each of the opponent's four stat resources.
 func test_siphon_drains_opponent_resources() -> void:
-	var game := _make(MatchRules.new(), MatchBoardView.InputMode.LINE_SHIFT, false)
+	var game := _make(RuleCatalog.default_ruleset(), MatchBoardView.InputMode.LINE_SHIFT, false)
 	await await_idle_frame()
 	for k: int in 4:
 		game._encounter.opponent.resources[k] = 5
@@ -770,7 +770,7 @@ func test_siphon_drains_opponent_resources() -> void:
 # Disruptor disables one of the opponent's modules: it records a single disabled cell on the opponent's
 # grid, and the module covering that cell is reported deactivated (it'll stop counting toward their stats).
 func test_disruptor_disables_an_opponent_module() -> void:
-	var game := _make(MatchRules.new(), MatchBoardView.InputMode.LINE_SHIFT, false)
+	var game := _make(RuleCatalog.default_ruleset(), MatchBoardView.InputMode.LINE_SHIFT, false)
 	await await_idle_frame()
 	var disrupt := MatchAbility.make("Disruptor", AbilityCost.make(2, 5), DisableEffect.make(3))
 	game._encounter.player.resources[2] = 5
@@ -895,14 +895,13 @@ func test_count_moves_zero_on_dead_board() -> void:
 
 # --- Rules engine ---
 
-# A MatchRules whose ruleset carries a single ExtraTurnRule — the migrated form of the old flat knob.
-func _extra_turn_rules(min_match: int) -> MatchRules:
-	var rules := MatchRules.new()
+# A Ruleset carrying a single ExtraTurnRule — the migrated form of the old flat knob.
+func _extra_turn_rules(min_match: int) -> Ruleset:
+	var ruleset := Ruleset.new()
 	var rule := ExtraTurnRule.new()
 	rule.min_match = min_match
-	rules.ruleset = Ruleset.new()
-	rules.ruleset.add(rule)
-	return rules
+	ruleset.add(rule)
+	return ruleset
 
 # A ruleset runs only the rules whose phase matches the one fired, and rules report results on the context.
 func test_ruleset_runs_only_matching_phase() -> void:
@@ -970,28 +969,28 @@ func test_resource_grant_rule_banks_matched_tiles() -> void:
 	assert_int(enc.starship_of(EncounterState.Combatant.PLAYER).resource_of(_COMBAT_KIND)).is_equal(4)
 	assert_int(match_context.visuals.size()).is_equal(1)
 
-# The default MatchRules carries the baseline grant rules out of the box, so a fresh ruleset already banks.
+# The authored default ruleset carries the grant rules, so a default match already banks resources.
 func test_default_rules_include_baseline_grants() -> void:
-	var rules := MatchRules.new()
-	assert_object(rules.ruleset.find(&"resource_grant")).is_not_null()
-	assert_object(rules.ruleset.find(&"damage")).is_not_null()
-	assert_object(rules.ruleset.find(&"warp")).is_not_null()
-	assert_object(rules.ruleset.find(&"scrap_grant")).is_not_null()
+	var ruleset := RuleCatalog.default_ruleset()
+	assert_object(ruleset.find(&"resource_grant")).is_not_null()
+	assert_object(ruleset.find(&"damage")).is_not_null()
+	assert_object(ruleset.find(&"warp")).is_not_null()
+	assert_object(ruleset.find(&"scrap_grant")).is_not_null()
 
 # --- Tunable knobs: capacity, scoring offset, action budget ---
 
-# The turn-start knobs ride in the baseline ruleset at their no-op defaults, so the default match plays exactly
+# The turn-start knobs ride in the default ruleset at their no-op defaults, so the default match plays exactly
 # as before: one action a turn (an ability ends it), unlimited resources, one-to-one scoring.
 func test_default_rules_include_turn_start_knobs_at_parity() -> void:
-	var rules := MatchRules.new()
-	var budget := rules.ruleset.find(&"action_budget") as ActionBudgetRule
+	var ruleset := RuleCatalog.default_ruleset()
+	var budget := ruleset.find(&"action_budget") as ActionBudgetRule
 	assert_object(budget).is_not_null()
 	assert_int(budget.actions_per_turn).is_equal(1)
 	assert_int(budget.ability_turn_cost).is_equal(ActionBudgetRule.AbilityTurnCost.ENDS_TURN)
-	var offset := rules.ruleset.find(&"scoring_offset") as OffsetScoringRule
+	var offset := ruleset.find(&"scoring_offset") as OffsetScoringRule
 	assert_object(offset).is_not_null()
 	assert_int(offset.offset).is_equal(0)
-	var capacity := rules.ruleset.find(&"resource_capacity") as ResourceCapacityRule
+	var capacity := ruleset.find(&"resource_capacity") as ResourceCapacityRule
 	assert_object(capacity).is_not_null()
 	assert_bool(capacity.maximums.is_empty()).is_true()
 
@@ -1071,7 +1070,7 @@ func test_action_budget_rule_refills_actions() -> void:
 # The action budget gates moves per turn: with three actions a mover keeps the board for three resolved moves,
 # the turn passing on the third. (The default one-action budget passes on the first move — unchanged.)
 func test_action_budget_gates_moves_per_turn() -> void:
-	var game := _make(MatchRules.new(), MatchBoardView.InputMode.LINE_SHIFT, false)
+	var game := _make(RuleCatalog.default_ruleset(), MatchBoardView.InputMode.LINE_SHIFT, false)
 	await await_idle_frame()
 	game._encounter.player.actions_remaining = 3
 	assert_int(game._encounter.active_combatant()).is_equal(EncounterState.Combatant.PLAYER)
@@ -1086,7 +1085,7 @@ func test_action_budget_gates_moves_per_turn() -> void:
 # With the COSTS_ACTION policy an ability spends one action instead of ending the turn, so a mover with budget
 # to spare keeps acting; the turn passes only once the budget is gone.
 func test_ability_costs_an_action_when_policy_set() -> void:
-	var game := _make(MatchRules.new(), MatchBoardView.InputMode.LINE_SHIFT, false)
+	var game := _make(RuleCatalog.default_ruleset(), MatchBoardView.InputMode.LINE_SHIFT, false)
 	await await_idle_frame()
 	game._encounter.player.resources[_COMBAT_KIND] = 100
 	game._encounter.player.actions_remaining = 2
@@ -1098,23 +1097,23 @@ func test_ability_costs_an_action_when_policy_set() -> void:
 	assert_int(game._encounter.active_combatant()).is_equal(EncounterState.Combatant.OPPONENT)  # spent → passes
 	game.queue_free()
 
-# The authored alternate-mode resource is a real MatchRules: it dials the same knobs to a low-mana, multi-action
+# The authored alternate-mode resource is a real Ruleset: it dials the same knobs to a low-mana, multi-action
 # turn (a match of N banks N-2, four moves a turn) without any code — the "make a new mode resource" path.
 func test_alternate_mode_resource_dials_the_knobs() -> void:
-	var path := "res://resources/catalogs/alternate_match_rules.tres"
+	var path := "res://resources/rulesets/alternate.tres"
 	assert_bool(ResourceLoader.exists(path)).is_true()
-	var rules: MatchRules = load(path)
-	assert_object(rules).is_not_null()
-	assert_int((rules.ruleset.find(&"scoring_offset") as OffsetScoringRule).offset).is_equal(2)
-	assert_int((rules.ruleset.find(&"action_budget") as ActionBudgetRule).actions_per_turn).is_equal(4)
+	var ruleset: Ruleset = load(path)
+	assert_object(ruleset).is_not_null()
+	assert_int((ruleset.find(&"scoring_offset") as OffsetScoringRule).offset).is_equal(2)
+	assert_int((ruleset.find(&"action_budget") as ActionBudgetRule).actions_per_turn).is_equal(4)
 
 # A TURN_START rule fires when the turn hands over — the hook a "rotate the board each turn" rule would use.
 func test_turn_start_phase_fires_on_handover() -> void:
 	var spy := _PhaseSpy.new()
 	spy.phase = MatchPhase.TURN_START
-	var rules := MatchRules.new()
-	rules.ruleset.add(spy)
-	var game := _make(rules, MatchBoardView.InputMode.SWAP, false)
+	var ruleset := Ruleset.new()
+	ruleset.add(spy)
+	var game := _make(ruleset, MatchBoardView.InputMode.SWAP, false)
 	await await_idle_frame()
 	var before: int = spy.fired
 	game._advance_turn()
@@ -1125,9 +1124,9 @@ func test_turn_start_phase_fires_on_handover() -> void:
 func test_victory_phase_fires_on_end() -> void:
 	var spy := _PhaseSpy.new()
 	spy.phase = MatchPhase.VICTORY
-	var rules := MatchRules.new()
-	rules.ruleset.add(spy)
-	var game := _make(rules, MatchBoardView.InputMode.SWAP, false)
+	var ruleset := Ruleset.new()
+	ruleset.add(spy)
+	var game := _make(ruleset, MatchBoardView.InputMode.SWAP, false)
 	await await_idle_frame()
 	game._encounter.opponent_health = 0  # opponent down → the player wins
 	game._check_for_end()

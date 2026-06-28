@@ -2,7 +2,7 @@
 extends Node
 ## The live, in-memory catalogs the in-game editor edits — modules, module grids, starships, and rules.
 ## Each loads its generated `all.tres` if one exists, else falls back to a code-built default. Edits mutate
-## these instances in place (the board reads the active rules via [DebugConfig.match_rules], which points
+## these instances in place (the board reads the active mode via [DebugConfig.match_ruleset], which points
 ## here); persisting edits back to disk lands later.
 
 const _DIR := "res://resources/catalogs/"

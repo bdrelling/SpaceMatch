@@ -22,4 +22,4 @@ func _build() -> void:
 			func(entry: Resource) -> DebugView: return StarshipDetailView.create(entry as StarshipBlueprint)))))
 	add_child(DebugRow.nav("Rules", "", func() -> void:
 		_push(CatalogView.create(Catalogs.rules,
-			func(entry: Resource) -> DebugView: return MatchRulesView.create(entry as MatchRules)))))
+			func(entry: Resource) -> DebugView: return MatchRulesView.create(entry as Ruleset)))))
