@@ -92,7 +92,7 @@ d.place("Comparison", d.box.StatThreshold.left, d.box.StatThreshold.bottom + 18,
 // spells out (see the linkBoxes/fk calls under "edges").
 const bandY = Math.max(...Object.values(d.box).map(b => b.bottom)) + 90;
 const GAP = 64;
-let bx = d.left0;
+let bx = d.box.Condition.left;   // start the band under the Effect subtree, near its anchors
 
 const rcF = ["source : Entity", "allies : Array[Entity]", "enemies : Array[Entity]", "attacker : Entity", "rng : RandomNumberGenerator", "chooser : EffectChooser", "health_stat : StringName"];
 d.place("ResolutionContext", bx, bandY, boxW("ResolutionContext", rcF), rcF);
@@ -103,8 +103,8 @@ const chW = boxW("EffectChooser", chF, "base");
 d.place("EffectChooser", bx, bandY, chW, chF, "base");
 d.stack(bx, chW, d.box.EffectChooser.bottom + d.rvgap, [{ n: "AutoChooser", note: ext("EffectChooser") }]);
 
-// damage-pipeline cluster, pushed right so it sits roughly under DealDamage / Action
-bx = Math.max(d.box.EffectChooser.right + GAP * 2, d.box.Effect.left);
+// damage-pipeline cluster, to the right so it sits roughly under DealDamage / Action
+bx = d.box.EffectChooser.right + GAP * 2;
 const pktF = ["source : Entity", "target : Entity", "amount : int", "damage_type : StringName"];
 d.place("DamagePacket", bx, bandY, boxW("DamagePacket", pktF), pktF);
 bx = d.box.DamagePacket.right + GAP;
