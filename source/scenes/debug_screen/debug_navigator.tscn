@@ -1,0 +1,78 @@
+[gd_scene format=3 uid="uid://dn8debugnav01"]
+
+[ext_resource type="Script" uid="uid://c56cksgsnxfxa" path="res://scenes/debug_screen/debug_navigator.gd" id="1_nav"]
+[ext_resource type="Theme" uid="uid://b8debugtheme01" path="res://ui/themes/debug.tres" id="2_theme"]
+[ext_resource type="PackedScene" uid="uid://zt6frzjvgtj8f" path="res://ui/background/background.tscn" id="3_bg"]
+[ext_resource type="Script" uid="uid://dks2wphvw6r5i" path="res://addons/utilities/device/safe_area_container.gd" id="4_safe"]
+
+[node name="DebugNavigator" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_nav")
+
+[node name="Background" parent="." instance=ExtResource("3_bg")]
+mouse_filter = 0
+
+[node name="SafeArea" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("4_safe")
+
+[node name="Margins" type="MarginContainer" parent="SafeArea"]
+layout_mode = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 40
+
+[node name="Column" type="VBoxContainer" parent="SafeArea/Margins"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Header" type="HBoxContainer" parent="SafeArea/Margins/Column"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Back" type="Button" parent="SafeArea/Margins/Column/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 32
+text = "‹ Back"
+
+[node name="Title" type="Label" parent="SafeArea/Margins/Column/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 44
+
+[node name="ActionHolder" type="HBoxContainer" parent="SafeArea/Margins/Column/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Done" type="Button" parent="SafeArea/Margins/Column/Header"]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"PrimaryButton"
+theme_override_font_sizes/font_size = 32
+text = "Done"
+
+[node name="HSeparator" type="HSeparator" parent="SafeArea/Margins/Column"]
+layout_mode = 2
+
+[node name="Scroll" type="ScrollContainer" parent="SafeArea/Margins/Column"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0

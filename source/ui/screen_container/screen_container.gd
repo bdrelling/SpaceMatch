@@ -2,16 +2,16 @@ class_name ScreenContainer
 extends Control
 ## A full-window presentation container: the app's themed [Background] behind a [SafeAreaContainer] that
 ## insets its content to the device safe area. Wrap any standalone screen in one so it presents the same
-## way every time — same background, same safe-area insets, the project theme — without pulling in the
-## [Game] shell and its bars. The reusable answer to "this screen has no background / runs into the
-## notch": present it with [code]SceneLoader.transition_to(ScreenContainer.create(content))[/code].
+## way every time — same background, same safe-area insets, the project theme. The reusable answer to
+## "this screen has no background / runs into the notch": present it with
+## [code]SceneLoader.transition_to(ScreenContainer.create(content))[/code].
 ##
-## Its only job is the background and the safe area. It deliberately adds no bars (no top bar, no nav);
-## a screen that needs those owns them itself, or lives in the [Game] shell.
+## Its only job is the background and the safe area. It deliberately adds no bars (no navigation bar);
+## a screen that needs those uses [ScreenFrame] instead, or owns them itself.
 
 #region Constants
 
-## Loaded on demand in [method create] rather than `preload`-ed, mirroring [Game] / [MainMenu]:
+## Loaded on demand in [method create] rather than `preload`-ed, mirroring the other screens:
 ## referencing [ScreenContainer] never pulls the scene into memory — only [method create] does.
 const SCENE_PATH := "res://ui/screen_container/screen_container.tscn"
 

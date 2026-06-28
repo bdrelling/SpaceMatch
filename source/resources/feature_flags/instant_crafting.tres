@@ -1,9 +1,0 @@
-[gd_resource type="Resource" script_class="FeatureFlag" load_steps=2 format=3 uid="uid://2litn3ud2m019"]
-
-[ext_resource type="Script" uid="uid://br0ja2p78sa18" path="res://addons/components/autoloads/feature_flagger/feature_flag.gd" id="1_flag"]
-
-[resource]
-script = ExtResource("1_flag")
-key = "instant_crafting"
-name = "Instant Crafting"
-default_value = false

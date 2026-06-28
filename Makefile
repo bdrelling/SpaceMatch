@@ -156,7 +156,7 @@ else
 endif
 
 play: ## Launch the game in a device window (DEVICE_WINDOW_MODE=phone|tablet, default tablet).
-	@./scripts/play.sh -w --resolution $(_WINDOW_W)x$(_WINDOW_H) -- --device=$(DEVICE_WINDOW_MODE) --orientation=$(DEVICE_WINDOW_ORIENTATION)
+	@./scripts/play.sh -w --resolution $(_WINDOW_W)x$(_WINDOW_H) -- --device=$(DEVICE_WINDOW_MODE) --orientation=$(DEVICE_WINDOW_ORIENTATION) --boot=encounter
 
 play-tablet: ## Launch as a tablet (portrait).
 	@$(MAKE) play DEVICE_WINDOW_MODE=tablet

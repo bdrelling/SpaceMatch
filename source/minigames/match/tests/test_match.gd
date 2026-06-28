@@ -671,7 +671,7 @@ func test_warp_capacity_is_per_side() -> void:
 
 # The Warp Core module grants warp capacity — guards the authored content the model depends on.
 func test_warp_core_module_grants_capacity() -> void:
-	var core: ModuleBlueprint = preload("res://resources/items/modules/warp_core_item_blueprint.tres")
+	var core: ModuleBlueprint = preload("res://resources/modules/warp_core_item_blueprint.tres")
 	assert_int(core.stats.warp_capacity).is_equal(4)
 
 # --- Ability effects (integration) ---

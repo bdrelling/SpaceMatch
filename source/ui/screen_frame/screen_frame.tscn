@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://hmt7p3j7b4c3" path="res://ui/screen_frame/screen_frame.gd" id="1_frame"]
 [ext_resource type="PackedScene" uid="uid://zt6frzjvgtj8f" path="res://ui/background/background.tscn" id="2_bg"]
 [ext_resource type="Script" uid="uid://dks2wphvw6r5i" path="res://addons/utilities/device/safe_area_container.gd" id="3_safe"]
-[ext_resource type="PackedScene" uid="uid://35kvumkkn1zca" path="res://ui/screen_top_bar/screen_top_bar.tscn" id="4_topbar"]
+[ext_resource type="PackedScene" uid="uid://35kvumkkn1zca" path="res://ui/navigation_bar/navigation_bar.tscn" id="4_topbar"]
 
 [node name="ScreenFrame" type="Control"]
 layout_mode = 3
@@ -30,7 +30,7 @@ script = ExtResource("3_safe")
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="TopBar" parent="SafeArea/Body" instance=ExtResource("4_topbar")]
+[node name="NavigationBar" parent="SafeArea/Body" instance=ExtResource("4_topbar")]
 unique_name_in_owner = true
 layout_mode = 2
 

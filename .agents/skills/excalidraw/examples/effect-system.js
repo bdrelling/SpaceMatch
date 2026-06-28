@@ -20,7 +20,7 @@ const TREE = {
   n: "Entity", f: ["id : int", "base_stats : StatBlock", "current_stats : StatBlock", "statuses : Array[StatusStack]"], children: [
     { n: "StatusStack", f: ["status : Status", "count : int"], fromRow: 2, children: [
       { n: "Status", fromRow: 0,
-        f: ["name : StringName", "sign : Sign", "cap : int", "stack_rule : StackRule", "decay_rule : DecayRule", "effects : Array[TriggeredEffect]", "modifiers : Array[Modifier]", "damage_steps : Array[DamageStep]"],
+        f: ["name : StringName", "sign : Sign", "cap : int", "stack_rule : StackRule", "decay_rule : DecayRule", "effects : Array[TriggeredEffect]", "modifiers : Array[Modifier]", "transforms : Array[ModificationStep]"],
         children: [
           { n: "Sign", f: ["POSITIVE", "NEGATIVE"], note: "enum", fromRow: 1 },
           { n: "StackRule", note: "base", fromRow: 3, riders: [
@@ -40,16 +40,14 @@ const TREE = {
                 { n: "HasStatus", f: ["target : Target", "status : StringName"], note: ext("Condition") },
                 { n: "StatThreshold", f: ["target : Target", "stat : StringName", "comparison : Comparison", "value : int"], note: ext("Condition") } ] },
               { n: "Target", f: ["resolve(ctx) : Array[Entity]"], note: "base", fromRow: 0, riders: [
-                { n: "SelfTarget", note: ext("Target") }, { n: "EnemyTarget", note: ext("Target") },
-                { n: "AllEnemiesTarget", note: ext("Target") }, { n: "AttackerTarget", note: ext("Target") },
-                { n: "SidesTarget", f: ["radius : int"], note: ext("Target") },
-                { n: "RandomEnemyTarget", note: ext("Target") }, { n: "ChosenTarget", note: ext("Target") } ] },
+                { n: "SelfTarget", note: ext("Target") }, { n: "OpponentTarget", note: ext("Target") },
+                { n: "AllOpponentsTarget", note: ext("Target") }, { n: "InstigatorTarget", note: ext("Target") },
+                { n: "RandomOpponentTarget", note: ext("Target") }, { n: "ChosenTarget", note: ext("Target") },
+                { n: "SidesTarget", f: ["radius : int"], note: ext("Target") } ] },
               { n: "Action", f: ["resolve(ctx, target)"], note: "base", fromRow: 1, riders: [
-                { n: "DealDamage", f: ["amount : Amount", "damage_type : StringName"], note: ext("Action") },
-                { n: "Heal", f: ["amount : Amount"], note: ext("Action") },
+                { n: "ModifyStat", f: ["stat : StringName", "amount : Amount", "tag : StringName", "subtracts : bool", "minimum : int", "maximum_stat : StringName"], note: ext("Action") },
                 { n: "ApplyStatus", f: ["status : StringName", "count : int"], note: ext("Action") },
-                { n: "RemoveStatus", f: ["status : StringName"], note: ext("Action") },
-                { n: "Gain", f: ["resource : StringName", "amount : Amount"], note: ext("Action") } ] } ] } ] },
+                { n: "RemoveStatus", f: ["status : StringName"], note: ext("Action") } ] } ] } ] },
           { n: "Modifier", f: ["stat : StringName", "operation : Operation", "amount : float"], fromRow: 6, children: [
             { n: "Operation", f: ["ADD", "MULTIPLY"], note: "enum", fromRow: 1 } ] } ] } ] } ] };
 
@@ -67,8 +65,6 @@ const sbF = ["get_stat(name) : Variant", "set_stat(name, value)", "stat_names() 
 const sbNote = "abstract — games subclass";
 const sbW = boxW("StatBlock", sbF, sbNote);
 d.place("StatBlock", d.box.Entity.left - sbW - 170, d.box.Entity.bottom + 50, sbW, sbF, sbNote);
-d.stack(d.box.StatBlock.left, sbW, d.box.StatBlock.bottom + d.rvgap, [
-  { n: "ShipStats", f: ["hull : int", "tactical_systems : int"], note: ext("StatBlock") }]);
 
 // shared leaves
 const spacer = TREE.children[0].children[0].children[3];
@@ -78,11 +74,11 @@ d.place("Phase", laneCx - laneW / 2, phaseTop, laneW, ["TURN_START", "TURN_END",
 const hookTop = Math.max((d.box.TriggerDecayRule.cy + d.box.HookTrigger.cy) / 2 - HBOX([], "base") / 2, d.box.Phase.bottom + 16);
 d.place("Hook", laneCx - laneW / 2, hookTop, laneW, [], "base");
 d.stack(laneCx - laneW / 2, laneW, d.box.Hook.bottom + d.rvgap, [
-  { n: "WhenHitHook", note: ext("Hook") }, { n: "OnAttackHook", note: ext("Hook") }, { n: "OnApplyHook", note: ext("Hook") },
+  { n: "OnApplyHook", note: ext("Hook") }, { n: "WhenHitHook", note: ext("Hook") }, { n: "OnAttackHook", note: ext("Hook") },
   { n: "DamageReceivedHook", f: ["amount : int", "damage_type : StringName", "attacker : Entity"], note: ext("Hook") }]);
 
 const amtW = 200, amtX = d.box.Action.right + 70;
-const amtCy = (d.box.DealDamage.cy + d.box.Heal.cy + d.box.Gain.cy) / 3;
+const amtCy = d.box.ModifyStat.cy;
 const amtF = ["evaluate(ctx) : int"];
 d.place("Amount", amtX, amtCy - HBOX(amtF, "base") / 2, amtW, amtF, "base");
 d.stack(amtX, amtW, d.box.Amount.bottom + d.rvgap, [
@@ -93,15 +89,14 @@ d.place("Ability", d.box.TriggeredEffect.right + 24, d.box.TriggeredEffect.top, 
 // Comparison enum — referenced by StatThreshold (an enum, like Sign / Operation)
 d.place("Comparison", d.box.StatThreshold.left, d.box.StatThreshold.bottom + 18, 170, ["LESS", "EQUAL", "GREATER"], "enum");
 
-// ── Runtime layer: resolution context + damage pipeline ──────────────
-// The runtime types from effect-system.md (stat awareness & runtime targeting).
-// Placed in a band below the tree, then wired back via the references the doc
-// spells out (see the linkBoxes/fk calls under "edges").
+// ── Runtime layer: resolution context + modification pipeline ──────────────
+// The runtime types from effect-system.md. Placed in a band below the tree, then wired back via the
+// references the doc spells out (see the linkBoxes/fk calls under "edges").
 const bandY = Math.max(...Object.values(d.box).map(b => b.bottom)) + 90;
 const GAP = 64;
 let bx = d.box.Condition.left;   // start the band under the Effect subtree, near its anchors
 
-const rcF = ["source : Entity", "allies : Array[Entity]", "enemies : Array[Entity]", "attacker : Entity", "rng : RandomNumberGenerator", "chooser : EffectChooser", "health_stat : StringName"];
+const rcF = ["source : Entity", "allies : Array[Entity]", "opponents : Array[Entity]", "instigator : Entity", "rng : RandomNumberGenerator", "chooser : EffectChooser"];
 d.place("ResolutionContext", bx, bandY, boxW("ResolutionContext", rcF), rcF);
 bx = d.box.ResolutionContext.right + GAP;
 
@@ -110,27 +105,24 @@ const chW = boxW("EffectChooser", chF, "base");
 d.place("EffectChooser", bx, bandY, chW, chF, "base");
 d.stack(bx, chW, d.box.EffectChooser.bottom + d.rvgap, [{ n: "AutoChooser", note: ext("EffectChooser") }]);
 
-// damage-pipeline cluster, to the right so it sits roughly under DealDamage / Action
+// modification-pipeline cluster, to the right so it sits roughly under ModifyStat / Action
 bx = d.box.EffectChooser.right + GAP * 2;
-const pktF = ["source : Entity", "target : Entity", "amount : int", "damage_type : StringName"];
-d.place("DamagePacket", bx, bandY, boxW("DamagePacket", pktF), pktF);
-bx = d.box.DamagePacket.right + GAP;
+const modF = ["source : Entity", "target : Entity", "stat : StringName", "amount : int", "tag : StringName"];
+d.place("Modification", bx, bandY, boxW("Modification", modF), modF);
+bx = d.box.Modification.right + GAP;
 
-const pipeF = ["resolve(packet, ctx) : int"];
-d.place("DamagePipeline", bx, bandY, boxW("DamagePipeline", pipeF), pipeF);
-bx = d.box.DamagePipeline.right + GAP;
+const pipeF = ["resolve(modification, ctx) : int"];
+d.place("ModificationPipeline", bx, bandY, boxW("ModificationPipeline", pipeF), pipeF);
+bx = d.box.ModificationPipeline.right + GAP;
 
-const dsF = ["phase() : DamageStep.Phase", "modify(packet, ctx)"];
-const dsW = boxW("DamageStep", dsF, "base");
-d.place("DamageStep", bx, bandY, dsW, dsF, "base");
-d.stack(bx, dsW, d.box.DamageStep.bottom + d.rvgap, [
-  { n: "MultiplierStep", f: ["factor : float"], note: ext("DamageStep") },
-  { n: "FlatMitigationStep", f: ["stat : StringName"], note: ext("DamageStep") },
-  { n: "AbsorbStep", f: ["stat : StringName"], note: ext("DamageStep") },
-  { n: "ClampStep", f: ["minimum : int", "maximum : int"], note: ext("DamageStep") }]);
-
-const phF = ["AMPLIFY", "MITIGATE", "ABSORB", "CLAMP"];
-d.place("DamageStep.Phase", d.box.DamageStep.right + GAP, bandY, boxW("DamageStep.Phase", phF, "enum"), phF, "enum");
+const msF = ["tag : StringName", "order() : int", "applies_to(mod) : bool", "modify(mod, ctx)"];
+const msW = boxW("ModificationStep", msF, "base");
+d.place("ModificationStep", bx, bandY, msW, msF, "base");
+d.stack(bx, msW, d.box.ModificationStep.bottom + d.rvgap, [
+  { n: "MultiplierStep", f: ["factor : float"], note: ext("ModificationStep") },
+  { n: "FlatMitigationStep", f: ["stat : StringName"], note: ext("ModificationStep") },
+  { n: "AbsorbStep", f: ["stat : StringName"], note: ext("ModificationStep") },
+  { n: "ClampStep", f: ["minimum : int", "maximum : int"], note: ext("ModificationStep") }]);
 
 // edges
 d.treeEdges(TREE);
@@ -138,7 +130,7 @@ d.linkDown("Entity", "StatBlock");   // Entity -> manually-placed StatBlock
 d.fk("Ability", 2, "Effect");
 d.fk("TimingDecayRule", 0, "Phase"); d.fk("PhaseTrigger", 0, "Phase");
 d.fk("TriggerDecayRule", 0, "Hook"); d.fk("HookTrigger", 0, "Hook");
-d.fk("DealDamage", 0, "Amount"); d.fk("Heal", 0, "Amount"); d.fk("Gain", 1, "Amount");
+d.fk("ModifyStat", 1, "Amount");
 d.fk("StatThreshold", 2, "Comparison");
 
 // wire the runtime band back into the tree (relationships per effect-system.md)
@@ -150,11 +142,10 @@ const linkBoxes = (a, b) => {
   else d.els.push(E.link(A.cx, A.top, B.cx, B.bottom));
 };
 d.fk("ResolutionContext", 5, "EffectChooser");   // chooser : EffectChooser
-d.fk("DamageStep", 0, "DamageStep.Phase");        // phase() : DamageStep.Phase
 linkBoxes("ChosenTarget", "EffectChooser");       // ChosenTarget resolves through ctx.chooser
-linkBoxes("DealDamage", "DamagePipeline");        // DealDamage builds a packet, runs the pipeline
-linkBoxes("DamagePipeline", "DamagePacket");      // ... mutating the packet
-linkBoxes("DamagePipeline", "DamageStep");        // ... through each step
+linkBoxes("ModifyStat", "ModificationPipeline");  // ModifyStat builds a Modification, runs the pipeline
+linkBoxes("ModificationPipeline", "Modification"); // ... mutating the modification
+linkBoxes("ModificationPipeline", "ModificationStep"); // ... through each step
 
 d.title("Effect System", "mirrors notes/effect-system.md  ·  composition flows top-down");
 d.key([["root", "Base / structural type"], ["sub", "Variant — shipped example"], ["enum", "Enum"]]);

@@ -1,0 +1,22 @@
+[gd_scene format=3 uid="uid://co35r82tidwl5"]
+
+[ext_resource type="Script" uid="uid://bs5jrdipk5mk1" path="res://scenes/debug_screen/widgets/debug_section.gd" id="1_section"]
+
+[node name="DebugSection" type="VBoxContainer"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+script = ExtResource("1_section")
+
+[node name="Header" type="Button" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+focus_mode = 0
+theme_override_font_sizes/font_size = 36
+alignment = 0
+
+[node name="Body" type="VBoxContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 12

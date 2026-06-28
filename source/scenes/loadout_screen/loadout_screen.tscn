@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bfpjy4weh8cjn" path="res://scenes/loadout_screen/loadout_screen.gd" id="1_ls"]
 [ext_resource type="PackedScene" uid="uid://32b3txwt87yow" path="res://ui/screen_frame/screen_frame.tscn" id="2_frame"]
-[ext_resource type="PackedScene" uid="uid://b8loadout00001" path="res://minigames/loadout/loadout.tscn" id="3_loadout"]
+[ext_resource type="PackedScene" uid="uid://b8loadout00001" path="res://scenes/loadout_screen/loadout_editor.tscn" id="3_loadout"]
 
 [node name="LoadoutScreen" instance=ExtResource("2_frame")]
 script = ExtResource("1_ls")

@@ -1,9 +1,9 @@
 extends GdUnitTestSuite
 ## Resolution tests for the effect engine: amount evaluation, target selection (including seeded randomness
-## and the chooser seam), the stat-aware damage pipeline (amplify / mitigate / absorb / clamp and their
+## and the chooser seam), the stat-aware modification pipeline (amplify / mitigate / absorb / clamp and their
 ## fixed order), healing, and condition gating through [method Effect.resolve].
 
-## A stand-in for a game's typed stats, with the fields the damage pipeline reads.
+## A stand-in for a game's typed stats, with the fields the modification pipeline reads.
 class _TestStats extends StatBlock:
 	@export var health: int = 20
 	@export var max_health: int = 20
@@ -30,18 +30,18 @@ func _entity(health: int = 20, armor: int = 0, shields: int = 0, power: int = 0)
 	return entity
 
 
-func _damage_status(steps: Array[DamageStep]) -> StatusStack:
+func _damage_status(steps: Array[ModificationStep]) -> StatusStack:
 	var status := Status.new()
-	status.damage_steps = steps
+	status.transforms = steps
 	var stack := StatusStack.new()
 	stack.status = status
 	stack.count = 1
 	return stack
 
 
-func _context(source: Entity, enemies: Array[Entity], rng_seed: int = 0, chooser: EffectChooser = null) -> ResolutionContext:
+func _context(source: Entity, opponents: Array[Entity], rng_seed: int = 0, chooser: EffectChooser = null) -> ResolutionContext:
 	var allies: Array[Entity] = [source]
-	return ResolutionContext.create(source, allies, enemies, rng_seed, chooser)
+	return ResolutionContext.create(source, allies, opponents, rng_seed, chooser)
 
 
 # ── Amounts ───────────────────────────────────────
@@ -68,33 +68,33 @@ func test_self_target_returns_the_source() -> void:
 	assert_bool(result[0] == source).is_true()
 
 
-func test_enemy_target_returns_first_foe() -> void:
+func test_opponent_target_returns_first_foe() -> void:
 	var foe := _entity()
-	var enemies: Array[Entity] = [foe, _entity()]
-	var result := EnemyTarget.new().resolve(_context(_entity(), enemies))
+	var opponents: Array[Entity] = [foe, _entity()]
+	var result := OpponentTarget.new().resolve(_context(_entity(), opponents))
 	assert_bool(result[0] == foe).is_true()
 
 
-func test_all_enemies_target_returns_every_foe() -> void:
-	var enemies: Array[Entity] = [_entity(), _entity(), _entity()]
-	assert_int(AllEnemiesTarget.new().resolve(_context(_entity(), enemies)).size()).is_equal(3)
+func test_all_opponents_target_returns_every_foe() -> void:
+	var opponents: Array[Entity] = [_entity(), _entity(), _entity()]
+	assert_int(AllOpponentsTarget.new().resolve(_context(_entity(), opponents)).size()).is_equal(3)
 
 
-func test_random_enemy_target_is_deterministic_for_a_seed() -> void:
-	var enemies: Array[Entity] = [_entity(), _entity(), _entity(), _entity()]
-	var first := RandomEnemyTarget.new().resolve(_context(_entity(), enemies, 123))
-	var second := RandomEnemyTarget.new().resolve(_context(_entity(), enemies, 123))
+func test_random_opponent_target_is_deterministic_for_a_seed() -> void:
+	var opponents: Array[Entity] = [_entity(), _entity(), _entity(), _entity()]
+	var first := RandomOpponentTarget.new().resolve(_context(_entity(), opponents, 123))
+	var second := RandomOpponentTarget.new().resolve(_context(_entity(), opponents, 123))
 	assert_bool(first[0] == second[0]).is_true()
-	assert_bool(first[0] in enemies).is_true()
+	assert_bool(first[0] in opponents).is_true()
 
 
 func test_chosen_target_routes_through_the_chooser() -> void:
-	var enemies: Array[Entity] = [_entity(), _entity(), _entity()]
-	var picked: Array[Entity] = await ChosenTarget.new().resolve(_context(_entity(), enemies, 0, _PickLastChooser.new()))
-	assert_bool(picked[0] == enemies[-1]).is_true()
+	var opponents: Array[Entity] = [_entity(), _entity(), _entity()]
+	var picked: Array[Entity] = await ChosenTarget.new().resolve(_context(_entity(), opponents, 0, _PickLastChooser.new()))
+	assert_bool(picked[0] == opponents[-1]).is_true()
 
 
-# ── Damage pipeline ───────────────────────────────
+# ── Modification pipeline ─────────────────────────
 
 func test_deal_damage_reduces_vitality() -> void:
 	var foe := _entity(20)
@@ -131,7 +131,7 @@ func test_clamp_caps_a_hit() -> void:
 	assert_int(foe.current_stats.get_stat(&"health")).is_equal(19)   # capped to 1
 
 
-func test_pipeline_applies_phases_in_fixed_order() -> void:
+func test_pipeline_applies_steps_in_fixed_order() -> void:
 	var foe := _entity(20, 2, 3)
 	# Authored out of order on purpose: absorb, then mitigate, then amplify.
 	foe.statuses.append(_damage_status([_absorb(&"shields"), _mitigation(&"armor"), _multiplier(1.5)]))
@@ -160,8 +160,7 @@ func test_outgoing_multiplier_on_the_source_weakens_damage() -> void:
 
 func test_heal_restores_and_caps_at_max() -> void:
 	var ally := _entity(5)  # max_health stays 20
-	var heal := HealAction.new()
-	heal.amount = _const(8)
+	var heal := _heal(8)
 	heal.resolve(_context(_entity(), []), ally)
 	assert_int(ally.current_stats.get_stat(&"health")).is_equal(13)
 
@@ -224,18 +223,30 @@ func _clamp(maximum: int) -> ClampStep:
 	return step
 
 
+func _damage(value: int) -> ModifyStatAction:
+	var action := ModifyStatAction.new()
+	action.stat = &"health"
+	action.tag = &"damage"
+	action.subtracts = true
+	action.amount = _const(value)
+	return action
+
+
+func _heal(value: int) -> ModifyStatAction:
+	var action := ModifyStatAction.new()
+	action.stat = &"health"
+	action.tag = &"heal"
+	action.maximum_stat = &"max_health"
+	action.amount = _const(value)
+	return action
+
+
 func _damage_effect(value: int) -> Effect:
 	var effect := Effect.new()
-	effect.target = EnemyTarget.new()
-	var damage := DealDamageAction.new()
-	damage.amount = _const(value)
-	damage.damage_type = &"kinetic"
-	effect.action = damage
+	effect.target = OpponentTarget.new()
+	effect.action = _damage(value)
 	return effect
 
 
 func _deal(value: int, source: Entity, target: Entity) -> void:
-	var damage := DealDamageAction.new()
-	damage.amount = _const(value)
-	damage.damage_type = &"kinetic"
-	damage.resolve(_context(source, [target]), target)
+	_damage(value).resolve(_context(source, [target]), target)

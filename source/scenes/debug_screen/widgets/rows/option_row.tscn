@@ -1,0 +1,23 @@
+[gd_scene load_steps=2 format=3 uid="uid://ep8sl773kl022"]
+
+[ext_resource type="Script" uid="uid://zv0331ab2gcx4" path="res://scenes/debug_screen/widgets/rows/option_row.gd" id="1_option"]
+
+[node name="OptionRow" type="HBoxContainer"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+script = ExtResource("1_option")
+
+[node name="Label" type="Label" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(360, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 32
+
+[node name="Picker" type="OptionButton" parent="."]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 64)
+layout_mode = 2
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 32
