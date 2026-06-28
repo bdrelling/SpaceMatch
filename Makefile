@@ -13,7 +13,7 @@
 # USAGE
 # =============================================================================
 
-.PHONY: help setup play play-tablet play-phone playtest test test-debug export-macos export-ios export-android export-linux export-web deploy-macos deploy-ios-store deploy-ios-sim deploy-iphone deploy-ipad deploy-android deploy-linux deploy-web release-macos release-ios release-android release-linux release-web clean
+.PHONY: help setup play play-tablet play-phone playtest test test-debug export-macos export-ios export-android export-linux export-web deploy-macos deploy-ios-store deploy-ios-sim deploy-iphone deploy-ipad deploy-android deploy-linux deploy-web release-macos release-ios release-android release-linux release-web check import clean
 
 help: ## Show available commands
 	@echo "MACOS:"
@@ -36,6 +36,9 @@ help: ## Show available commands
 	@echo ""
 	@echo "TESTING:"
 	@grep -E '^test[a-zA-Z_-]*:.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
+	@echo ""
+	@echo "VALIDATION:"
+	@grep -E '^(check|import):.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
 	@echo ""
 	@echo "CLAUDOT:"
 	@grep -hE '^claudot-[a-zA-Z_-]*:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -173,6 +176,16 @@ test: ## Run all tests
 
 test-debug: ## Run tests with debug output
 	@DEBUG=true ./scripts/test.sh
+
+# =============================================================================
+# VALIDATION
+# =============================================================================
+
+check: ## Parse-check all GDScript (no run)
+	@./scripts/godot-check.sh
+
+import: ## Rebuild the import/UID cache
+	@./scripts/godot-import.sh
 
 # =============================================================================
 # CLEANUP

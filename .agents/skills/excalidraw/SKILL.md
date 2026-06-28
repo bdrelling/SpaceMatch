@@ -86,7 +86,7 @@ House style (baked into the engine):
 Engine API — `const { Diagram, HBOX } = require("./.agents/skills/excalidraw/scripts/build.js")`:
 
 - `new Diagram(opts?)` — `opts.depthY / hgap / rvgap / left0` tune spacing.
-- `layoutTree(tree)` — lay out + render a composition tree. Node = `{ n, f?, note?, kids?, riders?, spacer?, spacerW? }`: `f` = field rows, `riders` = subtypes stacked under the node, `spacer`+`spacerW` = an empty lane reserving width.
+- `layoutTree(tree)` — lay out + render a composition tree. Node = `{ n, f?, note?, children?, riders?, spacer?, spacerW? }`: `f` = field rows, `riders` = subtypes stacked under the node, `spacer`+`spacerW` = an empty lane reserving width.
 - `treeEdges(tree)` — parent→child composition arrows for the whole tree.
 - `place(name, x, y, w, fields, note)` — manually place a box the tree can't (shared leaves). Stored in `d.box[name]` with anchors `.left/.right/.top/.bottom/.cx/.cy` and `.rowY(i)`.
 - `stack(x, w, startY, riders)` — stack boxes downward; returns next y.
@@ -98,8 +98,8 @@ Engine API — `const { Diagram, HBOX } = require("./.agents/skills/excalidraw/s
 ```bash
 cd /Users/brian/Developer/bdrelling/games/SpaceMatch && node -e '
 const { Diagram } = require("./.agents/skills/excalidraw/scripts/build.js");
-const TREE = { n:"GameState", f:["starship : StarshipState","wallet : WalletState"], kids:[
-  { n:"StarshipState", f:["name : String","health : int"], kids:[
+const TREE = { n:"GameState", f:["starship : StarshipState","wallet : WalletState"], children:[
+  { n:"StarshipState", f:["name : String","health : int"], children:[
     { n:"DamageKind", f:["KINETIC","THERMAL"], note:"enum" } ] },
   { n:"WalletState", f:["credits : int"], note:"extends Resource" },
 ]};

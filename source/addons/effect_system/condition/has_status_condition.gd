@@ -1,4 +1,4 @@
-class_name HasStatus
+class_name HasStatusCondition
 extends Condition
 ## True when [member target] currently holds the status named [member status].
 

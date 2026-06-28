@@ -26,11 +26,12 @@ func apply_blueprint(_blueprint: StarshipBlueprint) -> void:
 	state.name = _blueprint.name
 	# Copy the base stat block so each starship owns its own (a shared exported default would let two starships'
 	# buffs bleed together). Null authoring means a blank block — no intrinsic stats.
-	state.stats = _blueprint.stats.duplicate() if _blueprint.stats != null else StarshipStats.new()
-	# Build the module grid as a child node (Starship → ModuleGrid) and persist its state on the starship.
-	var grid := ModuleGrid.create(_blueprint.module_grid)
-	add_child(grid)
-	state.module_grid = grid.state
+	state.base_stats = _blueprint.stats.duplicate() if _blueprint.stats != null else StarshipStats.new()
+	# Build the loadout from the blueprint's grid and persist it, then mount a ModuleGrid child (Starship →
+	# ModuleGrid) to represent it in the tree — the node wraps the same loadout the starship holds.
+	var loadout := Loadout.create(_blueprint.module_grid)
+	state.loadout = loadout
+	add_child(ModuleGrid.with_state(loadout))
 	# Rules and abilities are the starship's, not the match's: a hull authors its own, else it gets the standard
 	# kit (a match-4 extra turn, the five stat abilities). Modules layer more on at match time.
 	state.ruleset = _blueprint.ruleset if _blueprint.ruleset != null else _standard_ruleset()
@@ -47,12 +48,12 @@ static func create(_blueprint: StarshipBlueprint) -> Starship:
 	return starship
 
 ## Wraps [param _state] in a fresh node — the load/clone path, where the data already exists (a saved starship or
-## a fight clone) and only needs a node to live in the tree. Mounts a [ModuleGrid] child for the starship's grid.
+## a fight clone) and only needs a node to live in the tree. Mounts a [ModuleGrid] child for the starship's loadout.
 static func with_state(_state: StarshipState) -> Starship:
 	var starship: Starship = SCENE.instantiate()
 	starship.state = _state
-	if _state != null and _state.module_grid != null:
-		starship.add_child(ModuleGrid.with_state(_state.module_grid))
+	if _state != null and _state.loadout != null:
+		starship.add_child(ModuleGrid.with_state(_state.loadout))
 	return starship
 
 ## The baseline hull kit: a match of four or more keeps the board (the extra-turn rule, now starship-owned).

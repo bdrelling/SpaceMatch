@@ -1,4 +1,4 @@
-class_name Gain
+class_name GainAction
 extends Action
 ## Grants [member amount] of the resource named [member resource] to the target.
 

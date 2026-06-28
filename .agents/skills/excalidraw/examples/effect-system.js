@@ -17,13 +17,11 @@ const E = require("../excalidraw.js");
 const ext = t => "extends " + t;
 
 const TREE = {
-  n: "Entity", f: ["id : int", "base_stats : StatBlock", "current_stats : StatBlock", "statuses : Array[StatusStack]"], kids: [
-    { n: "StatBlock", f: ["get_stat(name) : Variant", "set_stat(name, value)", "stat_names() : Array[StringName]"], note: "abstract — games subclass", fromRow: 1, riders: [
-      { n: "ShipStats", f: ["hull : int", "tactical_systems : int"], note: ext("StatBlock") } ] },
-    { n: "StatusStack", f: ["status : Status", "count : int"], fromRow: 2, kids: [
+  n: "Entity", f: ["id : int", "base_stats : StatBlock", "current_stats : StatBlock", "statuses : Array[StatusStack]"], children: [
+    { n: "StatusStack", f: ["status : Status", "count : int"], fromRow: 2, children: [
       { n: "Status", fromRow: 0,
         f: ["name : StringName", "sign : Sign", "cap : int", "stack_rule : StackRule", "decay_rule : DecayRule", "effects : Array[TriggeredEffect]", "modifiers : Array[Modifier]", "damage_steps : Array[DamageStep]"],
-        kids: [
+        children: [
           { n: "Sign", f: ["POSITIVE", "NEGATIVE"], note: "enum", fromRow: 1 },
           { n: "StackRule", note: "base", fromRow: 3, riders: [
             { n: "StackStackRule", note: ext("StackRule") }, { n: "KeepHighestStackRule", note: ext("StackRule") } ] },
@@ -32,12 +30,12 @@ const TREE = {
             { n: "TriggerDecayRule", f: ["hook : Hook", "quantity : int"], note: ext("DecayRule") },
             { n: "ThresholdDecayRule", f: ["value : int", "quantity : int"], note: ext("DecayRule") } ] },
           { spacer: true, spacerW: 210 },
-          { n: "TriggeredEffect", f: ["trigger : Trigger", "effects : Array[Effect]"], fromRow: 5, kids: [
+          { n: "TriggeredEffect", f: ["trigger : Trigger", "effects : Array[Effect]"], fromRow: 5, children: [
             { n: "Trigger", note: "base", fromRow: 0, riders: [
               { n: "PhaseTrigger", f: ["phase : Phase"], note: ext("Trigger") },
               { n: "HookTrigger", f: ["hook : Hook"], note: ext("Trigger") },
               { n: "CountTrigger", f: ["value : int"], note: ext("Trigger") } ] },
-            { n: "Effect", f: ["target : Target", "action : Action", "conditions : Array[Condition]", "resolve(ctx)"], fromRow: 1, kids: [
+            { n: "Effect", f: ["target : Target", "action : Action", "conditions : Array[Condition]", "resolve(ctx)"], fromRow: 1, children: [
               { n: "Condition", f: ["holds(ctx) : bool"], note: "base", fromRow: 2, riders: [
                 { n: "HasStatus", f: ["target : Target", "status : StringName"], note: ext("Condition") },
                 { n: "StatThreshold", f: ["target : Target", "stat : StringName", "comparison : Comparison", "value : int"], note: ext("Condition") } ] },
@@ -52,7 +50,7 @@ const TREE = {
                 { n: "ApplyStatus", f: ["status : StringName", "count : int"], note: ext("Action") },
                 { n: "RemoveStatus", f: ["status : StringName"], note: ext("Action") },
                 { n: "Gain", f: ["resource : StringName", "amount : Amount"], note: ext("Action") } ] } ] } ] },
-          { n: "Modifier", f: ["stat : StringName", "operation : Operation", "amount : float"], fromRow: 6, kids: [
+          { n: "Modifier", f: ["stat : StringName", "operation : Operation", "amount : float"], fromRow: 6, children: [
             { n: "Operation", f: ["ADD", "MULTIPLY"], note: "enum", fromRow: 1 } ] } ] } ] } ] };
 
 // House convention (settled in notes/effect-system.md header + notes/effect-system-mermaid.md):
@@ -63,8 +61,17 @@ const PURPLE = { strokeColor: "#b39ddb", headColor: "#2f2747", titleColor: "#d9c
 const d = new Diagram({ kinds: { sub: AMBER, enum: PURPLE } });
 d.layoutTree(TREE);
 
+// StatBlock is Entity's other child, but its subtree is tiny next to StatusStack's huge one, so
+// the auto-layout would strand it at the far-left edge. Place it by hand, below-left of Entity.
+const sbF = ["get_stat(name) : Variant", "set_stat(name, value)", "stat_names() : Array[StringName]"];
+const sbNote = "abstract — games subclass";
+const sbW = boxW("StatBlock", sbF, sbNote);
+d.place("StatBlock", d.box.Entity.left - sbW - 170, d.box.Entity.bottom + 50, sbW, sbF, sbNote);
+d.stack(d.box.StatBlock.left, sbW, d.box.StatBlock.bottom + d.rvgap, [
+  { n: "ShipStats", f: ["hull : int", "tactical_systems : int"], note: ext("StatBlock") }]);
+
 // shared leaves
-const spacer = TREE.kids[1].kids[0].kids[3];
+const spacer = TREE.children[0].children[0].children[3];
 const laneCx = spacer._cx, laneW = 205;
 const phaseTop = (d.box.TimingDecayRule.cy + d.box.PhaseTrigger.cy) / 2 - HBOX(["a"], "enum") / 2;
 d.place("Phase", laneCx - laneW / 2, phaseTop, laneW, ["TURN_START", "TURN_END", "ROUND_END"], "enum");
@@ -127,6 +134,7 @@ d.place("DamageStep.Phase", d.box.DamageStep.right + GAP, bandY, boxW("DamageSte
 
 // edges
 d.treeEdges(TREE);
+d.linkDown("Entity", "StatBlock");   // Entity -> manually-placed StatBlock
 d.fk("Ability", 2, "Effect");
 d.fk("TimingDecayRule", 0, "Phase"); d.fk("PhaseTrigger", 0, "Phase");
 d.fk("TriggerDecayRule", 0, "Hook"); d.fk("HookTrigger", 0, "Hook");

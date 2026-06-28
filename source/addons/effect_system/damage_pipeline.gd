@@ -2,7 +2,7 @@ class_name DamagePipeline
 extends RefCounted
 ## Runs a [DamagePacket] through every [DamageStep] the source and target contribute, in a fixed phase
 ## order, and returns the final amount to apply. Centralising the order here is the "do it right up front"
-## move: [DealDamage] and any other source of damage (reflect, status ticks) resolve through the same
+## move: [DealDamageAction] and any other source of damage (reflect, status ticks) resolve through the same
 ## pipeline, so a hit is mitigated identically no matter who launched it.
 ##
 ## Order within a hit:

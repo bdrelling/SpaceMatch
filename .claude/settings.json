@@ -45,6 +45,8 @@
       "Bash(make test:*)",
       "Bash(make test-debug:*)",
       "Bash(make clean)",
+      "Bash(make check)",
+      "Bash(make import)",
       "Bash(godot:*)",
       "Bash(ls:*)",
       "Bash(cat:*)",
@@ -78,7 +80,11 @@
       "WebSearch",
       "WebFetch",
       "Skill(take-screenshot)",
-      "Skill(take-screenshot:*)"
+      "Skill(take-screenshot:*)",
+      "Skill(obsidian)",
+      "Skill(obsidian:*)",
+      "Skill(excalidraw)",
+      "Skill(excalidraw:*)"
     ],
     "deny": [
       "Read(.env.local)",

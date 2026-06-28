@@ -1,4 +1,4 @@
-class_name Heal
+class_name HealAction
 extends Action
 ## Restores [member amount] to the target.
 

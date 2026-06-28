@@ -1,12 +1,24 @@
 class_name ModuleGridState
 extends GridState
-## A starship's module-grid state — a grid_system [GridState] specialized for modules: each placed module is a
-## [GridObjectState] occupant carrying its [ModuleBlueprint], and the grid derives the starship's stat profile,
-## abilities, and rules from them. Pure data plus grid-level operations; the [ModuleGrid] node builds and
-## represents it, and [StarshipState] persists it.
+## A grid of modules — a grid_system [GridState] specialized for placing and arranging [ModuleBlueprint]s: each
+## placed module is a [GridObjectState] occupant carrying its blueprint. Pure size/placement/query operations,
+## with no notion of stats — that derivation lives on [Loadout] (a starship's grid), keeping this reusable for
+## grids that don't have stats (inventories, puzzles). The [ModuleGrid] node builds and represents one.
 
 const _LAYER := 0
 const _MODULE_KEY := &"module"
+
+## Stamps [param blueprint]'s hull silhouette (its usable cells) and its authored modules, in placement order,
+## onto [param grid] — already sized to the blueprint; a placement that doesn't fit is skipped. The shared
+## blueprint build behind the [ModuleGrid] node and a starship's [Loadout]; a null blueprint leaves it untouched.
+static func stamp(grid: ModuleGridState, blueprint: ModuleGridBlueprint) -> void:
+	if blueprint == null:
+		return
+	for cell: Vector2i in blueprint.cells:
+		grid.usable_cells[cell] = true
+	for placement: ModulePlacement in blueprint.modules:
+		if placement != null and placement.module != null:
+			grid.place(placement.module, placement.origin, placement.rotation)
 
 ## The grid's column / row counts — aliases for the inherited [member GridState.width] / [member GridState.height].
 var columns: int:
@@ -110,47 +122,6 @@ func remove_at(cell: Vector2i) -> ModuleBlueprint:
 	remove_object(_LAYER, occupant)
 	emit_changed()
 	return module_state.blueprint if module_state != null else null
-
-## True when [param module_state] is fully enabled — none of the cells it occupies is in [param
-## disabled_cells]. A single disabled cell deactivates the whole module, so it stops counting toward stats.
-func enabled(module_state: ModuleState, disabled_cells: Array[Vector2i] = []) -> bool:
-	return _cells_enabled(cells_of(module_state), disabled_cells)
-
-## The stat profile this grid's modules sum to — the starship's contribution to its stats. Only fully-enabled
-## modules count (see [method enabled]); a module with any cell in [param disabled_cells] adds nothing. The
-## one place the "all cells enabled to count" rule lives.
-func profile(disabled_cells: Array[Vector2i] = []) -> StarshipStats:
-	var total := StarshipStats.new()
-	for occupant: GridObjectState in objects_on_layer(_LAYER):
-		var module_state: ModuleState = occupant.state.get(_MODULE_KEY)
-		if module_state != null and module_state.blueprint != null and _cells_enabled(occupant.cells, disabled_cells):
-			total.add(module_state.blueprint.stats)
-	return total
-
-## The abilities this grid's enabled modules grant the starship — same "all cells enabled to count" rule as
-## [method profile]. A disabled module grants nothing.
-func abilities(disabled_cells: Array[Vector2i] = []) -> Array[MatchAbility]:
-	var result: Array[MatchAbility] = []
-	for occupant: GridObjectState in objects_on_layer(_LAYER):
-		var module_state: ModuleState = occupant.state.get(_MODULE_KEY)
-		if module_state != null and module_state.blueprint != null and _cells_enabled(occupant.cells, disabled_cells):
-			result.append_array(module_state.blueprint.abilities)
-	return result
-
-## The phase rules this grid's enabled modules grant the starship — same enabled rule as [method profile].
-func rules(disabled_cells: Array[Vector2i] = []) -> Array[Rule]:
-	var result: Array[Rule] = []
-	for occupant: GridObjectState in objects_on_layer(_LAYER):
-		var module_state: ModuleState = occupant.state.get(_MODULE_KEY)
-		if module_state != null and module_state.blueprint != null and _cells_enabled(occupant.cells, disabled_cells):
-			result.append_array(module_state.blueprint.rules)
-	return result
-
-func _cells_enabled(cells: Array[Vector2i], disabled_cells: Array[Vector2i]) -> bool:
-	for cell: Vector2i in cells:
-		if disabled_cells.has(cell):
-			return false
-	return true
 
 ## True when the module covering [param from_cell] could be translated by (to_cell - from_cell) — its
 ## footprint lands on usable cells and collides with nothing but itself. False when from_cell is empty.

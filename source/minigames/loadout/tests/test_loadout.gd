@@ -65,6 +65,6 @@ func test_tapping_a_module_focuses_it() -> void:
 	# The tapped module becomes the focus (outlined on the board and split out of the stat totals); its
 	# name is lettered on the footprint by the view, not shown in the stats panel.
 	var scene := _scene()
-	var module: ModuleBlueprint = GameSession.game_state.starship.module_grid.modules[0].blueprint
+	var module: ModuleBlueprint = GameSession.game_state.starship.loadout.modules[0].blueprint
 	scene._set_focus(module)
 	assert_object(scene._focused_module).is_same(module)

@@ -36,7 +36,7 @@ const _LOSS_COLOR := Color(0.96, 0.55, 0.45)
 
 var _mode: Mode = Mode.READ_ONLY
 var _grid_view: ModuleGridView
-var _module_grid: ModuleGridState
+var _module_grid: Loadout
 
 # The module the player tapped to inspect (null when nothing is focused). Its footprint is outlined on
 # the board and its per-stat contribution is split out of each stat total.
@@ -66,15 +66,15 @@ func bind_session() -> void:
 	if GameSession.game_state == null or GameSession.game_state.starship == null:
 		return
 	set_mode(Mode.EDIT if DEBUG_DEFAULT_EDIT else Mode.READ_ONLY)
-	_show_grid(GameSession.game_state.starship.module_grid)
+	_show_grid(GameSession.game_state.starship.loadout)
 
-## Re-points the board at [param starship]'s module grid — the shell calls this when a portrait drills
+## Re-points the board at [param starship]'s loadout — the shell calls this when a portrait drills
 ## in mid-combat, so the loadout is shown [constant Mode.READ_ONLY]. Rebuilds the board and stats.
 func show_starship(starship: StarshipState) -> void:
 	if starship == null:
 		return
 	set_mode(Mode.READ_ONLY)
-	_show_grid(starship.module_grid)
+	_show_grid(starship.loadout)
 
 ## Sets the screen's [enum Mode]; the shell picks it per context (see [enum Mode]). Clears any in-flight
 ## drag so flipping mode mid-gesture can't strand a preview ghost.
@@ -88,7 +88,7 @@ func set_mode(mode: Mode) -> void:
 # Rebuilds the board and stat list for [param module_grid], freeing the prior view first
 # ([BoardCanvas.set_board] detaches the old board but doesn't free it, so re-pointing would otherwise
 # leak views) and re-pointing the stats at the shown starship.
-func _show_grid(module_grid: ModuleGridState) -> void:
+func _show_grid(module_grid: Loadout) -> void:
 	if module_grid == null:
 		return
 	if _module_grid != null and _module_grid.changed.is_connected(_on_grid_changed):
@@ -258,7 +258,7 @@ func _rebuild_stats() -> void:
 # A stat profile summed from the loadout's modules (zeros when empty). The grid owns the counting rule
 # (only fully-enabled modules count); the outfitting bay has no disabled cells, so this reads the lot.
 func _profile() -> StarshipStats:
-	return _module_grid.profile() if _module_grid != null else StarshipStats.new()
+	return _module_grid.stats() if _module_grid != null else StarshipStats.new()
 
 # One stat row: [tile][name ............ value]. The tile slot keeps its size even when the stat has no
 # tile, so the name column stays aligned. The caller supplies the value text and its color (green/red when

@@ -33,14 +33,14 @@ func _init() -> void:
 		resource_maximums.resize(RESOURCE_KINDS)
 
 ## Wraps [param source]'s persistent starship data in an encounter-scoped state ready to bank resources. Shares the
-## source's stats / grid / ruleset / abilities (the encounter only reads them); the new state carries its own
-## fresh, zeroed resource tally. Used by [method Encounter.create] to build the two combatants.
+## source's base stats / loadout / ruleset / abilities (the encounter only reads them); the new state carries its
+## own fresh, zeroed resource tally. Used by [method Encounter.create] to build the two combatants.
 static func for_combatant(source: StarshipState) -> EncounterStarshipState:
 	var starship := EncounterStarshipState.new()
 	if source != null:
 		starship.name = source.name
-		starship.stats = source.stats
-		starship.module_grid = source.module_grid
+		starship.base_stats = source.base_stats
+		starship.loadout = source.loadout
 		starship.health = source.health
 		starship.selection_override = source.selection_override
 		starship.ruleset = source.ruleset

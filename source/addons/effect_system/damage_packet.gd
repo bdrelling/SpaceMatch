@@ -1,6 +1,6 @@
 class_name DamagePacket
 extends RefCounted
-## A damage instance in flight. [DealDamage] builds one and the [DamagePipeline] hands it to each
+## A damage instance in flight. [DealDamageAction] builds one and the [DamagePipeline] hands it to each
 ## [DamageStep], which mutates [member amount] in place (and may drain a stat, e.g. a shield pool). Damage
 ## is an object the pipeline transforms, never a bare number applied at the source — that is what lets
 ## amplify, mitigate, absorb, and clamp compose instead of being hardcoded into every action.

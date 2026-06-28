@@ -7,7 +7,7 @@
 //
 //   const { Diagram } = require("./build.js");
 //   const d = new Diagram();
-//   d.layoutTree(TREE);                       // TREE = nested {n, f, note, riders, kids, fromRow, spacer}
+//   d.layoutTree(TREE);                       // TREE = nested {n, f, note, riders, children, fromRow, spacer}
 //   d.place("Phase", x, y, 150, ["A","B"], "enum");   // shared leaves placed manually
 //   d.stack(x, 150, d.box.Phase.bottom + 10, [{n:"X", note:"extends Phase"}]);
 //   d.treeEdges(TREE);                        // composition arrows, parent -> child
@@ -60,10 +60,10 @@ class Diagram {
   _hlayout(n, depth, left) {
     n.y = this.depthY[depth];
     if (n.spacer) { n._span = n.spacerW; n._cx = left + n._span / 2; return; }
-    n._w = (n.kids && n.kids.length) ? boxW(n.n, n.f, n.note) : this._slotW(n);
-    if (n.kids && n.kids.length) {
+    n._w = (n.children && n.children.length) ? boxW(n.n, n.f, n.note) : this._slotW(n);
+    if (n.children && n.children.length) {
       let x = left;
-      for (const k of n.kids) { this._hlayout(k, depth + 1, x); x += k._span + this.hgap; }
+      for (const k of n.children) { this._hlayout(k, depth + 1, x); x += k._span + this.hgap; }
       const span = x - this.hgap - left;
       n._span = Math.max(span, n._w); n._cx = left + span / 2;
     } else { n._span = n._w; n._cx = left + n._span / 2; }
@@ -73,13 +73,13 @@ class Diagram {
     const x = n._cx - n._w / 2;
     this.place(n.n, x, n.y, n._w, n.f, n.note);
     if (n.riders) this.stack(x, n._w, this.box[n.n].bottom + this.rvgap, n.riders);
-    if (n.kids) for (const k of n.kids) this._render(k);
+    if (n.children) for (const k of n.children) this._render(k);
   }
   // lay out + render a composition tree (top-down; breadth spreads horizontally).
   layoutTree(tree) { this._hlayout(tree, 0, this.left0); this._render(tree); return this; }
   // composition arrows: every non-spacer kid gets a parent -> child arrow.
   treeEdges(tree) {
-    const walk = n => { if (n.kids) for (const k of n.kids) if (!k.spacer) { this.linkDown(n.n, k.n); walk(k); } };
+    const walk = n => { if (n.children) for (const k of n.children) if (!k.spacer) { this.linkDown(n.n, k.n); walk(k); } };
     walk(tree); return this;
   }
   linkDown(parent, child) {

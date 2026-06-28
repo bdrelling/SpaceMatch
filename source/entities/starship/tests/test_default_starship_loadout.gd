@@ -7,13 +7,13 @@ extends GdUnitTestSuite
 const _DEFAULT_STARSHIP := preload("res://resources/starships/default_starship_blueprint.tres")
 const _COMPUTER_STARSHIP := preload("res://resources/starships/computer_default_starship_blueprint.tres")
 
-func _default_grid() -> ModuleGridState:
+func _default_grid() -> Loadout:
 	var starship: Starship = auto_free(Starship.create(_DEFAULT_STARSHIP))
-	return starship.state.module_grid
+	return starship.state.loadout
 
-func _computer_grid() -> ModuleGridState:
+func _computer_grid() -> Loadout:
 	var starship: Starship = auto_free(Starship.create(_COMPUTER_STARSHIP))
-	return starship.state.module_grid
+	return starship.state.loadout
 
 func test_default_starship_has_six_modules() -> void:
 	var grid := _default_grid()
@@ -49,11 +49,9 @@ func test_default_stat_profile() -> void:
 func test_default_starship_stat_block_drives_health() -> void:
 	var starship_node: Starship = auto_free(Starship.create(_DEFAULT_STARSHIP))
 	var starship := starship_node.state
-	assert_object(starship.stats).is_not_null()
-	assert_int(starship.stats.health).is_equal(25)  # hull health lives on the starship, not a module
-	var effective := StarshipStats.new()
-	effective.add(starship.stats)
-	effective.add(starship.module_grid.profile())
+	assert_object(starship.base_stats).is_not_null()
+	assert_int(starship.base_stats.health).is_equal(25)  # hull health lives on the starship, not a module
+	var effective := starship.effective_stats()           # base stats + the loadout's module profile
 	assert_int(effective.health).is_equal(25)         # starship hull
 	assert_int(effective.speed).is_equal(4)           # engine module
 	assert_int(effective.warp_capacity).is_equal(4)   # warp core module

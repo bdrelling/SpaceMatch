@@ -1,4 +1,4 @@
-class_name StatThreshold
+class_name StatThresholdCondition
 extends Condition
 ## True when [member target]'s [member stat] compares against [member value] per [member comparison].
 

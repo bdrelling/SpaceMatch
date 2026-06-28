@@ -50,18 +50,18 @@ func test_effect_composes_target_action_and_conditions() -> void:
 	effect.target = EnemyTarget.new()
 	var amount := ConstantAmount.new()
 	amount.value = 5
-	var damage := DealDamage.new()
+	var damage := DealDamageAction.new()
 	damage.amount = amount
 	damage.damage_type = &"kinetic"
 	effect.action = damage
-	var gate := StatThreshold.new()
+	var gate := StatThresholdCondition.new()
 	gate.target = SelfTarget.new()
 	gate.stat = &"hull"
-	gate.comparison = StatThreshold.Comparison.GREATER
+	gate.comparison = StatThresholdCondition.Comparison.GREATER
 	gate.value = 0
 	effect.conditions.append(gate)
-	assert_bool(effect.action is DealDamage).is_true()
-	assert_int((effect.action as DealDamage).amount.value).is_equal(5)
+	assert_bool(effect.action is DealDamageAction).is_true()
+	assert_int((effect.action as DealDamageAction).amount.value).is_equal(5)
 	assert_bool(effect.target is EnemyTarget).is_true()
 	assert_int(effect.conditions.size()).is_equal(1)
 
@@ -84,4 +84,4 @@ func test_status_wires_rules_triggers_and_effects() -> void:
 func test_enums_have_expected_baseline_values() -> void:
 	assert_int(Status.Sign.POSITIVE).is_equal(0)
 	assert_int(Modifier.Operation.ADD).is_equal(0)
-	assert_int(StatThreshold.Comparison.LESS).is_equal(0)
+	assert_int(StatThresholdCondition.Comparison.LESS).is_equal(0)

@@ -275,10 +275,10 @@ func bind_session() -> void:
 func _refresh_portraits() -> void:
 	if _player_portrait != null:
 		_player_portrait.set_readouts(_player_readouts())
-		_player_portrait.set_module_grid(_grid_of(_player_starship()))
+		_player_portrait.set_module_grid(_loadout_of(_player_starship()))
 	if _opponent_portrait != null:
 		_opponent_portrait.set_readouts(_opponent_readouts())
-		_opponent_portrait.set_module_grid(_grid_of(_opponent_starship()))
+		_opponent_portrait.set_module_grid(_loadout_of(_opponent_starship()))
 	_refresh_health()
 	_refresh_warp()
 	_refresh_abilities()
@@ -387,8 +387,8 @@ func _open_fallback_encounter() -> void:
 func _starship_for(combatant: int) -> StarshipState:
 	return _player_starship() if combatant == EncounterState.Combatant.PLAYER else _opponent_starship()
 
-func _grid_of(starship: StarshipState) -> ModuleGridState:
-	return starship.module_grid if starship != null else null
+func _loadout_of(starship: StarshipState) -> Loadout:
+	return starship.loadout if starship != null else null
 
 # The acting [param combatant]'s phase rules: its starship's ruleset plus its enabled modules' rules. The match
 # layers these over its own defaults each turn (see [method _effective_ruleset]), so a starship's extra-turn or
@@ -402,9 +402,9 @@ func _starship_rules(combatant: int) -> Array[Rule]:
 		return result
 	if starship.ruleset != null:
 		result.append_array(starship.ruleset.rules)
-	var grid: ModuleGridState = _grid_of(starship)
-	if grid != null and _encounter != null:
-		result.append_array(grid.rules(_encounter.disabled_cells_of(combatant)))
+	var loadout: Loadout = _loadout_of(starship)
+	if loadout != null and _encounter != null:
+		result.append_array(loadout.rules(_encounter.disabled_cells_of(combatant)))
 	return result
 
 # The acting [param combatant]'s abilities: its starship's hull kit plus its enabled modules' abilities. Drives
@@ -417,9 +417,9 @@ func _starship_abilities(combatant: int) -> Array[MatchAbility]:
 	if starship == null:
 		return result
 	result.append_array(starship.abilities)
-	var grid: ModuleGridState = _grid_of(starship)
-	if grid != null and _encounter != null:
-		result.append_array(grid.abilities(_encounter.disabled_cells_of(combatant)))
+	var loadout: Loadout = _loadout_of(starship)
+	if loadout != null and _encounter != null:
+		result.append_array(loadout.abilities(_encounter.disabled_cells_of(combatant)))
 	return result
 
 # [param combatant]'s effective stats: its starship's own base stat block plus its module-grid profile (honoring
@@ -431,11 +431,11 @@ func _effective_stats(combatant: int) -> StarshipStats:
 		return StarshipStats.new()
 	var starship: StarshipState = _starship_for(combatant)
 	var base := StarshipStats.new()
-	if starship != null and starship.stats != null:
-		base.add(starship.stats)
-	var grid: ModuleGridState = _grid_of(starship)
-	if grid != null:
-		base.add(grid.profile(_encounter.disabled_cells_of(combatant)))
+	if starship != null and starship.base_stats != null:
+		base.add(starship.base_stats)
+	var loadout: Loadout = _loadout_of(starship)
+	if loadout != null:
+		base.add(loadout.stats(_encounter.disabled_cells_of(combatant)))
 	return _encounter.effective_stats(combatant, base)
 
 #endregion
@@ -921,7 +921,7 @@ func _drain_resources(combatant: int, amount: int) -> void:
 # the module from the board's seeded RNG so it's reproducible; a no-op when the target has no grid or every
 # module is already down.
 func _disable_opponent_module(target: int, turns: int) -> void:
-	var grid: ModuleGridState = _grid_of(_starship_for(target))
+	var grid: Loadout = _loadout_of(_starship_for(target))
 	if grid == null:
 		return
 	var disabled: Array[Vector2i] = _encounter.disabled_cells_of(target)

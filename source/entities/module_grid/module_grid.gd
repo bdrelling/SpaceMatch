@@ -27,11 +27,7 @@ func apply_blueprint(_blueprint: ModuleGridBlueprint) -> void:
 		_adopt(ModuleGridState.new())
 		return
 	var grid_state := ModuleGridState.new(_blueprint.columns, _blueprint.rows, 1)
-	for cell: Vector2i in _blueprint.cells:
-		grid_state.usable_cells[cell] = true
-	for placement: ModulePlacement in _blueprint.modules:
-		if placement != null and placement.module != null:
-			grid_state.place(placement.module, placement.origin, placement.rotation)
+	ModuleGridState.stamp(grid_state, _blueprint)
 	_adopt(grid_state)
 
 static func create(_blueprint: ModuleGridBlueprint) -> ModuleGrid:

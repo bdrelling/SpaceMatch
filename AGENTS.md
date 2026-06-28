@@ -75,6 +75,7 @@ Git is read-only — read it only when a task needs it. Modified/staged files ar
 
 - **Codebase search/exploration → the `Explore` subagent**, not inline Grep/Glob. Read inline only the files you're about to edit — keeping search noise out of the main context is the single biggest context saver.
 - **Running tests → the `test-runner` subagent** (headless, returns failures only). Don't run gdUnit4 by hand.
+- **Parse-checking Godot → the `godot-checker` subagent** (headless, returns only parse errors). Keeps project-wide check output out of the main context, like `test-runner` does for tests.
 
 ## Testing
 
@@ -87,7 +88,7 @@ Automated testing is critical to keeping the game stable. Test coverage will be 
 ## Validating Godot
 
 - Before running `scripts/godot-check.sh`, if any files were created or renamed, run `scripts/godot-import.sh` first — it rebuilds the UID cache; check without a fresh import can silently misresolve UIDs.
-- **End of every change:** run `scripts/godot-check.sh`.
+- **End of every change:** run the parse check — via the `godot-checker` subagent, or `scripts/godot-check.sh` directly.
 - Never tell the user to reload/re-import the project themselves.
 
 @armory/AGENTS.md

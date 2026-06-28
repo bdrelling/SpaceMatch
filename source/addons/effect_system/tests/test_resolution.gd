@@ -160,7 +160,7 @@ func test_outgoing_multiplier_on_the_source_weakens_damage() -> void:
 
 func test_heal_restores_and_caps_at_max() -> void:
 	var ally := _entity(5)  # max_health stays 20
-	var heal := Heal.new()
+	var heal := HealAction.new()
 	heal.amount = _const(8)
 	heal.resolve(_context(_entity(), []), ally)
 	assert_int(ally.current_stats.get_stat(&"health")).is_equal(13)
@@ -175,10 +175,10 @@ func test_heal_restores_and_caps_at_max() -> void:
 func test_effect_skips_action_when_a_condition_fails() -> void:
 	var foe := _entity(20)
 	var effect := _damage_effect(10)
-	var gate := StatThreshold.new()
+	var gate := StatThresholdCondition.new()
 	gate.target = SelfTarget.new()
 	gate.stat = &"health"
-	gate.comparison = StatThreshold.Comparison.LESS  # source health < 0 is false
+	gate.comparison = StatThresholdCondition.Comparison.LESS  # source health < 0 is false
 	gate.value = 0
 	effect.conditions.append(gate)
 	await effect.resolve(_context(_entity(), [foe]))
@@ -227,7 +227,7 @@ func _clamp(maximum: int) -> ClampStep:
 func _damage_effect(value: int) -> Effect:
 	var effect := Effect.new()
 	effect.target = EnemyTarget.new()
-	var damage := DealDamage.new()
+	var damage := DealDamageAction.new()
 	damage.amount = _const(value)
 	damage.damage_type = &"kinetic"
 	effect.action = damage
@@ -235,7 +235,7 @@ func _damage_effect(value: int) -> Effect:
 
 
 func _deal(value: int, source: Entity, target: Entity) -> void:
-	var damage := DealDamage.new()
+	var damage := DealDamageAction.new()
 	damage.amount = _const(value)
 	damage.damage_type = &"kinetic"
 	damage.resolve(_context(source, [target]), target)

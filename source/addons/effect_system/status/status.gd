@@ -9,7 +9,7 @@ enum Sign {
 	NEGATIVE,
 }
 
-## Identifier used by [ApplyStatus] / [RemoveStatus] / [HasStatus] to refer to this status.
+## Identifier used by [ApplyStatusAction] / [RemoveStatusAction] / [HasStatusCondition] to refer to this status.
 @export var name: StringName
 ## Whether this status is a buff or a debuff.
 @export var sign: Sign = Sign.NEGATIVE

@@ -1,4 +1,4 @@
-class_name DealDamage
+class_name DealDamageAction
 extends Action
 ## Deals [member amount] damage of [member damage_type] to the target.
 

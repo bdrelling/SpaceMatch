@@ -778,7 +778,7 @@ func test_disruptor_disables_an_opponent_module() -> void:
 	game._use_ability(EncounterState.Combatant.PLAYER, disrupt)
 	var disabled: Array[Vector2i] = game._encounter.disabled_cells_of(EncounterState.Combatant.OPPONENT)
 	assert_int(disabled.size()).is_equal(1)
-	var grid: ModuleGridState = game._opponent_starship().module_grid
+	var grid: Loadout = game._opponent_starship().loadout
 	assert_object(grid.module_at(disabled[0])).is_not_null()  # it landed on a real module
 	var down: int = 0
 	for module_state: ModuleState in grid.modules:

@@ -44,11 +44,16 @@ func test_module_at_and_remove() -> void:
 	assert_object(grid.remove_at(Vector2i(1, 0))).is_same(module)
 	assert_int(grid.filled_cell_count()).is_equal(0)
 
-func _full_grid() -> ModuleGridState:
-	return _grid([
+# A full 3×3 [Loadout] — the stat/ability/rule tests below assert on the loadout-level derivation, so this
+# builds a Loadout (a ModuleGridState with that derivation) rather than the bare grid.
+func _full_grid() -> Loadout:
+	var grid := Loadout.new(3, 3, 1)
+	for cell: Vector2i in [
 		Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0),
 		Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 1),
-		Vector2i(0, 2), Vector2i(1, 2), Vector2i(2, 2)])
+		Vector2i(0, 2), Vector2i(1, 2), Vector2i(2, 2)]:
+		grid.usable_cells[cell] = true
+	return grid
 
 func test_placed_at_returns_footprint_for_any_covered_cell() -> void:
 	var grid := _full_grid()
@@ -115,11 +120,11 @@ func test_disabled_cell_drops_its_module_from_the_profile() -> void:
 	powered.stats.power = 5
 	grid.place(powered, Vector2i(0, 0), 0)
 	# No disabled cells: the module is enabled and counts.
-	assert_int(grid.profile().power).is_equal(5)
+	assert_int(grid.stats().power).is_equal(5)
 	assert_bool(grid.enabled(grid.modules[0])).is_true()
 	# Disable the cell it sits on: the module deactivates and stops counting.
 	var disabled: Array[Vector2i] = [Vector2i(0, 0)]
-	assert_int(grid.profile(disabled).power).is_equal(0)
+	assert_int(grid.stats(disabled).power).is_equal(0)
 	assert_bool(grid.enabled(grid.modules[0], disabled)).is_false()
 
 func test_disabling_any_cell_deactivates_a_multi_cell_module() -> void:
@@ -129,8 +134,8 @@ func test_disabling_any_cell_deactivates_a_multi_cell_module() -> void:
 	module.stats = StarshipStats.new()
 	module.stats.shields = 3
 	grid.place(module, Vector2i(0, 0), 0)
-	assert_int(grid.profile().shields).is_equal(3)
-	assert_int(grid.profile([Vector2i(1, 0)]).shields).is_equal(0)
+	assert_int(grid.stats().shields).is_equal(3)
+	assert_int(grid.stats([Vector2i(1, 0)]).shields).is_equal(0)
 	assert_bool(grid.enabled(grid.modules[0], [Vector2i(1, 0)])).is_false()
 
 # A module grants its starship abilities and phase rules while enabled — the "modules contribute" path, same

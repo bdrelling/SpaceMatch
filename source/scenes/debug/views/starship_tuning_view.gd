@@ -47,18 +47,18 @@ func _build_starship_card(encounter: EncounterState, combatant: EncounterState.C
 		func(value: float) -> void:
 			starship.health = int(value)
 			encounter.emit_changed()))
-	if starship.stats == null:
+	if starship.base_stats == null:
 		return
-	card.add_row(DebugRow.slider("Hull (max HP)", Color.WHITE, 1, 100, starship.stats.health,
+	card.add_row(DebugRow.slider("Hull (max HP)", Color.WHITE, 1, 100, starship.base_stats.health,
 		func(value: float) -> void:
-			starship.stats.health = int(value)
+			starship.base_stats.health = int(value)
 			encounter.emit_changed()))
 	for stat: Dictionary in _STATS:
 		var prop: String = stat["prop"]
 		var label: String = stat["label"]
 		var kind: int = stat["kind"]
-		var current: int = starship.stats.get(prop)
+		var current: int = starship.base_stats.get(prop)
 		card.add_row(DebugRow.slider(label, MatchTile.color_of(kind), 0, 30, current,
 			func(value: float) -> void:
-				starship.stats.set(prop, int(value))
+				starship.base_stats.set(prop, int(value))
 				encounter.emit_changed()))
