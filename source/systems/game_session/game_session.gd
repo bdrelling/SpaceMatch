@@ -6,7 +6,7 @@ extends Node
 ## the hosts that show them ([Game]), not by the session.
 
 ## The default starship a fresh game starts with.
-const _DEFAULT_STARSHIP := preload("res://resources/starships/default_starship_blueprint.tres")
+const _DEFAULT_STARSHIP := preload("res://data/starships/default_starship_blueprint.tres")
 
 ## The persisted state of the running game — the player starship, wallet, and active encounter. The save reads
 ## this; hosts build the entity nodes that represent it. Replaced wholesale by [method start_new_game].

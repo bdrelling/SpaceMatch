@@ -3,7 +3,7 @@ extends Catalog
 ## The catalog of [ModuleBlueprint]s — every module that can be slotted into a grid. It gathers every
 ## authored module resource from its directory; the editor can add and edit modules in memory.
 
-const _DIRECTORY := "res://resources/modules"
+const _DIRECTORY := "res://data/modules"
 
 @export var modules: Array[ModuleBlueprint] = []
 

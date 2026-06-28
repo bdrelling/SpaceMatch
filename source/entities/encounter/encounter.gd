@@ -9,9 +9,9 @@ const SCENE_PATH := "res://entities/encounter/encounter.tscn"
 const SCENE: PackedScene = preload(SCENE_PATH)
 
 ## The computer opponent's default starship — distinct from the player's (no warp core, so the AI can't Jump).
-const _DEFAULT_OPPONENT := preload("res://resources/starships/computer_default_starship_blueprint.tres")
+const _DEFAULT_OPPONENT := preload("res://data/starships/computer_default_starship_blueprint.tres")
 ## The player's fight starship when no session seeds one (the standalone match scene and unit tests).
-const _DEFAULT_PLAYER := preload("res://resources/starships/default_starship_blueprint.tres")
+const _DEFAULT_PLAYER := preload("res://data/starships/default_starship_blueprint.tres")
 
 @export var state: EncounterState
 

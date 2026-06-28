@@ -3,7 +3,7 @@ extends Catalog
 ## The catalog of [StarshipBlueprint]s — named starships, each pairing a name with a module-grid layout. It
 ## gathers every authored starship from its directory; the editor can add starships and (next step) assign grids.
 
-const _DIRECTORY := "res://resources/starships"
+const _DIRECTORY := "res://data/starships"
 
 @export var starships: Array[StarshipBlueprint] = []
 

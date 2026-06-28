@@ -5,7 +5,7 @@ extends Node
 ## these instances in place (the board reads the active mode via [DebugConfig.match_ruleset], which points
 ## here); persisting edits back to disk lands later.
 
-const _DIR := "res://resources/catalogs/"
+const _DIR := "res://data/catalogs/"
 
 var modules: ModuleCatalog
 var module_grids: ModuleGridCatalog

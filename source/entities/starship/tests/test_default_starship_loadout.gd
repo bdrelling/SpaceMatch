@@ -4,8 +4,8 @@ extends GdUnitTestSuite
 ## would use the player default instead). Guards the authored loadouts — wired through [method Starship.create]
 ## from the .tres, so a broken placement or a deleted module fails here.
 
-const _DEFAULT_STARSHIP := preload("res://resources/starships/default_starship_blueprint.tres")
-const _COMPUTER_STARSHIP := preload("res://resources/starships/computer_default_starship_blueprint.tres")
+const _DEFAULT_STARSHIP := preload("res://data/starships/default_starship_blueprint.tres")
+const _COMPUTER_STARSHIP := preload("res://data/starships/computer_default_starship_blueprint.tres")
 
 func _default_grid() -> Loadout:
 	var starship: Starship = auto_free(Starship.create(_DEFAULT_STARSHIP))
