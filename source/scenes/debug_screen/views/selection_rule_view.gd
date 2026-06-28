@@ -3,7 +3,7 @@ extends DebugView
 ## The selection-rule editor — how tiles get picked on the board (swap / slide / trace / teleport) plus the
 ## adjacency, run-length and teleport-range knobs that turn one match engine into a different game. Edits the
 ## active ruleset's [SelectionDefaultRule]; each change assigns a fresh [SelectionRule] so the
-## board re-points to it on the next turn (see [member MatchMinigame] — its per-turn re-sync only fires when
+## board re-points to it on the next turn (see [member MatchGame] — its per-turn re-sync only fires when
 ## the active rule's reference changes). A starship's [member StarshipState.selection_override] still wins on
 ## that starship's turn.
 

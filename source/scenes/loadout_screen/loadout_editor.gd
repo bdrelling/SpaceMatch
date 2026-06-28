@@ -1,5 +1,5 @@
 class_name LoadoutEditor
-extends Minigame
+extends Control
 ## The loadout editor — the feature [LoadoutScreen] hosts: a starship's module grid plus the stat profile
 ## its modules sum to. It runs in three [enum Mode]s the host sets per context — [constant Mode.READ_ONLY]
 ## when inspecting a starship, [constant Mode.EDIT] when modifying one (e.g. a shop), and [constant

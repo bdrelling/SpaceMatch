@@ -1,10 +1,26 @@
-class_name MatchMinigame
-extends Minigame
-## Match-3 minigame. A board of tiles: grab a tile and drag it toward a neighbour to swap
+class_name MatchGame
+extends Control
+## The match-3 game: a board of tiles where you grab a tile and drag it toward a neighbour to swap
 ## ([[SwapInteraction]]), line up three-or-more of one kind and they pop ([[MatchClearPassive]]). Tiles
 ## fall and fresh ones stream in ([[GravityPassive]]); the board is an equal-frequency generator, so it
-## never stalls. The board owns its tiles and rules; the encounter HUD around it (the two portraits)
+## never stalls. The board owns its tiles and rules; the encounter UI around it (the two portraits)
 ## reads the bound game's starship stats and [Wallet] once a session is bound.
+
+## Drives the one-line status string; assigning [member status_text] emits this.
+signal status_changed(text: String)
+## Asks the host to open a combatant's loadout — emitted when a portrait is tapped, handing the
+## [StarshipState] to show. The match names no screen; the host decides where to go.
+signal drill_requested(starship: StarshipState)
+## Asks the host to rebuild and reopen the active encounter (a fresh fight). The encounter screen wires
+## this; the match's win/lose overlay Restart emits it. Standing alone (no host), the match restarts itself.
+signal restart_requested()
+
+var status_text: String = "":
+	set(value):
+		if value == status_text:
+			return
+		status_text = value
+		status_changed.emit(value)
 
 const _CELL_SIZE: float = 64.0
 const _KIND_COUNT: int = MatchTile.KIND_COUNT
@@ -189,7 +205,7 @@ func _ready() -> void:
 	_compose_status()
 
 	# Tapping a portrait drills into that combatant's module grid. The board names no screen — it just
-	# asks the shell to drill and hands it whose starship to show (see [signal Minigame.drill_requested]).
+	# asks the host to drill and hands it whose starship to show (see [signal drill_requested]).
 	_player_portrait.pressed.connect(_on_player_pressed)
 	_opponent_portrait.pressed.connect(_on_opponent_pressed)
 
@@ -224,9 +240,9 @@ func _ready() -> void:
 	# The match is set up — let SETUP then TURN_START rules seed starting state and the first mover's budget.
 	_begin_encounter()
 
-func actions() -> Array[MinigameAction]:
+func actions() -> Array[MatchAction]:
 	# The player-facing Rules button lives in the top bar — a read-only summary of this match's rules.
-	var list: Array[MinigameAction] = [MinigameAction.new("Rules", _open_rules)]
+	var list: Array[MatchAction] = [MatchAction.new("Rules", _open_rules)]
 	return list
 
 # Opens the read-only player Rules view over the board (a top-most layer; the dim blocks the board behind).
@@ -575,7 +591,7 @@ func _take_opponent_turn_if_needed() -> void:
 	# (mirror SwapSolver for that interaction) when an opponent needs to play it.
 	if input_mode != MatchBoardView.InputMode.SWAP:
 		var mode_name: String = MatchBoardView.InputMode.keys()[input_mode]
-		push_error("MatchMinigame: AI opponent has no solver for %s yet — not implemented." % mode_name)
+		push_error("MatchGame: AI opponent has no solver for %s yet — not implemented." % mode_name)
 		_message = "Opponent can't play %s yet — passing." % mode_name.to_lower()
 		_compose_status()
 		_pass_opponent_turn()
@@ -770,7 +786,7 @@ func _configure_ability_button(button: Button, ability: MatchAbility) -> void:
 				plus.text = "+"
 				plus.add_theme_font_size_override("font_size", 22)
 				cost_row.add_child(plus)
-			var icon := TileIcon.new()
+			var icon := MatchTileIcon.new()
 			icon.kind = cost.kind
 			icon.custom_minimum_size = Vector2(30, 30)
 			icon.mouse_filter = Control.MOUSE_FILTER_IGNORE

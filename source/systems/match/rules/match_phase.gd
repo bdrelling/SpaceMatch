@@ -1,7 +1,7 @@
 class_name MatchPhase
 ## The lifecycle phases the match encounter fires rules at — the host's phase vocabulary (the grid engine
 ## knows none of these; see [[Ruleset]]). A [Rule] sets its [member Rule.phase] to one of these and the
-## encounter runs it when that moment arrives. Add a phase here, fire it from [MatchMinigame], and rules
+## encounter runs it when that moment arrives. Add a phase here, fire it from [MatchGame], and rules
 ## can hook it.
 
 ## The board has been built for the encounter — first chance to seed or alter starting state.

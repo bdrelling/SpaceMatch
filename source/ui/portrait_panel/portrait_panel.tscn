@@ -1,10 +1,10 @@
 [gd_scene format=3 uid="uid://b8r2x7m4qw0pn"]
 
-[ext_resource type="Script" uid="uid://col63my0q1tl" path="res://minigames/match/portrait_panel.gd" id="1_panel"]
+[ext_resource type="Script" uid="uid://col63my0q1tl" path="res://ui/portrait_panel/portrait_panel.gd" id="1_panel"]
 [ext_resource type="StyleBox" path="res://ui/styles/hud_placeholder.tres" id="2_normal"]
 [ext_resource type="StyleBox" path="res://ui/styles/hud_box_active.tres" id="3_active"]
 [ext_resource type="Script" uid="uid://d4hc4056kk7xa" path="res://entities/module_grid/module_grid_thumbnail.gd" id="4_thumb"]
-[ext_resource type="Script" uid="uid://b0c5o0vac8twb" path="res://minigames/match/tile_icon.gd" id="5_tile"]
+[ext_resource type="Script" uid="uid://b0c5o0vac8twb" path="res://systems/match/ui/match_tile_icon.gd" id="5_tile"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bar"]
 bg_color = Color(0.12, 0.13, 0.21, 0.6)
@@ -148,7 +148,7 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 2
 
-[node name="TileIcon" type="Control" parent="MarginContainer/VBoxContainer/Strip/Cell0"]
+[node name="MatchTileIcon" type="Control" parent="MarginContainer/VBoxContainer/Strip/Cell0"]
 custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
 script = ExtResource("5_tile")
@@ -166,7 +166,7 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 2
 
-[node name="TileIcon" type="Control" parent="MarginContainer/VBoxContainer/Strip/Cell1"]
+[node name="MatchTileIcon" type="Control" parent="MarginContainer/VBoxContainer/Strip/Cell1"]
 custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
 script = ExtResource("5_tile")
@@ -184,7 +184,7 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 2
 
-[node name="TileIcon" type="Control" parent="MarginContainer/VBoxContainer/Strip/Cell2"]
+[node name="MatchTileIcon" type="Control" parent="MarginContainer/VBoxContainer/Strip/Cell2"]
 custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
 script = ExtResource("5_tile")
@@ -202,7 +202,7 @@ layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 2
 
-[node name="TileIcon" type="Control" parent="MarginContainer/VBoxContainer/Strip/Cell3"]
+[node name="MatchTileIcon" type="Control" parent="MarginContainer/VBoxContainer/Strip/Cell3"]
 custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
 script = ExtResource("5_tile")

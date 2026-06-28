@@ -1,6 +1,6 @@
-class_name TileIcon
+class_name MatchTileIcon
 extends Control
-## A single match-tile glyph drawn at the control's size, for HUD readouts (the stat strip beneath a
+## A single match-tile glyph drawn at the control's size, for UI readouts (the stat strip beneath a
 ## portrait). Wraps a [MatchTile] and scales it to fit — the board's art, shrunk.
 
 @export var kind: int = 0:

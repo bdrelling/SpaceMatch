@@ -19,7 +19,7 @@ extends Resource
 ## Phase rules this starship brings to a match — its extra-turn rule and any module/hull behaviour. On the starship's
 ## turn these layer over (and override, by [member Rule.rule_name]) the match's default ruleset, the same way
 ## [member selection_override] overrides the default selection. The match composes starship + module rules per
-## turn (see [method MatchMinigame._effective_ruleset]); modules add more via [method Loadout.rules].
+## turn (see [method MatchGame._effective_ruleset]); modules add more via [method Loadout.rules].
 @export var ruleset: Ruleset
 ## Abilities this starship can use — its hull kit plus whatever its modules grant. Abilities are a property of the
 ## starship, never the match: the acting starship's set drives its ability bar (player) or AI pick (opponent). Modules

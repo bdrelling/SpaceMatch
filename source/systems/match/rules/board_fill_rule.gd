@@ -4,7 +4,7 @@ extends Rule
 ## in. A composable [Rule]: drop one in a match [Ruleset] to set the board's fill, or in a starship's ruleset
 ## (sharing this rule's [member Rule.rule_name]) to override it on that ship's turn, so each side can fill from
 ## its own edge. The host reads the active rule each turn and retunes the engine's [GravityPassive] — see
-## MatchMinigame._sync_board_rules — the same out-of-band read [method Ruleset.aggregate] does for spawn
+## MatchGame._sync_board_rules — the same out-of-band read [method Ruleset.aggregate] does for spawn
 ## weights. Absent entirely, the board falls top-down as classic match-3 does.
 
 ## The edge fresh tiles fall from.

@@ -2,7 +2,7 @@ class_name ActionBudgetRule
 extends Rule
 ## Sets how many board moves the mover gets this turn, and what using an ability does to the turn. Fires on
 ## [constant MatchPhase.TURN_START], writing the budget onto the active combatant's [EncounterStarshipState];
-## the match spends it down as moves resolve and passes the turn once it's gone (see [MatchMinigame]). The
+## the match spends it down as moves resolve and passes the turn once it's gone (see [MatchGame]). The
 ## default — one action, an ability ends the turn — reproduces the original "a move or an ability ends your
 ## turn" exactly. A starship overrides it by carrying its own [ActionBudgetRule] of the same [member
 ## Rule.rule_name], the same way a starship overrides any match rule.

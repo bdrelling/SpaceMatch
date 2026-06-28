@@ -4,7 +4,7 @@ extends Resource
 ## and any starship can override on its turn (Fluxx-style: the rules of play change with who's acting).
 ## Author a `.tres` per rule and carry it on a [SelectionDefaultRule] in the match ruleset (the board default)
 ## or on [member StarshipState.selection_override] (per-starship, which takes precedence on that starship's turn).
-## [MatchMinigame] applies the active rule live as turns pass.
+## [MatchGame] applies the active rule live as turns pass.
 
 ## The ways a player picks tiles. Maps to the engine's [enum MatchBoardView.InputMode] via [method input_mode].
 enum Mode {

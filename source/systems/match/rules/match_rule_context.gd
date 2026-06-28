@@ -1,7 +1,7 @@
 class_name MatchRuleContext
 extends RuleContext
 ## The typed [[RuleContext]] the match encounter hands its rules — the encounter state, who is acting, the
-## event payload for the firing phase, and the result fields a rule writes back. [MatchMinigame] fills the
+## event payload for the firing phase, and the result fields a rule writes back. [MatchGame] fills the
 ## inputs, runs the phase, then reads the outputs (turn handover for MOVE_RESOLVED, visual events for ON_CLEAR).
 
 ## The live encounter (health, resources, turns, warp) the rules read and mutate.

@@ -1,7 +1,7 @@
 class_name ExtraTurnRule
 extends Rule
 ## Keeps the board with the mover for another action when their move cleared a big enough match — a straight
-## run (or bent/path match, by [method MatchMinigame._largest_match]) of at least [member min_match] tiles.
+## run (or bent/path match, by [method MatchGame._largest_match]) of at least [member min_match] tiles.
 ## The migrated form of the old [code]extra_turn_min_match[/code] knob: now a swappable [Rule] on the
 ## [MOVE_RESOLVED][MatchPhase] phase, so an encounter (or a player) can drop it, retune it, or stack a variant.
 

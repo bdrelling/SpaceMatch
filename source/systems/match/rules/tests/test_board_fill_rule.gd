@@ -1,9 +1,9 @@
 extends GdUnitTestSuite
 ## BoardFillRule / TerritoryRule as composable [Rule]s: their direction/colour mapping, and that a ship's
-## rule overrides the match default through the same name-based composition [method MatchMinigame._effective_ruleset]
+## rule overrides the match default through the same name-based composition [method MatchGame._effective_ruleset]
 ## uses — the guarantee that fill and territory plug into the one ruleset system rather than a parallel track.
 
-# Mirrors MatchMinigame._effective_ruleset: match rules first, then ship rules layered over, a same-named ship
+# Mirrors MatchGame._effective_ruleset: match rules first, then ship rules layered over, a same-named ship
 # rule replacing the match's. This is the exact composition the host runs each turn.
 func _compose(match_rules: Array[Rule], ship_rules: Array[Rule]) -> Ruleset:
 	var composed := Ruleset.new()

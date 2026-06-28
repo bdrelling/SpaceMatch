@@ -16,7 +16,7 @@ func _init() -> void:
 	phase = MatchPhase.ON_CLEAR
 
 # The tile this rule contributes to the board's spawn pool: warp at its weight. The host still gates this on a
-# starship actually having warp capacity (see [method MatchMinigame._warp_active]).
+# starship actually having warp capacity (see [method MatchGame._warp_active]).
 func spawn_contribution() -> Dictionary:
 	return {kind: maxi(0, spawn_weight)}
 

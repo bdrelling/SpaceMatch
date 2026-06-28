@@ -2,7 +2,7 @@ class_name MatchBlueprint
 extends GridSessionBlueprint
 ## Match-3 rules for the match minigame. Builds every selection verb the board can use — swap a
 ## neighbour, slide a whole run, trace a connected path, or teleport two tiles — into one session, so the
-## host can switch between them live by toggling which is enabled (see [MatchMinigame] / [SelectionRule]).
+## host can switch between them live by toggling which is enabled (see [MatchGame] / [SelectionRule]).
 ## The line-clear cascade and gravity ride alongside; [member input_mode] / [member allow_diagonal] seed
 ## the initial selection and adjacency. Call [method build] after changing any setting and before
 ## [code]GridSession.create[/code].
@@ -26,7 +26,7 @@ func _init() -> void:
 	build()
 
 ## (Re)builds every selection interaction and the clear/gravity passives. All verbs are created enabled;
-## the host enables exactly the active one per turn (see [method MatchMinigame._apply_selection]). Picks up
+## the host enables exactly the active one per turn (see [method MatchGame._apply_selection]). Picks up
 ## the current [member board_width] / [member board_height] / [member min_run], so a host that changed them
 ## need only call this again.
 func build() -> void:

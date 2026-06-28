@@ -7,7 +7,7 @@ extends ScreenFrame
 
 const SCENE_PATH := "res://scenes/encounter_screen/encounter_screen.tscn"
 
-@onready var _match: MatchMinigame = %Match
+@onready var _match: MatchGame = %Match
 @onready var _footnote: Label = %Footnote
 ## The Settings overlay — a top-most [CanvasLayer] shown while the match is paused, drawn over the
 ## still-rendered (but frozen) board. Authored in the scene.
@@ -40,11 +40,11 @@ func _ready() -> void:
 # read-only summary of the rules in force. The match owns what a press does (it opens the view over its own
 # board); this screen only surfaces the button. Falls back to a plain titled bar if the match offers none.
 func _wire_actions() -> void:
-	var list: Array[MinigameAction] = _match.actions()
+	var list: Array[MatchAction] = _match.actions()
 	if list.is_empty():
 		configure_bar("Encounter")
 		return
-	var action: MinigameAction = list[0]
+	var action: MatchAction = list[0]
 	configure_bar("Encounter", action.label)
 	action_pressed.connect(action.on_pressed)
 

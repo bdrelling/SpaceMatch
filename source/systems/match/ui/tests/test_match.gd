@@ -1,5 +1,5 @@
 extends GdUnitTestSuite
-## MatchMinigame (match-3). The board is an equal-frequency generator, so it always lays down a full
+## MatchGame (match-3). The board is an equal-frequency generator, so it always lays down a full
 ## field of tiles.
 
 # Reset the shared GameSession singleton before each test so a fresh default game (starship + wallet) backs the
@@ -15,14 +15,14 @@ func _encounter() -> EncounterState:
 
 # Acts as a host mounting the match: opens an encounter on the session (a clone of the player starship vs the
 # computer default) and binds the match to it, the way [Game] / [EncounterScreen] do.
-func _host_bind(game: MatchMinigame) -> void:
+func _host_bind(game: MatchGame) -> void:
 	var enc: Encounter = auto_free(Encounter.create(GameSession.game_state.starship.clone()))
 	GameSession.game_state.encounter = enc.state
 	game.bind_session()
 
-func _make(ruleset: Ruleset = null, mode := MatchBoardView.InputMode.SWAP, ai := true) -> MatchMinigame:
-	var scene: PackedScene = load("res://minigames/match/match_minigame.tscn")
-	var game: MatchMinigame = scene.instantiate()
+func _make(ruleset: Ruleset = null, mode := MatchBoardView.InputMode.SWAP, ai := true) -> MatchGame:
+	var scene: PackedScene = load("res://systems/match/ui/match_game.tscn")
+	var game: MatchGame = scene.instantiate()
 	game.board_seed = 4242
 	game.input_mode = mode
 	# Insulate the existing behaviour tests from the spawn weights and extra-turn rule: a neutral

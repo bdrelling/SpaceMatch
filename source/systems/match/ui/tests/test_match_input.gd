@@ -5,7 +5,7 @@ extends GdUnitTestSuite
 ## land where the board reports its cells.
 
 const _VIEW_SIZE := Vector2i(1080, 1920)
-const _MATCH := "res://minigames/match/match_minigame.tscn"
+const _MATCH := "res://systems/match/ui/match_game.tscn"
 
 func _find(node: Node, type: Variant) -> Node:
 	if is_instance_of(node, type):
@@ -47,7 +47,7 @@ func _drag(viewport: Viewport, from: Vector2, to: Vector2) -> void:
 	viewport.push_input(event)
 
 func test_match_board_drag_dispatches() -> void:
-	var match_game := _host_in_viewport(_MATCH) as MatchMinigame
+	var match_game := _host_in_viewport(_MATCH) as MatchGame
 	# Let _ready build the board, then wait out its pour-in intro: the board
 	# ignores pointer input while it animates, so a fixed delay races the fall.
 	await await_millis(100)

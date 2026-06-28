@@ -1,6 +1,6 @@
 extends GdUnitTestSuite
 ## EncounterScreen — the screen that hosts the match and owns the encounter. These guard the screen-level
-## wiring; the match's own behaviour is covered in minigames/match/tests/test_match.gd.
+## wiring; the match's own behaviour is covered in systems/match/ui/tests/test_match.gd.
 
 const SCENE := "res://scenes/encounter_screen/encounter_screen.tscn"
 
@@ -9,7 +9,8 @@ func before_test() -> void:
 	GameSession.start_new_game()
 
 func _open_screen() -> EncounterScreen:
-	var screen: EncounterScreen = auto_free(load(SCENE).instantiate())
+	var scene: PackedScene = load(SCENE)
+	var screen: EncounterScreen = auto_free(scene.instantiate())
 	add_child(screen)
 	return screen
 
@@ -19,7 +20,7 @@ func _open_screen() -> EncounterScreen:
 func test_settings_restart_rebinds_and_restarts_the_match() -> void:
 	var screen := _open_screen()
 	await await_idle_frame()
-	var match_game: MatchMinigame = screen._match
+	var match_game: MatchGame = screen._match
 	# Simulate a finished, mid-progress match.
 	match_game._encounter.player_health = 3
 	match_game._game_over = true

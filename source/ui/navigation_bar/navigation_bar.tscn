@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://cd8wice7q4ysw" path="res://ui/navigation_bar/navigation_bar.gd" id="1_stb"]
 [ext_resource type="Theme" uid="uid://uy3znkll7jlqy" path="res://ui/themes/default.tres" id="2_theme"]
-[ext_resource type="Script" uid="uid://b0c5o0vac8twb" path="res://minigames/match/tile_icon.gd" id="3_tile"]
+[ext_resource type="Script" uid="uid://b0c5o0vac8twb" path="res://systems/match/ui/match_tile_icon.gd" id="3_tile"]
 
 [node name="NavigationBar" type="Control"]
 custom_minimum_size = Vector2(0, 96)
