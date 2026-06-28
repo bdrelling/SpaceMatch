@@ -23,3 +23,7 @@ enum Sign {
 @export var effects: Array[TriggeredEffect] = []
 ## Stat modifiers this status applies while active.
 @export var modifiers: Array[Modifier] = []
+## Transforms this status applies to damage passing through its holder — absorb, mitigate, amplify, clamp.
+## On the target of a hit these read as defenses (Block, armor, Vulnerable); on the attacker they read as
+## offense (Weak, empower). See [DamagePipeline].
+@export var damage_steps: Array[DamageStep] = []
