@@ -17,7 +17,8 @@ const ext = t => "extends " + t;
 
 const TREE = {
   n: "Entity", f: ["id : int", "base_stats : StatBlock", "current_stats : StatBlock", "statuses : Array[StatusStack]"], kids: [
-    { n: "StatBlock", f: ["get_stat(name) : Variant", "set_stat(name, value)", "stat_names() : Array[StringName]"], note: "abstract — games subclass", fromRow: 1 },
+    { n: "StatBlock", f: ["get_stat(name) : Variant", "set_stat(name, value)", "stat_names() : Array[StringName]"], note: "abstract — games subclass", fromRow: 1, riders: [
+      { n: "ShipStats", f: ["hull : int", "tactical_systems : int"], note: ext("StatBlock") } ] },
     { n: "StatusStack", f: ["status : Status", "count : int"], fromRow: 2, kids: [
       { n: "Status", fromRow: 0,
         f: ["name : StringName", "sign : Sign", "cap : int", "stack_rule : StackRule", "decay_rule : DecayRule", "effects : Array[TriggeredEffect]", "modifiers : Array[Modifier]"],
@@ -52,7 +53,12 @@ const TREE = {
           { n: "Modifier", f: ["stat : StringName", "operation : Operation", "amount : float"], fromRow: 6, kids: [
             { n: "Operation", f: ["ADD", "MULTIPLY"], note: "enum", fromRow: 1 } ] } ] } ] } ] };
 
-const d = new Diagram();
+// House convention (settled in notes/effect-system.md header + notes/effect-system-mermaid.md):
+// base + structural types keep the default color; every concrete variant ("kind of" a base) =
+// amber shipped example; enums = purple. root stays the engine default.
+const AMBER = { strokeColor: "#e0a96d", headColor: "#4a3520", titleColor: "#f0d4ac" };
+const PURPLE = { strokeColor: "#b39ddb", headColor: "#2f2747", titleColor: "#d9caf0" };
+const d = new Diagram({ kinds: { sub: AMBER, enum: PURPLE } });
 d.layoutTree(TREE);
 
 // shared leaves
@@ -86,7 +92,7 @@ d.fk("DealDamage", 0, "Amount"); d.fk("Heal", 0, "Amount"); d.fk("Gain", 1, "Amo
 d.fk("StatThreshold", 2, "Comparison");
 
 d.title("Effect System", "mirrors notes/effect-system.md  ·  composition flows top-down");
-d.key([["root", "Root — base type"], ["sub", "Subtype — extends a root"], ["enum", "Enum"]]);
+d.key([["root", "Base / structural type"], ["sub", "Variant — shipped example"], ["enum", "Enum"]]);
 
 console.log("boxes:", Object.keys(d.box).length);
 console.log("wrote", d.write("effect-system"));

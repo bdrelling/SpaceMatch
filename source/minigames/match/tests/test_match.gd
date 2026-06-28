@@ -10,7 +10,8 @@ func before_test() -> void:
 # A standalone encounter with default combatant ships, freed at test end. The [Encounter] node builds the two
 # [Starship] nodes; tests operate on its [EncounterState] directly (resources, no node-reaching).
 func _encounter() -> EncounterState:
-	return auto_free(Encounter.create()).state
+	var encounter: Encounter = auto_free(Encounter.create())
+	return encounter.state
 
 # Acts as a host mounting the match: opens an encounter on the session (a clone of the player ship vs the
 # computer default) and binds the match to it, the way [Game] / [EncounterScreen] do.
@@ -705,7 +706,7 @@ func test_target_lock_buffs_tile_damage() -> void:
 # The effective DAMAGE stat is permanent profile + temporary buffs: a ship that contributes damage hits for it.
 func test_effective_stats_layer_buffs_on_base() -> void:
 	var enc := _encounter()
-	var base := StatBlock.new()
+	var base := StarshipStats.new()
 	base.power = 3
 	enc.add_buff(EncounterState.Combatant.PLAYER, Stat.Type.POWER, 2)
 	assert_int(enc.effective_stats(EncounterState.Combatant.PLAYER, base).power).is_equal(5)

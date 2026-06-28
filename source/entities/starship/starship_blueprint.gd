@@ -7,7 +7,7 @@ extends Resource
 ## The ship's own base stats — what it brings before any modules: its starting health and any intrinsic
 ## bonuses or restrictions unique to this hull (you can't add or remove these the way you do modules). A
 ## [StarshipState]'s effective stats are this block plus its slotted modules' blocks.
-@export var stats: StatBlock
+@export var stats: StarshipStats
 @export var module_grid: ModuleGridBlueprint
 ## The ship's phase rules (its extra-turn rule, hull behaviour). Left null, [method Starship.apply_blueprint] gives
 ## the ship the standard hull kit. Author a [Ruleset] here to give a hull its own rules.

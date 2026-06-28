@@ -1,6 +1,6 @@
 class_name ModuleDetailView
 extends DebugView
-## Editor for one [ModuleBlueprint] — its name, id, and the [StatBlock] it contributes (every stat as a
+## Editor for one [ModuleBlueprint] — its name, id, and the [StarshipStats] it contributes (every stat as a
 ## slider, introspected so new stats appear automatically). Edits the module in place. The footprint
 ## ([PieceShape]) is shown read-only for now; editing it comes with grid arrange.
 
@@ -40,7 +40,7 @@ func _build() -> void:
 	add_child(heading)
 
 	if module.stats == null:
-		module.stats = StatBlock.new()
+		module.stats = StarshipStats.new()
 	var stats := module.stats
 	for prop: Dictionary in stats.get_property_list():
 		var usage: int = prop.usage

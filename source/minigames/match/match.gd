@@ -418,11 +418,11 @@ func _ship_abilities(combatant: int) -> Array[MatchAbility]:
 # any disabled cells — the permanent layer), with the encounter's temporary buff layer stacked on top. Empty
 # when no encounter or no ship backs the combatant (the standalone scene). What the ON_CLEAR rules bonus their
 # grants with, and where ship-driven health and warp capacity come from.
-func _effective_stats(combatant: int) -> StatBlock:
+func _effective_stats(combatant: int) -> StarshipStats:
 	if _encounter == null:
-		return StatBlock.new()
+		return StarshipStats.new()
 	var ship: StarshipState = _starship_for(combatant)
-	var base := StatBlock.new()
+	var base := StarshipStats.new()
 	if ship != null and ship.stats != null:
 		base.add(ship.stats)
 	var grid: ModuleGridState = _grid_of(ship)

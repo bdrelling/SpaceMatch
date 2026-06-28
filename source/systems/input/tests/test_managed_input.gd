@@ -10,8 +10,14 @@ const _SPRINT := &"sprint"
 const _TEST_ACTION := &"managed_input_test_action"
 
 func before_test() -> void:
-	if not InputMap.has_action(_TEST_ACTION):
-		InputMap.add_action(_TEST_ACTION)
+	# Project actions are absent in gdUnit's -s runs, so register every action this suite
+	# drives; and a prior suite may have left ManagedInput holding a block claim — clear it
+	# so the first test isn't suppressed by leaked state.
+	for action: StringName in [_TEST_ACTION, _JUMP, _SPRINT, &"move_forward", &"move_backward"]:
+		if not InputMap.has_action(action):
+			InputMap.add_action(action)
+	ManagedInput._blocked_actions.clear()
+	ManagedInput._held_through_unblock.clear()
 
 func after_test() -> void:
 	Input.action_release(_JUMP)

@@ -54,8 +54,8 @@ var opponent_max_health: int:
 ## Each combatant's temporary stat layer — buffs and debuffs (e.g. Target Lock's +damage) stacked on top of
 ## the ship's permanent module-grid profile. [method effective_stats] combines the two into the stats combat
 ## reads. Encounter-scoped, so a fresh encounter starts them empty. (Item/skill buffs will land here too.)
-@export var player_buffs: StatBlock
-@export var opponent_buffs: StatBlock
+@export var player_buffs: StarshipStats
+@export var opponent_buffs: StarshipStats
 ## Cells currently disabled on each combatant's module grid, mapping a cell [Vector2i] to the turns of
 ## disable it has left (granted by Disruptor; see [method disable_cell]). A disabled cell deactivates the
 ## module covering it, so that module stops counting toward the ship's stat profile until it re-enables.
@@ -65,7 +65,7 @@ var opponent_max_health: int:
 
 ## Each combatant's warp capacity — the bars their side of the meter holds before they can Jump (see
 ## [method can_jump]) to win outright. Granted by warp-core modules, so it's a copy of the ship's
-## [member StatBlock.warp_capacity]; the match seeds these at setup. Zero means that ship can't warp at all —
+## [member StarshipStats.warp_capacity]; the match seeds these at setup. Zero means that ship can't warp at all —
 ## no Jump, and the board spawns no warp tiles when neither side can warp. The two can differ (a six-bar core
 ## versus a four-bar one), which is why the capacities live per combatant rather than as one shared cap.
 @export var player_warp_max: int = 0
@@ -86,9 +86,9 @@ func _init() -> void:
 	# each carries its own resource tally (see [EncounterStarshipState]).
 	# Fresh per instance so the two combatants never share one buff block (exported Resource defaults can).
 	if player_buffs == null:
-		player_buffs = StatBlock.new()
+		player_buffs = StarshipStats.new()
 	if opponent_buffs == null:
-		opponent_buffs = StatBlock.new()
+		opponent_buffs = StarshipStats.new()
 
 ## The combatant whose turn it currently is.
 func active_combatant() -> Combatant:
@@ -141,7 +141,7 @@ func set_dodge(combatant: Combatant, on: bool) -> void:
 		opponent_dodge = on
 
 ## [param combatant]'s temporary stat layer (the buffs/debuffs stacked on its permanent profile).
-func buffs_of(combatant: Combatant) -> StatBlock:
+func buffs_of(combatant: Combatant) -> StarshipStats:
 	return player_buffs if combatant == Combatant.PLAYER else opponent_buffs
 
 ## Raises [param combatant]'s temporary [param stat] by [param amount] (negative debuffs it). Target Lock
@@ -152,8 +152,8 @@ func add_buff(combatant: Combatant, stat: Stat.Type, amount: int) -> void:
 ## [param combatant]'s effective stats: its permanent module-grid profile ([param base], supplied by the
 ## host since the starship owns the grid) with this encounter's temporary buff layer stacked on top. The
 ## stats combat consumes — the damage stat bonuses the hit, the four colored stats the resource they bank.
-func effective_stats(combatant: Combatant, base: StatBlock) -> StatBlock:
-	var total := StatBlock.new()
+func effective_stats(combatant: Combatant, base: StarshipStats) -> StarshipStats:
+	var total := StarshipStats.new()
 	total.add(base)
 	total.add(buffs_of(combatant))
 	return total

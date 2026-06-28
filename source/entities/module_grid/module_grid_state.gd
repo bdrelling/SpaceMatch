@@ -119,8 +119,8 @@ func enabled(module_state: ModuleState, disabled_cells: Array[Vector2i] = []) ->
 ## The stat profile this grid's modules sum to — the ship's contribution to its stats. Only fully-enabled
 ## modules count (see [method enabled]); a module with any cell in [param disabled_cells] adds nothing. The
 ## one place the "all cells enabled to count" rule lives.
-func profile(disabled_cells: Array[Vector2i] = []) -> StatBlock:
-	var total := StatBlock.new()
+func profile(disabled_cells: Array[Vector2i] = []) -> StarshipStats:
+	var total := StarshipStats.new()
 	for occupant: GridObjectState in objects_on_layer(_LAYER):
 		var module_state: ModuleState = occupant.state.get(_MODULE_KEY)
 		if module_state != null and module_state.blueprint != null and _cells_enabled(occupant.cells, disabled_cells):

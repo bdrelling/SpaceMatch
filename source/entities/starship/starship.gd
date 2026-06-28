@@ -26,7 +26,7 @@ func apply_blueprint(_blueprint: StarshipBlueprint) -> void:
 	state.name = _blueprint.name
 	# Copy the base stat block so each ship owns its own (a shared exported default would let two ships'
 	# buffs bleed together). Null authoring means a blank block — no intrinsic stats.
-	state.stats = _blueprint.stats.duplicate() if _blueprint.stats != null else StatBlock.new()
+	state.stats = _blueprint.stats.duplicate() if _blueprint.stats != null else StarshipStats.new()
 	# Build the module grid as a child node (Starship → ModuleGrid) and persist its state on the ship.
 	var grid := ModuleGrid.create(_blueprint.module_grid)
 	add_child(grid)

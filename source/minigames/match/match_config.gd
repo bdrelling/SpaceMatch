@@ -6,7 +6,7 @@ extends Resource
 ## [member DebugConfig.match_config] so the Debug panel tunes it without a recompile. Geometry changes
 ## (width / height / min run) apply when the board next builds — i.e. on the next match or a restart — since
 ## the running board is laid out once. (Warp on/off lives on the [WarpRule]; whether a ship can warp at all is
-## a warp-core module, summed into [member StatBlock.warp_capacity].)
+## a warp-core module, summed into [member StarshipStats.warp_capacity].)
 
 ## The board's dimensions, in cells.
 @export var board_width: int = 8

@@ -8,10 +8,12 @@ const _DEFAULT_STARSHIP := preload("res://resources/starships/default_starship_b
 const _COMPUTER_STARSHIP := preload("res://resources/starships/computer_default_starship_blueprint.tres")
 
 func _default_grid() -> ModuleGridState:
-	return auto_free(Starship.create(_DEFAULT_STARSHIP)).state.module_grid
+	var starship: Starship = auto_free(Starship.create(_DEFAULT_STARSHIP))
+	return starship.state.module_grid
 
 func _computer_grid() -> ModuleGridState:
-	return auto_free(Starship.create(_COMPUTER_STARSHIP)).state.module_grid
+	var starship: Starship = auto_free(Starship.create(_COMPUTER_STARSHIP))
+	return starship.state.module_grid
 
 func test_default_ship_has_six_modules() -> void:
 	var grid := _default_grid()
@@ -29,7 +31,7 @@ func test_default_modules_sit_where_authored() -> void:
 	assert_str(grid.module_at(Vector2i(4, 3)).name).is_equal("Warp Core")
 
 func test_default_stat_profile() -> void:
-	var total := StatBlock.new()
+	var total := StarshipStats.new()
 	for module_state: ModuleState in _default_grid().modules:
 		total.add(module_state.blueprint.stats)
 	assert_int(total.power).is_equal(0)         # power is combat power; no default (non-weapon) module grants it
@@ -49,7 +51,7 @@ func test_default_ship_stat_block_drives_health() -> void:
 	var ship := starship.state
 	assert_object(ship.stats).is_not_null()
 	assert_int(ship.stats.health).is_equal(25)  # hull health lives on the ship, not a module
-	var effective := StatBlock.new()
+	var effective := StarshipStats.new()
 	effective.add(ship.stats)
 	effective.add(ship.module_grid.profile())
 	assert_int(effective.health).is_equal(25)         # ship hull
@@ -63,7 +65,7 @@ func test_computer_default_has_no_warp_core() -> void:
 	assert_int(grid.modules.size()).is_equal(5)
 	for module_state: ModuleState in grid.modules:
 		assert_str(module_state.blueprint.name).is_not_equal("Warp Core")
-	var total := StatBlock.new()
+	var total := StarshipStats.new()
 	for module_state: ModuleState in grid.modules:
 		total.add(module_state.blueprint.stats)
 	assert_int(total.warp_capacity).is_equal(0)

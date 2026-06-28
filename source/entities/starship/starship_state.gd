@@ -5,7 +5,7 @@ extends Resource
 @export var name: String = ""
 ## The ship's own base stats — its hull's starting health and any intrinsic bonuses/restrictions, before
 ## modules. Effective stats are this plus the module grid's profile (see [method EncounterState.effective_stats]).
-@export var stats: StatBlock
+@export var stats: StarshipStats
 @export var module_grid: ModuleGridState
 ## The ship's current hull — what depletes as it takes damage in an encounter. At zero the ship is destroyed
 ## and its pilot loses: the starship itself is the thing that dies, so combat damage lives here rather than on

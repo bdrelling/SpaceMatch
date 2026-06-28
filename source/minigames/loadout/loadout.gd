@@ -246,7 +246,7 @@ func _rebuild_stats() -> void:
 	for child: Node in _stat_list.get_children():
 		child.queue_free()
 	var profile := _profile()
-	var focus_stats: StatBlock = _focused_module.stats if _focused_module != null else null
+	var focus_stats: StarshipStats = _focused_module.stats if _focused_module != null else null
 	_stat_list.add_child(_energy_row())
 	for row: Array in _stat_rows():
 		var stat: Stat.Type = row[0]
@@ -257,8 +257,8 @@ func _rebuild_stats() -> void:
 
 # A stat profile summed from the loadout's modules (zeros when empty). The grid owns the counting rule
 # (only fully-enabled modules count); the outfitting bay has no disabled cells, so this reads the lot.
-func _profile() -> StatBlock:
-	return _module_grid.profile() if _module_grid != null else StatBlock.new()
+func _profile() -> StarshipStats:
+	return _module_grid.profile() if _module_grid != null else StarshipStats.new()
 
 # One stat row: [tile][name ............ value]. The tile slot keeps its size even when the stat has no
 # tile, so the name column stays aligned. The caller supplies the value text and its color (green/red when

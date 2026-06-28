@@ -20,7 +20,7 @@ func add_new() -> Resource:
 	var module := ModuleBlueprint.new()
 	module.name = "New Module"
 	module.id = _next_id()
-	module.stats = StatBlock.new()
+	module.stats = StarshipStats.new()
 	module.shape = PieceShape.from_offsets([Vector2i.ZERO] as Array[Vector2i])
 	modules.append(module)
 	return module

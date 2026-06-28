@@ -43,9 +43,10 @@ class Diagram {
     this.hgap = opts.hgap || 50;
     this.rvgap = opts.rvgap || 10;
     this.left0 = opts.left0 || 60;
+    this.kinds = opts.kinds ? { ...KINDS, ...opts.kinds } : KINDS;  // per-drawing color overrides (default palette otherwise)
   }
   place(name, x, y, w, fields, note) {
-    const k = KINDS[kindOf(note)];
+    const k = this.kinds[kindOf(note)];
     const s = E.schema(Math.round(x), Math.round(y), w, name, fields || [], { ...k, ...(note ? { note } : {}) });
     this.els.push(...s.elements); this.box[name] = s; return s;
   }
@@ -103,7 +104,7 @@ class Diagram {
     this.els.push(E.rect(KX, KY, KW, KH, { strokeColor: "#30363d", backgroundColor: "#161b22", roughness: 0, strokeWidth: 1 }));
     this.els.push(E.text(KX + 14, KY + 9, "Key", { fontSize: 14, fontFamily: 2, strokeColor: "#e6edf3" }));
     rows.forEach(([c, label], i) => {
-      const color = KINDS[c] ? KINDS[c].strokeColor : c;
+      const color = this.kinds[c] ? this.kinds[c].strokeColor : c;
       const y = KY + 36 + i * 26;
       this.els.push(E.rect(KX + 14, y, 20, 14, { strokeColor: color, backgroundColor: color, fillStyle: "solid", roughness: 0, strokeWidth: 1 }));
       this.els.push(E.text(KX + 44, y - 2, label, { fontSize: 13, fontFamily: 2, strokeColor: "#c9d1d9" }));

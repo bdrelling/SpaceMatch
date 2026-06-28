@@ -11,7 +11,7 @@ var combatant: int = -1
 ## The acting combatant's effective stats (permanent module-grid profile + temporary buffs), filled by the
 ## host for ON_CLEAR. Rules read it to bonus their grant — the damage stat adds to the hit, each colored stat
 ## to the resource its tile banks. Null when no ship backs the mover (e.g. the standalone scene).
-var actor_stats: StatBlock
+var actor_stats: StarshipStats
 
 # --- MOVE_RESOLVED inputs ---
 ## The largest match cleared during the move (what the extra-turn rule measures a "match-N" by).

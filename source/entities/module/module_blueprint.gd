@@ -1,6 +1,6 @@
 class_name ModuleBlueprint
 extends Resource
-## Static data for a ship module: its identity, look, footprint [PieceShape], and the [StatBlock] it
+## Static data for a ship module: its identity, look, footprint [PieceShape], and the [StarshipStats] it
 ## contributes to a ship's stat profile when slotted into a [ModuleGrid]. One shared resource per
 ## module type.
 
@@ -8,7 +8,7 @@ extends Resource
 @export var name: String
 @export var color: Color = Color.WHITE
 @export var shape: PieceShape
-@export var stats: StatBlock
+@export var stats: StarshipStats
 ## Abilities this module grants its ship — e.g. a Repair module granting a Repair ability. Aggregated into the
 ## ship's ability set while the module is enabled (see [method ModuleGridState.abilities]).
 @export var abilities: Array[MatchAbility] = []

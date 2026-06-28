@@ -1,5 +1,5 @@
 class_name Stat
-## The ship stats a module contributes to. A module's contribution is authored as a [StatBlock];
+## The ship stats a module contributes to. A module's contribution is authored as a [StarshipStats];
 ## a ship's profile is the sum of its slotted modules' blocks.
 
 ## DAMAGE backs the attack tile — it's the ship's combat stat. Scrap and Warp are not ship stats: the scrap

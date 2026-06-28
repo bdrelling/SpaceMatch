@@ -178,14 +178,20 @@ test-debug: ## Run tests with debug output
 # CLEANUP
 # =============================================================================
 
-setup: ## Link docs/obsidian to $OBSIDIAN_VAULT
+setup: ## Link docs/obsidian to $OBSIDIAN_VAULT and sync it into Claude settings
 	@if [ -z "$(OBSIDIAN_VAULT)" ]; then \
 		echo "ERROR: OBSIDIAN_VAULT is not set. Set it in .env.local or your shell."; \
 		exit 1; \
 	fi
 	@target=`echo "$(OBSIDIAN_VAULT)" | sed "s|^ *~|$$HOME|; s|^ *||"`; \
 		ln -sfn "$$target" docs/obsidian; \
-		echo "Linked docs/obsidian -> $$target"
+		echo "Linked docs/obsidian -> $$target"; \
+		mkdir -p .claude; \
+		settings=.claude/settings.local.json; \
+		[ -f "$$settings" ] || echo '{}' > "$$settings"; \
+		tmp=`mktemp`; \
+		jq --arg v "$$target" '.env.OBSIDIAN_VAULT = $$v' "$$settings" > "$$tmp" && mv "$$tmp" "$$settings"; \
+		echo "Synced env.OBSIDIAN_VAULT into $$settings"
 
 clean: ## Clean build artifacts
 	@rm -rf reports/

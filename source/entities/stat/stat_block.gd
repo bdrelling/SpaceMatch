@@ -1,5 +1,5 @@
-class_name StatBlock
-extends Resource
+class_name StarshipStats
+extends StatBlock
 ## A vector of ship-stat contributions. A module authors one as its +/- effect when slotted; summing
 ## the blocks of a ship's slotted modules ([method add]) gives the ship's stat profile.
 
@@ -54,7 +54,7 @@ func add_value(stat: Stat.Type, amount: int) -> void:
 		Stat.Type.ENERGY: energy += amount
 
 ## Sums [param other]'s contributions into this block.
-func add(other: StatBlock) -> void:
+func add(other: StarshipStats) -> void:
 	if other == null:
 		return
 	power += other.power

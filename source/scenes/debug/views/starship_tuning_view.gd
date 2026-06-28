@@ -6,7 +6,7 @@ extends DebugView
 ## don't persist. Reads the running game off [member DebugConfig.active_state]; shows a notice when no encounter
 ## is live (e.g. from the main menu).
 
-# The stats that move combat, paired with their [StatBlock] property and the tile whose colour tags them: the
+# The stats that move combat, paired with their [StarshipStats] property and the tile whose colour tags them: the
 # four colored stat tiles each boost the resource they bank, the damage tile boosts the hit it deals.
 const _STATS: Array[Dictionary] = [
 	{"label": "Power", "prop": "power", "kind": 0},

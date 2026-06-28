@@ -111,7 +111,7 @@ func test_move_off_silhouette_is_rejected() -> void:
 func test_disabled_cell_drops_its_module_from_the_profile() -> void:
 	var grid := _full_grid()
 	var powered := _module()
-	powered.stats = StatBlock.new()
+	powered.stats = StarshipStats.new()
 	powered.stats.power = 5
 	grid.place(powered, Vector2i(0, 0), 0)
 	# No disabled cells: the module is enabled and counts.
@@ -126,7 +126,7 @@ func test_disabling_any_cell_deactivates_a_multi_cell_module() -> void:
 	# "Only modules with all enabled cells count" — disabling one cell of a two-cell module kills the whole thing.
 	var grid := _full_grid()
 	var module := _module([Vector2i(0, 0), Vector2i(1, 0)])
-	module.stats = StatBlock.new()
+	module.stats = StarshipStats.new()
 	module.stats.shields = 3
 	grid.place(module, Vector2i(0, 0), 0)
 	assert_int(grid.profile().shields).is_equal(3)
