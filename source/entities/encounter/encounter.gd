@@ -27,7 +27,8 @@ static func create(player_state: StarshipState = null, opponent_blueprint: Stars
 	encounter.add_child(player_ship)
 	encounter.add_child(opponent_ship)
 	var enc := EncounterState.new()
-	enc.player = player_ship.state
-	enc.opponent = opponent_ship.state
+	# Each combatant fights as an encounter-scoped ship that also carries its banked resources and turn budget.
+	enc.player = EncounterStarshipState.for_combatant(player_ship.state)
+	enc.opponent = EncounterStarshipState.for_combatant(opponent_ship.state)
 	encounter.state = enc
 	return encounter

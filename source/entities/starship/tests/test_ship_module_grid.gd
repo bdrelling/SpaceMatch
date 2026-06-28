@@ -161,7 +161,8 @@ func test_generator_stamps_blueprint_modules() -> void:
 	blueprint.rows = 3
 	var placements: Array[ModulePlacement] = [placement]
 	blueprint.modules = placements
-	var grid := auto_free(ModuleGrid.create(blueprint)).state
+	var module_grid: ModuleGrid = auto_free(ModuleGrid.create(blueprint))
+	var grid := module_grid.state
 	assert_int(grid.modules.size()).is_equal(1)
 	assert_object(grid.module_at(Vector2i(1, 1))).is_same(placement.module)
 	assert_object(grid.module_at(Vector2i(2, 1))).is_same(placement.module)

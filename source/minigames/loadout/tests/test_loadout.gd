@@ -10,7 +10,7 @@ func _minigame() -> LoadoutMinigame:
 
 # The full scene mounted in the tree, so the @onready view + label nodes resolve.
 func _scene() -> LoadoutMinigame:
-	var scene: LoadoutMinigame = auto_free(load("res://minigames/loadout/loadout.tscn").instantiate())
+	var scene: LoadoutMinigame = auto_free((load("res://minigames/loadout/loadout.tscn") as PackedScene).instantiate())
 	add_child(scene)
 	return scene
 

@@ -213,8 +213,8 @@ func _ready() -> void:
 	_build_move_debug()
 	_refresh_move_debug()
 
-	# The match is set up — let SETUP rules seed starting state before the first turn.
-	_run_phase(MatchPhase.SETUP, _phase_context())
+	# The match is set up — let SETUP then TURN_START rules seed starting state and the first mover's budget.
+	_begin_encounter()
 
 func actions() -> Array[MinigameAction]:
 	# The player-facing Rules button lives in the top bar — a read-only summary of this match's rules.
@@ -258,6 +258,10 @@ func bind_session() -> void:
 	# match over on a fresh one. The very first bind rides on the board _ready already poured.
 	if _bound:
 		_restart_board()
+	else:
+		# First mount on the host's encounter — seed its opening turn (SETUP + TURN_START) the way _ready did
+		# for the standalone fallback, so the bound ships get their turn budget before the first move.
+		_begin_encounter()
 	_bound = true
 
 func _refresh_portraits() -> void:
@@ -333,7 +337,8 @@ func _readouts_for(combatant: int) -> PackedStringArray:
 
 # A combatant's banked count of a kind this encounter (zero when there's no encounter yet).
 func _resource_of(combatant: int, kind: int) -> int:
-	return _encounter.resource_of(combatant, kind) if _encounter != null else 0
+	var ship: EncounterStarshipState = _encounter.ship_of(combatant) if _encounter != null else null
+	return ship.resource_of(kind) if ship != null else 0
 
 # Drills into a combatant's module grid: hands the shell that combatant's ship so the Loadout stage
 # opens it. No ship (e.g. running this scene standalone, no bound session) ⇒ no drill.
@@ -481,13 +486,25 @@ func _on_move_resolved(made_match: bool, cells_cleared: int) -> void:
 	ctx.max_run = max_run
 	_run_phase(MatchPhase.MOVE_RESOLVED, ctx)
 	var go_again: bool = ctx.go_again
+	var go_again_reason: String = ctx.go_again_reason
 	# Maxing warp keeps the board with the player so they can choose to Jump before the turn passes.
 	if _encounter != null and _encounter.active_combatant() == EncounterState.Combatant.PLAYER and _encounter.can_jump(EncounterState.Combatant.PLAYER):
 		go_again = true
+	# A resolved move spends one of the mover's actions; the turn passes only once they're out. Extra turns and
+	# a pending Jump are free — they keep the board without spending. With the default one-action budget this is
+	# exactly "a move ends your turn".
 	if _encounter != null and not go_again:
-		_advance_turn()
+		var ship: EncounterStarshipState = _encounter.ship_of(_encounter.active_combatant())
+		if ship != null:
+			ship.consume_action()
+		if ship != null and ship.has_actions_left():
+			go_again = true
+			if go_again_reason == "":
+				go_again_reason = "Action left"
+		else:
+			_advance_turn()
 	if go_again:
-		_message = "%s — %s! Take another action." % [mover, ctx.go_again_reason]
+		_message = "%s — %s! Take another action." % [mover, go_again_reason]
 	elif cells_cleared > 0:
 		_message = "%s cleared %d tiles — %s's turn." % [mover, cells_cleared, _active_name()]
 	else:
@@ -623,6 +640,10 @@ func _resolve_clear(board: GridState, cells: Array[Vector2i], is_path: bool) -> 
 	ctx.damage_cells = damage_cells
 	ctx.warp_bars = warp_bars
 	ctx.scoring = rules.scoring if rules != null else null
+	# The mover's scoring offset (set at turn start by an OffsetScoringRule; zero by default) shifts every
+	# match's reward down — read here so reward_for honors it without depending on rule-firing order.
+	var actor_ship: EncounterStarshipState = _encounter.ship_of(active)
+	ctx.score_offset = actor_ship.score_offset if actor_ship != null else 0
 	ctx.wallet = _wallet()
 	ctx.actor_stats = _effective_stats(active)
 	_run_phase(MatchPhase.ON_CLEAR, ctx)
@@ -803,8 +824,10 @@ func _use_ability(combatant: int, ability: MatchAbility) -> void:
 	if _encounter == null or _game_over or _resolving or not _affordable(combatant, ability):
 		return
 	_resolving = true  # freezes input and the buttons until the action finishes resolving
+	var actor: EncounterStarshipState = _encounter.ship_of(combatant)
 	for cost: AbilityCost in ability.costs:
-		_encounter.spend_resource(combatant, cost.kind, cost.amount)
+		if actor != null:
+			actor.spend_resource(cost.kind, cost.amount)
 	_apply_ability_effect(combatant, ability)
 	_refresh_portraits()
 	_message = "%s used %s." % [_name_for(combatant), ability.ability_name]
@@ -816,7 +839,20 @@ func _use_ability(combatant: int, ability: MatchAbility) -> void:
 	# Let the effects and their animation play out before the turn passes — don't hand over mid-resolve.
 	await _settle_action()
 	_resolving = false
-	_advance_turn()
+	# What an ability does to the turn is the mover's policy (default ENDS_TURN — the original behavior): end the
+	# turn, spend one action like a move, or be free (keep acting, gated only by resources).
+	var policy: int = actor.ability_turn_cost if actor != null else ActionBudgetRule.AbilityTurnCost.ENDS_TURN
+	var ends_turn: bool = true
+	if policy == ActionBudgetRule.AbilityTurnCost.FREE:
+		ends_turn = false
+	elif policy == ActionBudgetRule.AbilityTurnCost.COSTS_ACTION:
+		if actor != null:
+			actor.consume_action()
+		ends_turn = actor == null or not actor.has_actions_left()
+	if ends_turn:
+		_advance_turn()
+	else:
+		_refresh_abilities()
 	# If that handed the board to the AI opponent, set it playing; if it's the player's turn, this no-ops.
 	_take_opponent_turn_if_needed()
 
@@ -863,8 +899,11 @@ func _apply_effect(combatant: int, effect: AbilityEffect) -> void:
 
 # Removes [param amount] from each of [param combatant]'s four stat resources — the Siphon drain.
 func _drain_resources(combatant: int, amount: int) -> void:
+	var ship: EncounterStarshipState = _encounter.ship_of(combatant) if _encounter != null else null
+	if ship == null:
+		return
 	for kind: int in _STAT_KINDS:
-		_encounter.spend_resource(combatant, kind, amount)
+		ship.spend_resource(kind, amount)
 
 # Disables one of [param target]'s still-active modules for [param turns] turns — disabling one of its cells
 # deactivates the whole module, so it stops counting toward [param target]'s stats until it re-enables. Picks
@@ -893,8 +932,11 @@ func _damage_text(result: int, dealt: int) -> String:
 func _affordable(combatant: int, ability: MatchAbility) -> bool:
 	if _encounter == null:
 		return false
+	var ship: EncounterStarshipState = _encounter.ship_of(combatant)
+	if ship == null:
+		return false
 	for cost: AbilityCost in ability.costs:
-		if cost != null and _encounter.resource_of(combatant, cost.kind) < cost.amount:
+		if cost != null and ship.resource_of(cost.kind) < cost.amount:
 			return false
 	return true
 
@@ -1256,8 +1298,12 @@ func _split_board_resources() -> void:
 			_DAMAGE_KIND, _WARP_KIND:
 				pass  # neither damage nor warp is a banked resource
 			_:
-				_encounter.add_resource(EncounterState.Combatant.PLAYER, kind, each)
-				_encounter.add_resource(EncounterState.Combatant.OPPONENT, kind, each)
+				var player_ship: EncounterStarshipState = _encounter.ship_of(EncounterState.Combatant.PLAYER)
+				var opponent_ship: EncounterStarshipState = _encounter.ship_of(EncounterState.Combatant.OPPONENT)
+				if player_ship != null:
+					player_ship.add_resource(kind, each)
+				if opponent_ship != null:
+					opponent_ship.add_resource(kind, each)
 	_refresh_portraits()
 
 # Whether the board has a move to play. Unknown for non-swap modes (no cheap test) counts as "yes", so only
@@ -1403,7 +1449,7 @@ func _restart_board() -> void:
 	_refresh_move_debug()
 	_message = _prompt_for_mode()
 	_compose_status()
-	_run_phase(MatchPhase.SETUP, _phase_context())  # a fresh match is set up — let SETUP rules seed it
+	_begin_encounter()  # a fresh match is set up — seed SETUP + the first mover's turn-start budget
 
 func _hide_end_overlay() -> void:
 	if _end_overlay != null:
@@ -1472,6 +1518,13 @@ func _advance_turn() -> void:
 	_run_phase(MatchPhase.TURN_END, _phase_context())
 	_encounter.advance_turn()
 	_refresh_turn_tracker()
+	_run_phase(MatchPhase.TURN_START, _phase_context())
+
+# Seeds a fresh match's opening turn: fires SETUP, then TURN_START for the first mover — so the turn-start rules
+# (action budget, resource capacity, scoring offset) configure them before they act, exactly as every later
+# turn boundary does via [method _advance_turn].
+func _begin_encounter() -> void:
+	_run_phase(MatchPhase.SETUP, _phase_context())
 	_run_phase(MatchPhase.TURN_START, _phase_context())
 
 #endregion

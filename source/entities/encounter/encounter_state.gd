@@ -18,13 +18,13 @@ const TURNS_PER_ROUND: int = 2
 ## resource arrays; a fresh encounter starts them all at zero.
 const RESOURCE_KINDS: int = 7
 
-## The two ships fighting this encounter — pure data; the [Encounter] node builds them (see
-## [method Encounter.create]). Both are encounter-scoped clones: the player's persistent ship is deep-copied
-## into [member player] so combat damage and Debug edits hit the clone and a fresh fight starts from a fresh
-## copy. Each ship owns its own [member StarshipState.health].
-@export var player: StarshipState
+## The two combatants — each an [EncounterStarshipState], the encounter-scoped form of a ship that also holds
+## its banked resources and turn budget (see [method Encounter.create]). The player's is built from the
+## persistent ship so combat damage and Debug edits stay on the fight copy; the opponent is its own ship, not a
+## copy of the player's. Each owns its own [member StarshipState.health].
+@export var player: EncounterStarshipState
 ## The opponent's ship — its own default, distinct from the player's. Human-controlled for now; AI lands later.
-@export var opponent: StarshipState
+@export var opponent: EncounterStarshipState
 
 ## 1-based round counter.
 @export var round_number: int = 1
@@ -63,11 +63,6 @@ var opponent_max_health: int:
 @export var player_disabled_cells: Dictionary[Vector2i, int] = {}
 @export var opponent_disabled_cells: Dictionary[Vector2i, int] = {}
 
-## Each combatant's running count of tiles matched this encounter, per [MatchTile] kind — the resources the
-## portrait readouts show and abilities spend. Encounter-scoped, so a fresh encounter starts them at zero.
-@export var player_resources: PackedInt32Array = PackedInt32Array()
-@export var opponent_resources: PackedInt32Array = PackedInt32Array()
-
 ## Each combatant's warp capacity — the bars their side of the meter holds before they can Jump (see
 ## [method can_jump]) to win outright. Granted by warp-core modules, so it's a copy of the ship's
 ## [member StatBlock.warp_capacity]; the match seeds these at setup. Zero means that ship can't warp at all —
@@ -87,11 +82,8 @@ var opponent_max_health: int:
 @export var warp_winner: int = -1
 
 func _init() -> void:
-	# Pure-data defaults only — the combatant ships are built by the [Encounter] node, never fabricated here.
-	if player_resources.is_empty():
-		player_resources.resize(RESOURCE_KINDS)
-	if opponent_resources.is_empty():
-		opponent_resources.resize(RESOURCE_KINDS)
+	# Pure-data defaults only — the combatant ships are built by the [Encounter] node, never fabricated here;
+	# each carries its own resource tally (see [EncounterStarshipState]).
 	# Fresh per instance so the two combatants never share one buff block (exported Resource defaults can).
 	if player_buffs == null:
 		player_buffs = StatBlock.new()
@@ -106,8 +98,9 @@ func active_combatant() -> Combatant:
 func opponent_of(combatant: Combatant) -> Combatant:
 	return Combatant.OPPONENT if combatant == Combatant.PLAYER else Combatant.PLAYER
 
-## The ship [param combatant] is fighting in — the owner of its health, stats, and module grid.
-func ship_of(combatant: Combatant) -> StarshipState:
+## The ship [param combatant] is fighting in — the owner of its health, stats, module grid, and banked
+## resources (the encounter-scoped [EncounterStarshipState]).
+func ship_of(combatant: Combatant) -> EncounterStarshipState:
 	return player if combatant == Combatant.PLAYER else opponent
 
 ## [param combatant]'s current health — its ship's current hull (0 if it has no ship).
@@ -262,34 +255,6 @@ func jump(combatant: Combatant) -> void:
 		return
 	warp_winner = combatant
 	warp = 0
-
-## [param combatant]'s banked count of [param kind] tiles this encounter (zero for an unknown kind).
-func resource_of(combatant: Combatant, kind: int) -> int:
-	if kind < 0:
-		return 0
-	if combatant == Combatant.PLAYER:
-		return player_resources[kind] if kind < player_resources.size() else 0
-	return opponent_resources[kind] if kind < opponent_resources.size() else 0
-
-## Banks [param amount] of [param kind] into [param combatant]'s resources.
-func add_resource(combatant: Combatant, kind: int, amount: int) -> void:
-	if amount <= 0 or kind < 0:
-		return
-	if combatant == Combatant.PLAYER:
-		if kind < player_resources.size():
-			player_resources[kind] += amount
-	elif kind < opponent_resources.size():
-		opponent_resources[kind] += amount
-
-## Spends [param amount] of [param kind] from [param combatant]'s resources (never below zero).
-func spend_resource(combatant: Combatant, kind: int, amount: int) -> void:
-	if amount <= 0 or kind < 0:
-		return
-	if combatant == Combatant.PLAYER:
-		if kind < player_resources.size():
-			player_resources[kind] = maxi(0, player_resources[kind] - amount)
-	elif kind < opponent_resources.size():
-		opponent_resources[kind] = maxi(0, opponent_resources[kind] - amount)
 
 ## Ends the active combatant's turn: advances to the next turn, rolling into the next round once both
 ## combatants have moved.

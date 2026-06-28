@@ -29,6 +29,9 @@ func apply(context: RuleContext) -> void:
 	var ctx := context as MatchRuleContext
 	if ctx == null or ctx.encounter == null:
 		return
+	var ship: EncounterStarshipState = ctx.encounter.ship_of(ctx.combatant)
+	if ship == null:
+		return
 	for kind: int in ctx.counts:
 		if not kinds.has(kind):
 			continue
@@ -39,5 +42,6 @@ func apply(context: RuleContext) -> void:
 		var stat: int = Stat.for_tile(kind)
 		if ctx.actor_stats != null and stat != -1:
 			reward += maxi(0, ctx.actor_stats.value(stat))
-		ctx.encounter.add_resource(ctx.combatant, kind, reward)
+		# Banks into the mover's tally, clamped to its capacity for this kind (unlimited by default).
+		ship.add_resource(kind, reward)
 		ctx.visuals.append({"type": "resource", "kind": kind, "amount": reward, "center": ctx.centers.get(kind, Vector2.ZERO)})

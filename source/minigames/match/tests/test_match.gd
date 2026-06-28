@@ -15,7 +15,7 @@ func _encounter() -> EncounterState:
 # Acts as a host mounting the match: opens an encounter on the session (a clone of the player ship vs the
 # computer default) and binds the match to it, the way [Game] / [EncounterScreen] do.
 func _host_bind(game: MatchMinigame) -> void:
-	var enc := auto_free(Encounter.create(GameSession.game_state.starship.clone()))
+	var enc: Encounter = auto_free(Encounter.create(GameSession.game_state.starship.clone()))
 	GameSession.game_state.encounter = enc.state
 	game.bind_session()
 
@@ -105,7 +105,7 @@ func test_warp_match_charges_player() -> void:
 	_force_kind(board, cells, _WARP_KIND)
 	game._on_cells_cleared(board, cells)
 	assert_int(game._encounter.warp).is_equal(1)
-	assert_int(game._encounter.player_resources[_WARP_KIND]).is_equal(0)
+	assert_int(game._encounter.player.resources[_WARP_KIND]).is_equal(0)
 	game.queue_free()
 
 # Bigger Warp matches charge more bars: a 5-match is three (the match size minus two).
@@ -186,7 +186,7 @@ func test_player_tally_banks_only_into_player_readout() -> void:
 	await await_idle_frame()
 	var player_before: int = int(game._player_readouts()[_COMBAT_KIND])
 	var opponent_before: int = int(game._opponent_readouts()[_COMBAT_KIND])
-	game._encounter.player_resources[_COMBAT_KIND] += 5
+	game._encounter.player.resources[_COMBAT_KIND] += 5
 	assert_int(int(game._player_readouts()[_COMBAT_KIND])).is_equal(player_before + 5)
 	assert_int(int(game._opponent_readouts()[_COMBAT_KIND])).is_equal(opponent_before)
 	game.queue_free()
@@ -196,7 +196,7 @@ func test_opponent_tally_banks_only_into_opponent_readout() -> void:
 	await await_idle_frame()
 	var player_before: int = int(game._player_readouts()[_COMBAT_KIND])
 	var opponent_before: int = int(game._opponent_readouts()[_COMBAT_KIND])
-	game._encounter.opponent_resources[_COMBAT_KIND] += 5
+	game._encounter.opponent.resources[_COMBAT_KIND] += 5
 	assert_int(int(game._opponent_readouts()[_COMBAT_KIND])).is_equal(opponent_before + 5)
 	assert_int(int(game._player_readouts()[_COMBAT_KIND])).is_equal(player_before)
 	game.queue_free()
@@ -213,15 +213,15 @@ func test_clear_banks_to_active_combatant() -> void:
 	# Turn 1 is the player's.
 	assert_int(game._encounter.active_combatant()).is_equal(EncounterState.Combatant.PLAYER)
 	game._on_cells_cleared(board, cells)
-	assert_int(game._encounter.player_resources[kind]).is_equal(1)
-	assert_int(game._encounter.opponent_resources[kind]).is_equal(0)
+	assert_int(game._encounter.player.resources[kind]).is_equal(1)
+	assert_int(game._encounter.opponent.resources[kind]).is_equal(0)
 
 	# After a turn flips to the opponent, the same clear banks to them instead.
 	game._encounter.advance_turn()
 	assert_int(game._encounter.active_combatant()).is_equal(EncounterState.Combatant.OPPONENT)
 	game._on_cells_cleared(board, cells)
-	assert_int(game._encounter.opponent_resources[kind]).is_equal(1)
-	assert_int(game._encounter.player_resources[kind]).is_equal(1)
+	assert_int(game._encounter.opponent.resources[kind]).is_equal(1)
+	assert_int(game._encounter.player.resources[kind]).is_equal(1)
 	game.queue_free()
 
 # The encounter opens on the player (turn 1), and after the player moves the AI
@@ -273,7 +273,7 @@ func test_default_rules_match_the_designed_config() -> void:
 # The default starship carries the standard hull kit: a match-4 extra-turn rule. This is where extra turns
 # live now — on the ship, composed into the match per turn — not on the match's own ruleset.
 func test_default_starship_carries_the_extra_turn_kit() -> void:
-	var ship := GameState.new().starship
+	var ship := GameSession.game_state.starship
 	var extra_turn := ship.ruleset.find(&"extra_turn") as ExtraTurnRule
 	assert_object(extra_turn).is_not_null()
 	assert_int(extra_turn.min_match).is_equal(4)
@@ -402,7 +402,7 @@ func test_spawn_weights_bias_the_pool() -> void:
 # Evasive Maneuvers / Siphon / Shields — plus a fifth Disruptor that also spends green. Abilities are the
 # ship's now, so they're read off the default starship, not the match rules.
 func test_default_starship_defines_the_standard_abilities() -> void:
-	var abilities := GameState.new().starship.abilities
+	var abilities := GameSession.game_state.starship.abilities
 	assert_int(abilities.size()).is_equal(5)
 	for i: int in 4:
 		assert_int(abilities[i].costs[0].kind).is_equal(i)
@@ -424,10 +424,10 @@ func test_ability_use_spends_gems_and_deals_damage() -> void:
 	var game := _make(MatchRules.new(), MatchBoardView.InputMode.LINE_SHIFT, false)
 	await await_idle_frame()
 	var ability := MatchAbility.make("Test", AbilityCost.make(_COMBAT_KIND, 10), AttackEffect.make(5))
-	game._encounter.player_resources[_COMBAT_KIND] = 12
+	game._encounter.player.resources[_COMBAT_KIND] = 12
 	var max_health: int = game._encounter.opponent_max_health
 	game._on_ability_pressed(ability)
-	assert_int(game._encounter.player_resources[_COMBAT_KIND]).is_equal(2)
+	assert_int(game._encounter.player.resources[_COMBAT_KIND]).is_equal(2)
 	assert_int(game._encounter.opponent_health).is_equal(max_health - 5)
 	game.queue_free()
 
@@ -437,7 +437,7 @@ func test_using_an_ability_ends_the_turn() -> void:
 	var game := _make(MatchRules.new(), MatchBoardView.InputMode.LINE_SHIFT, false)
 	await await_idle_frame()
 	var ability := MatchAbility.make("Test", AbilityCost.make(_COMBAT_KIND, 5), AttackEffect.make(5))
-	game._encounter.player_resources[_COMBAT_KIND] = 10
+	game._encounter.player.resources[_COMBAT_KIND] = 10
 	assert_int(game._encounter.active_combatant()).is_equal(EncounterState.Combatant.PLAYER)
 	game._use_ability(EncounterState.Combatant.PLAYER, ability)
 	assert_int(game._encounter.active_combatant()).is_equal(EncounterState.Combatant.OPPONENT)
@@ -449,7 +449,7 @@ func test_opponent_picks_an_affordable_ability() -> void:
 	var game := _make(MatchRules.default())
 	await await_idle_frame()
 	assert_object(game._best_affordable_ability(EncounterState.Combatant.OPPONENT)).is_null()
-	game._encounter.opponent_resources[1] = 5  # enough for Evasive Maneuvers (kind 1, the cost-5 ability)
+	game._encounter.opponent.resources[1] = 5  # enough for Evasive Maneuvers (kind 1, the cost-5 ability)
 	var pick: MatchAbility = game._best_affordable_ability(EncounterState.Combatant.OPPONENT)
 	assert_object(pick).is_not_null()
 	assert_int(pick.costs[0].kind).is_equal(1)
@@ -460,7 +460,7 @@ func test_opponent_picks_an_affordable_ability() -> void:
 func test_opponent_does_not_recast_an_active_dodge() -> void:
 	var game := _make(MatchRules.default())
 	await await_idle_frame()
-	game._encounter.opponent_resources[1] = 5  # enough for Evasive Maneuvers only
+	game._encounter.opponent.resources[1] = 5  # enough for Evasive Maneuvers only
 	assert_object(game._best_affordable_ability(EncounterState.Combatant.OPPONENT)).is_not_null()
 	game._encounter.set_dodge(EncounterState.Combatant.OPPONENT, true)
 	assert_object(game._best_affordable_ability(EncounterState.Combatant.OPPONENT)).is_null()
@@ -506,8 +506,8 @@ func test_reload_splits_board_resources_between_players() -> void:
 	game._split_board_resources()
 	for k: int in expected:
 		var each: int = expected[k] / 2  # floor; the odd tile is discarded
-		assert_int(game._encounter.player_resources[k]).is_equal(each)
-		assert_int(game._encounter.opponent_resources[k]).is_equal(each)
+		assert_int(game._encounter.player.resources[k]).is_equal(each)
+		assert_int(game._encounter.opponent.resources[k]).is_equal(each)
 	game.queue_free()
 
 # An ability the player can't afford does nothing — no damage, no gems drained below the cost.
@@ -515,10 +515,10 @@ func test_ability_unaffordable_does_nothing() -> void:
 	var game := _make()
 	await await_idle_frame()
 	var ability := MatchAbility.make("Test", AbilityCost.make(_COMBAT_KIND, 10), AttackEffect.make(5))
-	game._encounter.player_resources[_COMBAT_KIND] = 3
+	game._encounter.player.resources[_COMBAT_KIND] = 3
 	var health_before: int = game._encounter.opponent_health
 	game._on_ability_pressed(ability)
-	assert_int(game._encounter.player_resources[_COMBAT_KIND]).is_equal(3)
+	assert_int(game._encounter.player.resources[_COMBAT_KIND]).is_equal(3)
 	assert_int(game._encounter.opponent_health).is_equal(health_before)
 	game.queue_free()
 
@@ -680,7 +680,7 @@ func test_shield_ability_grants_and_absorbs() -> void:
 	var game := _make(MatchRules.new(), MatchBoardView.InputMode.LINE_SHIFT, false)
 	await await_idle_frame()
 	var shield_ability := MatchAbility.make("Shields", AbilityCost.make(3, 5), ShieldEffect.make(10))
-	game._encounter.player_resources[3] = 5
+	game._encounter.player.resources[3] = 5
 	game._use_ability(EncounterState.Combatant.PLAYER, shield_ability)
 	assert_int(game._encounter.player_shield).is_equal(10)
 	game._encounter.deal_damage(EncounterState.Combatant.PLAYER, 6)
@@ -733,7 +733,7 @@ func test_matched_tile_resource_includes_stat_bonus() -> void:
 	var cells: Array[Vector2i] = [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0)]
 	_force_kind(board, cells, 0)  # combat tile -> POWER
 	game._on_cells_cleared(board, cells)
-	assert_int(game._encounter.player_resources[0]).is_equal(7)  # 3 matched + 4 Power
+	assert_int(game._encounter.player.resources[0]).is_equal(7)  # 3 matched + 4 Power
 	game.queue_free()
 
 # End to end: disabling a module drops its stat from the player's profile, so matches bank less. The default
@@ -745,12 +745,12 @@ func test_disabling_a_module_lowers_its_tile_haul() -> void:
 	var cells: Array[Vector2i] = [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0)]
 	_force_kind(board, cells, 1)  # propulsion tile -> SPEED, which the Engine contributes +4
 	game._on_cells_cleared(board, cells)
-	assert_int(game._encounter.player_resources[1]).is_equal(7)  # 3 matched + 4 Speed (Engine)
+	assert_int(game._encounter.player.resources[1]).is_equal(7)  # 3 matched + 4 Speed (Engine)
 	# Knock out the Engine (authored at (2, 4)); its Speed no longer counts, so the same match banks just 3.
 	game._encounter.disable_cell(EncounterState.Combatant.PLAYER, Vector2i(2, 4), 3)
 	_force_kind(board, cells, 1)
 	game._on_cells_cleared(board, cells)
-	assert_int(game._encounter.player_resources[1]).is_equal(10)  # prior 7 + (3 matched + 0 Speed)
+	assert_int(game._encounter.player.resources[1]).is_equal(10)  # prior 7 + (3 matched + 0 Speed)
 	game.queue_free()
 
 # Siphon removes its magnitude from each of the opponent's four stat resources.
@@ -758,12 +758,12 @@ func test_siphon_drains_opponent_resources() -> void:
 	var game := _make(MatchRules.new(), MatchBoardView.InputMode.LINE_SHIFT, false)
 	await await_idle_frame()
 	for k: int in 4:
-		game._encounter.opponent_resources[k] = 5
+		game._encounter.opponent.resources[k] = 5
 	var drain := MatchAbility.make("Siphon", AbilityCost.make(2, 5), DrainEffect.make(2))
-	game._encounter.player_resources[2] = 5
+	game._encounter.player.resources[2] = 5
 	game._use_ability(EncounterState.Combatant.PLAYER, drain)
 	for k: int in 4:
-		assert_int(game._encounter.opponent_resources[k]).is_equal(3)
+		assert_int(game._encounter.opponent.resources[k]).is_equal(3)
 	game.queue_free()
 
 # Disruptor disables one of the opponent's modules: it records a single disabled cell on the opponent's
@@ -772,7 +772,7 @@ func test_disruptor_disables_an_opponent_module() -> void:
 	var game := _make(MatchRules.new(), MatchBoardView.InputMode.LINE_SHIFT, false)
 	await await_idle_frame()
 	var disrupt := MatchAbility.make("Disruptor", AbilityCost.make(2, 5), DisableEffect.make(3))
-	game._encounter.player_resources[2] = 5
+	game._encounter.player.resources[2] = 5
 	assert_int(game._encounter.disabled_cells_of(EncounterState.Combatant.OPPONENT).size()).is_equal(0)
 	game._use_ability(EncounterState.Combatant.PLAYER, disrupt)
 	var disabled: Array[Vector2i] = game._encounter.disabled_cells_of(EncounterState.Combatant.OPPONENT)
@@ -816,14 +816,14 @@ func test_lethal_match_ends_the_quick_match() -> void:
 func test_restart_resets_the_encounter() -> void:
 	var game := _make()
 	await await_idle_frame()
-	game._encounter.player_resources[0] = 9
+	game._encounter.player.resources[0] = 9
 	game._encounter.player_health = 3
 	game._encounter.add_shield(EncounterState.Combatant.PLAYER, 5)
 	game._game_over = true
 	game._restart_encounter()
 	assert_int(game._encounter.player_health).is_equal(game._encounter.player_max_health)
 	assert_int(game._encounter.player_shield).is_equal(0)
-	assert_int(game._encounter.player_resources[0]).is_equal(0)
+	assert_int(game._encounter.player.resources[0]).is_equal(0)
 	assert_bool(game._game_over).is_false()
 	game.queue_free()
 
@@ -966,7 +966,7 @@ func test_resource_grant_rule_banks_matched_tiles() -> void:
 	centers[_COMBAT_KIND] = Vector2.ZERO
 	ctx.centers = centers
 	ResourceGrantRule.new().apply(ctx)
-	assert_int(enc.resource_of(EncounterState.Combatant.PLAYER, _COMBAT_KIND)).is_equal(4)
+	assert_int(enc.ship_of(EncounterState.Combatant.PLAYER).resource_of(_COMBAT_KIND)).is_equal(4)
 	assert_int(ctx.visuals.size()).is_equal(1)
 
 # The default MatchRules carries the baseline grant rules out of the box, so a fresh ruleset already banks.
@@ -976,6 +976,136 @@ func test_default_rules_include_baseline_grants() -> void:
 	assert_object(rules.ruleset.find(&"damage")).is_not_null()
 	assert_object(rules.ruleset.find(&"warp")).is_not_null()
 	assert_object(rules.ruleset.find(&"scrap_grant")).is_not_null()
+
+# --- Tunable knobs: capacity, scoring offset, action budget ---
+
+# The turn-start knobs ride in the baseline ruleset at their no-op defaults, so the default match plays exactly
+# as before: one action a turn (an ability ends it), unlimited resources, one-to-one scoring.
+func test_default_rules_include_turn_start_knobs_at_parity() -> void:
+	var rules := MatchRules.new()
+	var budget := rules.ruleset.find(&"action_budget") as ActionBudgetRule
+	assert_object(budget).is_not_null()
+	assert_int(budget.actions_per_turn).is_equal(1)
+	assert_int(budget.ability_turn_cost).is_equal(ActionBudgetRule.AbilityTurnCost.ENDS_TURN)
+	var offset := rules.ruleset.find(&"scoring_offset") as OffsetScoringRule
+	assert_object(offset).is_not_null()
+	assert_int(offset.offset).is_equal(0)
+	var capacity := rules.ruleset.find(&"resource_capacity") as ResourceCapacityRule
+	assert_object(capacity).is_not_null()
+	assert_bool(capacity.maximums.is_empty()).is_true()
+
+# The scoring offset shifts every match's reward down by its amount, floored at zero (3→1, 7→5); zero leaves
+# scoring one-to-one.
+func test_scoring_offset_reduces_reward() -> void:
+	var ctx := MatchRuleContext.new()
+	assert_int(ctx.reward_for(3)).is_equal(3)  # no offset → one-to-one
+	ctx.score_offset = 2
+	assert_int(ctx.reward_for(3)).is_equal(1)
+	assert_int(ctx.reward_for(7)).is_equal(5)
+	assert_int(ctx.reward_for(1)).is_equal(0)  # never negative
+
+# The OffsetScoringRule writes its offset onto the mover at turn start; with it in force a 4-match banks 4 - 2.
+func test_offset_scoring_rule_banks_reduced_reward() -> void:
+	var enc := _encounter()
+	var rule := OffsetScoringRule.new()
+	rule.offset = 2
+	var turn_ctx := MatchRuleContext.new()
+	turn_ctx.encounter = enc
+	turn_ctx.combatant = EncounterState.Combatant.PLAYER
+	rule.apply(turn_ctx)
+	assert_int(enc.ship_of(EncounterState.Combatant.PLAYER).score_offset).is_equal(2)
+	var clear_ctx := MatchRuleContext.new()
+	clear_ctx.encounter = enc
+	clear_ctx.combatant = EncounterState.Combatant.PLAYER
+	clear_ctx.score_offset = 2
+	var counts: Dictionary[int, int] = {}
+	counts[_COMBAT_KIND] = 4
+	clear_ctx.counts = counts
+	var centers: Dictionary[int, Vector2] = {}
+	centers[_COMBAT_KIND] = Vector2.ZERO
+	clear_ctx.centers = centers
+	ResourceGrantRule.new().apply(clear_ctx)
+	assert_int(enc.ship_of(EncounterState.Combatant.PLAYER).resource_of(_COMBAT_KIND)).is_equal(2)
+
+# Resource capacity clamps banking: with a maximum set a ship never holds more than it (and any surplus already
+# banked is clamped down); a zero maximum is unlimited.
+func test_resource_capacity_clamps_banking() -> void:
+	var ship := EncounterStarshipState.new()
+	ship.add_resource(_COMBAT_KIND, 100)
+	assert_int(ship.resource_of(_COMBAT_KIND)).is_equal(100)  # unlimited by default
+	ship.set_resource_maximums(PackedInt32Array([5, 0, 0, 0, 0, 0, 0]))
+	assert_int(ship.resource_of(_COMBAT_KIND)).is_equal(5)  # already-banked clamped to the new ceiling
+	ship.add_resource(_COMBAT_KIND, 10)
+	assert_int(ship.resource_of(_COMBAT_KIND)).is_equal(5)  # banking can't exceed it
+	ship.add_resource(1, 10)
+	assert_int(ship.resource_of(1)).is_equal(10)  # an uncapped kind stays unlimited
+
+# The ResourceCapacityRule writes the maximums onto the mover at turn start.
+func test_resource_capacity_rule_sets_mover_maximums() -> void:
+	var enc := _encounter()
+	var rule := ResourceCapacityRule.new()
+	rule.maximums = PackedInt32Array([7, 0, 0, 0, 0, 0, 0])
+	var ctx := MatchRuleContext.new()
+	ctx.encounter = enc
+	ctx.combatant = EncounterState.Combatant.PLAYER
+	rule.apply(ctx)
+	var ship := enc.ship_of(EncounterState.Combatant.PLAYER)
+	ship.add_resource(_COMBAT_KIND, 100)
+	assert_int(ship.resource_of(_COMBAT_KIND)).is_equal(7)
+
+# The ActionBudgetRule refills the mover's actions at turn start to its actions-per-turn (and sets the policy).
+func test_action_budget_rule_refills_actions() -> void:
+	var enc := _encounter()
+	var rule := ActionBudgetRule.new()
+	rule.actions_per_turn = 4
+	rule.ability_turn_cost = ActionBudgetRule.AbilityTurnCost.COSTS_ACTION
+	var ctx := MatchRuleContext.new()
+	ctx.encounter = enc
+	ctx.combatant = EncounterState.Combatant.PLAYER
+	rule.apply(ctx)
+	var ship := enc.ship_of(EncounterState.Combatant.PLAYER)
+	assert_int(ship.actions_remaining).is_equal(4)
+	assert_int(ship.ability_turn_cost).is_equal(ActionBudgetRule.AbilityTurnCost.COSTS_ACTION)
+
+# The action budget gates moves per turn: with three actions a mover keeps the board for three resolved moves,
+# the turn passing on the third. (The default one-action budget passes on the first move — unchanged.)
+func test_action_budget_gates_moves_per_turn() -> void:
+	var game := _make(MatchRules.new(), MatchBoardView.InputMode.LINE_SHIFT, false)
+	await await_idle_frame()
+	game._encounter.player.actions_remaining = 3
+	assert_int(game._encounter.active_combatant()).is_equal(EncounterState.Combatant.PLAYER)
+	game._on_move_resolved(true, 1)
+	assert_int(game._encounter.active_combatant()).is_equal(EncounterState.Combatant.PLAYER)  # 2 left
+	game._on_move_resolved(true, 1)
+	assert_int(game._encounter.active_combatant()).is_equal(EncounterState.Combatant.PLAYER)  # 1 left
+	game._on_move_resolved(true, 1)
+	assert_int(game._encounter.active_combatant()).is_equal(EncounterState.Combatant.OPPONENT)  # spent → passes
+	game.queue_free()
+
+# With the COSTS_ACTION policy an ability spends one action instead of ending the turn, so a mover with budget
+# to spare keeps acting; the turn passes only once the budget is gone.
+func test_ability_costs_an_action_when_policy_set() -> void:
+	var game := _make(MatchRules.new(), MatchBoardView.InputMode.LINE_SHIFT, false)
+	await await_idle_frame()
+	game._encounter.player.resources[_COMBAT_KIND] = 100
+	game._encounter.player.actions_remaining = 2
+	game._encounter.player.ability_turn_cost = ActionBudgetRule.AbilityTurnCost.COSTS_ACTION
+	var ability := MatchAbility.make("Test", AbilityCost.make(_COMBAT_KIND, 5), AttackEffect.make(1))
+	game._use_ability(EncounterState.Combatant.PLAYER, ability)
+	assert_int(game._encounter.active_combatant()).is_equal(EncounterState.Combatant.PLAYER)  # one action left
+	game._use_ability(EncounterState.Combatant.PLAYER, ability)
+	assert_int(game._encounter.active_combatant()).is_equal(EncounterState.Combatant.OPPONENT)  # spent → passes
+	game.queue_free()
+
+# The authored alternate-mode resource is a real MatchRules: it dials the same knobs to a low-mana, multi-action
+# turn (a match of N banks N-2, four moves a turn) without any code — the "make a new mode resource" path.
+func test_alternate_mode_resource_dials_the_knobs() -> void:
+	var path := "res://resources/catalogs/alternate_match_rules.tres"
+	assert_bool(ResourceLoader.exists(path)).is_true()
+	var rules: MatchRules = load(path)
+	assert_object(rules).is_not_null()
+	assert_int((rules.ruleset.find(&"scoring_offset") as OffsetScoringRule).offset).is_equal(2)
+	assert_int((rules.ruleset.find(&"action_budget") as ActionBudgetRule).actions_per_turn).is_equal(4)
 
 # A TURN_START rule fires when the turn hands over — the hook a "rotate the board each turn" rule would use.
 func test_turn_start_phase_fires_on_handover() -> void:

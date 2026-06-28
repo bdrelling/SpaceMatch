@@ -23,10 +23,15 @@ func _init() -> void:
 ## the foe, warp into the shared meter.
 static func baseline_ruleset() -> Ruleset:
 	var rules := Ruleset.new()
-	rules.add(ResourceGrantRule.new())  # the four stat tiles -> the mover's tally
-	rules.add(ScrapGrantRule.new())     # scrap -> the player's wallet
-	rules.add(DamageRule.new())         # damage -> the opposing combatant's health
-	rules.add(WarpRule.new())           # warp -> the shared warp meter
+	rules.add(ResourceGrantRule.new())     # the four stat tiles -> the mover's tally
+	rules.add(ScrapGrantRule.new())        # scrap -> the player's wallet
+	rules.add(DamageRule.new())            # damage -> the opposing combatant's health
+	rules.add(WarpRule.new())              # warp -> the shared warp meter
+	# Turn-start knobs, seeded at their no-op defaults so the baseline plays exactly as before: a single action
+	# per turn (an ability ends it), unlimited resources, one-to-one scoring. A mode or ship retunes these.
+	rules.add(ActionBudgetRule.new())      # moves per turn + what an ability does to the turn
+	rules.add(ResourceCapacityRule.new())  # per-resource hold limits (unlimited by default)
+	rules.add(OffsetScoringRule.new())     # a match of N banks N minus an offset (zero by default)
 	return rules
 
 ## How a match's tile count becomes its reward. The default [ScoringFormula] is one-to-one (a match of N

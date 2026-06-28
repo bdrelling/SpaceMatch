@@ -35,6 +35,9 @@ var damage_cells: Array[Vector2i] = []
 var warp_bars: int = 0
 ## The encounter's scoring formula (null = one-to-one). Use [method reward_for] rather than reading directly.
 var scoring: ScoringFormula
+## Subtracted from every match's reward (floored at zero) — a match of N banks N minus this. Zero leaves
+## scoring one-to-one; an [OffsetScoringRule] sets it from the mover's [member EncounterStarshipState.score_offset].
+var score_offset: int = 0
 ## The player's wallet state, when a session is bound (else null) — where scrap banks.
 var wallet: WalletState
 
@@ -43,6 +46,8 @@ var wallet: WalletState
 ## "type" key ("resource" / "warp" / "damage") and that type's payload — the host owns the actual nodes.
 var visuals: Array[Dictionary] = []
 
-## The reward for clearing [param quantity] tiles, per the encounter's scoring formula (one-to-one when unset).
+## The reward for clearing [param quantity] tiles: the scoring formula's value (one-to-one when unset) shifted
+## down by [member score_offset], never below zero.
 func reward_for(quantity: int) -> int:
-	return scoring.reward_for(quantity) if scoring != null else maxi(0, quantity)
+	var base: int = scoring.reward_for(quantity) if scoring != null else maxi(0, quantity)
+	return maxi(0, base - score_offset)

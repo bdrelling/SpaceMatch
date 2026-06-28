@@ -1,0 +1,65 @@
+[gd_resource type="Resource" script_class="MatchRules" format=3]
+
+[ext_resource type="Script" path="res://addons/grid_system/rules/rule.gd" id="1_qexlv"]
+[ext_resource type="Script" path="res://minigames/match/rules/resource_grant_rule.gd" id="2_jg85a"]
+[ext_resource type="Script" path="res://minigames/match/rules/scrap_grant_rule.gd" id="3_qisg4"]
+[ext_resource type="Script" path="res://minigames/match/rules/damage_rule.gd" id="4_fby5k"]
+[ext_resource type="Script" path="res://minigames/match/rules/warp_rule.gd" id="5_cv6lc"]
+[ext_resource type="Script" path="res://minigames/match/rules/action_budget_rule.gd" id="6_0cfly"]
+[ext_resource type="Script" path="res://minigames/match/rules/resource_capacity_rule.gd" id="7_ak0a6"]
+[ext_resource type="Script" path="res://minigames/match/rules/offset_scoring_rule.gd" id="8_rp2sg"]
+[ext_resource type="Script" path="res://addons/grid_system/rules/ruleset.gd" id="9_054bk"]
+[ext_resource type="Script" path="res://minigames/match/scoring_formula.gd" id="10_bo6rh"]
+[ext_resource type="Script" path="res://minigames/match/match_rules.gd" id="11_sqyw1"]
+
+[sub_resource type="Resource" id="Resource_ka280"]
+script = ExtResource("2_jg85a")
+kinds = PackedInt32Array(0, 1, 2, 3)
+spawn_weights = PackedInt32Array(20, 20, 20, 20)
+rule_name = &"resource_grant"
+phase = &"on_clear"
+
+[sub_resource type="Resource" id="Resource_n15h3"]
+script = ExtResource("3_qisg4")
+rule_name = &"scrap_grant"
+phase = &"on_clear"
+
+[sub_resource type="Resource" id="Resource_bkyoq"]
+script = ExtResource("4_fby5k")
+rule_name = &"damage"
+phase = &"on_clear"
+
+[sub_resource type="Resource" id="Resource_an1dr"]
+script = ExtResource("5_cv6lc")
+rule_name = &"warp"
+phase = &"on_clear"
+
+[sub_resource type="Resource" id="Resource_plxhn"]
+script = ExtResource("6_0cfly")
+actions_per_turn = 4
+rule_name = &"action_budget"
+phase = &"turn_start"
+
+[sub_resource type="Resource" id="Resource_k8fbp"]
+script = ExtResource("7_ak0a6")
+maximums = PackedInt32Array(30, 30, 30, 30, 0, 0, 0)
+rule_name = &"resource_capacity"
+phase = &"turn_start"
+
+[sub_resource type="Resource" id="Resource_1go3f"]
+script = ExtResource("8_rp2sg")
+offset = 2
+rule_name = &"scoring_offset"
+phase = &"turn_start"
+
+[sub_resource type="Resource" id="Resource_427vo"]
+script = ExtResource("9_054bk")
+rules = Array[ExtResource("1_qexlv")]([SubResource("Resource_ka280"), SubResource("Resource_n15h3"), SubResource("Resource_bkyoq"), SubResource("Resource_an1dr"), SubResource("Resource_plxhn"), SubResource("Resource_k8fbp"), SubResource("Resource_1go3f")])
+
+[sub_resource type="Resource" id="Resource_rxrgj"]
+script = ExtResource("10_bo6rh")
+
+[resource]
+script = ExtResource("11_sqyw1")
+ruleset = SubResource("Resource_427vo")
+scoring = SubResource("Resource_rxrgj")

@@ -45,7 +45,8 @@ func test_default_stat_profile() -> void:
 # The ship carries its own base stat block (its hull's health), separate from modules; effective stats are
 # the ship block plus the module profile. HP is ship-driven from here, not a constant.
 func test_default_ship_stat_block_drives_health() -> void:
-	var ship := auto_free(Starship.create(_DEFAULT_STARSHIP)).state
+	var starship: Starship = auto_free(Starship.create(_DEFAULT_STARSHIP))
+	var ship := starship.state
 	assert_object(ship.stats).is_not_null()
 	assert_int(ship.stats.health).is_equal(25)  # hull health lives on the ship, not a module
 	var effective := StatBlock.new()
