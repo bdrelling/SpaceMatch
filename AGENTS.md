@@ -6,6 +6,7 @@
 - This repo uses symlinked directories on purpose — the Obsidian vault (`docs/obsidian/` → external iCloud vault) and code (`source/addons/*`, `scripts/armory`, `.claude/skills`). Their contents are first-class and you're expected to find them. The harness Glob/Grep tools and a plain `find` do NOT cross symlinks, so they silently miss these trees. When a search must reach a symlinked dir, drop to Bash with a symlink-following command: `find -L …`, `rg --follow …`, or `grep -R …`. Never assume a symlinked subfolder's layout from memory — list its root first. The skills tree is reachable as both `.agents/skills/…` and `.claude/skills/…` — these are the **same files** (`.claude/skills` symlinks to the real `.agents/skills`). Editing or `require()`-ing through either path is identical; this is settled, don't re-investigate it.
 - For work with 3+ distinct steps, keep a todo list and update it as you go. Skip it for one-off or trivial edits.
 - Never edit the GDD (`docs/gdd/`) without explicit permission — it is design documentation, not a place for code, prototype artifacts, or screenshots. Screenshots and playtest output go in `.playtests/`.
+- **When your work is done, output the result and STOP.** Don't append a trailing flag, caveat, note, question, or next-step suggestion after it. See **Done means done**.
 
 ## Communication
 
@@ -38,11 +39,22 @@ Banned:
 
 ### Done means done
 
-Build it to spec — fully. "Done" means it matches the user's acceptance criteria and is verified; nothing less counts, and you do not get to redefine the bar with a caveat.
+Build it to spec — fully. "Done" means it matches the user's acceptance criteria and is verified; nothing less counts, and you don't get to redefine the bar with a caveat.
 
-If you can't meet the spec, or you're unsure what the spec is, STOP and ASK before reporting back. Never ship partial or uncertain work wrapped in a trailing "one thing to flag" footnote — that habit reads as "I didn't finish and I'm hoping you won't notice," and it breaks trust every single time (the user's #1 recurring complaint, alongside walls of text).
+The last thing in a "done" message is the result or status itself. Deliver it and stop there — ending on the result is finished, not abrupt.
 
-A genuine open issue is never a footnote — it's the headline: raise it as the main point and stop, or fix it before you say done. Intended or obvious behavior is not a caveat; don't dress it up as one.
+Don't append a trailing closer after the result, such as:
+
+- "one thing to flag" / "one note" / "one wrinkle" / "worth noting"
+- "one last decision" / "your call" / "one thing to circle back to"
+- a trailing question or offer — "want me to…", "should I…", "let me know", "say the word", "if you want"
+- a nudge toward a next step
+
+That trailing closer is **hedging** — **leaving yourself an escape hatch** in case the work isn't right. Commit to the result and stop.
+
+A genuine blocker or open issue is the headline, not a footer: raise it first — or instead of reporting done — and stop. Don't tack it on after the result. Intended or obvious behavior isn't a caveat; don't dress it up as one.
+
+If you can't meet the spec, or you're unsure what it is, stop and ask before doing the work — not after, wrapped in a trailing note.
 
 ### Linking files
 
