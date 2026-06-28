@@ -8,6 +8,24 @@ argument-hint: optional drawing name (default whiteboard)
 
 Write Excalidraw drawings as plain text. The bundled helper stamps every required field, so nothing gets silently dropped.
 
+## What's here
+
+- `excalidraw.js` — low-level element factories + `write`/`read` (stamps every required field).
+- `scripts/build.js` — the **layout engine** for schema / ER / composition diagrams. Use this, not hand-placed boxes — see below.
+- `scripts/render.js` — drawing → PNG preview.
+- `examples/effect-system.js` — full worked reference (and the engine's smoke test).
+
+## Editing or rebuilding an existing drawing — DO THIS FIRST
+
+Every engine-built drawing has a **generator script that is its source of truth** — the `.excalidraw.md` is the *output*, never edited by hand. Generators live at `examples/<drawing-name>.js` (the `effect-system` drawing ⇒ `examples/effect-system.js`).
+
+To change or "rebuild" a drawing: **find its generator, edit the data, re-run it, render to verify.** Never hand-edit or reverse-engineer the `.excalidraw.md`, and never author a fresh generator from scratch — the existing one is there. It lives under `.claude/`, which is gitignored, so `rg`/Glob skip it; look directly with `ls .claude/skills/excalidraw/examples/`.
+
+```bash
+node .claude/skills/excalidraw/examples/<name>.js         # regenerate the .excalidraw.md
+node .claude/skills/excalidraw/scripts/render.js <name>   # preview the PNG
+```
+
 ## Files (naming rule)
 
 - Default: `docs/obsidian/drawings/whiteboard.excalidraw.md`
@@ -51,30 +69,48 @@ console.log("wrote", E.write("whiteboard", els));   // or E.write("roadmap", els
 
 Coords: +x right, +y down. Group related shapes with a shared `groupIds: ["x"]` so they move together.
 
-## Entity / relationship diagrams (the house style)
+## Schema / ER / composition diagrams → use the engine (`scripts/build.js`)
 
-When the user asks for an **entity diagram, relationship diagram, ER diagram, or data-model** drawing, render it like a Swagger schema / database ER chart, NOT freeform boxes:
+Anything that's typed boxes + relationships — ER, data-model, class/composition, system structure — goes through the `Diagram` engine in `scripts/build.js`. **Don't hand-place boxes.** You describe the *data* (boxes, fields, edges) as a tree; the engine owns all the layout + Excalidraw-compat work: box sizing, top-down tree / column placement, direction-aware arrow routing, color-by-kind, the legend, and writing a valid `.excalidraw.md`. The engine is the reusable part, so layout is never re-solved by hand; the per-drawing data lives in that drawing's generator script — **saved, not throwaway**, since it's how the drawing gets edited and rebuilt later (see "Editing or rebuilding an existing drawing" above). Source-agnostic: the data can come from a markdown note or straight from a conversation — the engine never reads either, it takes the structure you build.
 
-- One `schema()` box per entity: title in the header, then `field : Type` rows (monospace via fontFamily 3). List the real fields from the code — read the `*_state.gd` / `*_blueprint.gd` first; don't summarize a field set as "all int", spell every field out.
-- **Monochrome.** No fills-as-color, no decorative glyphs (`✦`) in the title — just the plain title text. The default schema palette (gray stroke, dark body, lighter header) is the look.
-- A reference field points at the entity it holds via `link()` from `box.right/left, box.rowY(i)` straight into the target's `left/right, cy`. No "1:N" labels — the arrow + field type carry it.
-- A base class / mixin goes in `opts.note` — a centered annotation right under the title (set apart by the hand-drawn font, since Excalidraw text has no real italic), with a gap before the fields. Use it for `extends X`.
-- Lay entities out in columns by depth (root → owned → leaf); cross-links are fine.
+**Full worked reference + smoke test:** `examples/effect-system.js` (40+ boxes, every feature). Copy its shape. Re-run any example with `node .agents/skills/excalidraw/examples/<name>.js`.
+
+House style (baked into the engine):
+
+- One box per type: title header, then `field : Type` rows (monospace). Spell every real field out — read the `*_state.gd` / `*_blueprint.gd` first; never summarize as "all int".
+- **Color by kind**, decided from each node's `note`: no note = `root` (blue); `note:"extends X"` = `sub` (green); `note:"enum"` = `enum` (amber). `note:"base"` stays a root but reads as a base type you stack subtypes under.
+- `extends X` / annotations live in `note` — a centered line under the title in the hand-drawn font (Excalidraw has no real italic), with a gap before the fields.
+- A reference field connects to the type it holds via `fk(srcBox, fieldRow, dstBox)` — direction-aware, no "1:N" labels; the arrow + field type carry it.
+- Composition flows top-down; breadth spreads horizontally.
+
+Engine API — `const { Diagram, HBOX } = require("./.agents/skills/excalidraw/scripts/build.js")`:
+
+- `new Diagram(opts?)` — `opts.depthY / hgap / rvgap / left0` tune spacing.
+- `layoutTree(tree)` — lay out + render a composition tree. Node = `{ n, f?, note?, kids?, riders?, spacer?, spacerW? }`: `f` = field rows, `riders` = subtypes stacked under the node, `spacer`+`spacerW` = an empty lane reserving width.
+- `treeEdges(tree)` — parent→child composition arrows for the whole tree.
+- `place(name, x, y, w, fields, note)` — manually place a box the tree can't (shared leaves). Stored in `d.box[name]` with anchors `.left/.right/.top/.bottom/.cx/.cy` and `.rowY(i)`.
+- `stack(x, w, startY, riders)` — stack boxes downward; returns next y.
+- `fk(srcName, fieldRow, dstName)` — reference arrow from a field row to a box (auto right/left/vertical).
+- `title(t, sub?)` · `key(rows)` — title/subtitle + boxed legend (`rows = [["root","Root — base type"], …]`).
+- `write(name)` — write `docs/obsidian/drawings/<name>.excalidraw.md`. `layoutTree`/`treeEdges`/`title`/`key` return the Diagram, so they chain.
+- `HBOX(fields, note)` — box-height helper, to vertically center a manually-placed box against others.
 
 ```bash
 cd /Users/brian/Developer/bdrelling/games/SpaceMatch && node -e '
-const E = require("./.agents/skills/excalidraw/excalidraw.js");
-const els = [];
-els.push(E.text(60, 20, "Entity Relationships", { fontSize:26, fontFamily:2, strokeColor:"#e6edf3" }));
-const a = E.schema(60, 120, 230, "GameState", ["starship : StarshipState", "wallet : WalletState"]);
-const b = E.schema(360, 80,  260, "StarshipState", ["name : String", "health : int", "stats : StatBlock"]);
-const c = E.schema(360, 280, 250, "ModuleGridState", ["columns : int", "rows : int"], { note:"extends GridState" });
-for (const s of [a,b,c]) els.push(...s.elements);
-els.push(E.link(a.right, a.rowY(0), b.left, b.cy));   // GameState.starship -> StarshipState
-els.push(E.link(b.right, b.rowY(2), c.left, c.cy));   // ref field -> its type, by row
-console.log("wrote", E.write("entity-relationships", els));
+const { Diagram } = require("./.agents/skills/excalidraw/scripts/build.js");
+const TREE = { n:"GameState", f:["starship : StarshipState","wallet : WalletState"], kids:[
+  { n:"StarshipState", f:["name : String","health : int"], kids:[
+    { n:"DamageKind", f:["KINETIC","THERMAL"], note:"enum" } ] },
+  { n:"WalletState", f:["credits : int"], note:"extends Resource" },
+]};
+const d = new Diagram();
+d.layoutTree(TREE).treeEdges(TREE).title("Game State")
+ .key([["root","Root"],["sub","extends a root"],["enum","Enum"]]);
+console.log("wrote", d.write("game-state"));
 '
 ```
+
+For a tiny one-off (2–3 boxes, no hierarchy) you can hand-place raw `E.schema()` + `E.link()` (monochrome — gray stroke, no kind colors) per the helper API above. Past that, use the engine.
 
 ## Verify
 

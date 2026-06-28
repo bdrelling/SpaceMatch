@@ -1,7 +1,9 @@
-// build.js — reusable machinery for schema / ER-style Excalidraw diagrams (note -> drawing).
-// You supply the per-drawing DATA (a composition tree + a few shared-leaf placements); this file
-// owns everything generic: box sizing, color-by-kind, top-down tree layout, direction-aware arrow
+// build.js — the reusable layout engine for schema / ER / composition Excalidraw diagrams.
+// You supply only the per-drawing DATA (a composition tree + a few shared-leaf placements) — from a
+// markdown note OR straight from a conversation, the engine doesn't read either — and it owns
+// everything generic: box sizing, color-by-kind, top-down tree layout, direction-aware arrow
 // routing, the boxed key, and writing a valid .excalidraw.md. Pair with render.js (drawing -> image).
+// Full worked reference: ../examples/effect-system.js.
 //
 //   const { Diagram } = require("./build.js");
 //   const d = new Diagram();
