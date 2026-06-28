@@ -4,8 +4,8 @@ extends Resource
 ## screen) has, which the 3D game never reads. Null on [GameState] when no encounter is running.
 ## Lives under [member GameState.encounter], serialized with the one save.
 ##
-## Holds the two ships fighting it out — the combatants whose own [member StarshipState.health] is the
-## encounter's health, so the ship itself is the thing that's destroyed — and the turn/round counter that the
+## Holds the two starships fighting it out — the combatants whose own [member StarshipState.health] is the
+## encounter's health, so the starship itself is the thing that's destroyed — and the turn/round counter that the
 ## match minigame advances after each move and shows in its top row.
 
 ## The two combatants. Turn 1 of a round is the player's, turn 2 the opponent's.
@@ -18,12 +18,12 @@ const TURNS_PER_ROUND: int = 2
 ## resource arrays; a fresh encounter starts them all at zero.
 const RESOURCE_KINDS: int = 7
 
-## The two combatants — each an [EncounterStarshipState], the encounter-scoped form of a ship that also holds
+## The two combatants — each an [EncounterStarshipState], the encounter-scoped form of a starship that also holds
 ## its banked resources and turn budget (see [method Encounter.create]). The player's is built from the
-## persistent ship so combat damage and Debug edits stay on the fight copy; the opponent is its own ship, not a
+## persistent starship so combat damage and Debug edits stay on the fight copy; the opponent is its own starship, not a
 ## copy of the player's. Each owns its own [member StarshipState.health].
 @export var player: EncounterStarshipState
-## The opponent's ship — its own default, distinct from the player's. Human-controlled for now; AI lands later.
+## The opponent's starship — its own default, distinct from the player's. Human-controlled for now; AI lands later.
 @export var opponent: EncounterStarshipState
 
 ## 1-based round counter.
@@ -31,9 +31,9 @@ const RESOURCE_KINDS: int = 7
 ## Which turn within the current round, 1..[constant TURNS_PER_ROUND].
 @export var turn_in_round: int = 1
 
-## Each combatant's current and max health — read-throughs to the ship that owns them ([member player] /
+## Each combatant's current and max health — read-throughs to the starship that owns them ([member player] /
 ## [member opponent]), kept as named pairs for the combat code and HUD. Current depletes from matched damage
-## tiles (see [method deal_damage]); max is the ship's derived hull (see [method StarshipState.max_health]).
+## tiles (see [method deal_damage]); max is the starship's derived hull (see [method StarshipState.max_health]).
 var player_health: int:
 	get: return health_of(Combatant.PLAYER)
 	set(value): _set_health(Combatant.PLAYER, value)
@@ -52,20 +52,20 @@ var opponent_max_health: int:
 @export var player_dodge: bool = false
 @export var opponent_dodge: bool = false
 ## Each combatant's temporary stat layer — buffs and debuffs (e.g. Target Lock's +damage) stacked on top of
-## the ship's permanent module-grid profile. [method effective_stats] combines the two into the stats combat
+## the starship's permanent module-grid profile. [method effective_stats] combines the two into the stats combat
 ## reads. Encounter-scoped, so a fresh encounter starts them empty. (Item/skill buffs will land here too.)
 @export var player_buffs: StarshipStats
 @export var opponent_buffs: StarshipStats
 ## Cells currently disabled on each combatant's module grid, mapping a cell [Vector2i] to the turns of
 ## disable it has left (granted by Disruptor; see [method disable_cell]). A disabled cell deactivates the
-## module covering it, so that module stops counting toward the ship's stat profile until it re-enables.
+## module covering it, so that module stops counting toward the starship's stat profile until it re-enables.
 ## Counted down one per turn by [method advance_turn].
 @export var player_disabled_cells: Dictionary[Vector2i, int] = {}
 @export var opponent_disabled_cells: Dictionary[Vector2i, int] = {}
 
 ## Each combatant's warp capacity — the bars their side of the meter holds before they can Jump (see
-## [method can_jump]) to win outright. Granted by warp-core modules, so it's a copy of the ship's
-## [member StarshipStats.warp_capacity]; the match seeds these at setup. Zero means that ship can't warp at all —
+## [method can_jump]) to win outright. Granted by warp-core modules, so it's a copy of the starship's
+## [member StarshipStats.warp_capacity]; the match seeds these at setup. Zero means that starship can't warp at all —
 ## no Jump, and the board spawns no warp tiles when neither side can warp. The two can differ (a six-bar core
 ## versus a four-bar one), which is why the capacities live per combatant rather than as one shared cap.
 @export var player_warp_max: int = 0
@@ -82,7 +82,7 @@ var opponent_max_health: int:
 @export var warp_winner: int = -1
 
 func _init() -> void:
-	# Pure-data defaults only — the combatant ships are built by the [Encounter] node, never fabricated here;
+	# Pure-data defaults only — the combatant starships are built by the [Encounter] node, never fabricated here;
 	# each carries its own resource tally (see [EncounterStarshipState]).
 	# Fresh per instance so the two combatants never share one buff block (exported Resource defaults can).
 	if player_buffs == null:
@@ -98,26 +98,26 @@ func active_combatant() -> Combatant:
 func opponent_of(combatant: Combatant) -> Combatant:
 	return Combatant.OPPONENT if combatant == Combatant.PLAYER else Combatant.PLAYER
 
-## The ship [param combatant] is fighting in — the owner of its health, stats, module grid, and banked
+## The starship [param combatant] is fighting in — the owner of its health, stats, module grid, and banked
 ## resources (the encounter-scoped [EncounterStarshipState]).
-func ship_of(combatant: Combatant) -> EncounterStarshipState:
+func starship_of(combatant: Combatant) -> EncounterStarshipState:
 	return player if combatant == Combatant.PLAYER else opponent
 
-## [param combatant]'s current health — its ship's current hull (0 if it has no ship).
+## [param combatant]'s current health — its starship's current hull (0 if it has no starship).
 func health_of(combatant: Combatant) -> int:
-	var ship: StarshipState = ship_of(combatant)
-	return ship.health if ship != null else 0
+	var starship: StarshipState = starship_of(combatant)
+	return starship.health if starship != null else 0
 
-## [param combatant]'s max health — its ship's derived hull, the bar's cap (0 if it has no ship).
+## [param combatant]'s max health — its starship's derived hull, the bar's cap (0 if it has no starship).
 func max_health_of(combatant: Combatant) -> int:
-	var ship: StarshipState = ship_of(combatant)
-	return ship.max_health() if ship != null else 0
+	var starship: StarshipState = starship_of(combatant)
+	return starship.max_health() if starship != null else 0
 
-## Sets [param combatant]'s current health on its ship, floored at zero. The hull is the source of truth.
+## Sets [param combatant]'s current health on its starship, floored at zero. The hull is the source of truth.
 func _set_health(combatant: Combatant, value: int) -> void:
-	var ship: StarshipState = ship_of(combatant)
-	if ship != null:
-		ship.health = maxi(0, value)
+	var starship: StarshipState = starship_of(combatant)
+	if starship != null:
+		starship.health = maxi(0, value)
 
 ## [param combatant]'s current shield.
 func shield_of(combatant: Combatant) -> int:

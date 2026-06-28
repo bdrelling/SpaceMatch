@@ -15,7 +15,7 @@ func _computer_grid() -> ModuleGridState:
 	var starship: Starship = auto_free(Starship.create(_COMPUTER_STARSHIP))
 	return starship.state.module_grid
 
-func test_default_ship_has_six_modules() -> void:
+func test_default_starship_has_six_modules() -> void:
 	var grid := _default_grid()
 	assert_int(grid.modules.size()).is_equal(6)
 	# shield 2 + life support 2 + reactor 4 + sensor 1 + engine 4 + warp core 1
@@ -44,17 +44,17 @@ func test_default_stat_profile() -> void:
 	assert_int(total.fuel).is_equal(0)
 	assert_int(total.armor).is_equal(0)
 
-# The ship carries its own base stat block (its hull's health), separate from modules; effective stats are
-# the ship block plus the module profile. HP is ship-driven from here, not a constant.
-func test_default_ship_stat_block_drives_health() -> void:
+# The starship carries its own base stat block (its hull's health), separate from modules; effective stats are
+# the starship block plus the module profile. HP is starship-driven from here, not a constant.
+func test_default_starship_stat_block_drives_health() -> void:
 	var starship: Starship = auto_free(Starship.create(_DEFAULT_STARSHIP))
-	var ship := starship.state
-	assert_object(ship.stats).is_not_null()
-	assert_int(ship.stats.health).is_equal(25)  # hull health lives on the ship, not a module
+	var starship := starship.state
+	assert_object(starship.stats).is_not_null()
+	assert_int(starship.stats.health).is_equal(25)  # hull health lives on the starship, not a module
 	var effective := StarshipStats.new()
-	effective.add(ship.stats)
-	effective.add(ship.module_grid.profile())
-	assert_int(effective.health).is_equal(25)         # ship hull
+	effective.add(starship.stats)
+	effective.add(starship.module_grid.profile())
+	assert_int(effective.health).is_equal(25)         # starship hull
 	assert_int(effective.speed).is_equal(4)           # engine module
 	assert_int(effective.warp_capacity).is_equal(4)   # warp core module
 

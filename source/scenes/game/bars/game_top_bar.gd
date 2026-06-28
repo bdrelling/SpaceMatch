@@ -63,7 +63,7 @@ func set_actions(actions: Array[MinigameAction]) -> void:
 
 # Sizes the bar to its content and insets that content from the bar edges. The bar lives inside the
 # shell's SafeAreaContainer, which already holds it clear of the device notch, so it adds no top inset
-# of its own; the background, anchored to the bar's full rect, bleeds out to the sides.
+# of its own; the background, anchored to the bar's full rectangle, bleeds out to the sides.
 func _apply_safe_area() -> void:
 	_insets = DeviceUtils.get_safe_area(get_viewport()).insets
 	custom_minimum_size.y = _CONTENT_HEIGHT

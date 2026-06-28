@@ -19,12 +19,12 @@ func spawn_contribution() -> Dictionary:
 	return {kind: maxi(0, spawn_weight)}
 
 func apply(context: RuleContext) -> void:
-	var ctx := context as MatchRuleContext
-	if ctx == null or not ctx.counts.has(kind):
+	var match_context := context as MatchRuleContext
+	if match_context == null or not match_context.counts.has(kind):
 		return
-	var count: int = ctx.counts[kind]
-	var reward: int = ctx.reward_for(count)
+	var count: int = match_context.counts[kind]
+	var reward: int = match_context.reward_for(count)
 	# Only the player banks scrap; the opponent has no wallet.
-	if ctx.combatant == EncounterState.Combatant.PLAYER and ctx.wallet != null:
-		ctx.wallet.earn(reward)
-	ctx.visuals.append({"type": "resource", "kind": kind, "amount": reward, "center": ctx.centers.get(kind, Vector2.ZERO)})
+	if match_context.combatant == EncounterState.Combatant.PLAYER and match_context.wallet != null:
+		match_context.wallet.earn(reward)
+	match_context.visuals.append({"type": "resource", "kind": kind, "amount": reward, "center": match_context.centers.get(kind, Vector2.ZERO)})

@@ -3,7 +3,7 @@ extends Resource
 ## How tiles are selected on a match board — one swappable "selection modifier" the encounter defaults to
 ## and any starship can override on its turn (Fluxx-style: the rules of play change with who's acting).
 ## Author a `.tres` per rule and assign it to [member MatchRules.default_selection] (the board default) or
-## [member StarshipState.selection_override] (per-ship, which takes precedence on that ship's turn).
+## [member StarshipState.selection_override] (per-starship, which takes precedence on that starship's turn).
 ## [MatchMinigame] applies the active rule live as turns pass — see [member MatchRules].
 
 ## The ways a player picks tiles. Maps to the engine's [enum MatchBoardView.InputMode] via [method input_mode].

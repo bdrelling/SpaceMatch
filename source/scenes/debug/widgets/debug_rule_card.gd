@@ -30,10 +30,10 @@ func add_row(row: Control) -> void:
 	body.add_child(row)
 
 func _draw() -> void:
-	var rect := Rect2(Vector2.ZERO, size).grow(-4.0)
-	var top_right := Vector2(rect.end.x, rect.position.y)
-	var bottom_left := Vector2(rect.position.x, rect.end.y)
-	draw_dashed_line(rect.position, top_right, _BORDER_COLOR, _BORDER_WIDTH, _DASH)
-	draw_dashed_line(top_right, rect.end, _BORDER_COLOR, _BORDER_WIDTH, _DASH)
-	draw_dashed_line(rect.end, bottom_left, _BORDER_COLOR, _BORDER_WIDTH, _DASH)
-	draw_dashed_line(bottom_left, rect.position, _BORDER_COLOR, _BORDER_WIDTH, _DASH)
+	var rectangle := Rect2(Vector2.ZERO, size).grow(-4.0)
+	var top_right := Vector2(rectangle.end.x, rectangle.position.y)
+	var bottom_left := Vector2(rectangle.position.x, rectangle.end.y)
+	draw_dashed_line(rectangle.position, top_right, _BORDER_COLOR, _BORDER_WIDTH, _DASH)
+	draw_dashed_line(top_right, rectangle.end, _BORDER_COLOR, _BORDER_WIDTH, _DASH)
+	draw_dashed_line(rectangle.end, bottom_left, _BORDER_COLOR, _BORDER_WIDTH, _DASH)
+	draw_dashed_line(bottom_left, rectangle.position, _BORDER_COLOR, _BORDER_WIDTH, _DASH)

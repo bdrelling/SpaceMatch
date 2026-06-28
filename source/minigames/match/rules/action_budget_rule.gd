@@ -5,7 +5,7 @@ extends Rule
 ## the match spends it down as moves resolve and passes the turn once it's gone (see [MatchMinigame]). The
 ## default — one action, an ability ends the turn — reproduces the original "a move or an ability ends your
 ## turn" exactly. A starship overrides it by carrying its own [ActionBudgetRule] of the same [member
-## Rule.rule_name], the same way a ship overrides any match rule.
+## Rule.rule_name], the same way a starship overrides any match rule.
 
 ## What using an ability does to the mover's turn.
 enum AbilityTurnCost {
@@ -24,11 +24,11 @@ func _init() -> void:
 	phase = MatchPhase.TURN_START
 
 func apply(context: RuleContext) -> void:
-	var ctx := context as MatchRuleContext
-	if ctx == null or ctx.encounter == null or ctx.combatant < 0:
+	var match_context := context as MatchRuleContext
+	if match_context == null or match_context.encounter == null or match_context.combatant < 0:
 		return
-	var ship: EncounterStarshipState = ctx.encounter.ship_of(ctx.combatant)
-	if ship == null:
+	var starship: EncounterStarshipState = match_context.encounter.starship_of(match_context.combatant)
+	if starship == null:
 		return
-	ship.actions_remaining = maxi(1, actions_per_turn)
-	ship.ability_turn_cost = ability_turn_cost
+	starship.actions_remaining = maxi(1, actions_per_turn)
+	starship.ability_turn_cost = ability_turn_cost

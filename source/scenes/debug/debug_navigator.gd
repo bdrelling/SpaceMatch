@@ -36,8 +36,8 @@ func _ready() -> void:
 	# Stay live even when the game tree is paused (the in-match overlay sits over a paused board).
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	# Size to the viewport explicitly rather than via anchors: the navigator mounts under a plain Node or a
-	# CanvasLayer, where anchor-stretch doesn't reliably give it a rect — and the full-bleed background
-	# needs a real rect to fill (its children otherwise collapse to zero while min-sized content still shows).
+	# CanvasLayer, where anchor-stretch doesn't reliably give it a rectangle — and the full-bleed background
+	# needs a real rectangle to fill (its children otherwise collapse to zero while min-sized content still shows).
 	_fit_to_viewport()
 	get_viewport().size_changed.connect(_fit_to_viewport)
 	_back_button.pressed.connect(pop)

@@ -20,12 +20,12 @@ func spawn_contribution() -> Dictionary:
 	return {kind: maxi(0, spawn_weight)}
 
 func apply(context: RuleContext) -> void:
-	var ctx := context as MatchRuleContext
-	if ctx == null or ctx.encounter == null or ctx.damage_cells.is_empty():
+	var match_context := context as MatchRuleContext
+	if match_context == null or match_context.encounter == null or match_context.damage_cells.is_empty():
 		return
-	var dealt: int = ctx.reward_for(ctx.damage_cells.size())
-	if ctx.actor_stats != null:
-		dealt += maxi(0, ctx.actor_stats.damage)  # effective DAMAGE bonuses the hit; only ever adds (floored at 0)
-	var target: int = ctx.encounter.opponent_of(ctx.combatant)
-	var result: int = ctx.encounter.deal_damage(target, dealt)
-	ctx.visuals.append({"type": "damage", "cells": ctx.damage_cells, "target": target, "dealt": dealt, "result": result})
+	var dealt: int = match_context.reward_for(match_context.damage_cells.size())
+	if match_context.actor_stats != null:
+		dealt += maxi(0, match_context.actor_stats.damage)  # effective DAMAGE bonuses the hit; only ever adds (floored at 0)
+	var target: int = match_context.encounter.opponent_of(match_context.combatant)
+	var result: int = match_context.encounter.deal_damage(target, dealt)
+	match_context.visuals.append({"type": "damage", "cells": match_context.damage_cells, "target": target, "dealt": dealt, "result": result})

@@ -14,7 +14,7 @@ signal inventory_changed()
 signal actions_changed()
 ## The stage asked the shell to drill into the next screen (e.g. an Encounter portrait opening that
 ## combatant's loadout in the Loadout screen), passing the [StarshipState] to inspect there. The stage names no
-## screen — it just requests the drill and whose ship to show; the shell decides where.
+## screen — it just requests the drill and whose starship to show; the shell decides where.
 signal drill_requested(starship: StarshipState)
 ## The stage asked its host to reopen the active encounter — the host owns the [Encounter], so it rebuilds it
 ## (a fresh fight) and the stage re-reads [code]GameSession.game_state.encounter[/code]. Used by the match's

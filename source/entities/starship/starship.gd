@@ -1,15 +1,15 @@
 class_name Starship
 extends Node
-## A ship entity — the [Node] that represents a [StarshipState] in the game hierarchy (under [Game] for the
-## player's ship, under [Encounter] for the two combatants). Built from a [StarshipBlueprint] via
+## A starship entity — the [Node] that represents a [StarshipState] in the game hierarchy (under [Game] for the
+## player's starship, under [Encounter] for the two combatants). Built from a [StarshipBlueprint] via
 ## [method create], or wrapped around an existing state (a save or a fight clone) via [method with_state].
-## Combat and the HUD read the data off [member state]; the node makes the ship inspectable and places it in
+## Combat and the HUD read the data off [member state]; the node makes the starship inspectable and places it in
 ## the tree.
 
 const SCENE_PATH := "res://entities/starship/starship.tscn"
 const SCENE: PackedScene = preload(SCENE_PATH)
 
-## The ship's persisted state — its name, stats, module grid, hull, ruleset, and abilities. The save reads
+## The starship's persisted state — its name, stats, module grid, hull, ruleset, and abilities. The save reads
 ## this; combat mutates it. Built by [method apply_blueprint] or supplied by [method with_state].
 @export var state: StarshipState
 
@@ -24,18 +24,18 @@ func apply_blueprint(_blueprint: StarshipBlueprint) -> void:
 		return
 	state = StarshipState.new()
 	state.name = _blueprint.name
-	# Copy the base stat block so each ship owns its own (a shared exported default would let two ships'
+	# Copy the base stat block so each starship owns its own (a shared exported default would let two starships'
 	# buffs bleed together). Null authoring means a blank block — no intrinsic stats.
 	state.stats = _blueprint.stats.duplicate() if _blueprint.stats != null else StarshipStats.new()
-	# Build the module grid as a child node (Starship → ModuleGrid) and persist its state on the ship.
+	# Build the module grid as a child node (Starship → ModuleGrid) and persist its state on the starship.
 	var grid := ModuleGrid.create(_blueprint.module_grid)
 	add_child(grid)
 	state.module_grid = grid.state
-	# Rules and abilities are the ship's, not the match's: a hull authors its own, else it gets the standard
+	# Rules and abilities are the starship's, not the match's: a hull authors its own, else it gets the standard
 	# kit (a match-4 extra turn, the five stat abilities). Modules layer more on at match time.
 	state.ruleset = _blueprint.ruleset if _blueprint.ruleset != null else _standard_ruleset()
 	state.abilities = _blueprint.abilities.duplicate() if not _blueprint.abilities.is_empty() else _standard_abilities()
-	# A fresh ship starts at full hull — its max is derived from its stats and modules, so this is known now.
+	# A fresh starship starts at full hull — its max is derived from its stats and modules, so this is known now.
 	state.health = state.max_health()
 
 static func create(_blueprint: StarshipBlueprint) -> Starship:
@@ -46,8 +46,8 @@ static func create(_blueprint: StarshipBlueprint) -> Starship:
 	starship.apply_blueprint(_blueprint)
 	return starship
 
-## Wraps [param _state] in a fresh node — the load/clone path, where the data already exists (a saved ship or
-## a fight clone) and only needs a node to live in the tree. Mounts a [ModuleGrid] child for the ship's grid.
+## Wraps [param _state] in a fresh node — the load/clone path, where the data already exists (a saved starship or
+## a fight clone) and only needs a node to live in the tree. Mounts a [ModuleGrid] child for the starship's grid.
 static func with_state(_state: StarshipState) -> Starship:
 	var starship: Starship = SCENE.instantiate()
 	starship.state = _state
@@ -55,7 +55,7 @@ static func with_state(_state: StarshipState) -> Starship:
 		starship.add_child(ModuleGrid.with_state(_state.module_grid))
 	return starship
 
-## The baseline hull kit: a match of four or more keeps the board (the extra-turn rule, now ship-owned).
+## The baseline hull kit: a match of four or more keeps the board (the extra-turn rule, now starship-owned).
 static func _standard_ruleset() -> Ruleset:
 	var ruleset := Ruleset.new()
 	var extra_turn := ExtraTurnRule.new()

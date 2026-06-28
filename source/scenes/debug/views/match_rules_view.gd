@@ -118,9 +118,9 @@ func _add_spawn_weight_rows(card: DebugRuleCard, rule: Rule) -> void:
 		var current: int = weights[index]
 		card.add_row(DebugRow.slider(MatchTile.NAMES[kind], MatchTile.color_of(kind), 0, 50, current,
 			func(value: float) -> void:
-				var arr: PackedInt32Array = rule.get("spawn_weights")
-				arr[index] = int(value)
-				rule.set("spawn_weights", arr)))
+				var array: PackedInt32Array = rule.get("spawn_weights")
+				array[index] = int(value)
+				rule.set("spawn_weights", array)))
 
 # The colour of the tile a single-kind rule spawns (scrap / damage / warp), for tinting its weight slider.
 func _rule_tile_color(rule: Rule) -> Color:

@@ -8,7 +8,7 @@ extends Node
 ## The default starship a fresh game starts with.
 const _DEFAULT_STARSHIP := preload("res://resources/starships/default_starship_blueprint.tres")
 
-## The persisted state of the running game — the player ship, wallet, and active encounter. The save reads
+## The persisted state of the running game — the player starship, wallet, and active encounter. The save reads
 ## this; hosts build the entity nodes that represent it. Replaced wholesale by [method start_new_game].
 var game_state: GameState
 
@@ -18,13 +18,13 @@ func _ready() -> void:
 	if game_state == null:
 		start_new_game()
 
-## Resets to a fresh single-player game: a default player ship and an empty wallet, no encounter yet (a host
-## opens one). The ship's state is built through the [Starship] node factory — the builder node is transient
-## (freed here); the host that shows the ship wraps this state in a node it owns.
+## Resets to a fresh single-player game: a default player starship and an empty wallet, no encounter yet (a host
+## opens one). The starship's state is built through the [Starship] node factory — the builder node is transient
+## (freed here); the host that shows the starship wraps this state in a node it owns.
 func start_new_game() -> void:
 	game_state = GameState.new()
-	var ship := Starship.create(_DEFAULT_STARSHIP)
-	if ship != null:
-		game_state.starship = ship.state
-		ship.free()
+	var starship := Starship.create(_DEFAULT_STARSHIP)
+	if starship != null:
+		game_state.starship = starship.state
+		starship.free()
 	game_state.wallet = WalletState.new()

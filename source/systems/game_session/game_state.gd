@@ -2,7 +2,7 @@ class_name GameState
 extends Resource
 ## One running game's runtime state: the player's [StarshipState], their [WalletState], and the active
 ## [EncounterState]. Pure data — this is what a save serializes; a [GameSession] holds it live and the [Game]
-## node builds the entity nodes (player ship, wallet, encounter) that populate it. Never a project `.tres`.
+## node builds the entity nodes (player starship, wallet, encounter) that populate it. Never a project `.tres`.
 
 @export var starship: StarshipState
 

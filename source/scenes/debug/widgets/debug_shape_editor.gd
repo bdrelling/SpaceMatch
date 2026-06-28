@@ -67,12 +67,12 @@ func _draw() -> void:
 		_active.resize(GRID * GRID)
 	for y: int in GRID:
 		for x: int in GRID:
-			var rect := Rect2(x * _CELL + _GAP, y * _CELL + _GAP, _CELL - 2.0 * _GAP, _CELL - 2.0 * _GAP)
+			var rectangle := Rect2(x * _CELL + _GAP, y * _CELL + _GAP, _CELL - 2.0 * _GAP, _CELL - 2.0 * _GAP)
 			if _active[y * GRID + x]:
-				draw_rect(rect, _accent)
+				draw_rect(rectangle, _accent)
 			else:
-				draw_rect(rect, _FILL_EMPTY)
-				draw_rect(rect, _BORDER, false, 1.0)
+				draw_rect(rectangle, _FILL_EMPTY)
+				draw_rect(rectangle, _BORDER, false, 1.0)
 
 func _emit() -> void:
 	if Engine.is_editor_hint() or not _on_changed.is_valid():

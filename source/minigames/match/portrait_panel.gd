@@ -1,8 +1,8 @@
 class_name PortraitPanel
 extends Button
-## A combatant portrait in the encounter HUD: a thumbnail of that ship's module grid, a name, and a
+## A combatant portrait in the encounter HUD: a thumbnail of that starship's module grid, a name, and a
 ## strip of the four stat readouts (the four colored stat tiles — combat, propulsion, science, defense)
-## along the bottom. Scrap, damage, and warp aren't ship stats, so they don't appear here. Tappable —
+## along the bottom. Scrap, damage, and warp aren't starship stats, so they don't appear here. Tappable —
 ## the encounter decides what a tap opens (each combatant's module grid). Player on the left, opponent on
 ## the right, Puzzle-Quest style.
 ##

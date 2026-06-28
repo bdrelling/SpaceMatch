@@ -1,6 +1,6 @@
 class_name ModuleGrid
 extends Node
-## A ship's module-grid entity — the [Node] that represents a [ModuleGridState] in the hierarchy (a child of
+## A starship's module-grid entity — the [Node] that represents a [ModuleGridState] in the hierarchy (a child of
 ## the [Starship] whose grid it is). Built from a [ModuleGridBlueprint] via [method create] (stamping the hull
 ## silhouette and its authored modules), or wrapped around existing state via [method with_state]. Logic reads
 ## the grid off [member state]; this node makes the grid inspectable and places it in the tree.

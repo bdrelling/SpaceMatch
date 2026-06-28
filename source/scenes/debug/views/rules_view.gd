@@ -6,11 +6,11 @@ extends DebugView
 ## this encounter rather than the shared debug config.
 
 var _rules: MatchRules
-## The acting ship's own rules (extra turn, module rules), layered onto the match's for display — the set
-## actually in force on that ship's turn.
+## The acting starship's own rules (extra turn, module rules), layered onto the match's for display — the set
+## actually in force on that starship's turn.
 var _extra_rules: Array[Rule] = []
 
-## Builds a read-only view of [param rules], plus any [param extra_rules] the acting ship contributes.
+## Builds a read-only view of [param rules], plus any [param extra_rules] the acting starship contributes.
 static func create(rules: MatchRules, extra_rules: Array[Rule] = []) -> RulesView:
 	var view := RulesView.new()
 	view._rules = rules

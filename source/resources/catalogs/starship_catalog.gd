@@ -1,7 +1,7 @@
 class_name StarshipCatalog
 extends Catalog
-## The catalog of [StarshipBlueprint]s — named ships, each pairing a name with a module-grid layout. It
-## gathers every authored ship from its directory; the editor can add ships and (next step) assign grids.
+## The catalog of [StarshipBlueprint]s — named starships, each pairing a name with a module-grid layout. It
+## gathers every authored starship from its directory; the editor can add starships and (next step) assign grids.
 
 const _DIRECTORY := "res://resources/starships"
 
@@ -11,21 +11,21 @@ func entries() -> Array:
 	return starships
 
 func entry_title(entry: Resource) -> String:
-	var ship := entry as StarshipBlueprint
-	if ship == null:
+	var starship := entry as StarshipBlueprint
+	if starship == null:
 		return "Starship"
-	return ship.name if not ship.name.is_empty() else "Starship"
+	return starship.name if not starship.name.is_empty() else "Starship"
 
 func add_new() -> Resource:
-	var ship := StarshipBlueprint.new()
-	ship.name = "New Starship"
-	starships.append(ship)
-	return ship
+	var starship := StarshipBlueprint.new()
+	starship.name = "New Starship"
+	starships.append(starship)
+	return starship
 
 func remove_entry(entry: Resource) -> void:
-	var ship := entry as StarshipBlueprint
-	if ship != null:
-		starships.erase(ship)
+	var starship := entry as StarshipBlueprint
+	if starship != null:
+		starships.erase(starship)
 
 func matches(entry: Resource) -> bool:
 	return entry is StarshipBlueprint

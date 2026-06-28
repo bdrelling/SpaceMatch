@@ -28,7 +28,7 @@ static func baseline_ruleset() -> Ruleset:
 	rules.add(DamageRule.new())            # damage -> the opposing combatant's health
 	rules.add(WarpRule.new())              # warp -> the shared warp meter
 	# Turn-start knobs, seeded at their no-op defaults so the baseline plays exactly as before: a single action
-	# per turn (an ability ends it), unlimited resources, one-to-one scoring. A mode or ship retunes these.
+	# per turn (an ability ends it), unlimited resources, one-to-one scoring. A mode or starship retunes these.
 	rules.add(ActionBudgetRule.new())      # moves per turn + what an ability does to the turn
 	rules.add(ResourceCapacityRule.new())  # per-resource hold limits (unlimited by default)
 	rules.add(OffsetScoringRule.new())     # a match of N banks N minus an offset (zero by default)
@@ -46,7 +46,7 @@ static func baseline_ruleset() -> Ruleset:
 
 ## The board's default tile-selection rule (swap / slide / path / teleport). Left unset, the board falls
 ## back to [MatchMinigame]'s legacy mode export. A starship's [member StarshipState.selection_override]
-## takes precedence on that ship's turn, so selection can change with whoever is acting (see [SelectionRule]).
+## takes precedence on that starship's turn, so selection can change with whoever is acting (see [SelectionRule]).
 @export var default_selection: SelectionRule
 
 ## The standard SpaceMatch match-scope ruleset: the baseline economy (resource/scrap/damage/warp grants) plus
@@ -62,7 +62,7 @@ static func default() -> MatchRules:
 ## The composed spawn pool: each enabled rule's declared tile weights merged into one {kind: weight} map.
 ## Rules own what spawns, so dropping or disabling a rule drops its tiles from the board — the same match
 ## engine makes a different game (other combat, a puzzle) by swapping which rules are in play. The host may
-## still gate a kind on top of this (e.g. warp only rolls when a ship can warp).
+## still gate a kind on top of this (e.g. warp only rolls when a starship can warp).
 func spawn_table() -> Dictionary:
 	var table := {}
 	if ruleset == null:

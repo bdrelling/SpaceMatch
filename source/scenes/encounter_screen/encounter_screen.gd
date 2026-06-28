@@ -10,7 +10,7 @@ const SCENE_PATH := "res://scenes/encounter_screen/encounter_screen.tscn"
 @onready var _match: MatchMinigame = %Match
 @onready var _footnote: Label = %Footnote
 
-# The encounter this screen hosts (a clone of the running ship vs the computer default). Owned here so the
+# The encounter this screen hosts (a clone of the running starship vs the computer default). Owned here so the
 # match screen only renders it; pointed into GameSession.game_state.encounter.
 var _encounter: Encounter
 
@@ -28,7 +28,7 @@ func _ready() -> void:
 	if _footnote.visible:
 		_footnote.text = BuildInfo.stamp()
 
-# Opens the encounter this screen hosts: a fresh [Encounter] with a clone of the running ship, pointed into
+# Opens the encounter this screen hosts: a fresh [Encounter] with a clone of the running starship, pointed into
 # the session so the match reads it.
 func _open_encounter() -> void:
 	var player_clone: StarshipState = GameSession.game_state.starship.clone() if GameSession.game_state.starship != null else null

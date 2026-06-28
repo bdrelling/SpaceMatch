@@ -76,15 +76,15 @@ func _draw() -> void:
 	if grid == null:
 		return
 	for cell: Vector2i in grid.existing_cells():
-		var rect := _cell_rect(cell)
-		draw_rect(rect, _CELL)
-		draw_rect(rect, _CELL_BORDER, false, 1.0)
+		var rectangle := _cell_rectangle(cell)
+		draw_rect(rectangle, _CELL)
+		draw_rect(rectangle, _CELL_BORDER, false, 1.0)
 	for module_state: ModuleState in grid.modules:
 		_draw_module(module_state, grid.cells_of(module_state))
 	if not _focus_cells.is_empty():
 		_draw_footprint_outline(_focus_cells, _FOCUS_OUTLINE, _FOCUS_WIDTH)
 	for cell: Vector2i in _preview_cells:
-		draw_rect(_cell_rect(cell), _VALID_PREVIEW if _preview_valid else _INVALID_PREVIEW)
+		draw_rect(_cell_rectangle(cell), _VALID_PREVIEW if _preview_valid else _INVALID_PREVIEW)
 
 # A module as one cohesive piece: its cells filled seamlessly (internal seams meet at full cell extent),
 # a single outline around the whole footprint, and its name lettered across it.
@@ -92,14 +92,14 @@ func _draw_module(module_state: ModuleState, cells: Array[Vector2i]) -> void:
 	var fill: Color = module_state.blueprint.color
 	fill.a = 1.0
 	for cell: Vector2i in cells:
-		draw_rect(_module_cell_rect(cell, cells), fill)
+		draw_rect(_module_cell_rectangle(cell, cells), fill)
 	_draw_footprint_outline(cells, module_state.blueprint.color.lightened(0.4), _MODULE_BORDER_WIDTH)
 	_draw_module_name(module_state, cells)
 
-# A cell's fill rect within its module: pulled in by [_MODULE_GAP] on sides that face outside the
+# A cell's fill rectangle within its module: pulled in by [_MODULE_GAP] on sides that face outside the
 # footprint, but flush to the cell edge on sides shared with another cell of the same module — so
 # neighbouring cells of one module tile seamlessly while the module as a whole sits gapped off the grid.
-func _module_cell_rect(cell: Vector2i, cells: Array[Vector2i]) -> Rect2:
+func _module_cell_rectangle(cell: Vector2i, cells: Array[Vector2i]) -> Rect2:
 	var x := cell.x * cell_size
 	var y := cell.y * cell_size
 	var left := x + (0.0 if cells.has(cell + Vector2i.LEFT) else _MODULE_GAP)
@@ -112,11 +112,11 @@ func _module_cell_rect(cell: Vector2i, cells: Array[Vector2i]) -> Rect2:
 # that border outside the footprint, so a multi-cell module gets one outline, not a box per cell.
 func _draw_footprint_outline(cells: Array[Vector2i], color: Color, width: float) -> void:
 	for cell: Vector2i in cells:
-		var rect := _module_cell_rect(cell, cells)
-		var top_left := rect.position
-		var top_right := rect.position + Vector2(rect.size.x, 0.0)
-		var bottom_left := rect.position + Vector2(0.0, rect.size.y)
-		var bottom_right := rect.position + rect.size
+		var rectangle := _module_cell_rectangle(cell, cells)
+		var top_left := rectangle.position
+		var top_right := rectangle.position + Vector2(rectangle.size.x, 0.0)
+		var bottom_left := rectangle.position + Vector2(0.0, rectangle.size.y)
+		var bottom_right := rectangle.position + rectangle.size
 		if not cells.has(cell + Vector2i.UP):
 			draw_line(top_left, top_right, color, width)
 		if not cells.has(cell + Vector2i.DOWN):
@@ -141,10 +141,10 @@ func _draw_module_name(module_state: ModuleState, cells: Array[Vector2i]) -> voi
 	var text_size := font.get_multiline_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, wrap_width, font_size)
 	var origin_x := bounds.position.x + _MODULE_GAP + _NAME_PADDING
 	var baseline_y := bounds.position.y + (bounds.size.y - text_size.y) * 0.5 + font.get_ascent(font_size)
-	var pos := Vector2(origin_x, baseline_y)
+	var position := Vector2(origin_x, baseline_y)
 	draw_multiline_string_outline(
-		font, pos, text, HORIZONTAL_ALIGNMENT_CENTER, wrap_width, font_size, -1, _NAME_OUTLINE_SIZE, _NAME_OUTLINE)
-	draw_multiline_string(font, pos, text, HORIZONTAL_ALIGNMENT_CENTER, wrap_width, font_size, -1, _NAME_COLOR)
+		font, position, text, HORIZONTAL_ALIGNMENT_CENTER, wrap_width, font_size, -1, _NAME_OUTLINE_SIZE, _NAME_OUTLINE)
+	draw_multiline_string(font, position, text, HORIZONTAL_ALIGNMENT_CENTER, wrap_width, font_size, -1, _NAME_COLOR)
 
 # The pixel bounding box of [cells] — for laying the name out across the whole footprint.
 func _footprint_bounds(cells: Array[Vector2i]) -> Rect2:
@@ -157,7 +157,7 @@ func _footprint_bounds(cells: Array[Vector2i]) -> Rect2:
 	var span := Vector2((max_cell.x - min_cell.x + 1) * cell_size, (max_cell.y - min_cell.y + 1) * cell_size)
 	return Rect2(origin, span)
 
-func _cell_rect(cell: Vector2i) -> Rect2:
+func _cell_rectangle(cell: Vector2i) -> Rect2:
 	return Rect2(
 		Vector2(cell.x * cell_size + _CELL_INSET, cell.y * cell_size + _CELL_INSET),
 		Vector2(cell_size - _CELL_INSET * 2.0, cell_size - _CELL_INSET * 2.0))

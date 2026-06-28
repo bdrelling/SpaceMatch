@@ -8,12 +8,12 @@ extends ScoringFormula
 func reward_for(quantity: int) -> int:
 	if quantity <= 0:
 		return 0
-	var prev: int = 1
-	var curr: int = 2
+	var previous: int = 1
+	var current: int = 2
 	if quantity == 1:
-		return prev
+		return previous
 	for _i: int in range(2, quantity):
-		var next: int = prev + curr
-		prev = curr
-		curr = next
-	return curr
+		var next: int = previous + current
+		previous = current
+		current = next
+	return current

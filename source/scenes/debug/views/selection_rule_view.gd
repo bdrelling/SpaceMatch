@@ -5,7 +5,7 @@ extends DebugView
 ## active rules' [member MatchRules.default_selection]; each change assigns a fresh [SelectionRule] so the
 ## board re-points to it on the next turn (see [member MatchMinigame] — its per-turn re-sync only fires when
 ## the active rule's reference changes). A starship's [member StarshipState.selection_override] still wins on
-## that ship's turn.
+## that starship's turn.
 
 # Index-aligned with [enum SelectionRule.Mode] (SWAP, SLIDE, TRACE, TELEPORT).
 const _MODE_LABELS: Array[String] = ["Swap", "Slide", "Trace", "Teleport"]

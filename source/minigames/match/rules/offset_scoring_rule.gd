@@ -14,10 +14,10 @@ func _init() -> void:
 	phase = MatchPhase.TURN_START
 
 func apply(context: RuleContext) -> void:
-	var ctx := context as MatchRuleContext
-	if ctx == null or ctx.encounter == null or ctx.combatant < 0:
+	var match_context := context as MatchRuleContext
+	if match_context == null or match_context.encounter == null or match_context.combatant < 0:
 		return
-	var ship: EncounterStarshipState = ctx.encounter.ship_of(ctx.combatant)
-	if ship == null:
+	var starship: EncounterStarshipState = match_context.encounter.starship_of(match_context.combatant)
+	if starship == null:
 		return
-	ship.score_offset = maxi(0, offset)
+	starship.score_offset = maxi(0, offset)

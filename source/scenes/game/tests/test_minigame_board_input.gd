@@ -5,7 +5,7 @@ extends GdUnitTestSuite
 ## space so pushed touches land where the board reports its cells.
 
 const _VIEW_SIZE := Vector2i(1080, 1920)
-const _MATCH := "res://minigames/match/match.tscn"
+const _MATCH := "res://minigames/match/match_minigame.tscn"
 
 func _find(node: Node, type: Variant) -> Node:
 	if is_instance_of(node, type):

@@ -1,22 +1,22 @@
 class_name AbilitiesView
 extends DebugView
-## The abilities page: every ship ability as a row that drills into its editor ([AbilityDetailView]). Reads
-## the live player ship's abilities (its hull kit + modules); edits in a detail page mutate the ability in
+## The abilities page: every starship ability as a row that drills into its editor ([AbilityDetailView]). Reads
+## the live player starship's abilities (its hull kit + modules); edits in a detail page mutate the ability in
 ## place, so a running board uses the new values the next time the ability is used. With no live game it
-## previews a fresh default ship's kit.
+## previews a fresh default starship's kit.
 
 func title() -> String:
 	return "Abilities"
 
-# The ship whose abilities this page edits: the live game's player ship, or a fresh default when none is live.
-func _ship() -> StarshipState:
+# The starship whose abilities this page edits: the live game's player starship, or a fresh default when none is live.
+func _starship() -> StarshipState:
 	if DebugConfig.active_state != null and DebugConfig.active_state.starship != null:
 		return DebugConfig.active_state.starship
 	return GameState.new().starship
 
 func _build() -> void:
-	var ship := _ship()
-	var abilities: Array[MatchAbility] = ship.abilities if ship != null else []
+	var starship := _starship()
+	var abilities: Array[MatchAbility] = starship.abilities if starship != null else []
 	if abilities.is_empty():
 		var empty := Label.new()
 		empty.text = "No abilities configured."

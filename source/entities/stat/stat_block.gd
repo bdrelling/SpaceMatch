@@ -1,7 +1,7 @@
 class_name StarshipStats
 extends StatBlock
-## A vector of ship-stat contributions. A module authors one as its +/- effect when slotted; summing
-## the blocks of a ship's slotted modules ([method add]) gives the ship's stat profile.
+## A vector of starship-stat contributions. A module authors one as its +/- effect when slotted; summing
+## the blocks of a starship's slotted modules ([method add]) gives the starship's stat profile.
 
 @export var power: int = 0
 @export var speed: int = 0
@@ -13,14 +13,14 @@ extends StatBlock
 @export var life_support: int = 0
 @export var damage: int = 0
 @export var energy: int = 0
-## Bars of warp meter a ship can hold — its warp-bar capacity, granted by a warp-core module. Zero means the
-## ship can't warp at all (no Jump, and warp tiles don't spawn for it). Summed from modules like any stat, so
+## Bars of warp meter a starship can hold — its warp-bar capacity, granted by a warp-core module. Zero means the
+## starship can't warp at all (no Jump, and warp tiles don't spawn for it). Summed from modules like any stat, so
 ## a bigger or second core raises it; not bound to a [Stat.Type] tile (warp is the encounter meter, not a
 ## banked resource).
 @export var warp_capacity: int = 0
-## Hit points this block contributes — the ship's hull. A ship's base block carries its starting health; a
+## Hit points this block contributes — the starship's hull. A starship's base block carries its starting health; a
 ## hull/armor module can add more. The encounter's starting max health is seeded from the effective total, so
-## HP is ship-driven (chosen ship + its modules) rather than a fixed constant.
+## HP is starship-driven (chosen starship + its modules) rather than a fixed constant.
 @export var health: int = 0
 
 ## This block's value for [param stat].

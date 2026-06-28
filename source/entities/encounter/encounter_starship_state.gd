@@ -1,25 +1,25 @@
 class_name EncounterStarshipState
 extends StarshipState
 ## A starship as it exists inside an encounter — its persistent [StarshipState] plus the per-fight state a
-## ship only has while fighting: the resources it has banked, their optional capacity, its turn's action
+## starship only has while fighting: the resources it has banked, their optional capacity, its turn's action
 ## budget, and the scoring offset in force. [EncounterState] owns one per combatant ([member
 ## EncounterState.player] / [member EncounterState.opponent]); the match's TURN_START rules write the budgets,
-## capacity and offset here, and the grant rules bank into [member resources]. A bare [StarshipState] (a ship
+## capacity and offset here, and the grant rules bank into [member resources]. A bare [StarshipState] (a starship
 ## outside a fight) has none of this — resources are encounter-scoped.
 
 ## One slot per [MatchTile] kind. Sizes [member resources] / [member resource_maximums].
 const RESOURCE_KINDS: int = 7
 
-## This ship's banked resources this encounter, per [MatchTile] kind — what the portrait readouts show and
+## This starship's banked resources this encounter, per [MatchTile] kind — what the portrait readouts show and
 ## abilities spend. Grown by [method add_resource] on a match, spent by [method spend_resource].
 @export var resources: PackedInt32Array = PackedInt32Array()
-## The most of each kind this ship may hold, index-aligned to kind. Zero (or an absent slot) means unlimited —
+## The most of each kind this starship may hold, index-aligned to kind. Zero (or an absent slot) means unlimited —
 ## the default, so banking is unbounded until a [ResourceCapacityRule] sets a ceiling at turn start.
 @export var resource_maximums: PackedInt32Array = PackedInt32Array()
-## Board moves this ship has left this turn. Refilled at turn start by [ActionBudgetRule] to its
+## Board moves this starship has left this turn. Refilled at turn start by [ActionBudgetRule] to its
 ## actions-per-turn, spent one per resolved move; the turn passes once it reaches zero. One is a single-move turn.
 @export var actions_remaining: int = 1
-## What using an ability does to this ship's turn — an [enum ActionBudgetRule.AbilityTurnCost] value, set at
+## What using an ability does to this starship's turn — an [enum ActionBudgetRule.AbilityTurnCost] value, set at
 ## turn start by [ActionBudgetRule]. Default zero is [constant ActionBudgetRule.AbilityTurnCost.ENDS_TURN].
 @export var ability_turn_cost: int = 0
 ## Subtracted from every match's reward this turn (floored at zero) — a match of N banks N minus this. Zero by
@@ -32,26 +32,26 @@ func _init() -> void:
 	if resource_maximums.is_empty():
 		resource_maximums.resize(RESOURCE_KINDS)
 
-## Wraps [param source]'s persistent ship data in an encounter-scoped state ready to bank resources. Shares the
+## Wraps [param source]'s persistent starship data in an encounter-scoped state ready to bank resources. Shares the
 ## source's stats / grid / ruleset / abilities (the encounter only reads them); the new state carries its own
 ## fresh, zeroed resource tally. Used by [method Encounter.create] to build the two combatants.
 static func for_combatant(source: StarshipState) -> EncounterStarshipState:
-	var ship := EncounterStarshipState.new()
+	var starship := EncounterStarshipState.new()
 	if source != null:
-		ship.name = source.name
-		ship.stats = source.stats
-		ship.module_grid = source.module_grid
-		ship.health = source.health
-		ship.selection_override = source.selection_override
-		ship.ruleset = source.ruleset
-		ship.abilities = source.abilities
-	return ship
+		starship.name = source.name
+		starship.stats = source.stats
+		starship.module_grid = source.module_grid
+		starship.health = source.health
+		starship.selection_override = source.selection_override
+		starship.ruleset = source.ruleset
+		starship.abilities = source.abilities
+	return starship
 
-## This ship's banked count of [param kind] (zero for an unknown kind).
+## This starship's banked count of [param kind] (zero for an unknown kind).
 func resource_of(kind: int) -> int:
 	return resources[kind] if kind >= 0 and kind < resources.size() else 0
 
-## Banks [param amount] of [param kind], clamped to this ship's capacity for that kind (a zero/absent maximum
+## Banks [param amount] of [param kind], clamped to this starship's capacity for that kind (a zero/absent maximum
 ## is unlimited). A non-positive amount or an unknown kind is a no-op.
 func add_resource(kind: int, amount: int) -> void:
 	if amount <= 0 or kind < 0 or kind >= resources.size():
@@ -66,7 +66,7 @@ func spend_resource(kind: int, amount: int) -> void:
 		return
 	resources[kind] = maxi(0, resources[kind] - amount)
 
-## Sets this ship's per-kind capacity from [param maximums] (index-aligned to kind; zero/absent is unlimited).
+## Sets this starship's per-kind capacity from [param maximums] (index-aligned to kind; zero/absent is unlimited).
 ## A resource already banked above a new ceiling is clamped down to it.
 func set_resource_maximums(maximums: PackedInt32Array) -> void:
 	for kind: int in resource_maximums.size():
@@ -79,6 +79,6 @@ func set_resource_maximums(maximums: PackedInt32Array) -> void:
 func consume_action() -> void:
 	actions_remaining = maxi(0, actions_remaining - 1)
 
-## Whether this ship has a move left this turn.
+## Whether this starship has a move left this turn.
 func has_actions_left() -> bool:
 	return actions_remaining > 0

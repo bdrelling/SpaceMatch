@@ -1,7 +1,7 @@
 class_name StarshipTuningView
 extends DebugView
-## Live tuning for the two starships fighting the running encounter — one card per ship. Edits the ship itself:
-## its current hull, its hull stat (the max-HP cap), and its combat stats, written straight onto the live ship
+## Live tuning for the two starships fighting the running encounter — one card per starship. Edits the starship itself:
+## its current hull, its hull stat (the max-HP cap), and its combat stats, written straight onto the live starship
 ## so the change shows on the board at once. The match fights on clones, so a fresh match starts fresh — edits
 ## don't persist. Reads the running game off [member DebugConfig.active_state]; shows a notice when no encounter
 ## is live (e.g. from the main menu).
@@ -30,35 +30,35 @@ func _build() -> void:
 		add_child(notice)
 		return
 
-	_build_ship_card(encounter, EncounterState.Combatant.PLAYER, "Your Starship")
-	_build_ship_card(encounter, EncounterState.Combatant.OPPONENT, "Opponent")
+	_build_starship_card(encounter, EncounterState.Combatant.PLAYER, "Your Starship")
+	_build_starship_card(encounter, EncounterState.Combatant.OPPONENT, "Opponent")
 
-# A card of live sliders for one fight ship: its current hull (HP), its hull stat (the max-HP cap), and its
-# combat stats. Each slider writes straight onto the ship and emits changed so the board repaints at once.
-func _build_ship_card(encounter: EncounterState, combatant: EncounterState.Combatant, fallback: String) -> void:
-	var ship: StarshipState = encounter.ship_of(combatant)
-	if ship == null:
+# A card of live sliders for one fight starship: its current hull (HP), its hull stat (the max-HP cap), and its
+# combat stats. Each slider writes straight onto the starship and emits changed so the board repaints at once.
+func _build_starship_card(encounter: EncounterState, combatant: EncounterState.Combatant, fallback: String) -> void:
+	var starship: StarshipState = encounter.starship_of(combatant)
+	if starship == null:
 		return
-	var card_title: String = ship.name if not ship.name.is_empty() else fallback
+	var card_title: String = starship.name if not starship.name.is_empty() else fallback
 	var card := DebugRuleCard.create(card_title, Color.WHITE)
 	add_child(card)
 
-	card.add_row(DebugRow.slider("HP", Color.WHITE, 0, 100, ship.health,
+	card.add_row(DebugRow.slider("HP", Color.WHITE, 0, 100, starship.health,
 		func(value: float) -> void:
-			ship.health = int(value)
+			starship.health = int(value)
 			encounter.emit_changed()))
-	if ship.stats == null:
+	if starship.stats == null:
 		return
-	card.add_row(DebugRow.slider("Hull (max HP)", Color.WHITE, 1, 100, ship.stats.health,
+	card.add_row(DebugRow.slider("Hull (max HP)", Color.WHITE, 1, 100, starship.stats.health,
 		func(value: float) -> void:
-			ship.stats.health = int(value)
+			starship.stats.health = int(value)
 			encounter.emit_changed()))
 	for stat: Dictionary in _STATS:
 		var prop: String = stat["prop"]
 		var label: String = stat["label"]
 		var kind: int = stat["kind"]
-		var current: int = ship.stats.get(prop)
+		var current: int = starship.stats.get(prop)
 		card.add_row(DebugRow.slider(label, MatchTile.color_of(kind), 0, 30, current,
 			func(value: float) -> void:
-				ship.stats.set(prop, int(value))
+				starship.stats.set(prop, int(value))
 				encounter.emit_changed()))

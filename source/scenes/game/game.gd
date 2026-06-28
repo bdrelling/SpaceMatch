@@ -197,8 +197,8 @@ func _refresh_actions() -> void:
 	if _bound_minigame != null:
 		_top_bar.set_actions(_bound_minigame.actions())
 
-# A stage asked to drill into a combatant's loadout — point Loadout at that ship, then open it (the
-# last stage). With no ship, Loadout keeps whatever grid it was last bound to (the player's, by default).
+# A stage asked to drill into a combatant's loadout — point Loadout at that starship, then open it (the
+# last stage). With no starship, Loadout keeps whatever grid it was last bound to (the player's, by default).
 func _on_drill_requested(starship: StarshipState) -> void:
 	var loadout: LoadoutMinigame = _loadout_stage()
 	if loadout != null and starship != null:
@@ -270,8 +270,8 @@ func _on_wallet_changed() -> void:
 	_top_bar.set_scrap(scrap)
 
 # Builds the shell's entity nodes from the fresh session state: the player [Starship] and [Wallet] wrap their
-# state slices; the [Encounter] is opened with a clone of the player ship so combat never touches the saved
-# ship. All live under Game; their states are pointed back into GameSession.game_state.
+# state slices; the [Encounter] is opened with a clone of the player starship so combat never touches the saved
+# starship. All live under Game; their states are pointed back into GameSession.game_state.
 func _build_entities() -> void:
 	_starship = Starship.with_state(GameSession.game_state.starship)
 	_starship.name = "Starship"
@@ -283,7 +283,7 @@ func _build_entities() -> void:
 
 	_open_encounter()
 
-# Opens (or reopens) the encounter the shell owns: a fresh [Encounter] node with a clone of the player ship,
+# Opens (or reopens) the encounter the shell owns: a fresh [Encounter] node with a clone of the player starship,
 # pointed into GameSession.game_state. Frees any prior encounter so a restart doesn't leak it.
 func _open_encounter() -> void:
 	if _encounter != null:

@@ -58,8 +58,8 @@ func _cleanup_old_runs() -> void:
 	directory.list_dir_begin()
 	var entry: String = directory.get_next()
 	while entry != "":
-		# Only prune our own timestamped run dirs; never touch unrelated folders that
-		# happen to share the directory (so a stray dir can't evict a live capture).
+		# Only prune our own timestamped run directories; never touch unrelated folders that
+		# happen to share the directory (so a stray directory can't evict a live capture).
 		if directory.current_is_dir() and entry.begins_with("20") and entry.contains("T"):
 			runs.append(entry)
 		entry = directory.get_next()

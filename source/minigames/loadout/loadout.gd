@@ -1,17 +1,17 @@
 class_name LoadoutMinigame
 extends Minigame
 ## The loadout screen: a starship's module grid plus the stat profile its modules sum to. It runs in
-## three [enum Mode]s the shell selects per context — [constant Mode.READ_ONLY] when inspecting a ship
-## mid-combat, [constant Mode.EDIT] when modifying a ship (e.g. a shop), and [constant Mode.SELECT] when
-## loading out a ship at game start. Tapping a module focuses it (name + per-stat contribution) in any
+## three [enum Mode]s the shell selects per context — [constant Mode.READ_ONLY] when inspecting a starship
+## mid-combat, [constant Mode.EDIT] when modifying a starship (e.g. a shop), and [constant Mode.SELECT] when
+## loading out a starship at game start. Tapping a module focuses it (name + per-stat contribution) in any
 ## mode; dragging to rearrange is allowed only in the editable modes.
 
 ## The context the loadout screen runs in. The shell sets it via [method set_mode]; it gates whether
 ## modules can be dragged (and, later, whether the module tray is shown).
 enum Mode {
 	READ_ONLY,  ## Mid-combat: inspect only — no rearranging, no tray.
-	EDIT,       ## Modify the current ship's modules (e.g. a shop). Drag to rearrange; tray available.
-	SELECT,     ## Load out a ship at game start. Drag to rearrange; tray available.
+	EDIT,       ## Modify the current starship's modules (e.g. a shop). Drag to rearrange; tray available.
+	SELECT,     ## Load out a starship at game start. Drag to rearrange; tray available.
 }
 
 ## DEBUG: the player's own loadout page (mounted via [method bind_session]) defaults to [constant
@@ -61,7 +61,7 @@ func _ready() -> void:
 ## Mounts the player's module grid as the board and lists the stats its modules sum to. Called by
 ## [MinigameScreen] when the page mounts; reads the running game from the [code]GameSession[/code] autoload
 ## and defaults to an editable mode (the player's own loadout). The shell re-points this at another
-## combatant's ship via [method show_starship] when a portrait drills in.
+## combatant's starship via [method show_starship] when a portrait drills in.
 func bind_session() -> void:
 	if GameSession.game_state == null or GameSession.game_state.starship == null:
 		return
@@ -87,7 +87,7 @@ func set_mode(mode: Mode) -> void:
 
 # Rebuilds the board and stat list for [param module_grid], freeing the prior view first
 # ([BoardCanvas.set_board] detaches the old board but doesn't free it, so re-pointing would otherwise
-# leak views) and re-pointing the stats at the shown ship.
+# leak views) and re-pointing the stats at the shown starship.
 func _show_grid(module_grid: ModuleGridState) -> void:
 	if module_grid == null:
 		return
@@ -116,7 +116,7 @@ func _editable() -> bool:
 
 # Pointer events forwarded from the [BoardCanvas] (positions already in global space). Finger 0 / left
 # mouse picks up the module under the press; dragging it to another fitting cell moves it (editable
-# ships only), while a press-and-release on the same module taps it into focus. A press on empty space
+# starships only), while a press-and-release on the same module taps it into focus. A press on empty space
 # clears the focus.
 func _on_board_input(event: InputEvent) -> bool:
 	var touch := event as InputEventScreenTouch
@@ -138,7 +138,7 @@ func _on_board_input(event: InputEvent) -> bool:
 	return false
 
 # Picks up the module under [param global_position]; a press on empty space clears the focus instead.
-# The footprint preview only appears on an editable board (the player's own ship, between combats).
+# The footprint preview only appears on an editable board (the player's own starship, between combats).
 func _press(global_position: Vector2) -> bool:
 	var cell := _grid_view.cell_at(global_position)
 	var placed := _module_grid.state_at(cell) if cell.x != -1 else null
@@ -152,7 +152,7 @@ func _press(global_position: Vector2) -> bool:
 	return true
 
 # Re-previews the held footprint at the hovered cell (off-grid clears the preview). A no-op unless a
-# module is held on an editable board, so plain mouse motion and view-only ships ignore it.
+# module is held on an editable board, so plain mouse motion and view-only starships ignore it.
 func _move_preview(global_position: Vector2) -> bool:
 	if _grabbed_cell.x == -1 or not _editable():
 		return false
@@ -227,7 +227,7 @@ func _focused_cells() -> Array[Vector2i]:
 #endregion
 
 # The stat readout: one row per stat-bearing match tile kind, each shown beside its tile, in [MatchTile]
-# kind order. Each entry is [stat, label, tile kind]. The scrap (kind 4) and warp (kind 5) tiles aren't ship
+# kind order. Each entry is [stat, label, tile kind]. The scrap (kind 4) and warp (kind 5) tiles aren't starship
 # stats — scrap banks to the wallet, warp charges the encounter meter — so neither has a row.
 func _stat_rows() -> Array:
 	return [

@@ -6,10 +6,10 @@ extends Node2D
 ## physical contact: three-or-more touching tiles of one kind pop. The logical board ([[GridState]])
 ## keeps running underneath as pure bookkeeping, so every pop clears those cells and a normal refill rolls
 ## fresh tiles in at the top, which then fall into the pile. The grid is forever quietly refilling under
-## the chaos. Prototype-grade — meant to answer "does this feel good," not to ship.
+## the chaos. Prototype-grade — meant to answer "does this feel good," not to starship.
 ##
 ## This is a SpaceMatch-only effect; matchbox knows nothing about physics. It mounts as an unscaled
-## overlay sized to the board's CURRENT on-screen rect (so a tile here is the same size it was on the
+## overlay sized to the board's CURRENT on-screen rectangle (so a tile here is the same size it was on the
 ## board) and works in those screen pixels. Running unscaled matters: Godot ignores node scale on polygon
 ## colliders, so a scaled space would collide wrong. The host hands us the board's display scale and we
 ## bake it into one effective cell size.
@@ -98,14 +98,14 @@ func unlock(grid: Grid, display_scale: float) -> void:
 			continue
 		# Tile position is its cell centre in board-local px; floor recovers the cell, ×scale gives the
 		# matching point in our screen-pixel overlay.
-		var local_pos: Vector2 = tile.position
-		var cell := Vector2i(floori(local_pos.x / _cell_size), floori(local_pos.y / _cell_size))
+		var local_position: Vector2 = tile.position
+		var cell := Vector2i(floori(local_position.x / _cell_size), floori(local_position.y / _cell_size))
 		var object: GridObjectState = _state.get_object_at(0, cell.x, cell.y)
 		# Detach from the grid without freeing, and drop the registry entry so a stray reflow can't yank
 		# the tile back or free it out from under its body.
 		grid.remove_child(tile)
 		grid._tiles.erase(tile)
-		_attach_body(tile, tile.kind, object, local_pos * display_scale)
+		_attach_body(tile, tile.kind, object, local_position * display_scale)
 	_burst_bodies()
 	set_physics_process(true)
 
@@ -115,12 +115,12 @@ func unlock(grid: Grid, display_scale: float) -> void:
 func _burst_bodies() -> void:
 	var center := Vector2(_columns * _eff_cell, _rows * _eff_cell) * 0.5
 	for body: RigidBody2D in _by_body.keys():
-		var dir: Vector2 = body.position - center
-		if dir.length() < 1.0:
-			dir = Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0))
-		dir.y = absf(dir.y) * 0.4 + 0.2
-		dir = dir.normalized()
-		body.linear_velocity = dir * randf_range(_BURST_SPEED_MIN, _BURST_SPEED_MAX) * _eff_cell
+		var direction: Vector2 = body.position - center
+		if direction.length() < 1.0:
+			direction = Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0))
+		direction.y = absf(direction.y) * 0.4 + 0.2
+		direction = direction.normalized()
+		body.linear_velocity = direction * randf_range(_BURST_SPEED_MIN, _BURST_SPEED_MAX) * _eff_cell
 		body.angular_velocity = randf_range(-_BURST_SPIN, _BURST_SPIN)
 
 func _physics_process(delta: float) -> void:
@@ -217,9 +217,9 @@ func _pop_tile(tile: MatchTile, body: RigidBody2D) -> void:
 	tween.tween_property(tile, "modulate:a", 0.0, _POP_DURATION).set_ease(Tween.EASE_IN)
 	tween.finished.connect(tile.queue_free)
 
-func _attach_body(tile: MatchTile, kind: int, object: GridObjectState, pos: Vector2) -> void:
+func _attach_body(tile: MatchTile, kind: int, object: GridObjectState, position: Vector2) -> void:
 	var body := RigidBody2D.new()
-	body.position = pos
+	body.position = position
 	body.physics_material_override = _material
 	body.contact_monitor = true
 	body.max_contacts_reported = 8
@@ -283,8 +283,8 @@ func _add_wall(center: Vector2, size: Vector2) -> void:
 	var wall := StaticBody2D.new()
 	wall.position = center
 	var shape := CollisionShape2D.new()
-	var rect := RectangleShape2D.new()
-	rect.size = size
-	shape.shape = rect
+	var rectangle := RectangleShape2D.new()
+	rectangle.size = size
+	shape.shape = rectangle
 	wall.add_child(shape)
 	add_child(wall)

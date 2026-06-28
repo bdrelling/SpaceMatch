@@ -3,7 +3,7 @@ extends DebugView
 ## The board page — the [MatchConfig] geometry (size, shortest run), edited on the shared
 ## [member DebugConfig.match_config]. Board shape is fixed once a board is laid out, so size and min run are
 ## editable only with no encounter running (they'd otherwise change nothing until a restart); during an
-## encounter they show read-only. (Warp on/off is a rule — see Match Rules; whether a ship can warp is a
+## encounter they show read-only. (Warp on/off is a rule — see Match Rules; whether a starship can warp is a
 ## warp-core module.)
 
 func title() -> String:

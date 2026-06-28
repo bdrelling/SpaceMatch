@@ -13,9 +13,9 @@ func _init() -> void:
 	phase = MatchPhase.MOVE_RESOLVED
 
 func apply(context: RuleContext) -> void:
-	var ctx := context as MatchRuleContext
-	if ctx == null:
+	var match_context := context as MatchRuleContext
+	if match_context == null:
 		return
-	if min_match > 0 and ctx.max_run >= min_match:
-		ctx.go_again = true
-		ctx.go_again_reason = "Match-%d" % ctx.max_run
+	if min_match > 0 and match_context.max_run >= min_match:
+		match_context.go_again = true
+		match_context.go_again_reason = "Match-%d" % match_context.max_run

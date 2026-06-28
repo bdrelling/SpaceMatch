@@ -22,8 +22,8 @@ func _draw() -> void:
 	var cell_size: float = minf(size.x / columns, size.y / rows)
 	var origin := (size - Vector2(columns, rows) * cell_size) * 0.5
 	for cell: Vector2i in grid.existing_cells():
-		draw_rect(_cell_rect(origin, cell_size, cell), _CELL)
-		draw_rect(_cell_rect(origin, cell_size, cell), _CELL_BORDER, false, 1.0)
+		draw_rect(_cell_rectangle(origin, cell_size, cell), _CELL)
+		draw_rect(_cell_rectangle(origin, cell_size, cell), _CELL_BORDER, false, 1.0)
 	for module_state: ModuleState in grid.modules:
 		_draw_module(origin, cell_size, module_state, grid.cells_of(module_state))
 
@@ -31,7 +31,7 @@ func _draw_module(origin: Vector2, cell_size: float, module_state: ModuleState, 
 	var fill: Color = module_state.blueprint.color
 	fill.a = 1.0
 	for cell: Vector2i in cells:
-		draw_rect(_cell_rect(origin, cell_size, cell), fill)
+		draw_rect(_cell_rectangle(origin, cell_size, cell), fill)
 
-func _cell_rect(origin: Vector2, cell_size: float, cell: Vector2i) -> Rect2:
+func _cell_rectangle(origin: Vector2, cell_size: float, cell: Vector2i) -> Rect2:
 	return Rect2(origin + Vector2(cell) * cell_size + Vector2(0.5, 0.5), Vector2(cell_size - 1.0, cell_size - 1.0))

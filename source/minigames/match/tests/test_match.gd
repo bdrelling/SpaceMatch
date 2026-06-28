@@ -2,18 +2,18 @@ extends GdUnitTestSuite
 ## MatchMinigame (match-3). The board is an equal-frequency generator, so it always lays down a full
 ## field of tiles.
 
-# Reset the shared GameSession singleton before each test so a fresh default game (ship + wallet) backs the
+# Reset the shared GameSession singleton before each test so a fresh default game (starship + wallet) backs the
 # run and tests don't leak state into each other.
 func before_test() -> void:
 	GameSession.start_new_game()
 
-# A standalone encounter with default combatant ships, freed at test end. The [Encounter] node builds the two
+# A standalone encounter with default combatant starships, freed at test end. The [Encounter] node builds the two
 # [Starship] nodes; tests operate on its [EncounterState] directly (resources, no node-reaching).
 func _encounter() -> EncounterState:
 	var encounter: Encounter = auto_free(Encounter.create())
 	return encounter.state
 
-# Acts as a host mounting the match: opens an encounter on the session (a clone of the player ship vs the
+# Acts as a host mounting the match: opens an encounter on the session (a clone of the player starship vs the
 # computer default) and binds the match to it, the way [Game] / [EncounterScreen] do.
 func _host_bind(game: MatchMinigame) -> void:
 	var enc: Encounter = auto_free(Encounter.create(GameSession.game_state.starship.clone()))
@@ -21,7 +21,7 @@ func _host_bind(game: MatchMinigame) -> void:
 	game.bind_session()
 
 func _make(rules: MatchRules = null, mode := MatchBoardView.InputMode.SWAP, ai := true) -> MatchMinigame:
-	var scene: PackedScene = load("res://minigames/match/match.tscn")
+	var scene: PackedScene = load("res://minigames/match/match_minigame.tscn")
 	var game: MatchMinigame = scene.instantiate()
 	game.board_seed = 4242
 	game.input_mode = mode
@@ -33,8 +33,8 @@ func _make(rules: MatchRules = null, mode := MatchBoardView.InputMode.SWAP, ai :
 	# Most turn/ability tests isolate the logic from the AI opponent — a hot-seat opponent never auto-plays.
 	game.ai_opponent = ai
 	add_child(game)
-	# Behaviour tests run on neutral rules: clear each fight ship's own ruleset (its extra-turn kit) so a 4+
-	# match doesn't silently keep the board. Abilities stay — the AI ability tests read the ship's set.
+	# Behaviour tests run on neutral rules: clear each fight starship's own ruleset (its extra-turn kit) so a 4+
+	# match doesn't silently keep the board. Abilities stay — the AI ability tests read the starship's set.
 	if game._encounter != null:
 		if game._encounter.player != null:
 			game._encounter.player.ruleset = Ruleset.new()
@@ -60,7 +60,7 @@ const _SCRAP_KIND: int = 4
 const _WARP_KIND: int = 5
 const _DAMAGE_KIND: int = 6
 
-# The portraits show only the four colored stat tiles — scrap, warp, and damage aren't ship stats.
+# The portraits show only the four colored stat tiles — scrap, warp, and damage aren't starship stats.
 func test_portrait_shows_only_four_stat_readouts() -> void:
 	var game := _make()
 	await await_idle_frame()
@@ -154,7 +154,7 @@ func test_campaign_opponent_warp_drains_player() -> void:
 func test_quick_match_warp_is_a_tug() -> void:
 	var game := _make()  # quick_match defaults true -> tug on
 	await await_idle_frame()
-	game._encounter.player_warp_max = 4  # both ships carry a warp core in this tug
+	game._encounter.player_warp_max = 4  # both starships carry a warp core in this tug
 	game._encounter.opponent_warp_max = 4
 	assert_bool(game._encounter.warp_tug).is_true()
 	game._encounter.advance_turn()  # opponent's turn
@@ -255,10 +255,10 @@ func test_opponent_takes_its_turn_automatically() -> void:
 # --- Rules: spawn weights and the extra-turn rule ---
 
 # The standard MATCH-scope config: one-to-one scoring, reload split on, and warp (kind 5) rarer than every
-# stat tile. Extra turns and abilities are NOT here — they're the starship's now (see the ship tests below).
+# stat tile. Extra turns and abilities are NOT here — they're the starship's now (see the starship tests below).
 func test_default_rules_match_the_designed_config() -> void:
 	var rules := MatchRules.default()
-	# Extra turns moved off the match onto the ship — the match's own ruleset no longer carries one.
+	# Extra turns moved off the match onto the starship — the match's own ruleset no longer carries one.
 	assert_object(rules.ruleset.find(&"extra_turn")).is_null()
 	# Scoring is one-to-one by default — a match of N is worth N (the Fibonacci formula is opt-in).
 	assert_int(rules.scoring.reward_for(6)).is_equal(6)
@@ -272,10 +272,10 @@ func test_default_rules_match_the_designed_config() -> void:
 		assert_int(warp_weight).is_less(stat_weight)
 
 # The default starship carries the standard hull kit: a match-4 extra-turn rule. This is where extra turns
-# live now — on the ship, composed into the match per turn — not on the match's own ruleset.
+# live now — on the starship, composed into the match per turn — not on the match's own ruleset.
 func test_default_starship_carries_the_extra_turn_kit() -> void:
-	var ship := GameSession.game_state.starship
-	var extra_turn := ship.ruleset.find(&"extra_turn") as ExtraTurnRule
+	var starship := GameSession.game_state.starship
+	var extra_turn := starship.ruleset.find(&"extra_turn") as ExtraTurnRule
 	assert_object(extra_turn).is_not_null()
 	assert_int(extra_turn.min_match).is_equal(4)
 
@@ -301,30 +301,30 @@ func test_match_below_threshold_passes_the_turn() -> void:
 	game.queue_free()
 
 # Extra turns are the acting starship's, composed into the match per turn. With NO extra-turn rule on the
-# match (neutral), a player ship that carries one still keeps the board on a 4-match.
+# match (neutral), a player starship that carries one still keeps the board on a 4-match.
 func test_extra_turn_rule_is_starship_based() -> void:
 	var game := _make(MatchRules.new(), MatchBoardView.InputMode.LINE_SHIFT, false)
 	await await_idle_frame()
-	var ship_set := Ruleset.new()
+	var starship_set := Ruleset.new()
 	var rule := ExtraTurnRule.new()
 	rule.min_match = 4
-	ship_set.add(rule)
-	game._encounter.player.ruleset = ship_set
+	starship_set.add(rule)
+	game._encounter.player.ruleset = starship_set
 	game._move_max_run = 4
 	game._on_move_resolved(true, 4)
-	assert_int(game._encounter.active_combatant()).is_equal(EncounterState.Combatant.PLAYER)  # ship rule kept the board
+	assert_int(game._encounter.active_combatant()).is_equal(EncounterState.Combatant.PLAYER)  # starship rule kept the board
 	game.queue_free()
 
-# Default + per-ship override (mirroring selection): the match says a 5 grants another turn, the player ship's
-# rule says 3. On the player's turn the ship's rule overrides the match's by rule_name, so a 3 keeps the board.
-func test_ship_rule_overrides_the_match_rule_by_name() -> void:
+# Default + per-starship override (mirroring selection): the match says a 5 grants another turn, the player starship's
+# rule says 3. On the player's turn the starship's rule overrides the match's by rule_name, so a 3 keeps the board.
+func test_starship_rule_overrides_the_match_rule_by_name() -> void:
 	var game := _make(_extra_turn_rules(5), MatchBoardView.InputMode.LINE_SHIFT, false)
 	await await_idle_frame()
-	var ship_set := Ruleset.new()
+	var starship_set := Ruleset.new()
 	var loose := ExtraTurnRule.new()
 	loose.min_match = 3
-	ship_set.add(loose)
-	game._encounter.player.ruleset = ship_set
+	starship_set.add(loose)
+	game._encounter.player.ruleset = starship_set
 	game._move_max_run = 3
 	game._on_move_resolved(true, 3)
 	assert_int(game._encounter.active_combatant()).is_equal(EncounterState.Combatant.PLAYER)
@@ -399,9 +399,9 @@ func test_spawn_weights_bias_the_pool() -> void:
 
 # --- Abilities ---
 
-# The standard hull kit grants one ability per stat gem (red/yellow/green/blue = 0/1/2/3) — Target Lock /
+# The standard hull kit grants one ability per stat tile (red/yellow/green/blue = 0/1/2/3) — Target Lock /
 # Evasive Maneuvers / Siphon / Shields — plus a fifth Disruptor that also spends green. Abilities are the
-# ship's now, so they're read off the default starship, not the match rules.
+# starship's now, so they're read off the default starship, not the match rules.
 func test_default_starship_defines_the_standard_abilities() -> void:
 	var abilities := GameSession.game_state.starship.abilities
 	assert_int(abilities.size()).is_equal(5)
@@ -413,13 +413,13 @@ func test_default_starship_defines_the_standard_abilities() -> void:
 	assert_bool(abilities[3].effects[0] is ShieldEffect).is_true()
 	assert_int(abilities[1].costs[0].amount).is_equal(5)   # Evasive Maneuvers is the cheap one
 	assert_int(abilities[3].costs[0].amount).is_equal(10)  # Shields
-	# Disruptor: disables an opponent module for 3 turns, paid for with green (the science gem).
+	# Disruptor: disables an opponent module for 3 turns, paid for with green (the science tile).
 	var disruptor := abilities[4]
 	assert_bool(disruptor.effects[0] is DisableEffect).is_true()
 	assert_int(disruptor.costs[0].kind).is_equal(2)
 	assert_int((disruptor.effects[0] as DisableEffect).turns).is_equal(3)
 
-# Using an ability spends its gems from the player's tally and deals its damage to the opponent. Line-shift
+# Using an ability spends its tiles from the player's tally and deals its damage to the opponent. Line-shift
 # keeps the AI from auto-playing the handed-off turn, so the spend/damage are read without async interference.
 func test_ability_use_spends_gems_and_deals_damage() -> void:
 	var game := _make(MatchRules.new(), MatchBoardView.InputMode.LINE_SHIFT, false)
@@ -445,7 +445,7 @@ func test_using_an_ability_ends_the_turn() -> void:
 	game.queue_free()
 
 # The opponent picks the affordable attack on its turn — nothing when broke, an attack it can pay for once
-# it has the gems (the AI's ability use).
+# it has the tiles (the AI's ability use).
 func test_opponent_picks_an_affordable_ability() -> void:
 	var game := _make(MatchRules.default())
 	await await_idle_frame()
@@ -511,7 +511,7 @@ func test_reload_splits_board_resources_between_players() -> void:
 		assert_int(game._encounter.opponent.resources[k]).is_equal(each)
 	game.queue_free()
 
-# An ability the player can't afford does nothing — no damage, no gems drained below the cost.
+# An ability the player can't afford does nothing — no damage, no tiles drained below the cost.
 func test_ability_unaffordable_does_nothing() -> void:
 	var game := _make()
 	await await_idle_frame()
@@ -648,7 +648,7 @@ func test_opponent_jump_only_in_a_tug() -> void:
 	enc.jump(EncounterState.Combatant.OPPONENT)
 	assert_int(enc.defeated()).is_equal(EncounterState.Combatant.PLAYER)  # the opponent won
 
-# Without a warp core (zero capacity) a ship can't warp at all: matched warp banks nothing and Jump stays out.
+# Without a warp core (zero capacity) a starship can't warp at all: matched warp banks nothing and Jump stays out.
 func test_no_warp_without_a_core() -> void:
 	var enc := _encounter()  # a fresh encounter carries no warp capacity
 	enc.add_warp(EncounterState.Combatant.PLAYER, 10)
@@ -703,7 +703,7 @@ func test_target_lock_buffs_tile_damage() -> void:
 	assert_int(game._encounter.opponent_health).is_equal(max_health - 5)  # 3 tiles + 2 damage stat
 	game.queue_free()
 
-# The effective DAMAGE stat is permanent profile + temporary buffs: a ship that contributes damage hits for it.
+# The effective DAMAGE stat is permanent profile + temporary buffs: a starship that contributes damage hits for it.
 func test_effective_stats_layer_buffs_on_base() -> void:
 	var enc := _encounter()
 	var base := StarshipStats.new()
@@ -910,15 +910,15 @@ func test_ruleset_runs_only_matching_phase() -> void:
 	var rule := ExtraTurnRule.new()  # phase MOVE_RESOLVED, min_match 3
 	rule.min_match = 3
 	ruleset.add(rule)
-	var ctx := MatchRuleContext.new()
-	ctx.max_run = 4
+	var match_context := MatchRuleContext.new()
+	match_context.max_run = 4
 	# A non-matching phase leaves the context untouched.
-	ruleset.run(MatchPhase.ON_CLEAR, ctx)
-	assert_bool(ctx.go_again).is_false()
+	ruleset.run(MatchPhase.ON_CLEAR, match_context)
+	assert_bool(match_context.go_again).is_false()
 	# The rule's own phase fires it, and it writes its result back.
-	ruleset.run(MatchPhase.MOVE_RESOLVED, ctx)
-	assert_bool(ctx.go_again).is_true()
-	assert_str(ctx.go_again_reason).is_equal("Match-4")
+	ruleset.run(MatchPhase.MOVE_RESOLVED, match_context)
+	assert_bool(match_context.go_again).is_true()
+	assert_str(match_context.go_again_reason).is_equal("Match-4")
 
 # A disabled rule stays in the set but doesn't fire — the cheap on/off.
 func test_disabled_rule_does_not_fire() -> void:
@@ -927,10 +927,10 @@ func test_disabled_rule_does_not_fire() -> void:
 	rule.min_match = 3
 	rule.enabled = false
 	ruleset.add(rule)
-	var ctx := MatchRuleContext.new()
-	ctx.max_run = 9
-	ruleset.run(MatchPhase.MOVE_RESOLVED, ctx)
-	assert_bool(ctx.go_again).is_false()
+	var match_context := MatchRuleContext.new()
+	match_context.max_run = 9
+	ruleset.run(MatchPhase.MOVE_RESOLVED, match_context)
+	assert_bool(match_context.go_again).is_false()
 
 # Rules can be swapped at runtime — remove by name, add a retuned one — which is how play changes its own
 # rules mid-game.
@@ -939,10 +939,10 @@ func test_ruleset_swaps_rules_at_runtime() -> void:
 	var strict := ExtraTurnRule.new()
 	strict.min_match = 5
 	ruleset.add(strict)
-	var ctx := MatchRuleContext.new()
-	ctx.max_run = 4
-	ruleset.run(MatchPhase.MOVE_RESOLVED, ctx)
-	assert_bool(ctx.go_again).is_false()  # a 4-run misses the strict threshold
+	var match_context := MatchRuleContext.new()
+	match_context.max_run = 4
+	ruleset.run(MatchPhase.MOVE_RESOLVED, match_context)
+	assert_bool(match_context.go_again).is_false()  # a 4-run misses the strict threshold
 	# Swap the rule for a looser one mid-game.
 	ruleset.remove_named(&"extra_turn")
 	var loose := ExtraTurnRule.new()
@@ -957,18 +957,18 @@ func test_ruleset_swaps_rules_at_runtime() -> void:
 # worth N" (one-to-one with no scoring formula), now a unit-testable rule with no scene.
 func test_resource_grant_rule_banks_matched_tiles() -> void:
 	var enc := _encounter()
-	var ctx := MatchRuleContext.new()
-	ctx.encounter = enc
-	ctx.combatant = EncounterState.Combatant.PLAYER
+	var match_context := MatchRuleContext.new()
+	match_context.encounter = enc
+	match_context.combatant = EncounterState.Combatant.PLAYER
 	var counts: Dictionary[int, int] = {}
 	counts[_COMBAT_KIND] = 4
-	ctx.counts = counts
+	match_context.counts = counts
 	var centers: Dictionary[int, Vector2] = {}
 	centers[_COMBAT_KIND] = Vector2.ZERO
-	ctx.centers = centers
-	ResourceGrantRule.new().apply(ctx)
-	assert_int(enc.ship_of(EncounterState.Combatant.PLAYER).resource_of(_COMBAT_KIND)).is_equal(4)
-	assert_int(ctx.visuals.size()).is_equal(1)
+	match_context.centers = centers
+	ResourceGrantRule.new().apply(match_context)
+	assert_int(enc.starship_of(EncounterState.Combatant.PLAYER).resource_of(_COMBAT_KIND)).is_equal(4)
+	assert_int(match_context.visuals.size()).is_equal(1)
 
 # The default MatchRules carries the baseline grant rules out of the box, so a fresh ruleset already banks.
 func test_default_rules_include_baseline_grants() -> void:
@@ -998,12 +998,12 @@ func test_default_rules_include_turn_start_knobs_at_parity() -> void:
 # The scoring offset shifts every match's reward down by its amount, floored at zero (3→1, 7→5); zero leaves
 # scoring one-to-one.
 func test_scoring_offset_reduces_reward() -> void:
-	var ctx := MatchRuleContext.new()
-	assert_int(ctx.reward_for(3)).is_equal(3)  # no offset → one-to-one
-	ctx.score_offset = 2
-	assert_int(ctx.reward_for(3)).is_equal(1)
-	assert_int(ctx.reward_for(7)).is_equal(5)
-	assert_int(ctx.reward_for(1)).is_equal(0)  # never negative
+	var match_context := MatchRuleContext.new()
+	assert_int(match_context.reward_for(3)).is_equal(3)  # no offset → one-to-one
+	match_context.score_offset = 2
+	assert_int(match_context.reward_for(3)).is_equal(1)
+	assert_int(match_context.reward_for(7)).is_equal(5)
+	assert_int(match_context.reward_for(1)).is_equal(0)  # never negative
 
 # The OffsetScoringRule writes its offset onto the mover at turn start; with it in force a 4-match banks 4 - 2.
 func test_offset_scoring_rule_banks_reduced_reward() -> void:
@@ -1014,7 +1014,7 @@ func test_offset_scoring_rule_banks_reduced_reward() -> void:
 	turn_ctx.encounter = enc
 	turn_ctx.combatant = EncounterState.Combatant.PLAYER
 	rule.apply(turn_ctx)
-	assert_int(enc.ship_of(EncounterState.Combatant.PLAYER).score_offset).is_equal(2)
+	assert_int(enc.starship_of(EncounterState.Combatant.PLAYER).score_offset).is_equal(2)
 	var clear_ctx := MatchRuleContext.new()
 	clear_ctx.encounter = enc
 	clear_ctx.combatant = EncounterState.Combatant.PLAYER
@@ -1026,33 +1026,33 @@ func test_offset_scoring_rule_banks_reduced_reward() -> void:
 	centers[_COMBAT_KIND] = Vector2.ZERO
 	clear_ctx.centers = centers
 	ResourceGrantRule.new().apply(clear_ctx)
-	assert_int(enc.ship_of(EncounterState.Combatant.PLAYER).resource_of(_COMBAT_KIND)).is_equal(2)
+	assert_int(enc.starship_of(EncounterState.Combatant.PLAYER).resource_of(_COMBAT_KIND)).is_equal(2)
 
-# Resource capacity clamps banking: with a maximum set a ship never holds more than it (and any surplus already
+# Resource capacity clamps banking: with a maximum set a starship never holds more than it (and any surplus already
 # banked is clamped down); a zero maximum is unlimited.
 func test_resource_capacity_clamps_banking() -> void:
-	var ship := EncounterStarshipState.new()
-	ship.add_resource(_COMBAT_KIND, 100)
-	assert_int(ship.resource_of(_COMBAT_KIND)).is_equal(100)  # unlimited by default
-	ship.set_resource_maximums(PackedInt32Array([5, 0, 0, 0, 0, 0, 0]))
-	assert_int(ship.resource_of(_COMBAT_KIND)).is_equal(5)  # already-banked clamped to the new ceiling
-	ship.add_resource(_COMBAT_KIND, 10)
-	assert_int(ship.resource_of(_COMBAT_KIND)).is_equal(5)  # banking can't exceed it
-	ship.add_resource(1, 10)
-	assert_int(ship.resource_of(1)).is_equal(10)  # an uncapped kind stays unlimited
+	var starship := EncounterStarshipState.new()
+	starship.add_resource(_COMBAT_KIND, 100)
+	assert_int(starship.resource_of(_COMBAT_KIND)).is_equal(100)  # unlimited by default
+	starship.set_resource_maximums(PackedInt32Array([5, 0, 0, 0, 0, 0, 0]))
+	assert_int(starship.resource_of(_COMBAT_KIND)).is_equal(5)  # already-banked clamped to the new ceiling
+	starship.add_resource(_COMBAT_KIND, 10)
+	assert_int(starship.resource_of(_COMBAT_KIND)).is_equal(5)  # banking can't exceed it
+	starship.add_resource(1, 10)
+	assert_int(starship.resource_of(1)).is_equal(10)  # an uncapped kind stays unlimited
 
 # The ResourceCapacityRule writes the maximums onto the mover at turn start.
 func test_resource_capacity_rule_sets_mover_maximums() -> void:
 	var enc := _encounter()
 	var rule := ResourceCapacityRule.new()
 	rule.maximums = PackedInt32Array([7, 0, 0, 0, 0, 0, 0])
-	var ctx := MatchRuleContext.new()
-	ctx.encounter = enc
-	ctx.combatant = EncounterState.Combatant.PLAYER
-	rule.apply(ctx)
-	var ship := enc.ship_of(EncounterState.Combatant.PLAYER)
-	ship.add_resource(_COMBAT_KIND, 100)
-	assert_int(ship.resource_of(_COMBAT_KIND)).is_equal(7)
+	var match_context := MatchRuleContext.new()
+	match_context.encounter = enc
+	match_context.combatant = EncounterState.Combatant.PLAYER
+	rule.apply(match_context)
+	var starship := enc.starship_of(EncounterState.Combatant.PLAYER)
+	starship.add_resource(_COMBAT_KIND, 100)
+	assert_int(starship.resource_of(_COMBAT_KIND)).is_equal(7)
 
 # The ActionBudgetRule refills the mover's actions at turn start to its actions-per-turn (and sets the policy).
 func test_action_budget_rule_refills_actions() -> void:
@@ -1060,13 +1060,13 @@ func test_action_budget_rule_refills_actions() -> void:
 	var rule := ActionBudgetRule.new()
 	rule.actions_per_turn = 4
 	rule.ability_turn_cost = ActionBudgetRule.AbilityTurnCost.COSTS_ACTION
-	var ctx := MatchRuleContext.new()
-	ctx.encounter = enc
-	ctx.combatant = EncounterState.Combatant.PLAYER
-	rule.apply(ctx)
-	var ship := enc.ship_of(EncounterState.Combatant.PLAYER)
-	assert_int(ship.actions_remaining).is_equal(4)
-	assert_int(ship.ability_turn_cost).is_equal(ActionBudgetRule.AbilityTurnCost.COSTS_ACTION)
+	var match_context := MatchRuleContext.new()
+	match_context.encounter = enc
+	match_context.combatant = EncounterState.Combatant.PLAYER
+	rule.apply(match_context)
+	var starship := enc.starship_of(EncounterState.Combatant.PLAYER)
+	assert_int(starship.actions_remaining).is_equal(4)
+	assert_int(starship.ability_turn_cost).is_equal(ActionBudgetRule.AbilityTurnCost.COSTS_ACTION)
 
 # The action budget gates moves per turn: with three actions a mover keeps the board for three resolved moves,
 # the turn passing on the third. (The default one-action budget passes on the first move — unchanged.)
@@ -1144,7 +1144,7 @@ func test_selection_rule_maps_to_engine_modes() -> void:
 	assert_int(SelectionRule.make(SelectionRule.Mode.TELEPORT).input_mode()).is_equal(MatchBoardView.InputMode.TELEPORT)
 
 # A starship's selection override takes over the board on its turn, then the board reverts when the turn
-# passes back to a ship without one — the Fluxx-style "selection changes with whoever is acting".
+# passes back to a starship without one — the Fluxx-style "selection changes with whoever is acting".
 func test_starship_override_switches_selection_on_its_turn() -> void:
 	var game := _make(null, MatchBoardView.InputMode.SWAP, false)  # hot-seat, so no AI auto-play interferes
 	await await_idle_frame()

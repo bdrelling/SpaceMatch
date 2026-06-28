@@ -1,7 +1,7 @@
 class_name ModuleGridState
 extends GridState
-## A ship's module-grid state — a grid_system [GridState] specialized for modules: each placed module is a
-## [GridObjectState] occupant carrying its [ModuleBlueprint], and the grid derives the ship's stat profile,
+## A starship's module-grid state — a grid_system [GridState] specialized for modules: each placed module is a
+## [GridObjectState] occupant carrying its [ModuleBlueprint], and the grid derives the starship's stat profile,
 ## abilities, and rules from them. Pure data plus grid-level operations; the [ModuleGrid] node builds and
 ## represents it, and [StarshipState] persists it.
 
@@ -116,7 +116,7 @@ func remove_at(cell: Vector2i) -> ModuleBlueprint:
 func enabled(module_state: ModuleState, disabled_cells: Array[Vector2i] = []) -> bool:
 	return _cells_enabled(cells_of(module_state), disabled_cells)
 
-## The stat profile this grid's modules sum to — the ship's contribution to its stats. Only fully-enabled
+## The stat profile this grid's modules sum to — the starship's contribution to its stats. Only fully-enabled
 ## modules count (see [method enabled]); a module with any cell in [param disabled_cells] adds nothing. The
 ## one place the "all cells enabled to count" rule lives.
 func profile(disabled_cells: Array[Vector2i] = []) -> StarshipStats:
@@ -127,7 +127,7 @@ func profile(disabled_cells: Array[Vector2i] = []) -> StarshipStats:
 			total.add(module_state.blueprint.stats)
 	return total
 
-## The abilities this grid's enabled modules grant the ship — same "all cells enabled to count" rule as
+## The abilities this grid's enabled modules grant the starship — same "all cells enabled to count" rule as
 ## [method profile]. A disabled module grants nothing.
 func abilities(disabled_cells: Array[Vector2i] = []) -> Array[MatchAbility]:
 	var result: Array[MatchAbility] = []
@@ -137,7 +137,7 @@ func abilities(disabled_cells: Array[Vector2i] = []) -> Array[MatchAbility]:
 			result.append_array(module_state.blueprint.abilities)
 	return result
 
-## The phase rules this grid's enabled modules grant the ship — same enabled rule as [method profile].
+## The phase rules this grid's enabled modules grant the starship — same enabled rule as [method profile].
 func rules(disabled_cells: Array[Vector2i] = []) -> Array[Rule]:
 	var result: Array[Rule] = []
 	for occupant: GridObjectState in objects_on_layer(_LAYER):

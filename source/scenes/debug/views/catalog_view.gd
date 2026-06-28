@@ -2,7 +2,7 @@ class_name CatalogView
 extends DebugView
 ## Lists a [Catalog]'s entries as drill-in rows, with a "+" to add a new one. Tapping an entry opens its
 ## detail editor — built by the [member _detail_factory] the host supplies, so catalogs stay UI-free.
-## Generic over every catalog type (modules, grids, ships, rules).
+## Generic over every catalog type (modules, grids, starships, rules).
 
 var _catalog: Catalog
 # func(entry: Resource) -> DebugView — builds the detail editor for an entry. Supplied by the host.

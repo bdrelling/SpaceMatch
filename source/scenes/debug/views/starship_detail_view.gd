@@ -3,27 +3,27 @@ extends DebugView
 ## Editor for one [StarshipBlueprint] — its name (editable) and the module grid it uses (summary for now).
 ## Assigning and arranging module grids (the interactive part) is the next step.
 
-var _ship: StarshipBlueprint
+var _starship: StarshipBlueprint
 
-static func create(ship: StarshipBlueprint) -> StarshipDetailView:
+static func create(starship: StarshipBlueprint) -> StarshipDetailView:
 	var view := StarshipDetailView.new()
-	view._ship = ship
+	view._starship = starship
 	return view
 
 func title() -> String:
-	if _ship == null or _ship.name.is_empty():
+	if _starship == null or _starship.name.is_empty():
 		return "Starship"
-	return _ship.name
+	return _starship.name
 
 func _build() -> void:
-	if _ship == null:
+	if _starship == null:
 		return
-	var ship := _ship
+	var starship := _starship
 
-	add_child(DebugRow.text("Name", ship.name,
-		func(value: String) -> void: ship.name = value))
+	add_child(DebugRow.text("Name", starship.name,
+		func(value: String) -> void: starship.name = value))
 
-	var grid := ship.module_grid
+	var grid := starship.module_grid
 	if grid != null:
 		add_child(_line("Module grid: %d × %d, %d modules" % [grid.columns, grid.rows, grid.modules.size()]))
 	else:

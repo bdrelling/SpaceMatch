@@ -48,8 +48,8 @@ extends Resource
 @export var palette_board_object_text: Color
 @export var palette_gunk_green: Color
 @export var palette_scrap_yellow: Color
-@export var palette_ship_part_blue: Color
-@export var palette_ship_part_border_blue: Color
+@export var palette_starship_part_blue: Color
+@export var palette_starship_part_border_blue: Color
 @export var palette_goo_pink: Color
 
 @export_group("HUD")

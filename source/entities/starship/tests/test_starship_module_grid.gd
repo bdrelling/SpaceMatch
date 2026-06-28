@@ -133,7 +133,7 @@ func test_disabling_any_cell_deactivates_a_multi_cell_module() -> void:
 	assert_int(grid.profile([Vector2i(1, 0)]).shields).is_equal(0)
 	assert_bool(grid.enabled(grid.modules[0], [Vector2i(1, 0)])).is_false()
 
-# A module grants its ship abilities and phase rules while enabled — the "modules contribute" path, same
+# A module grants its starship abilities and phase rules while enabled — the "modules contribute" path, same
 # "all cells enabled to count" rule as the stat profile. Disable its cell and it contributes nothing.
 func test_module_contributes_abilities_and_rules_while_enabled() -> void:
 	var grid := _full_grid()

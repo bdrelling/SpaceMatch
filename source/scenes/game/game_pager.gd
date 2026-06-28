@@ -25,12 +25,12 @@ func _ready() -> void:
 		if child is GameScreen:
 			_register(child as GameScreen)
 
-## Mounts [param screen] as a full-rect page; the first one added is the one shown.
+## Mounts [param screen] as a full-rectangle page; the first one added is the one shown.
 func add_screen(screen: GameScreen) -> void:
 	add_child(screen)
 	_register(screen)
 
-# Tracks a screen as a page: full-rect, and visible only if it's the first one registered.
+# Tracks a screen as a page: full-rectangle, and visible only if it's the first one registered.
 func _register(screen: GameScreen) -> void:
 	screen.set_anchors_preset(Control.PRESET_FULL_RECT)
 	screen.visible = screens.is_empty()
