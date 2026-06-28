@@ -10,8 +10,8 @@ replace_newlines_with_spaces() {
 # (e.g. running inside a fresh sandbox / CI container).
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || REPO_ROOT="${0:A:h:h}"
 
-# Get the path to the godot binary
-GODOT_BIN=$(which godot)
+# Get the path to the godot binary (PATH first, then the Docker fallback)
+GODOT_BIN=$("$REPO_ROOT/scripts/godot-bin.sh")
 
 # Get the test directory from the first argument
 TEST_DIRECTORY=${1:-}
