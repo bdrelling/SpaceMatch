@@ -1,5 +1,5 @@
 class_name AbilityEffect
-extends Resource
+extends Action
 ## One thing using a [MatchAbility] does — deal damage, raise a shield, arm a dodge, drain resources, and so
 ## on. An ability holds a list of these (see [member MatchAbility.effects]) and runs them in order, so an
 ## ability can do several things or just one. Each subclass carries only the parameters its own effect needs;

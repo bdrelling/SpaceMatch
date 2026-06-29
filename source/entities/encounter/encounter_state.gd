@@ -18,6 +18,11 @@ const TURNS_PER_ROUND: int = 2
 ## resource arrays; a fresh encounter starts them all at zero.
 const RESOURCE_KINDS: int = 7
 
+## The statuses combat stamps onto a combatant as data — preloaded so the encounter can apply them by reference.
+const SHIELD: Status = preload("res://data/statuses/shield.tres")
+const DODGE: Status = preload("res://data/statuses/dodge.tres")
+const TARGET_LOCK: Status = preload("res://data/statuses/target_lock.tres")
+
 ## The two combatants — each an [EncounterStarshipState], the encounter-scoped form of a starship that also holds
 ## its banked resources and turn budget (see [method Encounter.create]). The player's is built from the
 ## persistent starship so combat damage and Debug edits stay on the fight copy; the opponent is its own starship, not a
@@ -45,17 +50,6 @@ var player_max_health: int:
 var opponent_max_health: int:
 	get: return max_health_of(Combatant.OPPONENT)
 
-## Each combatant's shield — a buffer that absorbs damage before health (granted by the Shields ability).
-@export var player_shield: int = 0
-@export var opponent_shield: int = 0
-## Whether a combatant will dodge (negate) the next attack against them (granted by Evasive Maneuvers).
-@export var player_dodge: bool = false
-@export var opponent_dodge: bool = false
-## Each combatant's temporary stat layer — buffs and debuffs (e.g. Target Lock's +damage) stacked on top of
-## the starship's permanent module-grid profile. [method effective_stats] combines the two into the stats combat
-## reads. Encounter-scoped, so a fresh encounter starts them empty. (Item/skill buffs will land here too.)
-@export var player_buffs: StarshipStats
-@export var opponent_buffs: StarshipStats
 ## Cells currently disabled on each combatant's module grid, mapping a cell [Vector2i] to the turns of
 ## disable it has left (granted by Disruptor; see [method disable_cell]). A disabled cell deactivates the
 ## module covering it, so that module stops counting toward the starship's stat profile until it re-enables.
@@ -80,15 +74,6 @@ var opponent_max_health: int:
 @export var warp_tug: bool = false
 ## The combatant who Jumped (filled their warp and cashed it in), or -1 if none. Decides a warp victory.
 @export var warp_winner: int = -1
-
-func _init() -> void:
-	# Pure-data defaults only — the combatant starships are built by the [Encounter] node, never fabricated here;
-	# each carries its own resource tally (see [EncounterStarshipState]).
-	# Fresh per instance so the two combatants never share one buff block (exported Resource defaults can).
-	if player_buffs == null:
-		player_buffs = StarshipStats.new()
-	if opponent_buffs == null:
-		opponent_buffs = StarshipStats.new()
 
 ## The combatant whose turn it currently is.
 func active_combatant() -> Combatant:
@@ -119,43 +104,47 @@ func _set_health(combatant: Combatant, value: int) -> void:
 	if starship != null:
 		starship.health = maxi(0, value)
 
-## [param combatant]'s current shield.
+## [param combatant]'s current shield — its [code]shield[/code] status count.
 func shield_of(combatant: Combatant) -> int:
-	return player_shield if combatant == Combatant.PLAYER else opponent_shield
+	var starship: EncounterStarshipState = starship_of(combatant)
+	return starship.status_count(&"shield") if starship != null else 0
 
-## Grants [param combatant] [param amount] more shield (the Shields ability).
+## Grants [param combatant] [param amount] more shield (the Shields ability) — stacks the [code]shield[/code] status.
 func add_shield(combatant: Combatant, amount: int) -> void:
 	if amount <= 0:
 		return
-	_set_shield(combatant, shield_of(combatant) + amount)
+	var starship: EncounterStarshipState = starship_of(combatant)
+	if starship != null:
+		starship.add_status(SHIELD, amount)
 
-## Whether [param combatant] is set to dodge the next attack against them.
+## Whether [param combatant] is set to dodge the next attack against them (holds the [code]dodge[/code] status).
 func dodge_of(combatant: Combatant) -> bool:
-	return player_dodge if combatant == Combatant.PLAYER else opponent_dodge
+	var starship: EncounterStarshipState = starship_of(combatant)
+	return starship != null and starship.status_count(&"dodge") > 0
 
 ## Arms or clears [param combatant]'s dodge (Evasive Maneuvers arms it; the next attack consumes it).
 func set_dodge(combatant: Combatant, on: bool) -> void:
-	if combatant == Combatant.PLAYER:
-		player_dodge = on
-	else:
-		opponent_dodge = on
+	var starship: EncounterStarshipState = starship_of(combatant)
+	if starship != null:
+		starship.set_status(DODGE, 1 if on else 0)
 
-## [param combatant]'s temporary stat layer (the buffs/debuffs stacked on its permanent profile).
-func buffs_of(combatant: Combatant) -> StarshipStats:
-	return player_buffs if combatant == Combatant.PLAYER else opponent_buffs
-
-## Raises [param combatant]'s temporary [param stat] by [param amount] (negative debuffs it). Target Lock
-## raises DAMAGE this way; it stacks for the encounter.
-func add_buff(combatant: Combatant, stat: Stat.Type, amount: int) -> void:
-	buffs_of(combatant).add_value(stat, amount)
+## Applies [param count] stacks of [param status] to [param combatant] — a buff or debuff. A stat-modifying
+## status shifts that combatant's [method effective_stats]; it stacks for the encounter (Target Lock's +damage
+## lands this way).
+func add_status(combatant: Combatant, status: Status, count: int) -> void:
+	var starship: EncounterStarshipState = starship_of(combatant)
+	if starship != null:
+		starship.add_status(status, count)
 
 ## [param combatant]'s effective stats: its permanent module-grid profile ([param base], supplied by the
-## host since the starship owns the grid) with this encounter's temporary buff layer stacked on top. The
+## host since the starship owns the grid) with this encounter's active-status [Modifier]s folded on top. The
 ## stats combat consumes — the damage stat bonuses the hit, the four colored stats the resource they bank.
 func effective_stats(combatant: Combatant, base: StarshipStats) -> StarshipStats:
 	var total := StarshipStats.new()
 	total.add(base)
-	total.add(buffs_of(combatant))
+	var starship: EncounterStarshipState = starship_of(combatant)
+	if starship != null:
+		starship.add_status_modifiers(total)
 	return total
 
 ## The cells currently disabled on [param combatant]'s grid — each deactivates the module covering it.
@@ -207,10 +196,9 @@ func deal_damage(target: Combatant, amount: int) -> int:
 	return to_health
 
 func _set_shield(combatant: Combatant, value: int) -> void:
-	if combatant == Combatant.PLAYER:
-		player_shield = maxi(0, value)
-	else:
-		opponent_shield = maxi(0, value)
+	var starship: EncounterStarshipState = starship_of(combatant)
+	if starship != null:
+		starship.set_status(SHIELD, maxi(0, value))
 
 ## Whether the encounter has been decided — a combatant Jumped, or one is out of health.
 func is_over() -> bool:

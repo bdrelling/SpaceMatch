@@ -41,6 +41,18 @@ func _make(ruleset: Ruleset = null, mode := MatchBoardView.InputMode.SWAP, ai :=
 			game._encounter.opponent.ruleset = Ruleset.new()
 	return game
 
+# Applies `amount` to `stat_name` on a combatant as a status-backed stat modifier (a unit-amount [Modifier]
+# stacked `amount` times) — the test stand-in for an authored buff/debuff status.
+func _buff(enc: EncounterState, combatant: int, stat_name: StringName, amount: int) -> void:
+	var status := Status.new()
+	status.name = stat_name
+	var modifier := Modifier.new()
+	modifier.stat = stat_name
+	modifier.operation = Modifier.Operation.ADD
+	modifier.amount = 1.0
+	status.modifiers.append(modifier)
+	enc.add_status(combatant, status, amount)
+
 func test_board_fills_completely() -> void:
 	var game := _make()
 	await await_idle_frame()
@@ -105,7 +117,7 @@ func test_warp_match_charges_player() -> void:
 	_force_kind(board, cells, _WARP_KIND)
 	game._on_cells_cleared(board, cells)
 	assert_int(game._encounter.warp).is_equal(1)
-	assert_int(game._encounter.player.resources[_WARP_KIND]).is_equal(0)
+	assert_int(game._encounter.player.resources[_WARP_KIND].amount).is_equal(0)
 	game.queue_free()
 
 # Bigger Warp matches charge more bars: a 5-match is three (the match size minus two).
@@ -186,7 +198,7 @@ func test_player_tally_banks_only_into_player_readout() -> void:
 	await await_idle_frame()
 	var player_before: int = int(game._player_readouts()[_COMBAT_KIND])
 	var opponent_before: int = int(game._opponent_readouts()[_COMBAT_KIND])
-	game._encounter.player.resources[_COMBAT_KIND] += 5
+	game._encounter.player.resources[_COMBAT_KIND].amount += 5
 	assert_int(int(game._player_readouts()[_COMBAT_KIND])).is_equal(player_before + 5)
 	assert_int(int(game._opponent_readouts()[_COMBAT_KIND])).is_equal(opponent_before)
 	game.queue_free()
@@ -196,7 +208,7 @@ func test_opponent_tally_banks_only_into_opponent_readout() -> void:
 	await await_idle_frame()
 	var player_before: int = int(game._player_readouts()[_COMBAT_KIND])
 	var opponent_before: int = int(game._opponent_readouts()[_COMBAT_KIND])
-	game._encounter.opponent.resources[_COMBAT_KIND] += 5
+	game._encounter.opponent.resources[_COMBAT_KIND].amount += 5
 	assert_int(int(game._opponent_readouts()[_COMBAT_KIND])).is_equal(opponent_before + 5)
 	assert_int(int(game._player_readouts()[_COMBAT_KIND])).is_equal(player_before)
 	game.queue_free()
@@ -213,15 +225,15 @@ func test_clear_banks_to_active_combatant() -> void:
 	# Turn 1 is the player's.
 	assert_int(game._encounter.active_combatant()).is_equal(EncounterState.Combatant.PLAYER)
 	game._on_cells_cleared(board, cells)
-	assert_int(game._encounter.player.resources[kind]).is_equal(1)
-	assert_int(game._encounter.opponent.resources[kind]).is_equal(0)
+	assert_int(game._encounter.player.resources[kind].amount).is_equal(1)
+	assert_int(game._encounter.opponent.resources[kind].amount).is_equal(0)
 
 	# After a turn flips to the opponent, the same clear banks to them instead.
 	game._encounter.advance_turn()
 	assert_int(game._encounter.active_combatant()).is_equal(EncounterState.Combatant.OPPONENT)
 	game._on_cells_cleared(board, cells)
-	assert_int(game._encounter.opponent.resources[kind]).is_equal(1)
-	assert_int(game._encounter.player.resources[kind]).is_equal(1)
+	assert_int(game._encounter.opponent.resources[kind].amount).is_equal(1)
+	assert_int(game._encounter.player.resources[kind].amount).is_equal(1)
 	game.queue_free()
 
 # The encounter opens on the player (turn 1), and after the player moves the AI
@@ -426,10 +438,10 @@ func test_ability_use_spends_gems_and_deals_damage() -> void:
 	var game := _make(RuleCatalog.default_ruleset(), MatchBoardView.InputMode.LINE_SHIFT, false)
 	await await_idle_frame()
 	var ability := MatchAbility.make("Test", AbilityCost.make(_COMBAT_KIND, 10), AttackEffect.make(5))
-	game._encounter.player.resources[_COMBAT_KIND] = 12
+	game._encounter.player.resources[_COMBAT_KIND].amount = 12
 	var max_health: int = game._encounter.opponent_max_health
 	game._on_ability_pressed(ability)
-	assert_int(game._encounter.player.resources[_COMBAT_KIND]).is_equal(2)
+	assert_int(game._encounter.player.resources[_COMBAT_KIND].amount).is_equal(2)
 	assert_int(game._encounter.opponent_health).is_equal(max_health - 5)
 	game.queue_free()
 
@@ -439,7 +451,7 @@ func test_using_an_ability_ends_the_turn() -> void:
 	var game := _make(RuleCatalog.default_ruleset(), MatchBoardView.InputMode.LINE_SHIFT, false)
 	await await_idle_frame()
 	var ability := MatchAbility.make("Test", AbilityCost.make(_COMBAT_KIND, 5), AttackEffect.make(5))
-	game._encounter.player.resources[_COMBAT_KIND] = 10
+	game._encounter.player.resources[_COMBAT_KIND].amount = 10
 	assert_int(game._encounter.active_combatant()).is_equal(EncounterState.Combatant.PLAYER)
 	game._use_ability(EncounterState.Combatant.PLAYER, ability)
 	assert_int(game._encounter.active_combatant()).is_equal(EncounterState.Combatant.OPPONENT)
@@ -451,7 +463,7 @@ func test_opponent_picks_an_affordable_ability() -> void:
 	var game := _make(RuleCatalog.default_ruleset())
 	await await_idle_frame()
 	assert_object(game._best_affordable_ability(EncounterState.Combatant.OPPONENT)).is_null()
-	game._encounter.opponent.resources[1] = 5  # enough for Evasive Maneuvers (kind 1, the cost-5 ability)
+	game._encounter.opponent.resources[1].amount = 5  # enough for Evasive Maneuvers (kind 1, the cost-5 ability)
 	var pick: MatchAbility = game._best_affordable_ability(EncounterState.Combatant.OPPONENT)
 	assert_object(pick).is_not_null()
 	assert_int(pick.costs[0].kind).is_equal(1)
@@ -462,7 +474,7 @@ func test_opponent_picks_an_affordable_ability() -> void:
 func test_opponent_does_not_recast_an_active_dodge() -> void:
 	var game := _make(RuleCatalog.default_ruleset())
 	await await_idle_frame()
-	game._encounter.opponent.resources[1] = 5  # enough for Evasive Maneuvers only
+	game._encounter.opponent.resources[1].amount = 5  # enough for Evasive Maneuvers only
 	assert_object(game._best_affordable_ability(EncounterState.Combatant.OPPONENT)).is_not_null()
 	game._encounter.set_dodge(EncounterState.Combatant.OPPONENT, true)
 	assert_object(game._best_affordable_ability(EncounterState.Combatant.OPPONENT)).is_null()
@@ -506,8 +518,8 @@ func test_reload_splits_board_resources_between_players() -> void:
 	game._split_board_resources()
 	for k: int in expected:
 		var each: int = expected[k] / 2  # floor; the odd tile is discarded
-		assert_int(game._encounter.player.resources[k]).is_equal(each)
-		assert_int(game._encounter.opponent.resources[k]).is_equal(each)
+		assert_int(game._encounter.player.resources[k].amount).is_equal(each)
+		assert_int(game._encounter.opponent.resources[k].amount).is_equal(each)
 	game.queue_free()
 
 # An ability the player can't afford does nothing — no damage, no tiles drained below the cost.
@@ -515,10 +527,10 @@ func test_ability_unaffordable_does_nothing() -> void:
 	var game := _make()
 	await await_idle_frame()
 	var ability := MatchAbility.make("Test", AbilityCost.make(_COMBAT_KIND, 10), AttackEffect.make(5))
-	game._encounter.player.resources[_COMBAT_KIND] = 3
+	game._encounter.player.resources[_COMBAT_KIND].amount = 3
 	var health_before: int = game._encounter.opponent_health
 	game._on_ability_pressed(ability)
-	assert_int(game._encounter.player.resources[_COMBAT_KIND]).is_equal(3)
+	assert_int(game._encounter.player.resources[_COMBAT_KIND].amount).is_equal(3)
 	assert_int(game._encounter.opponent_health).is_equal(health_before)
 	game.queue_free()
 
@@ -529,10 +541,10 @@ func test_shield_absorbs_damage_before_health() -> void:
 	var enc := _encounter()
 	enc.add_shield(EncounterState.Combatant.PLAYER, 10)
 	assert_int(enc.deal_damage(EncounterState.Combatant.PLAYER, 6)).is_equal(0)  # fully soaked
-	assert_int(enc.player_shield).is_equal(4)
+	assert_int(enc.shield_of(EncounterState.Combatant.PLAYER)).is_equal(4)
 	assert_int(enc.player_health).is_equal(enc.player_max_health)
 	assert_int(enc.deal_damage(EncounterState.Combatant.PLAYER, 10)).is_equal(6)  # 4 soaked, 6 to health
-	assert_int(enc.player_shield).is_equal(0)
+	assert_int(enc.shield_of(EncounterState.Combatant.PLAYER)).is_equal(0)
 	assert_int(enc.player_health).is_equal(enc.player_max_health - 6)
 
 # Dodge negates the next attack whole and is then spent; the one after lands normally.
@@ -541,7 +553,7 @@ func test_dodge_negates_the_next_attack() -> void:
 	enc.set_dodge(EncounterState.Combatant.PLAYER, true)
 	assert_int(enc.deal_damage(EncounterState.Combatant.PLAYER, 8)).is_equal(-1)  # dodged
 	assert_int(enc.player_health).is_equal(enc.player_max_health)
-	assert_bool(enc.player_dodge).is_false()  # consumed
+	assert_bool(enc.dodge_of(EncounterState.Combatant.PLAYER)).is_false()  # consumed
 	enc.deal_damage(EncounterState.Combatant.PLAYER, 5)
 	assert_int(enc.player_health).is_equal(enc.player_max_health - 5)
 
@@ -551,9 +563,9 @@ func test_dodge_expires_when_owners_turn_returns() -> void:
 	var enc := _encounter()
 	enc.set_dodge(EncounterState.Combatant.PLAYER, true)
 	enc.advance_turn()  # player's turn → opponent's; the player is still evading through it
-	assert_bool(enc.player_dodge).is_true()
+	assert_bool(enc.dodge_of(EncounterState.Combatant.PLAYER)).is_true()
 	enc.advance_turn()  # opponent's turn → player's again; the dodge expires
-	assert_bool(enc.player_dodge).is_false()
+	assert_bool(enc.dodge_of(EncounterState.Combatant.PLAYER)).is_false()
 
 # A damage match against a dodging opponent (the in-game path, not just deal_damage) spends the dodge: the
 # match is negated, and the opponent's badge clears.
@@ -567,7 +579,7 @@ func test_damage_match_consumes_opponent_dodge() -> void:
 	_force_kind(board, cells, _DAMAGE_KIND)
 	game._on_cells_cleared(board, cells)  # player's turn — damage targets the opponent
 	assert_int(game._encounter.opponent_health).is_equal(max_health)  # dodged, no damage
-	assert_bool(game._encounter.opponent_dodge).is_false()  # consumed
+	assert_bool(game._encounter.dodge_of(EncounterState.Combatant.OPPONENT)).is_false()  # consumed
 	assert_bool(game._opponent_portrait._dodge_indicator.visible).is_false()  # badge cleared
 	game.queue_free()
 
@@ -602,17 +614,17 @@ func test_dodge_survives_extra_turns_then_clears_on_handover() -> void:
 	game._move_max_run = 4
 	game._on_move_resolved(true, 4)
 	assert_int(game._encounter.active_combatant()).is_equal(EncounterState.Combatant.OPPONENT)
-	assert_bool(game._encounter.player_dodge).is_true()
+	assert_bool(game._encounter.dodge_of(EncounterState.Combatant.PLAYER)).is_true()
 	game._move_max_run = 4
 	game._on_move_resolved(true, 4)
 	assert_int(game._encounter.active_combatant()).is_equal(EncounterState.Combatant.OPPONENT)
-	assert_bool(game._encounter.player_dodge).is_true()
+	assert_bool(game._encounter.dodge_of(EncounterState.Combatant.PLAYER)).is_true()
 	assert_bool(game._player_portrait._dodge_indicator.visible).is_true()
 	# A move below the threshold finally hands the board back to the player — the dodge expires right then.
 	game._move_max_run = 3
 	game._on_move_resolved(true, 3)
 	assert_int(game._encounter.active_combatant()).is_equal(EncounterState.Combatant.PLAYER)
-	assert_bool(game._encounter.player_dodge).is_false()
+	assert_bool(game._encounter.dodge_of(EncounterState.Combatant.PLAYER)).is_false()
 	assert_bool(game._player_portrait._dodge_indicator.visible).is_false()
 	game.queue_free()
 
@@ -680,11 +692,11 @@ func test_shield_ability_grants_and_absorbs() -> void:
 	var game := _make(RuleCatalog.default_ruleset(), MatchBoardView.InputMode.LINE_SHIFT, false)
 	await await_idle_frame()
 	var shield_ability := MatchAbility.make("Shields", AbilityCost.make(3, 5), ShieldEffect.make(10))
-	game._encounter.player.resources[3] = 5
+	game._encounter.player.resources[3].amount = 5
 	game._use_ability(EncounterState.Combatant.PLAYER, shield_ability)
-	assert_int(game._encounter.player_shield).is_equal(10)
+	assert_int(game._encounter.shield_of(EncounterState.Combatant.PLAYER)).is_equal(10)
 	game._encounter.deal_damage(EncounterState.Combatant.PLAYER, 6)
-	assert_int(game._encounter.player_shield).is_equal(4)
+	assert_int(game._encounter.shield_of(EncounterState.Combatant.PLAYER)).is_equal(4)
 	assert_int(game._encounter.player_health).is_equal(game._encounter.player_max_health)
 	game.queue_free()
 
@@ -693,7 +705,7 @@ func test_shield_ability_grants_and_absorbs() -> void:
 func test_target_lock_buffs_tile_damage() -> void:
 	var game := _make()  # neutral — linear scoring, so a 3-match deals 3 before the bonus
 	await await_idle_frame()
-	game._encounter.add_buff(EncounterState.Combatant.PLAYER, Stat.Type.DAMAGE, 2)
+	game._encounter.add_status(EncounterState.Combatant.PLAYER, EncounterState.TARGET_LOCK, 2)
 	var board: GridState = game._session.state
 	var cells: Array[Vector2i] = [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0)]
 	_force_kind(board, cells, _DAMAGE_KIND)
@@ -707,10 +719,10 @@ func test_effective_stats_layer_buffs_on_base() -> void:
 	var enc := _encounter()
 	var base := StarshipStats.new()
 	base.power = 3
-	enc.add_buff(EncounterState.Combatant.PLAYER, Stat.Type.POWER, 2)
+	_buff(enc, EncounterState.Combatant.PLAYER, &"power", 2)
 	assert_int(enc.effective_stats(EncounterState.Combatant.PLAYER, base).power).is_equal(5)
 	# A negative buff debuffs; the opponent's layer is independent.
-	enc.add_buff(EncounterState.Combatant.PLAYER, Stat.Type.POWER, -4)
+	_buff(enc, EncounterState.Combatant.PLAYER, &"power", -4)
 	assert_int(enc.effective_stats(EncounterState.Combatant.PLAYER, base).power).is_equal(1)
 	assert_int(enc.effective_stats(EncounterState.Combatant.OPPONENT, base).power).is_equal(3)
 
@@ -728,12 +740,12 @@ func test_stat_for_tile_mapping() -> void:
 func test_matched_tile_resource_includes_stat_bonus() -> void:
 	var game := _make()  # neutral, one-to-one scoring; no session, so base profile is empty
 	await await_idle_frame()
-	game._encounter.add_buff(EncounterState.Combatant.PLAYER, Stat.Type.POWER, 4)
+	_buff(game._encounter, EncounterState.Combatant.PLAYER, &"power", 4)
 	var board: GridState = game._session.state
 	var cells: Array[Vector2i] = [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0)]
 	_force_kind(board, cells, 0)  # combat tile -> POWER
 	game._on_cells_cleared(board, cells)
-	assert_int(game._encounter.player.resources[0]).is_equal(7)  # 3 matched + 4 Power
+	assert_int(game._encounter.player.resources[0].amount).is_equal(7)  # 3 matched + 4 Power
 	game.queue_free()
 
 # End to end: disabling a module drops its stat from the player's profile, so matches bank less. The default
@@ -745,12 +757,12 @@ func test_disabling_a_module_lowers_its_tile_haul() -> void:
 	var cells: Array[Vector2i] = [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0)]
 	_force_kind(board, cells, 1)  # propulsion tile -> SPEED, which the Engine contributes +4
 	game._on_cells_cleared(board, cells)
-	assert_int(game._encounter.player.resources[1]).is_equal(7)  # 3 matched + 4 Speed (Engine)
+	assert_int(game._encounter.player.resources[1].amount).is_equal(7)  # 3 matched + 4 Speed (Engine)
 	# Knock out the Engine (authored at (2, 4)); its Speed no longer counts, so the same match banks just 3.
 	game._encounter.disable_cell(EncounterState.Combatant.PLAYER, Vector2i(2, 4), 3)
 	_force_kind(board, cells, 1)
 	game._on_cells_cleared(board, cells)
-	assert_int(game._encounter.player.resources[1]).is_equal(10)  # prior 7 + (3 matched + 0 Speed)
+	assert_int(game._encounter.player.resources[1].amount).is_equal(10)  # prior 7 + (3 matched + 0 Speed)
 	game.queue_free()
 
 # Siphon removes its magnitude from each of the opponent's four stat resources.
@@ -758,12 +770,12 @@ func test_siphon_drains_opponent_resources() -> void:
 	var game := _make(RuleCatalog.default_ruleset(), MatchBoardView.InputMode.LINE_SHIFT, false)
 	await await_idle_frame()
 	for k: int in 4:
-		game._encounter.opponent.resources[k] = 5
+		game._encounter.opponent.resources[k].amount = 5
 	var drain := MatchAbility.make("Siphon", AbilityCost.make(2, 5), DrainEffect.make(2))
-	game._encounter.player.resources[2] = 5
+	game._encounter.player.resources[2].amount = 5
 	game._use_ability(EncounterState.Combatant.PLAYER, drain)
 	for k: int in 4:
-		assert_int(game._encounter.opponent.resources[k]).is_equal(3)
+		assert_int(game._encounter.opponent.resources[k].amount).is_equal(3)
 	game.queue_free()
 
 # Disruptor disables one of the opponent's modules: it records a single disabled cell on the opponent's
@@ -772,7 +784,7 @@ func test_disruptor_disables_an_opponent_module() -> void:
 	var game := _make(RuleCatalog.default_ruleset(), MatchBoardView.InputMode.LINE_SHIFT, false)
 	await await_idle_frame()
 	var disrupt := MatchAbility.make("Disruptor", AbilityCost.make(2, 5), DisableEffect.make(3))
-	game._encounter.player.resources[2] = 5
+	game._encounter.player.resources[2].amount = 5
 	assert_int(game._encounter.disabled_cells_of(EncounterState.Combatant.OPPONENT).size()).is_equal(0)
 	game._use_ability(EncounterState.Combatant.PLAYER, disrupt)
 	var disabled: Array[Vector2i] = game._encounter.disabled_cells_of(EncounterState.Combatant.OPPONENT)
@@ -816,14 +828,14 @@ func test_lethal_match_ends_the_quick_match() -> void:
 func test_restart_resets_the_encounter() -> void:
 	var game := _make()
 	await await_idle_frame()
-	game._encounter.player.resources[0] = 9
+	game._encounter.player.resources[0].amount = 9
 	game._encounter.player_health = 3
 	game._encounter.add_shield(EncounterState.Combatant.PLAYER, 5)
 	game._game_over = true
 	game._restart_encounter()
 	assert_int(game._encounter.player_health).is_equal(game._encounter.player_max_health)
-	assert_int(game._encounter.player_shield).is_equal(0)
-	assert_int(game._encounter.player.resources[0]).is_equal(0)
+	assert_int(game._encounter.shield_of(EncounterState.Combatant.PLAYER)).is_equal(0)
+	assert_int(game._encounter.player.resources[0].amount).is_equal(0)
 	assert_bool(game._game_over).is_false()
 	game.queue_free()
 
@@ -1086,7 +1098,7 @@ func test_action_budget_gates_moves_per_turn() -> void:
 func test_ability_costs_an_action_when_policy_set() -> void:
 	var game := _make(RuleCatalog.default_ruleset(), MatchBoardView.InputMode.LINE_SHIFT, false)
 	await await_idle_frame()
-	game._encounter.player.resources[_COMBAT_KIND] = 100
+	game._encounter.player.resources[_COMBAT_KIND].amount = 100
 	game._encounter.player.actions_remaining = 2
 	game._encounter.player.ability_turn_cost = ActionBudgetRule.AbilityTurnCost.COSTS_ACTION
 	var ability := MatchAbility.make("Test", AbilityCost.make(_COMBAT_KIND, 5), AttackEffect.make(1))

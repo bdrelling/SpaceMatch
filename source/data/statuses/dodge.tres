@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="Status" format=3 load_steps=2]
+
+[ext_resource type="Script" path="res://addons/effect_system/core/models/status.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+name = &"dodge"
+sign = 0
+cap = 1

@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="Status" format=3 load_steps=4]
+
+[ext_resource type="Script" path="res://addons/effect_system/core/models/status.gd" id="1_status"]
+[ext_resource type="Script" path="res://addons/effect_system/core/models/modifier.gd" id="2_modifier"]
+
+[sub_resource type="Resource" id="Mod_damage"]
+script = ExtResource("2_modifier")
+stat = &"damage"
+operation = 0
+amount = 1.0
+
+[resource]
+script = ExtResource("1_status")
+name = &"target_lock"
+sign = 0
+cap = 0
+modifiers = Array[ExtResource("2_modifier")]([SubResource("Mod_damage")])

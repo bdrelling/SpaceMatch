@@ -1,0 +1,8 @@
+[gd_resource type="Resource" script_class="AbilityResource" format=3 load_steps=2]
+
+[ext_resource type="Script" path="res://addons/effect_system/core/models/ability_resource.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+name = &"defense"
+maximum = 0

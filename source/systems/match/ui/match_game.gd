@@ -305,9 +305,9 @@ func _refresh_health() -> void:
 	if _encounter == null:
 		return
 	if _player_portrait != null:
-		_player_portrait.set_health(_encounter.player_health, _encounter.player_max_health, _encounter.player_shield)
+		_player_portrait.set_health(_encounter.player_health, _encounter.player_max_health, _encounter.shield_of(EncounterState.Combatant.PLAYER))
 	if _opponent_portrait != null:
-		_opponent_portrait.set_health(_encounter.opponent_health, _encounter.opponent_max_health, _encounter.opponent_shield)
+		_opponent_portrait.set_health(_encounter.opponent_health, _encounter.opponent_max_health, _encounter.shield_of(EncounterState.Combatant.OPPONENT))
 	_refresh_dodge()
 
 # Toggles each portrait's EVADE badge to match the encounter's dodge state — armed by Evasive Maneuvers, spent
@@ -907,7 +907,7 @@ func _apply_effect(combatant: int, effect: AbilityEffect) -> void:
 		_drain_resources(foe, (effect as DrainEffect).amount)
 		_spawn_portrait_popup(_portrait_for(foe), "Drained", MatchTile.color_of(2))
 	elif effect is DamageBuffEffect:
-		_encounter.add_buff(combatant, Stat.Type.DAMAGE, (effect as DamageBuffEffect).amount)
+		_encounter.add_status(combatant, EncounterState.TARGET_LOCK, (effect as DamageBuffEffect).amount)
 		_spawn_portrait_popup(user_portrait, "Damage +%d" % (effect as DamageBuffEffect).amount, MatchTile.color_of(0))
 	elif effect is DisableEffect:
 		_disable_opponent_module(foe, (effect as DisableEffect).turns)
