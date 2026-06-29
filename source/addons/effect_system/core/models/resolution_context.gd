@@ -17,6 +17,9 @@ var instigator: Entity
 var rng: RandomNumberGenerator
 ## Resolves player/agent choices ("choose an opponent"). The single seam runtime selection funnels through.
 var chooser: EffectChooser
+## Maps a status name to its [Status] resource, so [ApplyStatusAction] / [RemoveStatusAction] (which name a
+## status by [StringName]) can resolve it. Empty by default; the host / [EffectRuntime] supplies it.
+var status_catalog: Dictionary = {}
 
 
 ## Builds a context. The host supplies the sides; [param rng_seed] is set on a fresh generator so the same
