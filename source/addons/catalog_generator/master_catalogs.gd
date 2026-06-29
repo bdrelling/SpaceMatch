@@ -10,15 +10,24 @@ const OUTPUT_DIR := "res://data/catalogs"
 const MODULES_DIRECTORY := "res://data/modules"
 const MODULE_GRIDS_DIRECTORY := "res://data/module_grids"
 const STARSHIPS_DIRECTORY := "res://data/starships"
+const RULESETS_DIRECTORY := "res://data/rulesets"
+const ABILITY_RESOURCES_DIRECTORY := "res://data/ability_resources"
+const STATUSES_DIRECTORY := "res://data/statuses"
 
 const MODULES_OUTPUT := OUTPUT_DIR + "/module_catalog_all.tres"
 const MODULE_GRIDS_OUTPUT := OUTPUT_DIR + "/module_grid_catalog_all.tres"
 const STARSHIPS_OUTPUT := OUTPUT_DIR + "/starship_catalog_all.tres"
+const RULES_OUTPUT := OUTPUT_DIR + "/rule_catalog_all.tres"
+const ABILITY_RESOURCES_OUTPUT := OUTPUT_DIR + "/ability_resource_catalog_all.tres"
+const STATUSES_OUTPUT := OUTPUT_DIR + "/status_catalog_all.tres"
 
 ## The data folders that back a master catalog, in regeneration order. The plugin watches these for adds,
 ## renames, and moves.
 static func directories() -> PackedStringArray:
-	return PackedStringArray([MODULES_DIRECTORY, MODULE_GRIDS_DIRECTORY, STARSHIPS_DIRECTORY])
+	return PackedStringArray([
+		MODULES_DIRECTORY, MODULE_GRIDS_DIRECTORY, STARSHIPS_DIRECTORY, RULESETS_DIRECTORY,
+		ABILITY_RESOURCES_DIRECTORY, STATUSES_DIRECTORY,
+	])
 
 ## Rebuilds every master catalog from disk.
 static func regenerate_all() -> void:
@@ -34,6 +43,12 @@ static func regenerate(directory: String) -> void:
 			_save(ModuleGridCatalog.default(), MODULE_GRIDS_OUTPUT)
 		STARSHIPS_DIRECTORY:
 			_save(StarshipCatalog.default(), STARSHIPS_OUTPUT)
+		RULESETS_DIRECTORY:
+			_save(RuleCatalog.default(), RULES_OUTPUT)
+		ABILITY_RESOURCES_DIRECTORY:
+			_save(AbilityResourceCatalog.default(), ABILITY_RESOURCES_OUTPUT)
+		STATUSES_DIRECTORY:
+			_save(StatusCatalog.default(), STATUSES_OUTPUT)
 
 ## The sorted `.tres` paths under [param directory] (recursive) — the membership set the plugin diffs to detect
 ## adds, renames, and moves. A content edit leaves this set unchanged, so it never triggers a regenerate.

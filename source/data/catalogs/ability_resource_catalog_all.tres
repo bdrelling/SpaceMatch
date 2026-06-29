@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="AbilityResourceCatalog" format=3 uid="uid://ckbg6id4lokap"]
+
+[ext_resource type="Script" uid="uid://bqiylpu1go50e" path="res://addons/effect_system/core/models/ability_resource.gd" id="1_jnwvn"]
+[ext_resource type="Resource" path="res://data/ability_resources/combat.tres" id="2_4a8gp"]
+[ext_resource type="Resource" path="res://data/ability_resources/damage.tres" id="3_wwri0"]
+[ext_resource type="Resource" path="res://data/ability_resources/defense.tres" id="4_2m00e"]
+[ext_resource type="Resource" path="res://data/ability_resources/propulsion.tres" id="5_s60j6"]
+[ext_resource type="Resource" path="res://data/ability_resources/science.tres" id="6_sme3g"]
+[ext_resource type="Resource" path="res://data/ability_resources/scrap.tres" id="7_jiyji"]
+[ext_resource type="Resource" path="res://data/ability_resources/warp.tres" id="8_k3nr2"]
+[ext_resource type="Script" uid="uid://barqs8n5y5c1y" path="res://resources/catalog/ability_resource_catalog.gd" id="9_q5gol"]
+
+[resource]
+script = ExtResource("9_q5gol")
+ability_resources = Array[ExtResource("1_jnwvn")]([ExtResource("2_4a8gp"), ExtResource("3_wwri0"), ExtResource("4_2m00e"), ExtResource("5_s60j6"), ExtResource("6_sme3g"), ExtResource("7_jiyji"), ExtResource("8_k3nr2")])
+catalog_name = "Ability Resources"
+directory = "res://data/ability_resources"

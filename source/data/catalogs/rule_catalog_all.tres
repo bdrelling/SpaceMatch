@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="RuleCatalog" format=3 uid="uid://bv3yw564cwrsv"]
+
+[ext_resource type="Script" uid="uid://cboblywqkoy5m" path="res://addons/grid_system/rules/ruleset.gd" id="1_syefe"]
+[ext_resource type="Resource" path="res://data/rulesets/alternate.tres" id="2_inujf"]
+[ext_resource type="Resource" path="res://data/rulesets/default.tres" id="3_2ll4o"]
+[ext_resource type="Script" uid="uid://ctikf4uco2dgx" path="res://resources/catalog/rule_catalog.gd" id="4_akryu"]
+
+[resource]
+script = ExtResource("4_akryu")
+rulesets = Array[ExtResource("1_syefe")]([ExtResource("2_inujf"), ExtResource("3_2ll4o")])
+catalog_name = "Rules"
+directory = "res://data/rulesets"

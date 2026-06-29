@@ -1,9 +1,10 @@
 # AUTOLOAD: Catalogs
 extends Node
-## The live, in-memory catalogs the in-game editor edits — modules, module grids, starships, and rules.
-## Each loads its generated `all.tres` if one exists, else falls back to a code-built default. Edits mutate
-## these instances in place (the board reads the active mode via [DebugConfig.match_ruleset], which points
-## here); persisting edits back to disk lands later.
+## The live, in-memory master catalogs — every authored resource of a type, gathered from its data folder. The
+## catalog generator plugin keeps the `all.tres` files current; each loads its generated `all.tres` if one
+## exists, else falls back to a code-built default that rebuilds from the folder on the spot. Some catalogs are
+## editor-facing (modules, starships, rules); others are just facts read at runtime (ability resources,
+## statuses). The board reads the active ruleset via [DebugConfig.match_ruleset], which points here.
 
 const _DIR := "res://data/catalogs/"
 
@@ -11,12 +12,16 @@ var modules: ModuleCatalog
 var module_grids: ModuleGridCatalog
 var starships: StarshipCatalog
 var rules: RuleCatalog
+var ability_resources: AbilityResourceCatalog
+var statuses: StatusCatalog
 
 func _ready() -> void:
 	modules = _load(_DIR + "module_catalog_all.tres", ModuleCatalog.default) as ModuleCatalog
 	module_grids = _load(_DIR + "module_grid_catalog_all.tres", ModuleGridCatalog.default) as ModuleGridCatalog
 	starships = _load(_DIR + "starship_catalog_all.tres", StarshipCatalog.default) as StarshipCatalog
 	rules = _load(_DIR + "rule_catalog_all.tres", RuleCatalog.default) as RuleCatalog
+	ability_resources = _load(_DIR + "ability_resource_catalog_all.tres", AbilityResourceCatalog.default) as AbilityResourceCatalog
+	statuses = _load(_DIR + "status_catalog_all.tres", StatusCatalog.default) as StatusCatalog
 
 # The catalog at [param path] if it exists, else the code-built default from [param fallback].
 func _load(path: String, fallback: Callable) -> Catalog:
