@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ModuleGridCatalog" format=3 uid="uid://c5d0wn1fpgsm2"]
+
+[ext_resource type="Script" uid="uid://dc5pbapsn87iq" path="res://entities/module_grid/module_grid_blueprint.gd" id="1_dekh5"]
+[ext_resource type="Resource" uid="uid://cbgedqlvb0ki6" path="res://data/module_grids/computer_default_module_grid_blueprint.tres" id="2_a775y"]
+[ext_resource type="Resource" uid="uid://cj7lcuwo8goxy" path="res://data/module_grids/default_module_grid_blueprint.tres" id="3_di8as"]
+[ext_resource type="Script" uid="uid://bxotq8bk48o64" path="res://resources/catalog/module_grid_catalog.gd" id="4_bu7as"]
+
+[resource]
+script = ExtResource("4_bu7as")
+grids = Array[ExtResource("1_dekh5")]([ExtResource("2_a775y"), ExtResource("3_di8as")])
+catalog_name = "Module Grids"
+directory = "res://data/module_grids"

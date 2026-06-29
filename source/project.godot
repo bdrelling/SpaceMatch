@@ -57,7 +57,7 @@ window/size/min_height=800
 
 [editor_plugins]
 
-enabled=PackedStringArray("res://addons/command_line/plugin.cfg", "res://addons/components/plugin.cfg", "res://addons/effect_system/plugin.cfg", "res://addons/gdUnit4/plugin.cfg", "res://addons/grid_system/plugin.cfg", "res://addons/logging/plugin.cfg", "res://addons/utilities/plugin.cfg")
+enabled=PackedStringArray("res://addons/catalog_generator/plugin.cfg", "res://addons/command_line/plugin.cfg", "res://addons/components/plugin.cfg", "res://addons/effect_system/plugin.cfg", "res://addons/gdUnit4/plugin.cfg", "res://addons/grid_system/plugin.cfg", "res://addons/logging/plugin.cfg", "res://addons/utilities/plugin.cfg")
 
 [gui]
 

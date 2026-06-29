@@ -4,7 +4,7 @@ extends Catalog
 ## stamped into them). It gathers every authored bay from its directory; the editor can add grids and
 ## (next step) arrange modules in them.
 
-const _DIRECTORY := "res://data/starships"
+const _DIRECTORY := "res://data/module_grids"
 
 @export var grids: Array[ModuleGridBlueprint] = []
 

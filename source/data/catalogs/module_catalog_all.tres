@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="ModuleCatalog" format=3 uid="uid://c4dakw3h4fy08"]
+
+[ext_resource type="Script" uid="uid://daxrkag063tph" path="res://entities/module/module_blueprint.gd" id="1_h4cpn"]
+[ext_resource type="Resource" uid="uid://bltio0cybawhi" path="res://data/modules/engine_item_blueprint.tres" id="2_u63sa"]
+[ext_resource type="Resource" path="res://data/modules/laser_cannon_item_blueprint.tres" id="3_7kri0"]
+[ext_resource type="Resource" uid="uid://bjnpt3i63vbq3" path="res://data/modules/life_support_item_blueprint.tres" id="4_ust24"]
+[ext_resource type="Resource" uid="uid://dlpn238vek5di" path="res://data/modules/reactor_item_blueprint.tres" id="5_k7dym"]
+[ext_resource type="Resource" uid="uid://5g0yw4m0f1b1" path="res://data/modules/sensor_array_item_blueprint.tres" id="6_65u6l"]
+[ext_resource type="Resource" uid="uid://dlkraq4yc71s4" path="res://data/modules/shield_generator_item_blueprint.tres" id="7_pm6ym"]
+[ext_resource type="Resource" uid="uid://bw1rp8c0re7vk" path="res://data/modules/warp_core_item_blueprint.tres" id="8_6ohsp"]
+[ext_resource type="Script" uid="uid://c7o7byvdbw8te" path="res://resources/catalog/module_catalog.gd" id="9_owao4"]
+
+[resource]
+script = ExtResource("9_owao4")
+modules = Array[ExtResource("1_h4cpn")]([ExtResource("2_u63sa"), ExtResource("3_7kri0"), ExtResource("4_ust24"), ExtResource("5_k7dym"), ExtResource("6_65u6l"), ExtResource("7_pm6ym"), ExtResource("8_6ohsp")])
+catalog_name = "Modules"
+directory = "res://data/modules"

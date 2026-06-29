@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="StarshipCatalog" format=3 uid="uid://b3trm30vwl35h"]
+
+[ext_resource type="Script" uid="uid://bw2q7ydp6mcgp" path="res://resources/catalog/starship_catalog.gd" id="1_b6233"]
+[ext_resource type="Script" uid="uid://b65lw3gmpgvux" path="res://entities/starship/starship_blueprint.gd" id="2_hpw5o"]
+[ext_resource type="Resource" uid="uid://c87w5k8eywojd" path="res://data/starships/computer_default_starship_blueprint.tres" id="3_fq53v"]
+[ext_resource type="Resource" uid="uid://cgska4knix2gu" path="res://data/starships/default_starship_blueprint.tres" id="4_h6rpl"]
+
+[resource]
+script = ExtResource("1_b6233")
+starships = Array[ExtResource("2_hpw5o")]([ExtResource("3_fq53v"), ExtResource("4_h6rpl")])
+catalog_name = "Starships"
+directory = "res://data/starships"
