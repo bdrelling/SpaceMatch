@@ -31,6 +31,46 @@ func test_grant_clamps_to_maximum() -> void:
 	assert_int(ResourceEngine.amount_of(entity, energy)).is_equal(4)
 
 
+func test_grant_clamps_to_pool_maximum() -> void:
+	# A per-pool ceiling caps the amount even when the resource itself is unlimited.
+	var entity := Entity.new()
+	var energy := _resource(&"energy")  # resource maximum 0 = unlimited
+	var pool := ResourcePool.new()
+	pool.resource = energy
+	pool.maximum = 4
+	entity.resources.append(pool)
+	ResourceEngine.grant(entity, energy, 10)
+	assert_int(ResourceEngine.amount_of(entity, energy)).is_equal(4)
+
+
+func test_pool_maximum_overrides_resource_maximum() -> void:
+	# When set, the per-pool ceiling wins over the kind's own maximum (here raising it).
+	var entity := Entity.new()
+	var energy := _resource(&"energy", 4)
+	var pool := ResourcePool.new()
+	pool.resource = energy
+	pool.maximum = 7
+	entity.resources.append(pool)
+	ResourceEngine.grant(entity, energy, 100)
+	assert_int(ResourceEngine.amount_of(entity, energy)).is_equal(7)
+
+
+func test_drain_reduces_pool_floored_at_zero() -> void:
+	var entity := Entity.new()
+	var energy := _resource(&"energy")
+	ResourceEngine.grant(entity, energy, 5)
+	ResourceEngine.drain(entity, energy, 3)
+	assert_int(ResourceEngine.amount_of(entity, energy)).is_equal(2)
+	ResourceEngine.drain(entity, energy, 10)  # overdrain floors, never negative
+	assert_int(ResourceEngine.amount_of(entity, energy)).is_equal(0)
+
+
+func test_drain_absent_pool_is_noop() -> void:
+	var entity := Entity.new()
+	ResourceEngine.drain(entity, _resource(&"energy"), 5)  # no pool — must not crash or create one
+	assert_int(entity.resources.size()).is_equal(0)
+
+
 func test_amount_of_is_zero_when_absent() -> void:
 	assert_int(ResourceEngine.amount_of(Entity.new(), _resource(&"energy"))).is_equal(0)
 
