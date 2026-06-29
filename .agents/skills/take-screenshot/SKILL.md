@@ -58,7 +58,7 @@ Five screenshots over 5 seconds:
 
 Screenshot a specific scene:
 ```bash
-./scripts/playtest.sh res://scenes/demo/demo.tscn
+./scripts/playtest.sh res://screens/demo/demo.tscn
 ```
 
 ## After capture

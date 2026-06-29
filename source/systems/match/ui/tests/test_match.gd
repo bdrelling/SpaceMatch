@@ -1099,7 +1099,7 @@ func test_ability_costs_an_action_when_policy_set() -> void:
 # The authored alternate-mode resource is a real Ruleset: it dials the same knobs to a low-mana, multi-action
 # turn (a match of N banks N-2, four moves a turn) without any code — the "make a new mode resource" path.
 func test_alternate_mode_resource_dials_the_knobs() -> void:
-	var path := "res://data/rules/rulesets/alternate.tres"
+	var path := "res://data/rulesets/alternate.tres"
 	assert_bool(ResourceLoader.exists(path)).is_true()
 	var ruleset: Ruleset = load(path)
 	assert_object(ruleset).is_not_null()

@@ -1,0 +1,13 @@
+[gd_scene load_steps=4 format=3 uid="uid://tli6ys0b3n301"]
+
+[ext_resource type="Script" uid="uid://bfpjy4weh8cjn" path="res://screens/loadout_screen/loadout_screen.gd" id="1_ls"]
+[ext_resource type="PackedScene" uid="uid://32b3txwt87yow" path="res://ui/screen_frame/screen_frame.tscn" id="2_frame"]
+[ext_resource type="PackedScene" uid="uid://b8loadout00001" path="res://screens/loadout_screen/loadout_editor.tscn" id="3_loadout"]
+
+[node name="LoadoutScreen" instance=ExtResource("2_frame")]
+script = ExtResource("1_ls")
+
+[node name="Loadout" parent="SafeArea/Body/Content" instance=ExtResource("3_loadout")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3

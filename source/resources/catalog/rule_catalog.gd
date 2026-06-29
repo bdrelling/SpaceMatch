@@ -6,7 +6,7 @@ extends Catalog
 ## mode via [MatchRulesView].
 
 ## The authored standard mode — loaded fresh so a default catalog (and tests) get an independent copy.
-const DEFAULT_PATH := "res://data/rules/rulesets/default.tres"
+const DEFAULT_PATH := "res://data/rulesets/default.tres"
 
 @export var rulesets: Array[Ruleset] = []
 

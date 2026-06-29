@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://j03pwpzl5g4f2"]
+
+[ext_resource type="Script" uid="uid://wyv0es2lnbgbw" path="res://screens/debug_screen/widgets/rows/nav_row.gd" id="1_nav"]
+
+[node name="NavRow" type="Button"]
+custom_minimum_size = Vector2(0, 88)
+size_flags_horizontal = 3
+focus_mode = 0
+theme_override_font_sizes/font_size = 32
+alignment = 0
+script = ExtResource("1_nav")
