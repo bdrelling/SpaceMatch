@@ -2,26 +2,22 @@ class_name Encounter
 extends Node
 ## The active fight entity — the [Node] that represents an [EncounterState] in the game hierarchy (a child of
 ## [Game], absent when no encounter is running). Owns the two combatant [Starship] children; combat logic
-## reads and mutates the data off [member state]. Built via [method create], which clones the player's starship
-## into the fight and builds the opponent from its blueprint so combat damage never touches a saved starship.
+## reads and mutates the data off [member state]. Built via [method create] from two ready combatant states —
+## the player's is a clone of the persistent starship so combat damage never touches a saved starship. The
+## states themselves are chosen and built by [GameCoordinator]; this entity owns no content defaults.
 
 const SCENE_PATH := "res://entities/encounter/encounter.tscn"
 const SCENE: PackedScene = preload(SCENE_PATH)
 
-## The computer opponent's default starship — distinct from the player's (no warp core, so the AI can't Jump).
-const _DEFAULT_OPPONENT := preload("res://data/starships/computer_default_starship_blueprint.tres")
-## The player's fight starship when no session seeds one (the standalone match scene and unit tests).
-const _DEFAULT_PLAYER := preload("res://data/starships/default_starship_blueprint.tres")
-
 @export var state: EncounterState
 
-## Builds an encounter with its two combatant [Starship] children. [param player_state] is the player's fight
-## starship — a clone of the persistent starship in a real game; null builds the standalone default. The opponent is
-## built from [param opponent_blueprint] (the computer default).
-static func create(player_state: StarshipState = null, opponent_blueprint: StarshipBlueprint = _DEFAULT_OPPONENT) -> Encounter:
+## Builds an encounter with its two combatant [Starship] children from the two fight states. [param player_state]
+## is the player's fight starship (a clone of the persistent starship in a real game); [param opponent_state] is
+## the opponent's. Both are required — [GameCoordinator] owns which starships fight and supplies them.
+static func create(player_state: StarshipState, opponent_state: StarshipState) -> Encounter:
 	var encounter: Encounter = SCENE.instantiate()
-	var player_starship: Starship = Starship.with_state(player_state) if player_state != null else Starship.create(_DEFAULT_PLAYER)
-	var opponent_starship: Starship = Starship.create(opponent_blueprint)
+	var player_starship: Starship = Starship.with_state(player_state)
+	var opponent_starship: Starship = Starship.with_state(opponent_state)
 	player_starship.name = "Player"
 	opponent_starship.name = "Opponent"
 	encounter.add_child(player_starship)

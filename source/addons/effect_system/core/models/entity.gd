@@ -12,3 +12,5 @@ extends Resource
 @export var current_stats: StatBlock
 ## Status effects currently on this entity, each with its live stack count.
 @export var statuses: Array[StatusStack] = []
+## Spendable resources this entity holds — its [AbilityResource] pools (the "mana" an [Ability] costs).
+@export var resources: Array[ResourcePool] = []

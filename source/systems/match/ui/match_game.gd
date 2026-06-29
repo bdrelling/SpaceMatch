@@ -384,21 +384,16 @@ func _player_starship() -> StarshipState:
 func _opponent_starship() -> StarshipState:
 	return _encounter.opponent if _encounter != null else null
 
-# Opens the match's own fallback encounter, used ONLY when it stands alone (raw match.tscn, no host). The
-# player combatant clones the running starship (so a fresh fight starts from a fresh copy), the opponent is the
-# computer default; the [Encounter] node parents the two combatant [Starship] nodes under the match so the
-# fight lives in the hierarchy, and its state is pointed into the session. Frees any prior fallback first.
+# Opens the match's own fallback encounter, used ONLY when it stands alone (raw match.tscn, no host).
+# GameCoordinator builds the fight (a clone of the running starship vs the computer default) and points the
+# session at it; the [Encounter] node parents the two combatant [Starship] nodes under the match so the fight
+# lives in the hierarchy. Frees any prior fallback first.
 func _open_fallback_encounter() -> void:
 	if _fallback_encounter != null:
 		_fallback_encounter.queue_free()
-	var player_clone: StarshipState = null
-	if GameSession.game_state != null and GameSession.game_state.starship != null:
-		player_clone = GameSession.game_state.starship.clone()
-	_fallback_encounter = Encounter.create(player_clone)
+	_fallback_encounter = GameCoordinator.start_quick_match()
 	add_child(_fallback_encounter)
 	_encounter = _fallback_encounter.state
-	if GameSession.game_state != null:
-		GameSession.game_state.encounter = _encounter
 
 func _starship_for(combatant: int) -> StarshipState:
 	return _player_starship() if combatant == EncounterState.Combatant.PLAYER else _opponent_starship()

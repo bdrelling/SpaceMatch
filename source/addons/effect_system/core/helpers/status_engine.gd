@@ -51,10 +51,16 @@ static func reduce_stack(entity: Entity, stack: StatusStack, quantity: int) -> v
 		entity.statuses.erase(stack)
 
 
-## Combines an existing count with an incoming one per [param rule] (keep-highest takes the max, otherwise sum),
-## clamped to [param cap].
+## Combines an existing count with an incoming one per [param rule] — keep-highest takes the max, replace takes
+## the incoming, otherwise sum — clamped to [param cap].
 static func _combine(rule: StackRule, existing: int, incoming: int, cap: int) -> int:
-	var combined := maxi(existing, incoming) if rule is KeepHighestStackRule else existing + incoming
+	var combined: int
+	if rule is KeepHighestStackRule:
+		combined = maxi(existing, incoming)
+	elif rule is ReplaceStackRule:
+		combined = incoming
+	else:
+		combined = existing + incoming
 	return _clamp_cap(combined, cap)
 
 

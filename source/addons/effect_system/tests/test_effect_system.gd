@@ -87,3 +87,12 @@ func test_enums_have_expected_baseline_values() -> void:
 	assert_int(Status.Sign.POSITIVE).is_equal(0)
 	assert_int(Modifier.Operation.ADD).is_equal(0)
 	assert_int(StatThresholdCondition.Comparison.LESS).is_equal(0)
+
+
+func test_ability_resource_constructs_with_name_and_maximum() -> void:
+	# The neutral spendable-resource base a game extends for its own mana/tile kinds.
+	var resource := AbilityResource.new()
+	resource.name = &"energy"
+	resource.maximum = 10
+	assert_bool(resource.name == &"energy").is_true()
+	assert_int(resource.maximum).is_equal(10)

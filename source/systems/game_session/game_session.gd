@@ -5,9 +5,6 @@ extends Node
 ## session itself. The entity nodes that represent the state ([Starship], [Wallet], [Encounter]) are owned by
 ## the hosts that show them ([Game]), not by the session.
 
-## The default starship a fresh game starts with.
-const _DEFAULT_STARSHIP := preload("res://data/starships/default_starship_blueprint.tres")
-
 ## The persisted state of the running game — the player starship, wallet, and active encounter. The save reads
 ## this; hosts build the entity nodes that represent it. Replaced wholesale by [method start_new_game].
 var game_state: GameState
@@ -18,13 +15,7 @@ func _ready() -> void:
 	if game_state == null:
 		start_new_game()
 
-## Resets to a fresh single-player game: a default player starship and an empty wallet, no encounter yet (a host
-## opens one). The starship's state is built through the [Starship] node factory — the builder node is transient
-## (freed here); the host that shows the starship wraps this state in a node it owns.
+## Resets to a fresh single-player game. The session holds no content defaults, so it hands the seed off to
+## [GameCoordinator], which builds the default starship and empty wallet and assigns the fresh state here.
 func start_new_game() -> void:
-	game_state = GameState.new()
-	var starship := Starship.create(_DEFAULT_STARSHIP)
-	if starship != null:
-		game_state.starship = starship.state
-		starship.free()
-	game_state.wallet = WalletState.new()
+	GameCoordinator.start_new_game()

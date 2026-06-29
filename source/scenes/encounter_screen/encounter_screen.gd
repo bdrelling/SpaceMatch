@@ -81,11 +81,11 @@ func _wire_settings() -> void:
 func _open_encounter() -> void:
 	if _encounter != null:
 		_encounter.queue_free()
-	var player_clone: StarshipState = GameSession.game_state.starship.clone() if GameSession.game_state.starship != null else null
-	_encounter = Encounter.create(player_clone)
+	# GameCoordinator builds the fight (a clone of the running starship vs the computer default) and points the
+	# session at it; this screen only mounts and frees the node it returns.
+	_encounter = GameCoordinator.start_quick_match()
 	_encounter.name = "Encounter"
 	add_child(_encounter)
-	GameSession.game_state.encounter = _encounter.state
 
 # The cog pauses (touch has no ESC/joypad); the overlay shows itself over the frozen board on pause.
 func _on_settings_pressed() -> void:

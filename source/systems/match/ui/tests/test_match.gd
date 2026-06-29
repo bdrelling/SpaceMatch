@@ -7,17 +7,16 @@ extends GdUnitTestSuite
 func before_test() -> void:
 	GameSession.start_new_game()
 
-# A standalone encounter with default combatant starships, freed at test end. The [Encounter] node builds the two
+# A standalone encounter with default combatant starships, freed at test end. GameCoordinator builds the two
 # [Starship] nodes; tests operate on its [EncounterState] directly (resources, no node-reaching).
 func _encounter() -> EncounterState:
-	var encounter: Encounter = auto_free(Encounter.create())
+	var encounter: Encounter = auto_free(GameCoordinator.start_quick_match())
 	return encounter.state
 
 # Acts as a host mounting the match: opens an encounter on the session (a clone of the player starship vs the
 # computer default) and binds the match to it, the way [Game] / [EncounterScreen] do.
 func _host_bind(game: MatchGame) -> void:
-	var enc: Encounter = auto_free(Encounter.create(GameSession.game_state.starship.clone()))
-	GameSession.game_state.encounter = enc.state
+	auto_free(GameCoordinator.start_quick_match())
 	game.bind_session()
 
 func _make(ruleset: Ruleset = null, mode := MatchBoardView.InputMode.SWAP, ai := true) -> MatchGame:
