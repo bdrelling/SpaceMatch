@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="StatCatalog" format=3 uid="uid://78tdwf55u21x"]
+[gd_resource type="Resource" script_class="StatCatalog" format=3 uid="uid://br26ul102o2qc"]
 
 [ext_resource type="Script" uid="uid://c6yqdfdoebi6w" path="res://resources/catalog/stat_catalog.gd" id="1_wi4u4"]
 [ext_resource type="Script" uid="uid://dtfo78qbpmwvv" path="res://entities/starship/starship_stat.gd" id="2_et6gs"]
