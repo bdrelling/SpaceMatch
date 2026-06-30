@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3 uid="uid://5o114mce5e14k"]
+
+[ext_resource type="Script" uid="uid://csfrui5bhsry4" path="res://ui/catalog_picker/catalog_picker.gd" id="1_picker"]
+[ext_resource type="PackedScene" uid="uid://f83q1gomorxhu" path="res://ui/catalog_browser/catalog_browser.tscn" id="2_browser"]
+
+[node name="CatalogPicker" type="VBoxContainer"]
+size_flags_horizontal = 3
+script = ExtResource("1_picker")
+
+[node name="Browser" parent="." instance=ExtResource("2_browser")]
+unique_name_in_owner = true
+layout_mode = 2

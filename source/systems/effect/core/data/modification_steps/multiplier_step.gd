@@ -12,4 +12,4 @@ func order() -> int:
 
 
 func modify(modification: Modification, _context: ResolutionContext) -> void:
-	modification.amount = int(floor(modification.amount * factor))
+	modification.amount = floori(modification.amount * factor)

@@ -19,8 +19,9 @@ static func resolve(modification: Modification, context: ResolutionContext) -> i
 		if a.side != b.side:
 			return a.side < b.side
 		return a.seq < b.seq)
-	for entry in entries:
-		(entry.step as ModificationStep).modify(modification, context)
+	for entry: Dictionary in entries:
+		var step: ModificationStep = entry.step
+		step.modify(modification, context)
 	modification.amount = maxi(0, modification.amount)
 	return modification.amount
 

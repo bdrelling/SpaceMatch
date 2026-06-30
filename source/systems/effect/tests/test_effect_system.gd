@@ -71,7 +71,7 @@ func test_effect_composes_target_action_and_conditions() -> void:
 	gate.value = 0
 	effect.conditions.append(gate)
 	assert_bool(effect.action is ModifyStatAction).is_true()
-	assert_int((effect.action as ModifyStatAction).amount.value).is_equal(5)
+	assert_int(((effect.action as ModifyStatAction).amount as ConstantAmount).value).is_equal(5)
 	assert_bool(effect.target is OpponentTarget).is_true()
 	assert_int(effect.conditions.size()).is_equal(1)
 

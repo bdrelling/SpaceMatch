@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="Status" format=3 load_steps=4]
 
-[ext_resource type="Script" path="res://addons/effect_system/core/models/status.gd" id="1"]
-[ext_resource type="Script" path="res://addons/effect_system/core/data/modification_steps/absorb_step.gd" id="2_absorb"]
+[ext_resource type="Script" path="res://systems/effect/core/models/status.gd" id="1"]
+[ext_resource type="Script" path="res://systems/effect/core/data/modification_steps/absorb_step.gd" id="2_absorb"]
 [ext_resource type="Resource" path="res://data/stats/block.tres" id="3_shield"]
 
 [sub_resource type="Resource" id="Absorb_shield"]

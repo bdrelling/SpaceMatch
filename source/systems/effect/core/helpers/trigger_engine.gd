@@ -10,10 +10,10 @@ extends RefCounted
 static func fire_phase(entity: Entity, phase: StringName, context: ResolutionContext) -> void:
 	if entity == null:
 		return
-	for stack in entity.statuses.duplicate():
+	for stack: StatusStack in entity.statuses.duplicate():
 		if stack == null or stack.status == null:
 			continue
-		for triggered in stack.status.effects:
+		for triggered: TriggeredEffect in stack.status.effects:
 			if triggered != null and triggered.trigger is PhaseTrigger and (triggered.trigger as PhaseTrigger).phase == phase:
 				await _run(triggered.effects, context)
 
@@ -22,10 +22,10 @@ static func fire_phase(entity: Entity, phase: StringName, context: ResolutionCon
 static func fire_hook(entity: Entity, hook: Hook, context: ResolutionContext) -> void:
 	if entity == null:
 		return
-	for stack in entity.statuses.duplicate():
+	for stack: StatusStack in entity.statuses.duplicate():
 		if stack == null or stack.status == null:
 			continue
-		for triggered in stack.status.effects:
+		for triggered: TriggeredEffect in stack.status.effects:
 			if triggered != null and triggered.trigger is HookTrigger and matches((triggered.trigger as HookTrigger).hook, hook):
 				await _run(triggered.effects, context)
 
@@ -34,10 +34,10 @@ static func fire_hook(entity: Entity, hook: Hook, context: ResolutionContext) ->
 static func fire_counts(entity: Entity, context: ResolutionContext) -> void:
 	if entity == null:
 		return
-	for stack in entity.statuses.duplicate():
+	for stack: StatusStack in entity.statuses.duplicate():
 		if stack == null or stack.status == null:
 			continue
-		for triggered in stack.status.effects:
+		for triggered: TriggeredEffect in stack.status.effects:
 			if triggered != null and triggered.trigger is CountTrigger and stack.count >= (triggered.trigger as CountTrigger).value:
 				await _run(triggered.effects, context)
 
@@ -48,12 +48,13 @@ static func fire_counts(entity: Entity, context: ResolutionContext) -> void:
 static func matches(trigger_hook: Hook, raised: Hook) -> bool:
 	if trigger_hook == null or raised == null:
 		return false
-	var script := trigger_hook.get_script()
+	var script: Object = trigger_hook.get_script()
 	if script != raised.get_script():
 		return false
 	var defaults: Object = (script as GDScript).new() if script != null else null
-	for property in trigger_hook.get_property_list():
-		if not (int(property.usage) & PROPERTY_USAGE_SCRIPT_VARIABLE):
+	for property: Dictionary in trigger_hook.get_property_list():
+		var usage: int = property.usage
+		if not (usage & PROPERTY_USAGE_SCRIPT_VARIABLE):
 			continue
 		var field: StringName = property.name
 		var expected: Variant = trigger_hook.get(field)

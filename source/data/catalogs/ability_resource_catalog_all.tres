@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="AbilityResourceCatalog" format=3 uid="uid://ckbg6id4lokap"]
 
-[ext_resource type="Script" uid="uid://bqiylpu1go50e" path="res://addons/effect_system/core/models/ability_resource.gd" id="1_jnwvn"]
+[ext_resource type="Script" uid="uid://bqiylpu1go50e" path="res://systems/effect/core/models/ability_resource.gd" id="1_jnwvn"]
 [ext_resource type="Resource" uid="uid://b2kqyh4632a1r" path="res://data/ability_resources/combat.tres" id="2_4a8gp"]
 [ext_resource type="Resource" uid="uid://cyhafv6x2udqt" path="res://data/ability_resources/propulsion.tres" id="3_wwri0"]
 [ext_resource type="Resource" uid="uid://b63jse3fv7g7k" path="res://data/ability_resources/science.tres" id="4_2m00e"]

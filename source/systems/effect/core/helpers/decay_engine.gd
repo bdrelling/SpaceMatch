@@ -12,7 +12,7 @@ static func tick_phase(entity: Entity, phase: StringName) -> Array[Status]:
 	var expired: Array[Status] = []
 	if entity == null:
 		return expired
-	for stack in entity.statuses.duplicate():
+	for stack: StatusStack in entity.statuses.duplicate():
 		var rule := _rule_of(stack)
 		if rule is TimingDecayRule and (rule as TimingDecayRule).phase == phase:
 			StatusEngine.reduce_stack(entity, stack, (rule as TimingDecayRule).quantity)
@@ -27,7 +27,7 @@ static func tick_hook(entity: Entity, hook: Hook) -> Array[Status]:
 	var expired: Array[Status] = []
 	if entity == null:
 		return expired
-	for stack in entity.statuses.duplicate():
+	for stack: StatusStack in entity.statuses.duplicate():
 		var rule := _rule_of(stack)
 		if rule is TriggerDecayRule and TriggerEngine.matches((rule as TriggerDecayRule).hook, hook):
 			StatusEngine.reduce_stack(entity, stack, (rule as TriggerDecayRule).quantity)
@@ -42,7 +42,7 @@ static func tick_thresholds(entity: Entity) -> Array[Status]:
 	var expired: Array[Status] = []
 	if entity == null:
 		return expired
-	for stack in entity.statuses.duplicate():
+	for stack: StatusStack in entity.statuses.duplicate():
 		var rule := _rule_of(stack)
 		if rule is ThresholdDecayRule and stack.count >= (rule as ThresholdDecayRule).value:
 			StatusEngine.reduce_stack(entity, stack, (rule as ThresholdDecayRule).quantity)

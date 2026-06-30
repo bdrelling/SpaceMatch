@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://f83q1gomorxhu"]
+
+[ext_resource type="Script" uid="uid://dgkbbtx7o26a0" path="res://ui/catalog_browser/catalog_browser.gd" id="1_browser"]
+
+[node name="CatalogBrowser" type="VBoxContainer"]
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+script = ExtResource("1_browser")

@@ -25,4 +25,4 @@ static func apply(entity: Entity, into: EntityStats) -> void:
 					result = float(current) + modifier.amount * stack.count
 				Modifier.Operation.MULTIPLY:
 					result = float(current) * pow(modifier.amount, stack.count)
-			into.set_stat(modifier.stat, int(round(result)))
+			into.set_stat(modifier.stat, roundi(result))

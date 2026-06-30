@@ -1,9 +1,9 @@
 [gd_resource type="Resource" script_class="Status" format=3 load_steps=5]
 
-[ext_resource type="Script" path="res://addons/effect_system/core/models/status.gd" id="1"]
-[ext_resource type="Script" path="res://addons/effect_system/core/data/modification_steps/clamp_step.gd" id="2_clamp"]
-[ext_resource type="Script" path="res://addons/effect_system/core/data/decay_rules/trigger_decay_rule.gd" id="3_decay"]
-[ext_resource type="Script" path="res://addons/effect_system/core/data/hooks/when_hit_hook.gd" id="4_hit"]
+[ext_resource type="Script" path="res://systems/effect/core/models/status.gd" id="1"]
+[ext_resource type="Script" path="res://systems/effect/core/data/modification_steps/clamp_step.gd" id="2_clamp"]
+[ext_resource type="Script" path="res://systems/effect/core/data/decay_rules/trigger_decay_rule.gd" id="3_decay"]
+[ext_resource type="Script" path="res://systems/effect/core/data/hooks/when_hit_hook.gd" id="4_hit"]
 
 [sub_resource type="Resource" id="Clamp_zero"]
 script = ExtResource("2_clamp")

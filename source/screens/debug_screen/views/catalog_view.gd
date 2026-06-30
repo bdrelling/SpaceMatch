@@ -1,14 +1,16 @@
 class_name CatalogView
 extends DebugView
-## Lists a [Catalog]'s entries as drill-in rows, with a "+" to add a new one. Tapping an entry opens its
-## detail editor — built by the [member _detail_factory] the host supplies, so catalogs stay UI-free.
+## The debug page for a [Catalog]: a thin adapter that hosts a reusable [CatalogBrowser] inside the debug
+## shell. The browser lists the entries (decoupled from any navigation); this view wires a tapped entry to its
+## detail editor — built by the [member _detail_factory] the host supplies — and the header "+" to adding one.
 ## Generic over every catalog type (modules, grids, starships, rules).
 
 var _catalog: Catalog
 # func(entry: Resource) -> DebugView — builds the detail editor for an entry. Supplied by the host.
 var _detail_factory: Callable
+var _browser: CatalogBrowser
 
-## Builds a list view of [param catalog]; [param detail_factory] maps an entry to its editor view.
+## Builds a page for [param catalog]; [param detail_factory] maps an entry to its editor view.
 static func create(catalog: Catalog, detail_factory: Callable) -> CatalogView:
 	var view := CatalogView.new()
 	view._catalog = catalog
@@ -32,16 +34,10 @@ func _build() -> void:
 		return
 	if not _catalog.directory.is_empty():
 		add_child(DebugRow.nav("Regenerate from disk", "", _on_regenerate))
-	var items := _catalog.entries()
-	if items.is_empty():
-		var empty := Label.new()
-		empty.text = "Empty — tap + to add one."
-		empty.add_theme_font_size_override("font_size", DebugRow.ROW_FONT)
-		add_child(empty)
-		return
-	for entry: Resource in items:
-		var e := entry
-		add_child(DebugRow.nav(_catalog.entry_title(e), "", func() -> void: _open(e)))
+	_browser = CatalogBrowser.create(_catalog)
+	_browser.empty_text = "Empty — tap + to add one."
+	_browser.entry_activated.connect(_open)
+	add_child(_browser)
 
 func _open(entry: Resource) -> void:
 	var detail: DebugView = _detail_factory.call(entry)
@@ -50,10 +46,12 @@ func _open(entry: Resource) -> void:
 
 func _on_add() -> void:
 	var entry: Resource = _catalog.add_new()
-	rebuild()
+	if _browser != null:
+		_browser.refresh()
 	if entry != null:
 		_open(entry)
 
 func _on_regenerate() -> void:
 	_catalog.regenerate()
-	rebuild()
+	if _browser != null:
+		_browser.refresh()
