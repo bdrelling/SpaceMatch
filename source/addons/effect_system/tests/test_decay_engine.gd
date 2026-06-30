@@ -34,16 +34,16 @@ func test_timing_decay_ignores_other_phases() -> void:
 
 func test_trigger_decay_consumes_on_matching_hook() -> void:
 	var rule := TriggerDecayRule.new()
-	rule.hook = DamageReceivedHook.new()
+	rule.hook = StatModifiedHook.new()
 	rule.quantity = 1
 	var entity := _entity_with_decay(&"dodge", rule, 1)
-	DecayEngine.tick_hook(entity, DamageReceivedHook.new())
+	DecayEngine.tick_hook(entity, StatModifiedHook.new())
 	assert_int(entity.statuses.size()).is_equal(0)
 
 
 func test_trigger_decay_ignores_other_hooks() -> void:
 	var rule := TriggerDecayRule.new()
-	rule.hook = DamageReceivedHook.new()
+	rule.hook = StatModifiedHook.new()
 	rule.quantity = 1
 	var entity := _entity_with_decay(&"dodge", rule, 1)
 	DecayEngine.tick_hook(entity, OnApplyHook.new())

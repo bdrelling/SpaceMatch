@@ -20,4 +20,5 @@ func resolve(context: ResolutionContext) -> void:
 	@warning_ignore("redundant_await")
 	var targets: Array[Entity] = await target.resolve(context)
 	for entity in targets:
-		action.resolve(context, entity)
+		@warning_ignore("redundant_await")
+		await action.resolve(context, entity)

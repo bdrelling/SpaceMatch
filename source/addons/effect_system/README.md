@@ -4,39 +4,45 @@ Generic entity status/effect engine: entities with stats and stacking statuses, 
 
 ```
 # ── Layers ────────────────────────────────────────
-# core/    every game — the neutral engine: stats, statuses, effects, triggers, hooks,
-#          relational targeting, and the modification pipeline with its steps.
-# combat/  opt-in — the combat hooks (and combat-specific authored content) that ride the core
-#          seam. Tagged "combat" below.
+# core/    every game — the neutral engine: stats, statuses, effects, triggers, hooks (including the generic
+#          action / stat-change events), relational targeting, and the modification pipeline with its steps.
 # spatial/ opt-in, rare — positional targeting. Tagged "spatial" below.
 #
-# The abstract bases (StatBlock, StackRule, DecayRule, Trigger, Hook, Target, Amount, Action,
-# Condition, ModificationStep) plus the structural types (Entity, Status, StatusStack, Modifier,
+# The abstract bases (EntityStats, StackRule, DecayRule, Trigger, Hook, Target, Amount, Action,
+# Condition, ModificationStep) plus the structural types (Entity, EntityStat, Status, StatusStack, Modifier,
 # TriggeredEffect, Ability, Effect, Modification, ResolutionContext) ARE the system. Every concrete
 # subtype below them — ModifyStatAction, ApplyStatusAction, PhaseTrigger, SelfTarget, MultiplierStep, ... — ships
 # as an EXAMPLE: reusable, but removable. A game keeps the ones it wants and adds its own.
 
-# Entity — a combatant the engine acts on. The engine reaches stats ONLY through the StatBlock contract
+# Entity — a combatant the engine acts on. The engine reaches stats ONLY through the EntityStats contract
 # (get_stat/set_stat/stat_names); it never computes the base→effective→current layering — the GAME owns that.
 # base_stats is the baseline the game supplies (its effective profile: intrinsic stats + loadout). current_stats
 # is the live layer: seeded from the baseline, depleting pools (health, shields) fall below it via ModifyStatAction,
 # and the runtime folds active-status modifiers into it (see Runtime → stat contribution). The game decides what
-# is a depleting pool vs a derived stat; the engine only reads and writes by name.
+# is a depleting pool vs a derived stat; the engine only reads and writes by key.
 Entity {
   id:             int
-  base_stats:     StatBlock     # the baseline / effective profile the game supplies (intrinsic + loadout)
-  current_stats:  StatBlock     # the live layer: pools deplete here, status modifiers fold in
+  base_stats:     EntityStats   # the baseline / effective profile the game supplies (intrinsic + loadout)
+  current_stats:  EntityStats   # the live layer: pools deplete here, status modifiers fold in
   statuses:       Array[StatusStack]
   resources:      Array[ResourcePool]    # spendable AbilityResource amounts the entity holds (its "mana")
 }
 
-# StatBlock — abstract stats contract. Games subclass it with typed @export fields, so name access
-# bridges to Godot get()/set(): no Dictionary and no sync layer. In-game you use typed access and only
-# authored data ever names a stat as a StringName.
-StatBlock {
-  get_stat(name)  -> Variant            # hard error if name is absent
-  set_stat(name, value)
+# EntityStats — the stat collection: a dictionary of values keyed by an EntityStat (its name). The dict is the
+# storage AND the math, so a block holds whatever stats it is given with no typed subclass required. Games may
+# layer typed-field sugar over it (the game's StarshipStats does), but the dictionary is the source of truth.
+EntityStats {
+  values:         Dictionary[StringName, int]   # value per stat key
+  get_stat(stat: EntityStat)  -> int            # zero when the block holds no such stat
+  set_stat(stat: EntityStat, value)
+  add(other: EntityStats)                        # sums another block in, key by key
   stat_names()    -> Array[StringName]
+}
+
+# EntityStat — a stat definition: its key (name). The neutral counterpart of AbilityResource — authored data and
+# code reference a stat as an EntityStat instead of a raw StringName, so stat references are type-checked.
+EntityStat {
+  name:           StringName
 }
 
 # Status — the definition (poison, bleed, shield, ...), authored as a resource
@@ -74,7 +80,7 @@ Effect {
 Modifier {
   enum Operation { ADD, MULTIPLY }   # ADD: flat delta;  MULTIPLY: scales the stat
 
-  stat:        StringName
+  stat:        EntityStat
   operation:   Operation
   amount:      float                 # applied once per stack: a status at N stacks contributes the modifier N times
 }
@@ -91,7 +97,6 @@ Ability {
 # govern how fast a resource is collected), a resource is a pool you spend.
 AbilityResource {
   name:     StringName
-  maximum:  int                      # most an entity can hold; 0 = unlimited
 }
 
 # ResourceCost — an amount of one AbilityResource that using an Ability spends. A cost and a pool match by the
@@ -106,6 +111,7 @@ ResourceCost {
 ResourcePool {
   resource:  AbilityResource
   amount:    int
+  maximum:   int                     # most this pool may hold; 0 = unlimited (the pool owns its cap, not the resource)
 }
 
 
@@ -135,13 +141,13 @@ CountTrigger extends Trigger { value: int }
 
 # ── Hook (pluggable; defaults below) ──────────────
 # A raised Hook matches a HookTrigger / TriggerDecayRule's hook when they share a class AND every non-default
-# scalar field on the trigger's hook equals the raised hook's. Entity-typed fields (attacker, ...) are payload,
-# ignored for matching — so a bare DamageReceivedHook matches any hit; one with damage_type set matches only it.
+# scalar field on the trigger's hook equals the raised hook's — so a bare hook matches any of its class, one
+# with `tag` set matches only that tag. Hooks are bare event tokens; who / whom / how-much come from the context.
 Hook { }
-OnApplyHook        extends Hook { }                        # core — a status was applied
-WhenHitHook        extends Hook { }                        # combat
-OnAttackHook       extends Hook { }                        # combat
-DamageReceivedHook extends Hook { amount: int,  damage_type: StringName,  attacker: Entity }   # combat
+OnApplyHook        extends Hook { }                  # a status was applied
+StatModifiedHook   extends Hook { tag: StringName }  # a stat changed, raised on the subject (reflect, undead, ...)
+OutgoingActionHook extends Hook { tag: StringName }  # a change you caused, raised on the actor (lifesteal, ...)
+IncomingActionHook extends Hook { tag: StringName }  # an action targeted you, raised on the subject (any magnitude)
 
 
 # ── Target ────────────────────────────────────────
@@ -161,8 +167,9 @@ SidesTarget          extends Target { radius: int }  # spatial — neighbours in
 Amount {
   evaluate(ctx) -> int    # computes the numeric value in context
 }
-ConstantAmount extends Amount { value: int }
-StatAmount     extends Amount { stat: StringName }   # reads the source entity's stat
+ConstantAmount     extends Amount { value: int }
+StatAmount         extends Amount { stat: EntityStat }   # reads the source entity's stat
+ModificationAmount extends Amount { }                    # the magnitude of the change being reacted to (ctx.modification.amount)
 
 
 # ── Action ────────────────────────────────────────
@@ -172,15 +179,16 @@ Action {
 # ModifyStatAction — the single value-changing action. Damage, healing, and resource gain are all this, with
 # a different tag and direction. The magnitude runs through the ModificationPipeline first.
 ModifyStatAction   extends Action {
-  stat:          StringName
+  stat:          EntityStat
   amount:        Amount
   tag:           StringName    # "damage", "heal", ... — names the change for steps and hooks
   subtracts:     bool          # true = remove (damage, paying a cost);  false = add (heal, gain)
   minimum:       int           # floor the stat lands on (default 0)
-  maximum_stat:  StringName     # optional ceiling read from another stat (e.g. max_health); empty = none
+  maximum_stat:  EntityStat     # optional ceiling read from another stat (e.g. max_health); null = none
 }
-ApplyStatusAction  extends Action { status: StringName,  count: int }
-RemoveStatusAction extends Action { status: StringName }
+ApplyStatusAction   extends Action { status: StringName,  count: int }
+RemoveStatusAction  extends Action { status: StringName }
+DrainResourceAction extends Action { resources: Array[AbilityResource], amount: Amount }  # subtracts amount from each pool on the target
 
 
 # ── Condition (gates an Effect on game state) ─────
@@ -192,7 +200,7 @@ StatThresholdCondition extends Condition {
   enum Comparison { LESS, EQUAL, GREATER }
 
   target:      Target
-  stat:        StringName
+  stat:        EntityStat
   comparison:  Comparison
   value:       int
 }
@@ -211,6 +219,7 @@ ResolutionContext {
   rng:         RandomNumberGenerator                        # seeded
   chooser:     EffectChooser                                # handles target/decision selection
   status_catalog:  Dictionary                               # StringName -> Status; how ApplyStatusAction/RemoveStatusAction resolve a name to its resource
+  modification:    Modification                             # the change in flight a reaction is responding to (set by ModifyStatAction); ModificationAmount reads it
 }
 
 EffectChooser {
@@ -229,7 +238,7 @@ AutoChooser extends EffectChooser { }    # default; synchronously picks the firs
 Modification {
   source:  Entity
   target:  Entity
-  stat:    StringName     # the named value being changed
+  stat:    EntityStat     # the named value being changed
   amount:  int            # mutable magnitude; steps reshape in place, the pipeline floors it at zero
   tag:     StringName     # "damage", "heal", ... ; steps filter on it
 }
@@ -245,8 +254,8 @@ ModificationStep {
   modify(mod, ctx)                         # mutates modification.amount
 }
 MultiplierStep     extends ModificationStep { factor: float }                 # scales (Vulnerable / Weak); order 100
-FlatMitigationStep extends ModificationStep { stat: StringName }              # subtracts a stat, e.g. armor; order 200
-AbsorbStep         extends ModificationStep { stat: StringName }              # drains a pool, e.g. Block; order 300
+FlatMitigationStep extends ModificationStep { stat: EntityStat }              # subtracts a stat, e.g. armor; order 200
+AbsorbStep         extends ModificationStep { stat: EntityStat }              # drains a pool, e.g. Block; order 300
 ClampStep          extends ModificationStep { minimum: int, maximum: int }    # bounds the change, e.g. Intangible; order 400
 
 
@@ -275,12 +284,12 @@ fire_counts(entity, ctx)         # CountTrigger whose count has reached value
 # the entity, with ctx.instigator set to whoever raised it.
 raise_hook(entity, hook, instigator, ctx)
 
-# Stat contribution — folds the entity's active-status modifiers (scaled by stack count) onto a StatBlock the
+# Stat contribution — folds the entity's active-status modifiers (scaled by stack count) onto an EntityStats the
 # GAME supplies from its own stat computation. The engine's only hand in stats; it stores no derived block.
-apply_modifiers(entity, into: StatBlock)
+apply_modifiers(entity, into: EntityStats)
 
 # Resources — an entity holds ResourcePools; an ability's ResourceCosts are checked and paid here. The game refills
-# pools as it collects (grant), clamped to each AbilityResource's maximum.
+# pools as it collects (grant), clamped to each ResourcePool's maximum.
 can_afford(entity, costs) -> bool
 spend(entity, costs)
 grant(entity, resource, amount)

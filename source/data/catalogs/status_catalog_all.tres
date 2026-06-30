@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://dq0nl6lj0xbts" path="res://addons/effect_system/core/models/status.gd" id="2_viohu"]
 [ext_resource type="Resource" path="res://data/statuses/dodge.tres" id="3_xvkv1"]
 [ext_resource type="Resource" path="res://data/statuses/shield.tres" id="4_74vli"]
-[ext_resource type="Resource" path="res://data/statuses/target_lock.tres" id="5_mnugk"]
+[ext_resource type="Resource" uid="uid://myxv7nlbwsia" path="res://data/statuses/target_lock.tres" id="5_mnugk"]
 
 [resource]
 script = ExtResource("1_a5p8o")

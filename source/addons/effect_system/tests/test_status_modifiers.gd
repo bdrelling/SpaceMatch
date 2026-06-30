@@ -1,14 +1,13 @@
 extends GdUnitTestSuite
-## Tests [StatusModifiers.apply]: folding active-status [Modifier]s onto a game-supplied [StatBlock], scaled by
-## stack count, leaving undeclared stats untouched and preserving each stat's type.
+## Tests [StatusModifiers.apply]: folding active-status [Modifier]s onto an [EntityStats], scaled by stack count.
 
-class _TestStats extends StatBlock:
-	@export var damage: int = 0
-	@export var armor: int = 0
-	@export var speed: float = 0.0
+func _stat(name: StringName) -> EntityStat:
+	var stat := EntityStat.new()
+	stat.name = name
+	return stat
 
 
-func _modifier(stat: StringName, operation: Modifier.Operation, amount: float) -> Modifier:
+func _modifier(stat: EntityStat, operation: Modifier.Operation, amount: float) -> Modifier:
 	var modifier := Modifier.new()
 	modifier.stat = stat
 	modifier.operation = operation
@@ -27,53 +26,53 @@ func _entity(modifiers: Array[Modifier], count: int = 1) -> Entity:
 	return entity
 
 
+func _block(stat: EntityStat, value: int) -> EntityStats:
+	var block := EntityStats.new()
+	block.set_stat(stat, value)
+	return block
+
+
 func test_add_modifier_increases_stat() -> void:
-	var entity := _entity([_modifier(&"damage", Modifier.Operation.ADD, 2.0)])
-	var into := _TestStats.new()
-	into.damage = 5
+	var damage := _stat(&"damage")
+	var entity := _entity([_modifier(damage, Modifier.Operation.ADD, 2.0)])
+	var into := _block(damage, 5)
 	StatusModifiers.apply(entity, into)
-	assert_int(into.damage).is_equal(7)
+	assert_int(into.get_stat(damage)).is_equal(7)
 
 
 func test_add_modifier_scales_by_stack_count() -> void:
-	var entity := _entity([_modifier(&"damage", Modifier.Operation.ADD, 2.0)], 3)
-	var into := _TestStats.new()
-	into.damage = 5
+	var damage := _stat(&"damage")
+	var entity := _entity([_modifier(damage, Modifier.Operation.ADD, 2.0)], 3)
+	var into := _block(damage, 5)
 	StatusModifiers.apply(entity, into)
-	assert_int(into.damage).is_equal(11)  # 5 + 2 * 3
+	assert_int(into.get_stat(damage)).is_equal(11)
 
 
 func test_multiply_modifier_scales_count_times() -> void:
-	var entity := _entity([_modifier(&"armor", Modifier.Operation.MULTIPLY, 2.0)], 2)
-	var into := _TestStats.new()
-	into.armor = 3
+	var armor := _stat(&"armor")
+	var entity := _entity([_modifier(armor, Modifier.Operation.MULTIPLY, 2.0)], 2)
+	var into := _block(armor, 3)
 	StatusModifiers.apply(entity, into)
-	assert_int(into.armor).is_equal(12)  # 3 * 2^2
+	assert_int(into.get_stat(armor)).is_equal(12)
 
 
-func test_unknown_stat_is_skipped() -> void:
-	var entity := _entity([_modifier(&"nonexistent", Modifier.Operation.ADD, 5.0)])
-	var into := _TestStats.new()
-	StatusModifiers.apply(entity, into)  # must not error
-	assert_int(into.damage).is_equal(0)
-
-
-func test_float_stat_keeps_its_type() -> void:
-	var entity := _entity([_modifier(&"speed", Modifier.Operation.ADD, 1.5)])
-	var into := _TestStats.new()
-	into.speed = 2.0
+func test_modifier_for_absent_stat_adds_it() -> void:
+	var extra := _stat(&"extra")
+	var entity := _entity([_modifier(extra, Modifier.Operation.ADD, 5.0)])
+	var into := EntityStats.new()
 	StatusModifiers.apply(entity, into)
-	assert_float(into.speed).is_equal_approx(3.5, 0.001)
+	assert_int(into.get_stat(extra)).is_equal(5)
 
 
 func test_multiple_statuses_fold_together() -> void:
-	var entity := _entity([_modifier(&"damage", Modifier.Operation.ADD, 2.0)])
+	var damage := _stat(&"damage")
+	var entity := _entity([_modifier(damage, Modifier.Operation.ADD, 2.0)])
 	var second := Status.new()
-	second.modifiers = [_modifier(&"damage", Modifier.Operation.ADD, 1.0)]
+	second.modifiers = [_modifier(damage, Modifier.Operation.ADD, 1.0)]
 	var stack := StatusStack.new()
 	stack.status = second
 	stack.count = 1
 	entity.statuses.append(stack)
-	var into := _TestStats.new()
+	var into := EntityStats.new()
 	StatusModifiers.apply(entity, into)
-	assert_int(into.damage).is_equal(3)
+	assert_int(into.get_stat(damage)).is_equal(3)

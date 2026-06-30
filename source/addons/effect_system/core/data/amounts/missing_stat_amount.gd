@@ -4,10 +4,10 @@ extends Amount
 ## pool. Scales a change by absence: "damage equal to your missing hull", "heal more the lower you are". Never
 ## negative.
 
-## The current stat read from the source (e.g. the health [Stat]).
-@export var stat: Stat
-## The ceiling the shortfall is measured against (e.g. the max-health [Stat]).
-@export var maximum_stat: Stat
+## The current stat read from the source (e.g. the health [EntityStat]).
+@export var stat: EntityStat
+## The ceiling the shortfall is measured against (e.g. the max-health [EntityStat]).
+@export var maximum_stat: EntityStat
 
 
 ## Returns [member maximum_stat] minus [member stat] on the source, floored at zero. Zero when there is no source

@@ -8,7 +8,7 @@ extends Target
 ## are skipped.
 @export var from: Target
 ## The stat compared across the pool.
-@export var stat: Stat
+@export var stat: EntityStat
 
 
 ## Resolves [member from], then returns the one entity whose [member stat] is largest. Empty when the pool is

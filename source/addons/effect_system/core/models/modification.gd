@@ -12,8 +12,12 @@ var source: Entity
 ## to its [member stat].
 var target: Entity
 ## The stat being changed (health, a shield pool, a resource, ...).
-var stat: Stat
+var stat: EntityStat
 ## The current magnitude of the change. Steps read and rewrite this; the pipeline floors it at zero.
 var amount: int
 ## What kind of change this is ("damage", "heal", ...). Steps and hooks key off it to scope themselves.
 var tag: StringName
+## How deep in a reaction cascade this change is: 0 for a change made directly, +1 for each change a reaction
+## spawned off another. Reactions read it (e.g. "react only at depth 0") and the engine caps it so reflections
+## of reflections terminate.
+var depth: int = 0

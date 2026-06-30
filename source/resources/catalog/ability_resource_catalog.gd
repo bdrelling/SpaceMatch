@@ -12,6 +12,15 @@ const _DIRECTORY := "res://data/ability_resources"
 func entries() -> Array:
 	return ability_resources
 
+## The [StarshipResource] backing board tile [param tile_kind], or null when no resource maps to that kind.
+## Bridges the grid's int tile kind to the resource the encounter/ability/rules layer references.
+func for_tile(tile_kind: int) -> StarshipResource:
+	for resource: AbilityResource in ability_resources:
+		var starship_resource := resource as StarshipResource
+		if starship_resource != null and starship_resource.tile_kind == tile_kind:
+			return starship_resource
+	return null
+
 func entry_title(entry: Resource) -> String:
 	var resource := entry as AbilityResource
 	if resource == null or resource.name.is_empty():

@@ -6,8 +6,7 @@ extends Control
 
 #region Constants
 
-## Loaded on demand in [method create] rather than `preload`-ed, mirroring the other screens: referencing
-## [MainMenuScreen] (e.g. from a boot-time switch) never pulls the scene into memory — only [method create] does.
+const SCREEN_NAME := "menu"
 const SCENE_PATH := "res://screens/main_menu_screen/main_menu_screen.tscn"
 
 #endregion

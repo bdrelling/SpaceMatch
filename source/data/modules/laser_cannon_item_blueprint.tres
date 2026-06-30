@@ -1,13 +1,12 @@
 [gd_resource type="Resource" script_class="ModuleBlueprint" format=3]
 
 [ext_resource type="Script" uid="uid://daxrkag063tph" path="res://entities/module/module_blueprint.gd" id="1_script"]
-[ext_resource type="Script" uid="uid://ha1rkn84cbir" path="res://entities/stat/starship_stats.gd" id="2_stats"]
+[ext_resource type="Script" uid="uid://ha1rkn84cbir" path="res://entities/starship/starship_stats.gd" id="2_stats"]
 [ext_resource type="Script" uid="uid://dy25mpv7s2ajw" path="res://addons/grid_system/data/piece_shape.gd" id="3_shape"]
 
 [sub_resource type="Resource" id="Stats_laser_cannon"]
 script = ExtResource("2_stats")
-power = 4
-energy = -1
+values = { &"power": 4, &"energy": -1 }
 
 [sub_resource type="Resource" id="Shape_laser_cannon"]
 script = ExtResource("3_shape")

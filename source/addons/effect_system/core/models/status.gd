@@ -21,7 +21,7 @@ enum Sign {
 @export var decay_rule: DecayRule
 ## Effects this status fires when its triggers match.
 @export var effects: Array[TriggeredEffect] = []
-## Stat modifiers this status applies while active.
+## EntityStat modifiers this status applies while active.
 @export var modifiers: Array[Modifier] = []
 ## Transforms this status applies to changes passing through its holder — absorb, mitigate, amplify, clamp. On
 ## the target of a change these read as defenses (Block, armor, Vulnerable); on the source they read as

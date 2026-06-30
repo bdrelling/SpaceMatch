@@ -37,7 +37,7 @@ func _build() -> void:
 # A plain-language sentence for what a rule does, for the player.
 func _summary(rule: Rule) -> String:
 	var kind := RulePresentation.kind_of(rule)
-	var kind_name := MatchTile.NAMES[kind] if kind >= 0 and kind < MatchTile.NAMES.size() else ""
+	var kind_name := MatchTile.name_of(kind) if kind >= 0 and kind < MatchTile.KIND_COUNT else ""
 	match String(rule.rule_name):
 		"resource_grant":
 			return "Matching stat tiles banks their resource to whoever cleared them."

@@ -57,7 +57,7 @@ func use_ability(source: Entity, allies: Array[Entity], opponents: Array[Entity]
 
 
 ## Folds [param entity]'s active-status modifiers onto [param into] (the game's own stat block).
-func apply_modifiers(entity: Entity, into: StatBlock) -> void:
+func apply_modifiers(entity: Entity, into: EntityStats) -> void:
 	StatusModifiers.apply(entity, into)
 
 

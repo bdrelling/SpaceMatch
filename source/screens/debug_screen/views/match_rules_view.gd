@@ -58,11 +58,7 @@ func _add_rule_rows(card: DebugRuleCard, rule: Rule) -> void:
 		var prop_type: int = prop.type
 		match prop_type:
 			TYPE_INT:
-				if p == "kind":
-					var current_kind: int = r.get(p)
-					card.add_row(DebugRow.option(label, MatchTile.NAMES, current_kind,
-						func(index: int) -> void: r.set(p, index)))
-				elif p == "spawn_weight":
+				if p == "spawn_weight":
 					# The rule's own spawn weight — tinted by the tile it spawns, ranged like the old pool card.
 					var weight: int = r.get(p)
 					card.add_row(DebugRow.slider("Spawn weight", _rule_tile_color(r), 0, 50, weight,
@@ -71,6 +67,14 @@ func _add_rule_rows(card: DebugRuleCard, rule: Rule) -> void:
 					var current_int: int = r.get(p)
 					card.add_row(DebugRow.slider(label, Color.WHITE, 0, 10, current_int,
 						func(value: float) -> void: r.set(p, int(value))))
+			TYPE_OBJECT:
+				# A single-resource rule (scrap / damage / warp) — show which resource it acts on, read-only.
+				if p == "resource":
+					card.add_row(_resource_label(label, r.get(p)))
+			TYPE_ARRAY:
+				# A multi-resource rule (resource grant) — show the resources it banks, read-only.
+				if p == "resources":
+					card.add_row(_resources_label(label, r.get(p)))
 			TYPE_BOOL:
 				var current_bool: bool = r.get(p)
 				card.add_row(DebugRow.toggle(label, current_bool,
@@ -93,38 +97,69 @@ func _add_rule_rows(card: DebugRuleCard, rule: Rule) -> void:
 			func(index: int) -> void:
 				scoring.formula = FibonacciScoringFormula.new() if index == 1 else ScoringFormula.new()))
 
-# A read-only summary of a kinds array as resource names (multi-kind editing comes with the catalog work).
+# A read-only summary of a per-kind int array (e.g. capacity maximums) as resource names.
 func _kinds_label(label: String, raw: Variant) -> Label:
 	var names := PackedStringArray()
 	if typeof(raw) == TYPE_PACKED_INT32_ARRAY:
 		var kinds: PackedInt32Array = raw
 		for k: int in kinds:
-			if k >= 0 and k < MatchTile.NAMES.size():
-				names.append(MatchTile.NAMES[k])
+			if k >= 0 and k < MatchTile.KIND_COUNT:
+				names.append(MatchTile.name_of(k))
 	var node := Label.new()
 	node.text = "%s: %s" % [label, ", ".join(names)]
 	node.add_theme_font_size_override("font_size", DebugRow.ROW_FONT)
 	return node
 
-# A slider per kind a multi-kind rule (the resource grant) spawns, tinted by that tile — the per-stat-tile
-# weights that used to live on the match-level card now sit on the rule that owns those tiles.
+# A read-only summary of a single [StarshipResource] field (the resource a scrap / damage / warp rule acts on).
+func _resource_label(label: String, raw: Variant) -> Label:
+	var text := ""
+	if raw is StarshipResource:
+		var resource: StarshipResource = raw
+		if resource.tile_kind >= 0 and resource.tile_kind < MatchTile.KIND_COUNT:
+			text = MatchTile.name_of(resource.tile_kind)
+	var node := Label.new()
+	node.text = "%s: %s" % [label, text]
+	node.add_theme_font_size_override("font_size", DebugRow.ROW_FONT)
+	return node
+
+# A read-only summary of an [Array][[StarshipResource]] field (the resources the grant rule banks).
+func _resources_label(label: String, raw: Variant) -> Label:
+	var names := PackedStringArray()
+	if raw is Array:
+		var entries: Array = raw
+		for entry: Variant in entries:
+			if entry is StarshipResource:
+				var resource: StarshipResource = entry
+				if resource.tile_kind >= 0 and resource.tile_kind < MatchTile.KIND_COUNT:
+					names.append(MatchTile.name_of(resource.tile_kind))
+	var node := Label.new()
+	node.text = "%s: %s" % [label, ", ".join(names)]
+	node.add_theme_font_size_override("font_size", DebugRow.ROW_FONT)
+	return node
+
+# A slider per resource a multi-resource rule (the resource grant) spawns, tinted by that tile — the per-stat-
+# tile weights that used to live on the match-level card now sit on the rule that owns those tiles.
 func _add_spawn_weight_rows(card: DebugRuleCard, rule: Rule) -> void:
-	var kinds: PackedInt32Array = rule.get("kinds")
+	var resources: Array = rule.get("resources")
 	var weights: PackedInt32Array = rule.get("spawn_weights")
 	for i: int in weights.size():
 		var index := i
-		var kind: int = kinds[index] if index < kinds.size() else index
+		var kind := index
+		if index < resources.size() and resources[index] is StarshipResource:
+			var resource: StarshipResource = resources[index]
+			kind = resource.tile_kind
 		var current: int = weights[index]
-		card.add_row(DebugRow.slider(MatchTile.NAMES[kind], MatchTile.color_of(kind), 0, 50, current,
+		card.add_row(DebugRow.slider(MatchTile.name_of(kind), MatchTile.color_of(kind), 0, 50, current,
 			func(value: float) -> void:
 				var array: PackedInt32Array = rule.get("spawn_weights")
 				array[index] = int(value)
 				rule.set("spawn_weights", array)))
 
-# The colour of the tile a single-kind rule spawns (scrap / damage / warp), for tinting its weight slider.
+# The colour of the tile a single-resource rule spawns (scrap / damage / warp), for tinting its weight slider.
 func _rule_tile_color(rule: Rule) -> Color:
-	var raw: Variant = rule.get("kind")
-	if typeof(raw) == TYPE_INT:
-		var kind: int = raw
-		return MatchTile.color_of(kind)
+	var raw: Variant = rule.get("resource")
+	if raw is StarshipResource:
+		var resource: StarshipResource = raw
+		if resource.tile_kind >= 0 and resource.tile_kind < MatchTile.KIND_COUNT:
+			return MatchTile.color_of(resource.tile_kind)
 	return Color.WHITE

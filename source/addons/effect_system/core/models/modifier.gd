@@ -8,6 +8,6 @@ enum Operation {
 	MULTIPLY,  ## Scales the stat.
 }
 
-@export var stat: Stat
+@export var stat: EntityStat
 @export var operation: Operation = Operation.ADD
 @export var amount: float = 0.0

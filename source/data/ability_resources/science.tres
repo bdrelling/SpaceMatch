@@ -1,7 +1,12 @@
-[gd_resource type="Resource" script_class="AbilityResource" format=3 load_steps=2]
+[gd_resource type="Resource" script_class="StarshipResource" format=3 uid="uid://b63jse3fv7g7k"]
 
-[ext_resource type="Script" path="res://addons/effect_system/core/models/ability_resource.gd" id="1"]
+[ext_resource type="Script" path="res://entities/starship/starship_resource.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/tiles/science.png" id="2"]
 
 [resource]
 script = ExtResource("1")
 name = &"science"
+tile_kind = 2
+label = "Science"
+color = Color(0.44, 0.78, 0.5, 1)
+texture = ExtResource("2")

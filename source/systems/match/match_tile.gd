@@ -1,46 +1,52 @@
 class_name MatchTile
 extends GridTile
-## A component tile for the match-3 board: one of seven kinds (combat, propulsion, science, defense,
-## scrap, warp, damage) chosen by [member kind], drawn centred on the node origin in unit cell-space so
-## a pop scales about the centre. Kinds 0–5 render a sprite from [constant _TEXTURES]; damage (kind 6)
-## has no art yet, so it falls back to a hand-drawn starburst. A non-zero [member tint] modulates the art.
+## A component tile for the match-3 board: one of seven kinds (combat, propulsion, science, defense, scrap, warp,
+## damage) chosen by [member kind], drawn centred on the node origin in unit cell-space so a pop scales about the
+## centre. Its sprite, colour and label come from the [StarshipResource] bound to its kind (see
+## [method _resource_for]) — the resources own the tile's representation, there is no separate tile-data table.
+## The damage tile has no sprite yet, so it falls back to a hand-drawn starburst. A non-zero [member tint]
+## modulates the art.
 
 const KIND_COUNT: int = 7
 
-## Display names per kind, index-aligned with [constant _COLORS] and [constant _TEXTURES].
-const NAMES: Array[String] = ["Combat", "Propulsion", "Science", "Defense", "Scrap", "Warp", "Damage"]
-
-## Sprite per kind, index-aligned with [constant NAMES]. Kinds 0–5 have art; damage (kind 6) is drawn.
-const _TEXTURES: Array[Texture2D] = [
-	preload("res://assets/tiles/combat.png"),
-	preload("res://assets/tiles/propulsion.png"),
-	preload("res://assets/tiles/science.png"),
-	preload("res://assets/tiles/defense.png"),
-	preload("res://assets/tiles/scrap.png"),
-	preload("res://assets/tiles/warp.png"),
-]
-
-## Fallback palette for kinds without art (and the source of [method color_of] for HUD readouts).
-const _COLORS: Array[Color] = [
-	Color(0.88, 0.33, 0.34),  # combat
-	Color(0.97, 0.80, 0.30),  # propulsion
-	Color(0.44, 0.78, 0.50),  # science
-	Color(0.35, 0.68, 0.92),  # defense
-	Color(0.60, 0.64, 0.70),  # scrap
-	Color(0.66, 0.47, 0.86),  # warp
-	Color(0.96, 0.50, 0.18),  # damage — orange starburst (explosion)
-]
 ## Glyph half-extent in cell units; leaves a margin inside the cell.
 const _HALF: float = 0.40
 const _LINE: float = 0.045
 
-## Sprite per kind, or null for a kind drawn procedurally (damage).
-static func texture_of(kind: int) -> Texture2D:
-	return _TEXTURES[kind] if kind >= 0 and kind < _TEXTURES.size() else null
+# Tile kind -> its StarshipResource, built once from the resource catalog. The resources own the art/colour/label;
+# this just indexes them by their tile_kind for the board.
+static var _by_kind: Dictionary = {}
 
-## Glyph color for [param kind], clamped to the catalog.
+# The StarshipResource bound to [param kind] (matched on its tile_kind), or null when none maps to it.
+static func _resource_for(kind: int) -> StarshipResource:
+	if _by_kind.is_empty():
+		for resource: AbilityResource in Catalogs.ability_resources.ability_resources:
+			var starship_resource := resource as StarshipResource
+			if starship_resource != null:
+				_by_kind[starship_resource.tile_kind] = starship_resource
+	return _by_kind.get(kind, null)
+
+## Sprite for [param kind], or null for a kind drawn procedurally (damage).
+static func texture_of(kind: int) -> Texture2D:
+	var resource := _resource_for(kind)
+	return resource.texture if resource != null else null
+
+## Glyph colour for [param kind].
 static func color_of(kind: int) -> Color:
-	return _COLORS[clampi(kind, 0, _COLORS.size() - 1)]
+	var resource := _resource_for(kind)
+	return resource.color if resource != null else Color.WHITE
+
+## Display name for [param kind] (empty when none maps to it).
+static func name_of(kind: int) -> String:
+	var resource := _resource_for(kind)
+	return resource.label if resource != null else ""
+
+## Display names for every kind, in kind order — for pickers that list the kinds.
+static func names() -> Array[String]:
+	var result: Array[String] = []
+	for kind: int in KIND_COUNT:
+		result.append(name_of(kind))
+	return result
 
 var kind: int = 0:
 	set(value):
@@ -48,7 +54,7 @@ var kind: int = 0:
 		queue_redraw()
 
 ## Fill override painted by the host (the component blueprint's colour). Zero
-## alpha means unset — the built-in palette is used instead.
+## alpha means unset — the resource's colour is used instead.
 var tint: Color = Color(0, 0, 0, 0):
 	set(value):
 		tint = value
@@ -81,8 +87,8 @@ func _draw() -> void:
 		var modulate_color: Color = tint if tint.a > 0.0 else Color.WHITE
 		draw_texture_rect(texture, Rect2(-0.5, -0.5, 1.0, 1.0), false, modulate_color)
 	else:
-		# Damage (kind 6) has no art yet — fall back to the hand-drawn starburst.
-		var color: Color = tint if tint.a > 0.0 else _COLORS[clampi(kind, 0, _COLORS.size() - 1)]
+		# Damage (kind 6) has no art yet — fall back to the hand-drawn starburst in the resource's colour.
+		var color: Color = tint if tint.a > 0.0 else color_of(kind)
 		_draw_explosion(color)
 	if owner_outline.a > 0.0:
 		var owner_inset: float = _HALF + 0.02
@@ -107,13 +113,15 @@ func _draw_explosion(color: Color) -> void:
 
 # --- collision baking ---
 
-## Traces a unit-cell-space collision outline from each kind's sprite alpha. Returns one polygon per
-## entry in [constant _TEXTURES] (kinds 0–5); kinds without art are left to a procedural fallback.
-## [param alpha_threshold] is the opaque cutoff (0–1); [param epsilon] simplifies the traced outline.
+## Traces a unit-cell-space collision outline from each kind's sprite alpha. Returns one polygon per kind that
+## has a sprite (in kind order); kinds without art are left to a procedural fallback. [param alpha_threshold] is
+## the opaque cutoff (0–1); [param epsilon] simplifies the traced outline.
 static func bake_collision_outlines(alpha_threshold: float, epsilon: float) -> Array[PackedVector2Array]:
 	var outlines: Array[PackedVector2Array] = []
-	for texture: Texture2D in _TEXTURES:
-		outlines.append(_trace_outline(texture, alpha_threshold, epsilon))
+	for kind: int in KIND_COUNT:
+		var resource := _resource_for(kind)
+		if resource != null and resource.texture != null:
+			outlines.append(_trace_outline(resource.texture, alpha_threshold, epsilon))
 	return outlines
 
 # The largest opaque silhouette of [param texture], normalised so the full image spans the unit cell

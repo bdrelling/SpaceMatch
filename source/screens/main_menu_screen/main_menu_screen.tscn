@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://b595aqmpkeona"]
+[gd_scene load_steps=5 format=3 uid="uid://b595aqmpkeona"]
 
 [ext_resource type="Script" uid="uid://ckky57af27dnb" path="res://screens/main_menu_screen/main_menu_screen.gd" id="1_mainmenu"]
-[ext_resource type="PackedScene" uid="uid://d2wrqdsha3dgi" path="res://ui/screen_container/screen_container.tscn" id="2_sc"]
 [ext_resource type="Theme" uid="uid://uy3znkll7jlqy" path="res://ui/themes/default.tres" id="3_theme"]
+[ext_resource type="PackedScene" uid="uid://zt6frzjvgtj8f" path="res://ui/background/background.tscn" id="4_bg"]
+[ext_resource type="Script" uid="uid://dks2wphvw6r5i" path="res://addons/utilities/device/safe_area_container.gd" id="5_safe"]
 
 [node name="MainMenuScreen" type="Control"]
 layout_mode = 3
@@ -14,34 +15,43 @@ grow_vertical = 2
 theme = ExtResource("3_theme")
 script = ExtResource("1_mainmenu")
 
-[node name="ScreenContainer" parent="." instance=ExtResource("2_sc")]
+[node name="Background" parent="." instance=ExtResource("4_bg")]
 
-[node name="Center" type="CenterContainer" parent="ScreenContainer/SafeArea"]
+[node name="SafeArea" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("5_safe")
+
+[node name="Center" type="CenterContainer" parent="SafeArea"]
 layout_mode = 2
 
-
-[node name="Content" type="VBoxContainer" parent="ScreenContainer/SafeArea/Center"]
+[node name="Content" type="VBoxContainer" parent="SafeArea/Center"]
 custom_minimum_size = Vector2(640, 0)
 layout_mode = 2
 theme_override_constants/separation = 32
 
-[node name="Title" type="Label" parent="ScreenContainer/SafeArea/Center/Content"]
+[node name="Title" type="Label" parent="SafeArea/Center/Content"]
 layout_mode = 2
 theme_type_variation = &"Title"
 theme_override_font_sizes/font_size = 112
 horizontal_alignment = 1
 text = "SpaceMatch"
 
-[node name="Spacer" type="Control" parent="ScreenContainer/SafeArea/Center/Content"]
+[node name="Spacer" type="Control" parent="SafeArea/Center/Content"]
 custom_minimum_size = Vector2(0, 48)
 layout_mode = 2
 
-[node name="MainButtons" type="VBoxContainer" parent="ScreenContainer/SafeArea/Center/Content"]
+[node name="MainButtons" type="VBoxContainer" parent="SafeArea/Center/Content"]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 32
 
-[node name="PlayButton" type="Button" parent="ScreenContainer/SafeArea/Center/Content/MainButtons"]
+[node name="PlayButton" type="Button" parent="SafeArea/Center/Content/MainButtons"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
@@ -49,18 +59,18 @@ focus_mode = 0
 theme_type_variation = &"PrimaryButton"
 text = "Play"
 
-[node name="DebugButton" type="Button" parent="ScreenContainer/SafeArea/Center/Content/MainButtons"]
+[node name="DebugButton" type="Button" parent="SafeArea/Center/Content/MainButtons"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
 focus_mode = 0
 text = "Debug"
 
-[node name="QuitSpacer" type="Control" parent="ScreenContainer/SafeArea/Center/Content/MainButtons"]
+[node name="QuitSpacer" type="Control" parent="SafeArea/Center/Content/MainButtons"]
 custom_minimum_size = Vector2(0, 24)
 layout_mode = 2
 
-[node name="QuitButton" type="Button" parent="ScreenContainer/SafeArea/Center/Content/MainButtons"]
+[node name="QuitButton" type="Button" parent="SafeArea/Center/Content/MainButtons"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
@@ -68,13 +78,13 @@ focus_mode = 0
 theme_type_variation = &"DangerButton"
 text = "Quit"
 
-[node name="PlayMenu" type="VBoxContainer" parent="ScreenContainer/SafeArea/Center/Content"]
+[node name="PlayMenu" type="VBoxContainer" parent="SafeArea/Center/Content"]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_constants/separation = 32
 
-[node name="CampaignButton" type="Button" parent="ScreenContainer/SafeArea/Center/Content/PlayMenu"]
+[node name="CampaignButton" type="Button" parent="SafeArea/Center/Content/PlayMenu"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
@@ -82,7 +92,7 @@ focus_mode = 0
 disabled = true
 text = "Campaign"
 
-[node name="QuickMatchButton" type="Button" parent="ScreenContainer/SafeArea/Center/Content/PlayMenu"]
+[node name="QuickMatchButton" type="Button" parent="SafeArea/Center/Content/PlayMenu"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 96)
 layout_mode = 2
@@ -90,7 +100,7 @@ focus_mode = 0
 theme_type_variation = &"PrimaryButton"
 text = "Quick Match"
 
-[node name="BackButton" type="Button" parent="ScreenContainer/SafeArea/Center/Content/PlayMenu"]
+[node name="BackButton" type="Button" parent="SafeArea/Center/Content/PlayMenu"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 96)
 layout_mode = 2

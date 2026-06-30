@@ -1,38 +1,46 @@
 extends GdUnitTestSuite
-## Smoke + contract tests for the effect_system data model: the [StatBlock] name-access contract, the
+## Smoke + contract tests for the effect_system data model: the [EntityStats] name-access contract, the
 ## game's [StarshipStats] subclass honoring it, enum sanity, and that the composable resource types
 ## construct and wire together.
 
-## A minimal in-suite [StatBlock] subclass — stands in for a game's typed stats.
-class _TestStats extends StatBlock:
-	@export var hull: int = 10
-	@export var shields: int = 5
+func _stat(name: StringName) -> EntityStat:
+	var stat := EntityStat.new()
+	stat.name = name
+	return stat
 
 
 func test_stat_block_get_and_set_by_name() -> void:
-	var stats := _TestStats.new()
-	assert_int(stats.get_stat(&"hull")).is_equal(10)
-	stats.set_stat(&"shields", 8)
-	assert_int(stats.get_stat(&"shields")).is_equal(8)
+	var hull := _stat(&"hull")
+	var shields := _stat(&"shields")
+	var stats := EntityStats.new()
+	stats.set_stat(hull, 10)
+	assert_int(stats.get_stat(hull)).is_equal(10)
+	stats.set_stat(shields, 8)
+	assert_int(stats.get_stat(shields)).is_equal(8)
 
 
 func test_stat_block_names_lists_declared_stats() -> void:
-	var names := _TestStats.new().stat_names()
+	var hull := _stat(&"hull")
+	var shields := _stat(&"shields")
+	var stats := EntityStats.new()
+	stats.set_stat(hull, 10)
+	stats.set_stat(shields, 5)
+	var names := stats.stat_names()
 	assert_bool(names.has(&"hull")).is_true()
 	assert_bool(names.has(&"shields")).is_true()
 
 
 func test_starship_stats_honors_the_stat_block_contract() -> void:
-	# The game's concrete stats subclass the engine's abstract StatBlock and inherit name access.
+	# The game's concrete stats subclass the engine's EntityStats and inherit name access.
 	var stats := StarshipStats.new()
 	stats.power = 4
-	assert_int(stats.get_stat(&"power")).is_equal(4)
+	assert_int(stats.get_stat(_stat(&"power"))).is_equal(4)
 	assert_bool(stats.stat_names().has(&"power")).is_true()
 
 
 func test_entity_holds_stats_and_statuses() -> void:
 	var entity := Entity.new()
-	entity.base_stats = _TestStats.new()
+	entity.base_stats = EntityStats.new()
 	var poison := Status.new()
 	poison.name = &"poison"
 	poison.sign = Status.Sign.NEGATIVE
@@ -51,14 +59,14 @@ func test_effect_composes_target_action_and_conditions() -> void:
 	var amount := ConstantAmount.new()
 	amount.value = 5
 	var damage := ModifyStatAction.new()
-	damage.stat = &"health"
+	damage.stat = _stat(&"health")
 	damage.tag = &"damage"
 	damage.subtracts = true
 	damage.amount = amount
 	effect.action = damage
 	var gate := StatThresholdCondition.new()
 	gate.target = SelfTarget.new()
-	gate.stat = &"hull"
+	gate.stat = _stat(&"hull")
 	gate.comparison = StatThresholdCondition.Comparison.GREATER
 	gate.value = 0
 	effect.conditions.append(gate)

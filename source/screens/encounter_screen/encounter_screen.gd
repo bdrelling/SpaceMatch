@@ -5,6 +5,7 @@ extends ScreenFrame
 ## the running game (the [code]GameSession[/code] autoload) the player just set up; Back returns to the
 ## [MainMenuScreen]. The bar's settings cog opens a top-most [SettingsScreen] overlay over the paused match.
 
+const SCREEN_NAME := "encounter"
 const SCENE_PATH := "res://screens/encounter_screen/encounter_screen.tscn"
 
 @onready var _match: MatchGame = %Match

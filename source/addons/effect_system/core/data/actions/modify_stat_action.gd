@@ -6,8 +6,11 @@ extends Action
 ## first, so a target's statuses can amplify, mitigate, absorb, or clamp it — for any [member tag], not just
 ## damage.
 
+## Hard ceiling on reaction depth, so reflections of reflections terminate instead of looping forever.
+const MAX_CASCADE_DEPTH := 8
+
 ## The stat to change (health, a shield pool, a resource, ...).
-@export var stat: Stat
+@export var stat: EntityStat
 ## The magnitude of the change before transforms. A non-negative quantity; direction is [member subtracts].
 @export var amount: Amount
 ## Names this change so transforms and hooks can scope themselves ("damage", "heal", ...).
@@ -17,9 +20,9 @@ extends Action
 @export var subtracts: bool = false
 ## Floor the stat lands on after the change. Defaults to 0 (stats that model pools never go negative).
 @export var minimum: int = 0
-## Optional ceiling, read from another stat (e.g. the max-health [Stat] so healing cannot overfill).
+## Optional ceiling, read from another stat (e.g. the max-health [EntityStat] so healing cannot overfill).
 ## Null means no ceiling.
-@export var maximum_stat: Stat
+@export var maximum_stat: EntityStat
 
 
 ## Builds a [Modification], runs it through the [ModificationPipeline], then writes the clamped result to the
@@ -33,10 +36,22 @@ func resolve(context: ResolutionContext, target: Entity) -> void:
 	modification.stat = stat
 	modification.amount = amount.evaluate(context) if amount != null else 0
 	modification.tag = tag
+	modification.depth = (context.modification.depth + 1) if context.modification != null else 0
 	var magnitude := ModificationPipeline.resolve(modification, context)
+	modification.amount = magnitude
+	context.modification = modification
 	var current := target.current_stats.get_stat(stat)
 	var result := (current - magnitude) if subtracts else (current + magnitude)
 	if maximum_stat != null and maximum_stat.name in target.current_stats.stat_names():
 		result = mini(result, target.current_stats.get_stat(maximum_stat))
 	result = maxi(result, minimum)
 	target.current_stats.set_stat(stat, result)
+	# Let statuses react to the change: the actor's outgoing reactions, then the subject's. Depth-capped so a
+	# reflection of a reflection terminates. Entities for the reactions come from the context, not the hook.
+	if magnitude > 0 and modification.depth < MAX_CASCADE_DEPTH:
+		var outgoing := OutgoingActionHook.new()
+		outgoing.tag = tag
+		await TriggerEngine.fire_hook(context.source, outgoing, context.reaction(context.source, context.instigator, modification))
+		var landed := StatModifiedHook.new()
+		landed.tag = tag
+		await TriggerEngine.fire_hook(target, landed, context.reaction(target, context.source, modification))

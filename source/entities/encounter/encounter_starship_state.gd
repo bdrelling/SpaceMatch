@@ -77,25 +77,39 @@ static func for_combatant(source: StarshipState) -> EncounterStarshipState:
 		starship.abilities = source.abilities
 	return starship
 
-## This starship's banked count of [param kind] (zero for an unknown kind).
-func resource_of(kind: int) -> int:
-	return resources[kind].amount if kind >= 0 and kind < resources.size() else 0
+## The [ResourcePool] backing [param resource] (matched by the resource's name), or null when this starship has
+## no pool for it. The pools are still index-aligned to [member StarshipResource.tile_kind] (their order comes
+## from [constant _RESOURCE_DEFINITIONS]), but lookup goes by name so callers reference resources, not indices.
+func _pool_for(resource: StarshipResource) -> ResourcePool:
+	if resource == null:
+		return null
+	for pool: ResourcePool in resources:
+		if pool != null and pool.resource != null and pool.resource.name == resource.name:
+			return pool
+	return null
 
-## Banks [param amount] of [param kind], clamped to this starship's capacity for that kind (a zero/absent maximum
-## is unlimited). A non-positive amount or an unknown kind is a no-op.
-func add_resource(kind: int, amount: int) -> void:
-	if amount <= 0 or kind < 0 or kind >= resources.size():
+## This starship's banked count of [param resource] (zero when it has no pool for it).
+func resource_of(resource: StarshipResource) -> int:
+	var pool: ResourcePool = _pool_for(resource)
+	return pool.amount if pool != null else 0
+
+## Banks [param amount] of [param resource], clamped to this starship's capacity for it (a zero/absent maximum
+## is unlimited). A non-positive amount or an unknown resource is a no-op.
+func add_resource(resource: StarshipResource, amount: int) -> void:
+	var pool: ResourcePool = _pool_for(resource)
+	if amount <= 0 or pool == null:
 		return
-	var pool: ResourcePool = resources[kind]
+	var kind: int = resource.tile_kind
 	var total: int = pool.amount + amount
-	var maximum: int = resource_maximums[kind] if kind < resource_maximums.size() else 0
+	var maximum: int = resource_maximums[kind] if kind >= 0 and kind < resource_maximums.size() else 0
 	pool.amount = total if maximum <= 0 else mini(total, maximum)
 
-## Spends [param amount] of [param kind] (never below zero).
-func spend_resource(kind: int, amount: int) -> void:
-	if amount <= 0 or kind < 0 or kind >= resources.size():
+## Spends [param amount] of [param resource] (never below zero).
+func spend_resource(resource: StarshipResource, amount: int) -> void:
+	var pool: ResourcePool = _pool_for(resource)
+	if amount <= 0 or pool == null:
 		return
-	resources[kind].amount = maxi(0, resources[kind].amount - amount)
+	pool.amount = maxi(0, pool.amount - amount)
 
 ## Sets this starship's per-kind capacity from [param maximums] (index-aligned to kind; zero/absent is unlimited).
 ## A resource already banked above a new ceiling is clamped down to it.

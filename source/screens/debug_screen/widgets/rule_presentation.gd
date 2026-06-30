@@ -9,20 +9,23 @@ static func display_name(rule: Rule) -> String:
 	var identifier := String(rule.rule_name)
 	return identifier.capitalize() if not identifier.is_empty() else "Rule"
 
-## The resource colour a rule acts on (from its "kind", or first of "kinds"), else white for independent rules.
+## The resource colour a rule acts on (from its "resource", or first of "resources"), else white for
+## independent rules.
 static func accent_for(rule: Rule) -> Color:
 	var kind := kind_of(rule)
 	return MatchTile.color_of(kind) if kind >= 0 else Color.WHITE
 
-## The tile kind a rule acts on (its "kind", or first of "kinds"), or -1 if it isn't resource-bound.
+## The tile kind a rule acts on (its "resource", or first of "resources"), or -1 if it isn't resource-bound.
 static func kind_of(rule: Rule) -> int:
-	var single: Variant = rule.get("kind")
-	if typeof(single) == TYPE_INT:
-		var value: int = single
-		return value
-	var many: Variant = rule.get("kinds")
-	if typeof(many) == TYPE_PACKED_INT32_ARRAY:
-		var kinds: PackedInt32Array = many
-		if kinds.size() > 0:
-			return kinds[0]
+	var single: Variant = rule.get("resource")
+	if single is StarshipResource:
+		var resource: StarshipResource = single
+		return resource.tile_kind
+	var many: Variant = rule.get("resources")
+	if many is Array:
+		var resources: Array = many
+		for entry: Variant in resources:
+			if entry is StarshipResource:
+				var resource: StarshipResource = entry
+				return resource.tile_kind
 	return -1

@@ -3,29 +3,26 @@ extends GdUnitTestSuite
 ## and the chooser seam), the stat-aware modification pipeline (amplify / mitigate / absorb / clamp and their
 ## fixed order), healing, and condition gating through [method Effect.resolve].
 
-## A stand-in for a game's typed stats, with the fields the modification pipeline reads.
-class _TestStats extends StatBlock:
-	@export var health: int = 20
-	@export var max_health: int = 20
-	@export var armor: int = 0
-	@export var shields: int = 0
-	@export var power: int = 0
-
-
 ## Chooser that picks the LAST candidate — proves selection routes through the seam, not a hardcoded pick.
 class _PickLastChooser extends EffectChooser:
 	func choose(candidates: Array[Entity], _source: Entity) -> Entity:
 		return candidates[-1] if not candidates.is_empty() else null
 
 
+func _stat(name: StringName) -> EntityStat:
+	var stat := EntityStat.new()
+	stat.name = name
+	return stat
+
+
 func _entity(health: int = 20, armor: int = 0, shields: int = 0, power: int = 0) -> Entity:
 	var entity := Entity.new()
-	var stats := _TestStats.new()
-	stats.health = health
-	stats.max_health = maxi(health, stats.max_health)
-	stats.armor = armor
-	stats.shields = shields
-	stats.power = power
+	var stats := EntityStats.new()
+	stats.set_stat(_stat(&"health"), health)
+	stats.set_stat(_stat(&"max_health"), maxi(health, 20))
+	stats.set_stat(_stat(&"armor"), armor)
+	stats.set_stat(_stat(&"shields"), shields)
+	stats.set_stat(_stat(&"power"), power)
 	entity.current_stats = stats
 	return entity
 
@@ -55,7 +52,7 @@ func test_constant_amount_evaluates_to_its_value() -> void:
 func test_stat_amount_reads_the_source_stat() -> void:
 	var source := _entity(20, 0, 0, 4)
 	var amount := StatAmount.new()
-	amount.stat = &"power"
+	amount.stat = _stat(&"power")
 	assert_int(amount.evaluate(_context(source, []))).is_equal(4)
 
 
@@ -99,53 +96,53 @@ func test_chosen_target_routes_through_the_chooser() -> void:
 func test_deal_damage_reduces_vitality() -> void:
 	var foe := _entity(20)
 	_deal(10, _entity(), foe)
-	assert_int(foe.current_stats.get_stat(&"health")).is_equal(10)
+	assert_int(foe.current_stats.get_stat(_stat(&"health"))).is_equal(10)
 
 
 func test_flat_mitigation_subtracts_armor() -> void:
 	var foe := _entity(20, 3)
-	foe.statuses.append(_damage_status([_mitigation(&"armor")]))
+	foe.statuses.append(_damage_status([_mitigation(_stat(&"armor"))]))
 	_deal(10, _entity(), foe)
-	assert_int(foe.current_stats.get_stat(&"health")).is_equal(13)  # 10 - 3 armor = 7 damage
+	assert_int(foe.current_stats.get_stat(_stat(&"health"))).is_equal(13)  # 10 - 3 armor = 7 damage
 
 
 func test_absorb_drains_the_pool_and_writes_it_back() -> void:
 	var foe := _entity(20, 0, 3)
-	foe.statuses.append(_damage_status([_absorb(&"shields")]))
+	foe.statuses.append(_damage_status([_absorb(_stat(&"shields"))]))
 	_deal(10, _entity(), foe)
-	assert_int(foe.current_stats.get_stat(&"shields")).is_equal(0)   # pool spent
-	assert_int(foe.current_stats.get_stat(&"health")).is_equal(13)   # 7 carried through
+	assert_int(foe.current_stats.get_stat(_stat(&"shields"))).is_equal(0)   # pool spent
+	assert_int(foe.current_stats.get_stat(_stat(&"health"))).is_equal(13)   # 7 carried through
 
 
 func test_multiplier_amplifies_and_floors() -> void:
 	var foe := _entity(20)
 	foe.statuses.append(_damage_status([_multiplier(1.5)]))
 	_deal(3, _entity(), foe)
-	assert_int(foe.current_stats.get_stat(&"health")).is_equal(16)   # floor(3 * 1.5) = 4
+	assert_int(foe.current_stats.get_stat(_stat(&"health"))).is_equal(16)   # floor(3 * 1.5) = 4
 
 
 func test_clamp_caps_a_hit() -> void:
 	var foe := _entity(20)
 	foe.statuses.append(_damage_status([_clamp(1)]))
 	_deal(10, _entity(), foe)
-	assert_int(foe.current_stats.get_stat(&"health")).is_equal(19)   # capped to 1
+	assert_int(foe.current_stats.get_stat(_stat(&"health"))).is_equal(19)   # capped to 1
 
 
 func test_pipeline_applies_steps_in_fixed_order() -> void:
 	var foe := _entity(20, 2, 3)
 	# Authored out of order on purpose: absorb, then mitigate, then amplify.
-	foe.statuses.append(_damage_status([_absorb(&"shields"), _mitigation(&"armor"), _multiplier(1.5)]))
+	foe.statuses.append(_damage_status([_absorb(_stat(&"shields")), _mitigation(_stat(&"armor")), _multiplier(1.5)]))
 	_deal(10, _entity(), foe)
 	# 10 -> amplify x1.5 = 15 -> armor 2 = 13 -> shields 3 absorb = 10 damage.
-	assert_int(foe.current_stats.get_stat(&"health")).is_equal(10)
-	assert_int(foe.current_stats.get_stat(&"shields")).is_equal(0)
+	assert_int(foe.current_stats.get_stat(_stat(&"health"))).is_equal(10)
+	assert_int(foe.current_stats.get_stat(_stat(&"shields"))).is_equal(0)
 
 
 func test_damage_never_goes_below_zero() -> void:
 	var foe := _entity(20, 99)
-	foe.statuses.append(_damage_status([_mitigation(&"armor")]))
+	foe.statuses.append(_damage_status([_mitigation(_stat(&"armor"))]))
 	_deal(5, _entity(), foe)
-	assert_int(foe.current_stats.get_stat(&"health")).is_equal(20)   # fully mitigated
+	assert_int(foe.current_stats.get_stat(_stat(&"health"))).is_equal(20)   # fully mitigated
 
 
 func test_outgoing_multiplier_on_the_source_weakens_damage() -> void:
@@ -153,7 +150,7 @@ func test_outgoing_multiplier_on_the_source_weakens_damage() -> void:
 	source.statuses.append(_damage_status([_multiplier(0.5)]))   # Weak on the attacker
 	var foe := _entity(20)
 	_deal(10, source, foe)
-	assert_int(foe.current_stats.get_stat(&"health")).is_equal(15)   # 10 * 0.5 = 5
+	assert_int(foe.current_stats.get_stat(_stat(&"health"))).is_equal(15)   # 10 * 0.5 = 5
 
 
 # ── Healing ───────────────────────────────────────
@@ -162,11 +159,11 @@ func test_heal_restores_and_caps_at_max() -> void:
 	var ally := _entity(5)  # max_health stays 20
 	var heal := _heal(8)
 	heal.resolve(_context(_entity(), []), ally)
-	assert_int(ally.current_stats.get_stat(&"health")).is_equal(13)
+	assert_int(ally.current_stats.get_stat(_stat(&"health"))).is_equal(13)
 
 	var topped := _entity(18)
 	heal.resolve(_context(_entity(), []), topped)
-	assert_int(topped.current_stats.get_stat(&"health")).is_equal(20)  # capped, not 26
+	assert_int(topped.current_stats.get_stat(_stat(&"health"))).is_equal(20)  # capped, not 26
 
 
 # ── Effect gating ─────────────────────────────────
@@ -176,19 +173,19 @@ func test_effect_skips_action_when_a_condition_fails() -> void:
 	var effect := _damage_effect(10)
 	var gate := StatThresholdCondition.new()
 	gate.target = SelfTarget.new()
-	gate.stat = &"health"
+	gate.stat = _stat(&"health")
 	gate.comparison = StatThresholdCondition.Comparison.LESS  # source health < 0 is false
 	gate.value = 0
 	effect.conditions.append(gate)
 	await effect.resolve(_context(_entity(), [foe]))
-	assert_int(foe.current_stats.get_stat(&"health")).is_equal(20)   # blocked
+	assert_int(foe.current_stats.get_stat(_stat(&"health"))).is_equal(20)   # blocked
 
 
 func test_effect_runs_action_when_conditions_hold() -> void:
 	var foe := _entity(20)
 	var effect := _damage_effect(10)
 	await effect.resolve(_context(_entity(), [foe]))
-	assert_int(foe.current_stats.get_stat(&"health")).is_equal(10)
+	assert_int(foe.current_stats.get_stat(_stat(&"health"))).is_equal(10)
 
 
 # ── helpers ───────────────────────────────────────
@@ -199,13 +196,13 @@ func _const(value: int) -> ConstantAmount:
 	return amount
 
 
-func _mitigation(stat: StringName) -> FlatMitigationStep:
+func _mitigation(stat: EntityStat) -> FlatMitigationStep:
 	var step := FlatMitigationStep.new()
 	step.stat = stat
 	return step
 
 
-func _absorb(stat: StringName) -> AbsorbStep:
+func _absorb(stat: EntityStat) -> AbsorbStep:
 	var step := AbsorbStep.new()
 	step.stat = stat
 	return step
@@ -225,7 +222,7 @@ func _clamp(maximum: int) -> ClampStep:
 
 func _damage(value: int) -> ModifyStatAction:
 	var action := ModifyStatAction.new()
-	action.stat = &"health"
+	action.stat = _stat(&"health")
 	action.tag = &"damage"
 	action.subtracts = true
 	action.amount = _const(value)
@@ -234,9 +231,9 @@ func _damage(value: int) -> ModifyStatAction:
 
 func _heal(value: int) -> ModifyStatAction:
 	var action := ModifyStatAction.new()
-	action.stat = &"health"
+	action.stat = _stat(&"health")
 	action.tag = &"heal"
-	action.maximum_stat = &"max_health"
+	action.maximum_stat = _stat(&"max_health")
 	action.amount = _const(value)
 	return action
 

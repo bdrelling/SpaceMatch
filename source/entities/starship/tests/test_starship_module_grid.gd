@@ -146,7 +146,7 @@ func test_disabling_any_cell_deactivates_a_multi_cell_module() -> void:
 func test_module_contributes_abilities_and_rules_while_enabled() -> void:
 	var grid := _full_grid()
 	var module := _module()
-	module.abilities = [MatchAbility.make("Repair", AbilityCost.make(0, 5), ShieldEffect.make(5))]
+	module.abilities = [MatchAbility.make("Repair", AbilityCost.make(preload("res://data/ability_resources/combat.tres"), 5), ShieldEffect.make(5))]
 	var rule := ExtraTurnRule.new()
 	rule.min_match = 3
 	module.rules = [rule]

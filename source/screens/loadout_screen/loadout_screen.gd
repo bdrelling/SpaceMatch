@@ -5,6 +5,7 @@ extends ScreenFrame
 ## loadout just set. The player edits the running game's starship (the [code]GameSession[/code] autoload) here;
 ## the encounter reads that same session, so the match plays with exactly this loadout.
 
+const SCREEN_NAME := "loadout"
 const SCENE_PATH := "res://screens/loadout_screen/loadout_screen.tscn"
 
 @onready var _loadout: LoadoutEditor = %Loadout

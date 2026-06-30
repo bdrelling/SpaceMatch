@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://c1cq8hihtg6qr"]
 
-[ext_resource type="Script" path="res://entities/encounter/encounter.gd" id="1_encounter"]
+[ext_resource type="Script" uid="uid://dq432t8oaadi0" path="res://entities/encounter/encounter.gd" id="1_encounter"]
 
-[node name="Encounter" type="Node"]
+[node name="Encounter" type="Node" unique_id=110502402]
 script = ExtResource("1_encounter")

@@ -1,6 +1,6 @@
 extends GdUnitTestSuite
-## Tests [TriggerEngine]: phase/hook/count triggers fire their effects, and the hook-matching rule respects scalar
-## fields while ignoring [Entity] payload.
+## Tests [TriggerEngine]: phase/hook/count triggers fire their effects, and the hook-matching rule matches by
+## class and scalar fields (e.g. a hook's tag).
 
 ## Records how many times it resolved — stands in for an effect's action.
 class _SpyAction extends Action:
@@ -54,42 +54,28 @@ func test_phase_trigger_skips_other_phase() -> void:
 func test_hook_trigger_fires_on_matching_hook() -> void:
 	var spy := _SpyAction.new()
 	var trigger := HookTrigger.new()
-	trigger.hook = DamageReceivedHook.new()
+	trigger.hook = StatModifiedHook.new()
 	var entity := _entity_with_trigger(trigger, spy)
-	await TriggerEngine.fire_hook(entity, DamageReceivedHook.new(), _context(entity))
+	await TriggerEngine.fire_hook(entity, StatModifiedHook.new(), _context(entity))
 	assert_int(spy.ran).is_equal(1)
 
 
 func test_hook_match_respects_scalar_fields() -> void:
 	var spy := _SpyAction.new()
-	var trigger_hook := DamageReceivedHook.new()
-	trigger_hook.damage_type = &"kinetic"
+	var trigger_hook := StatModifiedHook.new()
+	trigger_hook.tag = &"damage"
 	var trigger := HookTrigger.new()
 	trigger.hook = trigger_hook
 	var entity := _entity_with_trigger(trigger, spy)
 
-	var plasma := DamageReceivedHook.new()
-	plasma.damage_type = &"plasma"
-	await TriggerEngine.fire_hook(entity, plasma, _context(entity))
+	var heal := StatModifiedHook.new()
+	heal.tag = &"heal"
+	await TriggerEngine.fire_hook(entity, heal, _context(entity))
 	assert_int(spy.ran).is_equal(0)
 
-	var kinetic := DamageReceivedHook.new()
-	kinetic.damage_type = &"kinetic"
-	await TriggerEngine.fire_hook(entity, kinetic, _context(entity))
-	assert_int(spy.ran).is_equal(1)
-
-
-func test_hook_match_ignores_entity_payload() -> void:
-	var spy := _SpyAction.new()
-	var trigger_hook := DamageReceivedHook.new()
-	trigger_hook.attacker = Entity.new()
-	var trigger := HookTrigger.new()
-	trigger.hook = trigger_hook
-	var entity := _entity_with_trigger(trigger, spy)
-
-	var raised := DamageReceivedHook.new()
-	raised.attacker = Entity.new()  # a different attacker still matches
-	await TriggerEngine.fire_hook(entity, raised, _context(entity))
+	var damage := StatModifiedHook.new()
+	damage.tag = &"damage"
+	await TriggerEngine.fire_hook(entity, damage, _context(entity))
 	assert_int(spy.ran).is_equal(1)
 
 
@@ -112,8 +98,8 @@ func test_count_trigger_holds_below_value() -> void:
 
 
 func test_matches_bare_hook_matches_any_of_class() -> void:
-	assert_bool(TriggerEngine.matches(DamageReceivedHook.new(), DamageReceivedHook.new())).is_true()
+	assert_bool(TriggerEngine.matches(StatModifiedHook.new(), StatModifiedHook.new())).is_true()
 
 
 func test_matches_different_class_fails() -> void:
-	assert_bool(TriggerEngine.matches(OnApplyHook.new(), DamageReceivedHook.new())).is_false()
+	assert_bool(TriggerEngine.matches(OnApplyHook.new(), StatModifiedHook.new())).is_false()

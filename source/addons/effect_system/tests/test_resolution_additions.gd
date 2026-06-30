@@ -3,25 +3,23 @@ extends GdUnitTestSuite
 ## status-count / random / missing / math amounts, the condition combinators (not/and/or/chance/compare), the
 ## cleanse and set-stat actions, the replace stack rule, and the [OnRemoveHook] / [OnExpireHook] lifecycle hooks.
 
-## A stand-in for a game's typed stats, with the fields these tests read.
-class _TestStats extends StatBlock:
-	@export var health: int = 20
-	@export var max_health: int = 20
-	@export var power: int = 0
-	@export var shields: int = 0
-
-
 ## Chooser that picks the LAST candidate — proves selection routes through the seam, not a hardcoded pick.
 class _PickLastChooser extends EffectChooser:
 	func choose(candidates: Array[Entity], _source: Entity) -> Entity:
 		return candidates[-1] if not candidates.is_empty() else null
 
 
+func _stat(name: StringName) -> EntityStat:
+	var stat := EntityStat.new()
+	stat.name = name
+	return stat
+
+
 func _entity(health: int = 20, power: int = 0) -> Entity:
-	var stats := _TestStats.new()
-	stats.health = health
-	stats.max_health = maxi(health, stats.max_health)
-	stats.power = power
+	var stats := EntityStats.new()
+	stats.set_stat(_stat(&"health"), health)
+	stats.set_stat(_stat(&"max_health"), maxi(health, 20))
+	stats.set_stat(_stat(&"power"), power)
 	var entity := Entity.new()
 	entity.current_stats = stats
 	return entity
@@ -42,7 +40,7 @@ func _damage_self(value: int) -> Effect:
 	var amount := ConstantAmount.new()
 	amount.value = value
 	var action := ModifyStatAction.new()
-	action.stat = &"health"
+	action.stat = _stat(&"health")
 	action.tag = &"damage"
 	action.subtracts = true
 	action.amount = amount
@@ -95,7 +93,7 @@ func test_all_entities_target_returns_both_sides() -> void:
 	assert_int(AllEntitiesTarget.new().resolve(_ctx(source, allies, opponents)).size()).is_equal(5)
 
 
-# ── Stat-selector targeting ───────────────────────
+# ── EntityStat-selector targeting ───────────────────────
 
 func test_lowest_stat_target_picks_the_smallest() -> void:
 	var source := _entity()
@@ -103,7 +101,7 @@ func test_lowest_stat_target_picks_the_smallest() -> void:
 	var allies: Array[Entity] = [source, _entity(18), wounded, _entity(12)]
 	var target := LowestStatTarget.new()
 	target.from = AllAlliesTarget.new()
-	target.stat = &"health"
+	target.stat = _stat(&"health")
 	var picked := await target.resolve(_ctx(source, allies, []))
 	assert_bool(picked[0] == wounded).is_true()
 
@@ -114,7 +112,7 @@ func test_highest_stat_target_picks_the_largest() -> void:
 	var opponents: Array[Entity] = [_entity(10), toughest, _entity(22)]
 	var target := HighestStatTarget.new()
 	target.from = AllOpponentsTarget.new()
-	target.stat = &"health"
+	target.stat = _stat(&"health")
 	var picked := await target.resolve(_ctx(source, [source], opponents))
 	assert_bool(picked[0] == toughest).is_true()
 
@@ -150,15 +148,15 @@ func test_random_amount_stays_in_range_and_is_deterministic() -> void:
 func test_missing_stat_amount_is_the_shortfall() -> void:
 	var source := _entity(8)  # health 8, max_health 20
 	var amount := MissingStatAmount.new()
-	amount.stat = &"health"
-	amount.maximum_stat = &"max_health"
+	amount.stat = _stat(&"health")
+	amount.maximum_stat = _stat(&"max_health")
 	assert_int(amount.evaluate(_ctx(source, [source], []))).is_equal(12)
 
 
 func test_math_amount_combines_operands() -> void:
 	var source := _entity(20, 4)
 	var power := StatAmount.new()
-	power.stat = &"power"
+	power.stat = _stat(&"power")
 	var base := ConstantAmount.new()
 	base.value = 3
 	var sum := MathAmount.new()
@@ -172,6 +170,33 @@ func test_math_amount_combines_operands() -> void:
 	doubled.right = base
 	doubled.operation = MathAmount.Operation.MULTIPLY
 	assert_int(doubled.evaluate(_ctx(source, [source], []))).is_equal(12)
+
+
+func test_modification_amount_reads_the_in_flight_change() -> void:
+	var context := _ctx(_entity(), [], [])
+	var modification := Modification.new()
+	modification.amount = 7
+	context.modification = modification
+	assert_int(ModificationAmount.new().evaluate(context)).is_equal(7)
+
+
+func test_modification_amount_is_zero_without_a_change() -> void:
+	assert_int(ModificationAmount.new().evaluate(_ctx(_entity(), [], []))).is_equal(0)
+
+
+func test_modify_stat_action_records_the_resolved_change_on_the_context() -> void:
+	var foe := _entity(20)
+	var context := _ctx(_entity(), [_entity()], [foe])
+	var value := ConstantAmount.new()
+	value.value = 10
+	var damage := ModifyStatAction.new()
+	damage.stat = _stat(&"health")
+	damage.tag = &"damage"
+	damage.subtracts = true
+	damage.amount = value
+	damage.resolve(context, foe)
+	assert_int(context.modification.amount).is_equal(10)
+	assert_int(ModificationAmount.new().evaluate(context)).is_equal(10)
 
 
 # ── Condition combinators ─────────────────────────
@@ -231,7 +256,7 @@ func test_compare_stats_condition_compares_two_targets() -> void:
 	var stronger := CompareStatsCondition.new()
 	stronger.target = SelfTarget.new()
 	stronger.other = OpponentTarget.new()
-	stronger.stat = &"power"
+	stronger.stat = _stat(&"power")
 	stronger.comparison = CompareStatsCondition.Comparison.GREATER
 	assert_bool(stronger.holds(_ctx(source, [source], [foe]))).is_true()
 	stronger.comparison = CompareStatsCondition.Comparison.LESS
@@ -257,10 +282,10 @@ func test_set_stat_action_writes_an_absolute_value() -> void:
 	var value := ConstantAmount.new()
 	value.value = 1
 	var action := SetStatAction.new()
-	action.stat = &"health"
+	action.stat = _stat(&"health")
 	action.amount = value
 	action.resolve(_ctx(entity, [entity], []), entity)
-	assert_int(entity.current_stats.get_stat(&"health")).is_equal(1)
+	assert_int(entity.current_stats.get_stat(_stat(&"health"))).is_equal(1)
 
 
 # ── Replace stack rule ────────────────────────────
@@ -283,7 +308,7 @@ func test_remove_status_raises_on_remove_hook() -> void:
 	var allies: Array[Entity] = [entity]
 	var opponents: Array[Entity] = []
 	await EffectRuntime.new().remove_status(entity, &"poison", allies, opponents)
-	assert_int(entity.current_stats.get_stat(&"health")).is_equal(15)
+	assert_int(entity.current_stats.get_stat(_stat(&"health"))).is_equal(15)
 
 
 func test_remove_status_skips_the_hook_when_nothing_was_there() -> void:
@@ -292,7 +317,7 @@ func test_remove_status_skips_the_hook_when_nothing_was_there() -> void:
 	var allies: Array[Entity] = [entity]
 	var opponents: Array[Entity] = []
 	await EffectRuntime.new().remove_status(entity, &"absent", allies, opponents)
-	assert_int(entity.current_stats.get_stat(&"health")).is_equal(20)
+	assert_int(entity.current_stats.get_stat(_stat(&"health"))).is_equal(20)
 
 
 func test_phase_decay_to_zero_raises_on_expire_hook() -> void:
@@ -308,7 +333,7 @@ func test_phase_decay_to_zero_raises_on_expire_hook() -> void:
 	var opponents: Array[Entity] = []
 	await EffectRuntime.new().tick_phase(entity, allies, opponents, &"turn_end")
 	assert_bool(StatusEngine.find_stack(entity, &"shield") == null).is_true()
-	assert_int(entity.current_stats.get_stat(&"health")).is_equal(16)
+	assert_int(entity.current_stats.get_stat(_stat(&"health"))).is_equal(16)
 
 
 func _stack(status: Status, count: int) -> StatusStack:

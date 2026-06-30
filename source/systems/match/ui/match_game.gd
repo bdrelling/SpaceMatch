@@ -34,6 +34,20 @@ const _SCRAP_KIND: int = 4
 const _WARP_KIND: int = 5
 const _DAMAGE_KIND: int = 6
 
+# The four stat resources (combat, propulsion, science, defense), resolved from the catalog by tile kind and
+# cached on first use — the readouts read these, and Siphon drains them. Built lazily because Catalogs is an
+# autoload that populates in its own _ready.
+var _stat_resources: Array[StarshipResource] = []
+
+# The four stat resources, resolved once from the catalog (index-aligned with [constant _STAT_KINDS]).
+func _stat_resources_cached() -> Array[StarshipResource]:
+	if _stat_resources.is_empty():
+		for kind: int in _STAT_KINDS:
+			var resource: StarshipResource = Catalogs.ability_resources.for_tile(kind)
+			if resource != null:
+				_stat_resources.append(resource)
+	return _stat_resources
+
 # Damage tiles fly from the match to the target portrait before the hit lands: glyph size, travel time,
 # the impact pop at the end, and the head-start between successive tiles so they stream rather than stack.
 const _FLY_TILE_PX: float = 54.0
@@ -289,16 +303,23 @@ func bind_session() -> void:
 	_bound = true
 
 func _refresh_portraits() -> void:
+	_refresh_readouts()
 	if _player_portrait != null:
-		_player_portrait.set_readouts(_player_readouts())
 		_player_portrait.set_module_grid(_loadout_of(_player_starship()))
 	if _opponent_portrait != null:
-		_opponent_portrait.set_readouts(_opponent_readouts())
 		_opponent_portrait.set_module_grid(_loadout_of(_opponent_starship()))
 	_refresh_health()
 	_refresh_warp()
 	_refresh_abilities()
 	_refresh_jump()
+
+# Repaints both portraits' resource readouts from the starships' live tallies. Cheap and idempotent, so it runs
+# once per cascade step (banked resources tick up as each match clears) as well as in the full portrait pass.
+func _refresh_readouts() -> void:
+	if _player_portrait != null:
+		_player_portrait.set_readouts(_player_readouts())
+	if _opponent_portrait != null:
+		_opponent_portrait.set_readouts(_opponent_readouts())
 
 # Repaints both portraits' health bars from the encounter's current health.
 func _refresh_health() -> void:
@@ -352,17 +373,17 @@ func _player_readouts() -> PackedStringArray:
 func _opponent_readouts() -> PackedStringArray:
 	return _readouts_for(EncounterState.Combatant.OPPONENT)
 
-# A combatant's four stat-tile readouts: the count matched of each kind this fight, read off the encounter.
+# A combatant's four stat-tile readouts: the count matched of each resource this fight, read off the encounter.
 func _readouts_for(combatant: int) -> PackedStringArray:
 	var out := PackedStringArray()
-	for kind: int in _STAT_KINDS:
-		out.append(str(_resource_of(combatant, kind)))
+	for resource: StarshipResource in _stat_resources_cached():
+		out.append(str(_resource_of(combatant, resource)))
 	return out
 
-# A combatant's banked count of a kind this encounter (zero when there's no encounter yet).
-func _resource_of(combatant: int, kind: int) -> int:
+# A combatant's banked count of a resource this encounter (zero when there's no encounter yet).
+func _resource_of(combatant: int, resource: StarshipResource) -> int:
 	var starship: EncounterStarshipState = _encounter.starship_of(combatant) if _encounter != null else null
-	return starship.resource_of(kind) if starship != null else 0
+	return starship.resource_of(resource) if starship != null else 0
 
 # Drills into a combatant's module grid: hands the shell that combatant's starship so the Loadout stage
 # opens it. No starship (e.g. running this scene standalone, no bound session) ⇒ no drill.
@@ -674,9 +695,11 @@ func _resolve_clear(board: GridState, cells: Array[Vector2i], is_path: bool) -> 
 func _render_clear_visuals(match_context: MatchRuleContext) -> void:
 	var struck: bool = false
 	var charged: bool = false
+	var banked: bool = false
 	for visual: Dictionary in match_context.visuals:
 		match visual.get("type", ""):
 			"resource":
+				banked = true
 				var kind: int = visual["kind"]
 				var amount: int = visual["amount"]
 				var center: Vector2 = visual["center"]
@@ -695,6 +718,8 @@ func _render_clear_visuals(match_context: MatchRuleContext) -> void:
 				# The damage flies from the match to the struck portrait; the result (or "Dodged!") lands with it.
 				_fly_damage_to_portrait(damage_cells, target)
 				_spawn_portrait_popup_delayed(_portrait_for(target), _damage_text(result, dealt), MatchTile.color_of(_DAMAGE_KIND), _FLY_DURATION)
+	if banked:
+		_refresh_readouts()
 	if struck:
 		_refresh_health()
 	if charged:
@@ -782,7 +807,7 @@ func _configure_ability_button(button: Button, ability: MatchAbility) -> void:
 				plus.add_theme_font_size_override("font_size", 22)
 				cost_row.add_child(plus)
 			var icon := MatchTileIcon.new()
-			icon.kind = cost.kind
+			icon.kind = cost.resource.tile_kind if cost.resource != null else 0
 			icon.custom_minimum_size = Vector2(30, 30)
 			icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			cost_row.add_child(icon)
@@ -810,7 +835,9 @@ func _refresh_abilities() -> void:
 		var usable: bool = can_act and _affordable(EncounterState.Combatant.PLAYER, ability)
 		var button: Button = _ability_buttons[i]
 		button.disabled = not usable
-		_style_ability_button(button, _primary_cost_kind(ability), usable)
+		var primary: StarshipResource = _primary_cost_resource(ability)
+		var tile_kind: int = primary.tile_kind if primary != null else -1
+		_style_ability_button(button, tile_kind, usable)
 
 # Swaps the button's box for the affordable look (a bright border in the tile color) or the idle look
 # (dim, faint border). Disabled buttons show the idle box; affordable ones show the lit box.
@@ -849,7 +876,7 @@ func _use_ability(combatant: int, ability: MatchAbility) -> void:
 	var actor: EncounterStarshipState = _encounter.starship_of(combatant)
 	for cost: AbilityCost in ability.costs:
 		if actor != null:
-			actor.spend_resource(cost.kind, cost.amount)
+			actor.spend_resource(cost.resource, cost.amount)
 	_apply_ability_effect(combatant, ability)
 	_refresh_portraits()
 	_message = "%s used %s." % [_name_for(combatant), ability.ability_name]
@@ -924,8 +951,8 @@ func _drain_resources(combatant: int, amount: int) -> void:
 	var starship: EncounterStarshipState = _encounter.starship_of(combatant) if _encounter != null else null
 	if starship == null:
 		return
-	for kind: int in _STAT_KINDS:
-		starship.spend_resource(kind, amount)
+	for resource: StarshipResource in _stat_resources_cached():
+		starship.spend_resource(resource, amount)
 
 # Disables one of [param target]'s still-active modules for [param turns] turns — disabling one of its cells
 # deactivates the whole module, so it stops counting toward [param target]'s stats until it re-enables. Picks
@@ -958,7 +985,7 @@ func _affordable(combatant: int, ability: MatchAbility) -> bool:
 	if starship == null:
 		return false
 	for cost: AbilityCost in ability.costs:
-		if cost != null and starship.resource_of(cost.kind) < cost.amount:
+		if cost != null and cost.resource != null and starship.resource_of(cost.resource) < cost.amount:
 			return false
 	return true
 
@@ -994,18 +1021,24 @@ func _total_cost(ability: MatchAbility) -> int:
 			total += cost.amount
 	return total
 
-# The kind of [param ability]'s first cost (for the button's accent color), or -1 when the ability is free.
-func _primary_cost_kind(ability: MatchAbility) -> int:
-	return ability.costs[0].kind if not ability.costs.is_empty() else -1
+# The resource of [param ability]'s first cost (for the button's accent color), or null when the ability is free.
+func _primary_cost_resource(ability: MatchAbility) -> StarshipResource:
+	return ability.costs[0].resource if not ability.costs.is_empty() else null
 
-# A one-line price for the tooltip — "10 red + 12 green", or "Free" when the ability has no costs.
+# A one-line price for the tooltip — "10 combat + 12 science", or "Free" when the ability has no costs.
 func _cost_text(ability: MatchAbility) -> String:
 	if ability.costs.is_empty():
 		return "Free"
 	var parts: Array[String] = []
 	for cost: AbilityCost in ability.costs:
-		parts.append("%d %s" % [cost.amount, _kind_name(cost.kind)])
+		parts.append("%d %s" % [cost.amount, _cost_name(cost)])
 	return " + ".join(parts)
+
+# The display name of a cost's resource (the tile name), or "" when the cost names no resource.
+func _cost_name(cost: AbilityCost) -> String:
+	if cost == null or cost.resource == null:
+		return ""
+	return _kind_name(cost.resource.tile_kind)
 
 # Whether it's the player's turn (or there's no encounter, e.g. the standalone scene — then always theirs).
 func _is_player_turn() -> bool:
@@ -1273,7 +1306,7 @@ func _portrait_for(combatant: int) -> PortraitPanel:
 
 # A kind's display name, clamped to the catalog.
 func _kind_name(kind: int) -> String:
-	return MatchTile.NAMES[clampi(kind, 0, MatchTile.NAMES.size() - 1)]
+	return MatchTile.name_of(clampi(kind, 0, MatchTile.KIND_COUNT - 1))
 
 #endregion
 
@@ -1317,12 +1350,15 @@ func _split_board_resources() -> void:
 			_DAMAGE_KIND, _WARP_KIND:
 				pass  # neither damage nor warp is a banked resource
 			_:
+				var resource: StarshipResource = Catalogs.ability_resources.for_tile(kind)
+				if resource == null:
+					continue
 				var player_starship: EncounterStarshipState = _encounter.starship_of(EncounterState.Combatant.PLAYER)
 				var opponent_starship: EncounterStarshipState = _encounter.starship_of(EncounterState.Combatant.OPPONENT)
 				if player_starship != null:
-					player_starship.add_resource(kind, each)
+					player_starship.add_resource(resource, each)
 				if opponent_starship != null:
-					opponent_starship.add_resource(kind, each)
+					opponent_starship.add_resource(resource, each)
 	_refresh_portraits()
 
 # Whether the board has a move to play. Unknown for non-swap modes (no cheap test) counts as "yes", so only

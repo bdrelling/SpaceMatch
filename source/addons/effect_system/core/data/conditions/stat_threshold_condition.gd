@@ -9,7 +9,7 @@ enum Comparison {
 }
 
 @export var target: Target
-@export var stat: Stat
+@export var stat: EntityStat
 @export var comparison: Comparison = Comparison.GREATER
 @export var value: int = 0
 

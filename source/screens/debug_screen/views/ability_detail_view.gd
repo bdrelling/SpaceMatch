@@ -31,7 +31,7 @@ func _build() -> void:
 	for index: int in ability.costs.size():
 		_build_cost(ability.costs[index], index)
 	add_child(DebugRow.nav("+ Add cost", "", func() -> void:
-		ability.costs.append(AbilityCost.make(0, 5))
+		ability.costs.append(AbilityCost.make(Catalogs.ability_resources.for_tile(0), 5))
 		rebuild()))
 
 	add_child(_heading("Effects"))
@@ -43,9 +43,10 @@ func _build() -> void:
 
 # One cost: the tile it spends, the amount, and a remove row.
 func _build_cost(cost: AbilityCost, index: int) -> void:
-	add_child(DebugRow.option("Cost %d tile" % (index + 1), MatchTile.NAMES, cost.kind,
-		func(picked: int) -> void: cost.kind = picked))
-	add_child(DebugRow.slider("Amount", MatchTile.color_of(cost.kind), 0, 30, cost.amount,
+	var current_kind: int = cost.resource.tile_kind if cost.resource != null else 0
+	add_child(DebugRow.option("Cost %d tile" % (index + 1), MatchTile.names(), current_kind,
+		func(picked: int) -> void: cost.resource = Catalogs.ability_resources.for_tile(picked)))
+	add_child(DebugRow.slider("Amount", MatchTile.color_of(current_kind), 0, 30, cost.amount,
 		func(value: float) -> void: cost.amount = int(value)))
 	add_child(DebugRow.nav("Remove cost %d" % (index + 1), "", func() -> void:
 		_ability.costs.erase(cost)

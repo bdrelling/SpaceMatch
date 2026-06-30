@@ -1,11 +1,13 @@
 ---
 name: obsidian
-description: Orient in this repo's Obsidian vault — where notes/config/drawings live, and how to use the `obsidian` CLI for vault-aware ops (search, daily notes, tasks, tags, eval against the app API, plugin/dev work). Use when working with anything under docs/obsidian, or when a task needs Obsidian features (dataview, templates, cross-vault search) rather than a plain file edit.
+description: This repo's Obsidian vault lives at docs/obsidian/ (a SYMLINK harness Glob/Grep can't see). Invoke for ANYTHING touching the vault — reading or searching notes, config, drawings — and especially for vault-aware ops via the `obsidian` CLI: full-vault search, dataview, links/tags, daily notes, templates, eval against the app API, plugin/dev work. Triggers on any mention of Obsidian or any path under docs/obsidian, including plain "look at the obsidian docs".
 ---
 
 # obsidian
 
-The vault is `docs/obsidian/`. Notes are plain Markdown — **to read or edit a note, just use Read/Edit/Write directly.** Reach for the CLI only when a task needs the live app (search, templates, dataview, the vault API).
+The vault is `docs/obsidian/` — a symlink into an external iCloud vault (see below). **Invoke this skill whenever a task touches the vault**, including "look at the Obsidian docs".
+
+**Default to the `obsidian` CLI for vault-aware work.** Search, links/tags, dataview, daily notes, templates, and the app API all need the live app, and the CLI drives it — raw file reads are blind to all of that *and* to the symlink. Use plain Read/Edit/Write only for a pure text edit of a single note whose path you already have; even then, find it through the symlink-aware steps below, never via Glob/Grep.
 
 **`docs/obsidian/` is a SYMLINK** into an external iCloud vault. Plain `find`, `rg`, and the harness Glob/Grep tools do NOT cross symlinks — they're blind to the entire vault. To search it from a Bash shell, follow symlinks: `find -L docs/obsidian …`, `rg --follow … docs/obsidian`, or `grep -R … docs/obsidian`. Never guess a subfolder from memory — `ls docs/obsidian/` (the root) first.
 

@@ -5,8 +5,8 @@ extends Rule
 ## Fires on [constant MatchPhase.ON_CLEAR]. Emits a "damage" visual (the cells, target, dealt and result) for
 ## the host to animate; the hit lands here.
 
-## The damage tile kind.
-@export var kind: int = 6
+## The damage resource — its [member StarshipResource.tile_kind] is the damage tile.
+@export var resource: StarshipResource = preload("res://data/ability_resources/damage.tres")
 ## Relative spawn weight for the damage tile — how often it fills the board. Drop this rule and damage tiles
 ## stop spawning entirely.
 @export var spawn_weight: int = 10
@@ -17,7 +17,9 @@ func _init() -> void:
 
 # The tile this rule contributes to the board's spawn pool: damage at its weight.
 func spawn_contribution() -> Dictionary:
-	return {kind: maxi(0, spawn_weight)}
+	if resource == null:
+		return {}
+	return {resource.tile_kind: maxi(0, spawn_weight)}
 
 func apply(context: RuleContext) -> void:
 	var match_context := context as MatchRuleContext

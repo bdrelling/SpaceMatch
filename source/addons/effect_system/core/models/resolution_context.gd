@@ -20,6 +20,11 @@ var chooser: EffectChooser
 ## Maps a status name to its [Status] resource, so [ApplyStatusAction] / [RemoveStatusAction] (which name a
 ## status by [StringName]) can resolve it. Empty by default; the host / [EffectRuntime] supplies it.
 var status_catalog: Dictionary = {}
+## The change currently in flight — the [Modification] a reaction is responding to. A [ModifyStatAction] sets
+## it as it resolves, so an effect fired off that change can read what just happened (its magnitude via
+## [ModificationAmount]); who caused it and who it landed on come from [member instigator] and [member source].
+## Null when no change is in flight.
+var modification: Modification
 
 
 ## Builds a context. The host supplies the sides; [param rng_seed] is set on a fresh generator so the same
@@ -39,3 +44,25 @@ static func create(
 	context.rng.seed = rng_seed
 	context.chooser = p_chooser if p_chooser != null else AutoChooser.new()
 	return context
+
+
+## Builds the context a reaction resolves in: [param reactor] becomes the source (so [SelfTarget] hits it and
+## its own statuses are the ones firing), [param cause] is who caused the change being reacted to (so
+## [InstigatorTarget] hits them), and the in-flight [param in_flight] change is carried so the reaction can read
+## what just happened. Sides are taken relative to the reactor; the seeded RNG, chooser, and status catalog are
+## shared with this context.
+func reaction(reactor: Entity, cause: Entity, in_flight: Modification) -> ResolutionContext:
+	var next := ResolutionContext.new()
+	next.source = reactor
+	next.instigator = cause
+	if reactor in opponents:
+		next.allies = opponents
+		next.opponents = allies
+	else:
+		next.allies = allies
+		next.opponents = opponents
+	next.rng = rng
+	next.chooser = chooser
+	next.status_catalog = status_catalog
+	next.modification = in_flight
+	return next

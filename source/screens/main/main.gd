@@ -30,18 +30,19 @@ func _ready() -> void:
 	_apply_window(get_window())
 	_boot()
 
-## Opens the first screen. Debug builds — the editor's Play and every [code]make play[/code] target — drop
-## straight into the [EncounterScreen] so every launch lands on the match we're iterating on; release builds
-## land on the title screen ([MainMenuScreen]). A [code]--boot=<screen>[/code] launch flag overrides that
-## default (menu, encounter, or loadout) for a one-off dev loop.
+## Opens the first screen. Every launch drops straight into the [EncounterScreen] — the match we're
+## iterating on — so on-device rapid testing lands there just like [code]make play[/code], regardless of
+## debug/release. A [code]--boot=<screen>[/code] launch flag overrides it (menu, encounter, or loadout);
+## the title screen ([MainMenuScreen]) becomes the default once the menu is the real entry point.
 func _boot() -> void:
-	var fallback: String = "encounter" if OS.is_debug_build() else "menu"
+	var fallback: String = EncounterScreen.SCREEN_NAME
 	match CommandLine.get_launch_argument_value("boot", fallback):
-		"encounter":
+		EncounterScreen.SCREEN_NAME:
 			SceneLoader.transition_to(EncounterScreen.create())
-		"loadout":
-			SceneLoader.transition_to(LoadoutScreen.create())
+		MainMenuScreen.SCREEN_NAME:
+			SceneLoader.transition_to(MainMenuScreen.create())
 		_:
+			# TODO: THIS SHOULD BE AN ERROR SCREEN!
 			SceneLoader.transition_to(MainMenuScreen.create())
 
 ## Sets [param window]'s content scaling for the touch UI (canvas-items in both cases). The window's size

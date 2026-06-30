@@ -1,7 +1,12 @@
-[gd_resource type="Resource" script_class="AbilityResource" format=3 load_steps=2]
+[gd_resource type="Resource" script_class="StarshipResource" format=3 uid="uid://dx8npskqws2tb"]
 
-[ext_resource type="Script" path="res://addons/effect_system/core/models/ability_resource.gd" id="1"]
+[ext_resource type="Script" path="res://entities/starship/starship_resource.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/tiles/defense.png" id="2"]
 
 [resource]
 script = ExtResource("1")
 name = &"defense"
+tile_kind = 3
+label = "Defense"
+color = Color(0.35, 0.68, 0.92, 1)
+texture = ExtResource("2")

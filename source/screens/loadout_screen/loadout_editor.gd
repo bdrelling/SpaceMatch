@@ -227,11 +227,11 @@ func _focused_cells() -> Array[Vector2i]:
 # stats — scrap banks to the wallet, warp charges the encounter meter — so neither has a row.
 func _stat_rows() -> Array:
 	return [
-		[Stat.Type.POWER, "Power", 0],
-		[Stat.Type.SPEED, "Speed", 1],
-		[Stat.Type.SENSORS, "Sensors", 2],
-		[Stat.Type.SHIELDS, "Shields", 3],
-		[Stat.Type.DAMAGE, "Damage", 6],
+		[Stats.power, "Power", 0],
+		[Stats.speed, "Speed", 1],
+		[Stats.sensors, "Sensors", 2],
+		[Stats.shields, "Shields", 3],
+		[Stats.damage, "Damage", 6],
 	]
 
 # Repopulates the stat list from the grid's current loadout: one row per stat, tile + name + value. When
@@ -245,11 +245,11 @@ func _rebuild_stats() -> void:
 	var focus_stats: StarshipStats = _focused_module.stats if _focused_module != null else null
 	_stat_list.add_child(_energy_row())
 	for row: Array in _stat_rows():
-		var stat: Stat.Type = row[0]
+		var stat: StarshipStat = row[0]
 		var label: String = row[1]
 		var tile_kind: int = row[2]
-		var contribution: int = focus_stats.value(stat) if focus_stats != null else 0
-		_stat_list.add_child(_stat_row(label, tile_kind, _stat_value_text(profile.value(stat), contribution), _value_color(contribution)))
+		var contribution: int = focus_stats.get_stat(stat) if focus_stats != null else 0
+		_stat_list.add_child(_stat_row(label, tile_kind, _stat_value_text(profile.get_stat(stat), contribution), _value_color(contribution)))
 
 # A stat profile summed from the loadout's modules (zeros when empty). The grid owns the counting rule
 # (only fully-enabled modules count); the outfitting bay has no disabled cells, so this reads the lot.

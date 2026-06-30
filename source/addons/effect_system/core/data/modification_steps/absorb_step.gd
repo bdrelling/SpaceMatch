@@ -4,7 +4,7 @@ extends ModificationStep
 ## flat mitigation this is stateful: what it absorbs is written back, so the pool shrinks and breaks. Overkill
 ## (beyond the pool) empties it and the remainder carries through.
 
-@export var stat: Stat
+@export var stat: EntityStat
 
 
 func order() -> int:
