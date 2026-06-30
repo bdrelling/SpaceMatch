@@ -18,7 +18,7 @@ func apply(context: RuleContext) -> void:
 		return
 	var dealt: int = match_context.reward_for(match_context.damage_cells.size())
 	if match_context.actor_stats != null:
-		dealt += maxi(0, match_context.actor_stats.damage)  # effective DAMAGE bonuses the hit; only ever adds (floored at 0)
-	var target: int = match_context.encounter.opponent_of(match_context.combatant)
+		dealt += maxi(0, match_context.actor_stats.weapons)  # effective Weapons bonuses the hit; only ever adds (floored at 0)
+	var target: Combatant = match_context.encounter.opponent_of(match_context.combatant)
 	var result: int = match_context.encounter.deal_damage(target, dealt)
 	match_context.visuals.append({"type": "damage", "cells": match_context.damage_cells, "target": target, "dealt": dealt, "result": result})

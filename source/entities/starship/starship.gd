@@ -69,7 +69,7 @@ static func _standard_ruleset() -> Ruleset:
 const _COMBAT: StarshipResource = preload("res://data/ability_resources/combat.tres")
 const _PROPULSION: StarshipResource = preload("res://data/ability_resources/propulsion.tres")
 const _SCIENCE: StarshipResource = preload("res://data/ability_resources/science.tres")
-const _DEFENSE: StarshipResource = preload("res://data/ability_resources/defense.tres")
+const _SHIELDS: StarshipResource = preload("res://data/ability_resources/shields.tres")
 
 ## The baseline hull abilities: one per stat tile (red/yellow/green/blue), plus a Disruptor that spends green.
 ##   Red — Target Lock: +1 to your tile damage for the rest of the encounter (stacks).
@@ -82,7 +82,7 @@ static func _standard_abilities() -> Array[MatchAbility]:
 		MatchAbility.make("Target Lock", AbilityCost.make(_COMBAT, 10), DamageBuffEffect.make(1)),
 		MatchAbility.make("Evasive Maneuvers", AbilityCost.make(_PROPULSION, 5), DodgeEffect.make()),
 		MatchAbility.make("Siphon", AbilityCost.make(_SCIENCE, 10), DrainEffect.make(2)),
-		MatchAbility.make("Shields", AbilityCost.make(_DEFENSE, 10), ShieldEffect.make(10)),
+		MatchAbility.make("Shields", AbilityCost.make(_SHIELDS, 10), ShieldEffect.make(10)),
 		MatchAbility.make("Disruptor", AbilityCost.make(_SCIENCE, 12), DisableEffect.make(3)),
 	]
 

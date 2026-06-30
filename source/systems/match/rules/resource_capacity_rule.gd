@@ -1,8 +1,8 @@
 class_name ResourceCapacityRule
 extends Rule
 ## Caps how much of each resource the mover can hold. Fires on [constant MatchPhase.TURN_START], writing the
-## per-kind maximums onto the active combatant's [EncounterStarshipState]; banking then clamps to them (see
-## [method EncounterStarshipState.add_resource]). Empty (or a zero slot) means unlimited — the default, so a
+## per-kind maximums onto the active combatant's [Combatant]; banking then clamps to them (see
+## [method Combatant.add_resource]). Empty (or a zero slot) means unlimited — the default, so a
 ## fresh match banks without a ceiling. A starship overrides it by carrying its own rule of the same name.
 
 ## The most of each [MatchTile] kind the mover may hold, index-aligned to kind. Empty or a zero slot is
@@ -15,9 +15,7 @@ func _init() -> void:
 
 func apply(context: RuleContext) -> void:
 	var match_context := context as MatchRuleContext
-	if match_context == null or match_context.encounter == null or match_context.combatant < 0:
+	if match_context == null or match_context.encounter == null or match_context.combatant == null:
 		return
-	var starship: EncounterStarshipState = match_context.encounter.starship_of(match_context.combatant)
-	if starship == null:
-		return
+	var starship: Combatant = match_context.combatant
 	starship.set_resource_maximums(maximums)

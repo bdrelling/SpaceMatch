@@ -36,7 +36,7 @@ func test_default_stat_profile() -> void:
 		total.add(module_state.stats)
 	assert_int(total.power).is_equal(0)         # power is combat power; no default (non-weapon) module grants it
 	assert_int(total.speed).is_equal(4)          # engine
-	assert_int(total.shields).is_equal(4)        # shield generator
+	assert_int(total.defense).is_equal(4)        # shield generator
 	assert_int(total.sensors).is_equal(4)        # sensor array
 	assert_int(total.life_support).is_equal(5)   # life support
 	assert_int(total.warp_capacity).is_equal(4)  # warp core

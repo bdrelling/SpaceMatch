@@ -135,10 +135,10 @@ func test_disabling_any_cell_deactivates_a_multi_cell_module() -> void:
 	var grid := _full_grid()
 	var module := _module([Vector2i(0, 0), Vector2i(1, 0)])
 	module.stats = StarshipStats.new()
-	module.stats.shields = 3
+	module.stats.defense = 3
 	grid.place(module, Vector2i(0, 0), 0)
-	assert_int(grid.stats().shields).is_equal(3)
-	assert_int(grid.stats([Vector2i(1, 0)]).shields).is_equal(0)
+	assert_int(grid.stats().defense).is_equal(3)
+	assert_int(grid.stats([Vector2i(1, 0)]).defense).is_equal(0)
 	assert_bool(grid.enabled(grid.modules[0], [Vector2i(1, 0)])).is_false()
 
 # A module grants its starship abilities and phase rules while enabled — the "modules contribute" path, same

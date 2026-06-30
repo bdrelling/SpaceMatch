@@ -12,8 +12,8 @@ const _STATS: Array[Dictionary] = [
 	{"label": "Power", "prop": "power", "kind": 0},
 	{"label": "Speed", "prop": "speed", "kind": 1},
 	{"label": "Sensors", "prop": "sensors", "kind": 2},
-	{"label": "Shields", "prop": "shields", "kind": 3},
-	{"label": "Damage", "prop": "damage", "kind": 6},
+	{"label": "Defense", "prop": "defense", "kind": 3},
+	{"label": "Weapons", "prop": "weapons", "kind": 6},
 ]
 
 func title() -> String:
@@ -30,22 +30,23 @@ func _build() -> void:
 		add_child(notice)
 		return
 
-	_build_starship_card(encounter, EncounterState.Combatant.PLAYER, "Your Starship")
-	_build_starship_card(encounter, EncounterState.Combatant.OPPONENT, "Opponent")
+	_build_starship_card(encounter, encounter.player, "Your Starship")
+	_build_starship_card(encounter, encounter.opponent, "Opponent")
 
-# A card of live sliders for one fight starship: its current hull (HP), its hull stat (the max-HP cap), and its
-# combat stats. Each slider writes straight onto the starship and emits changed so the board repaints at once.
-func _build_starship_card(encounter: EncounterState, combatant: EncounterState.Combatant, fallback: String) -> void:
-	var starship: StarshipState = encounter.starship_of(combatant)
-	if starship == null:
+# A card of live sliders for one combatant: its current hull (HP, the live stat), its hull stat (the max-HP cap)
+# and its combat stats (both on the persistent starship's base stats). Each slider writes straight onto the live
+# state and emits changed so the board repaints at once.
+func _build_starship_card(encounter: EncounterState, combatant: Combatant, fallback: String) -> void:
+	if combatant == null or combatant.starship == null:
 		return
+	var starship: StarshipState = combatant.starship
 	var card_title: String = starship.name if not starship.name.is_empty() else fallback
 	var card := DebugRuleCard.create(card_title, Color.WHITE)
 	add_child(card)
 
-	card.add_row(DebugRow.slider("HP", Color.WHITE, 0, 100, starship.health,
+	card.add_row(DebugRow.slider("HP", Color.WHITE, 0, 100, combatant.health(),
 		func(value: float) -> void:
-			starship.health = int(value)
+			combatant.set_health(int(value))
 			encounter.emit_changed()))
 	if starship.base_stats == null:
 		return

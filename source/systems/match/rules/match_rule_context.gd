@@ -6,8 +6,9 @@ extends RuleContext
 
 ## The live encounter (health, resources, turns, warp) the rules read and mutate.
 var encounter: EncounterState
-## The combatant this phase concerns ([enum EncounterState.Combatant]), or -1 when none.
-var combatant: int = -1
+## The [Combatant] this phase concerns (compare against [member EncounterState.player] for the player-vs-opponent
+## role), or null when none.
+var combatant: Combatant
 ## The acting combatant's effective stats (permanent module-grid profile + temporary buffs), filled by the
 ## host for ON_CLEAR. Rules read it to bonus their grant — the damage stat adds to the hit, each colored stat
 ## to the resource its tile banks. Null when no starship backs the mover (e.g. the standalone scene).
@@ -36,7 +37,7 @@ var warp_bars: int = 0
 ## The encounter's scoring formula (null = one-to-one). Use [method reward_for] rather than reading directly.
 var scoring: ScoringFormula
 ## Subtracted from every match's reward (floored at zero) — a match of N banks N minus this. Zero leaves
-## scoring one-to-one; an [OffsetScoringRule] sets it from the mover's [member EncounterStarshipState.score_offset].
+## scoring one-to-one; an [OffsetScoringRule] sets it from the mover's [member Combatant.score_offset].
 var score_offset: int = 0
 ## The player's wallet state, when a session is bound (else null) — where scrap banks.
 var wallet: WalletState

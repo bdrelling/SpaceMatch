@@ -230,8 +230,8 @@ func _stat_rows() -> Array:
 		[Stats.power, "Power", 0],
 		[Stats.speed, "Speed", 1],
 		[Stats.sensors, "Sensors", 2],
-		[Stats.shields, "Shields", 3],
-		[Stats.damage, "Damage", 6],
+		[Stats.defense, "Defense", 3],
+		[Stats.weapons, "Weapons", 6],
 	]
 
 # Repopulates the stat list from the grid's current loadout: one row per stat, tile + name + value. When

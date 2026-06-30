@@ -4,7 +4,7 @@
 [ext_resource type="Script" uid="uid://dynbvgknnkaku" path="res://addons/effect_system/core/models/triggered_effect.gd" id="1_u7d3t"]
 [ext_resource type="Script" uid="uid://d3d5n3w2xuhqi" path="res://addons/effect_system/core/models/modifier.gd" id="2_modifier"]
 [ext_resource type="Script" uid="uid://dkqr4xe6wvvbl" path="res://addons/effect_system/core/models/modification_step.gd" id="4_4w4ex"]
-[ext_resource type="Resource" path="res://data/stats/damage.tres" id="5_damage"]
+[ext_resource type="Resource" path="res://data/stats/weapons.tres" id="5_damage"]
 
 [sub_resource type="Resource" id="Mod_damage"]
 script = ExtResource("2_modifier")

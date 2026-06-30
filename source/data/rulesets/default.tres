@@ -17,7 +17,7 @@
 [ext_resource type="Resource" uid="uid://b2kqyh4632a1r" path="res://data/ability_resources/combat.tres" id="15_combat"]
 [ext_resource type="Resource" uid="uid://cyhafv6x2udqt" path="res://data/ability_resources/propulsion.tres" id="16_prop"]
 [ext_resource type="Resource" uid="uid://b63jse3fv7g7k" path="res://data/ability_resources/science.tres" id="17_sci"]
-[ext_resource type="Resource" uid="uid://dx8npskqws2tb" path="res://data/ability_resources/defense.tres" id="18_def"]
+[ext_resource type="Resource" uid="uid://dx8npskqws2tb" path="res://data/ability_resources/shields.tres" id="18_def"]
 [ext_resource type="Resource" uid="uid://dhitpgn63v7tc" path="res://data/ability_resources/scrap.tres" id="19_scrap"]
 [ext_resource type="Resource" uid="uid://u2s7rrhiurg8" path="res://data/ability_resources/warp.tres" id="20_warp"]
 [ext_resource type="Resource" uid="uid://dwymbod6coevg" path="res://data/ability_resources/damage.tres" id="21_damage"]

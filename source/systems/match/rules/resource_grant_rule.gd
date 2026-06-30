@@ -17,7 +17,7 @@ static func _default_resources() -> Array[StarshipResource]:
 		preload("res://data/ability_resources/combat.tres"),
 		preload("res://data/ability_resources/propulsion.tres"),
 		preload("res://data/ability_resources/science.tres"),
-		preload("res://data/ability_resources/defense.tres"),
+		preload("res://data/ability_resources/shields.tres"),
 	]
 
 func _init() -> void:
@@ -28,7 +28,7 @@ func apply(context: RuleContext) -> void:
 	var match_context := context as MatchRuleContext
 	if match_context == null or match_context.encounter == null:
 		return
-	var starship: EncounterStarshipState = match_context.encounter.starship_of(match_context.combatant)
+	var starship: Combatant = match_context.combatant
 	if starship == null:
 		return
 	for resource: StarshipResource in resources:
@@ -44,6 +44,7 @@ func apply(context: RuleContext) -> void:
 		var stat: StarshipStat = Stats.for_tile(kind)
 		if match_context.actor_stats != null and stat != null:
 			reward += maxi(0, match_context.actor_stats.get_stat(stat))
-		# Banks into the mover's tally, clamped to its capacity for this resource (unlimited by default).
-		starship.add_resource(resource, reward)
+		# Banks into the mover's pools through the engine's ResourceEngine, clamped to each pool's capacity
+		# (mirrored from the combatant's per-kind maximums; unlimited by default).
+		ResourceEngine.grant(starship, resource, reward)
 		match_context.visuals.append({"type": "resource", "kind": kind, "amount": reward, "center": match_context.centers.get(kind, Vector2.ZERO)})

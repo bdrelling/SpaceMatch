@@ -76,5 +76,8 @@ func test_default_ruleset_carries_the_seven_spawn_tiles() -> void:
 	# The authored default ruleset's Spawn set composes the standard pool: four stat tiles at 20, warp rarest.
 	var pool: Dictionary = RuleCatalog.default_ruleset().aggregate(&"spawn_contribution")
 	for stat_kind: int in 4:
-		assert_int(pool[stat_kind]).is_equal(20)
-	assert_int(pool[5]).is_less(pool[0])  # warp rarer than any stat tile
+		var weight: int = pool[stat_kind]
+		assert_int(weight).is_equal(20)
+	var warp_weight: int = pool[5]
+	var stat_weight: int = pool[0]
+	assert_int(warp_weight).is_less(stat_weight)  # warp rarer than any stat tile

@@ -1,22 +1,23 @@
 [gd_resource type="Resource" script_class="StatCatalog" format=3 uid="uid://br26ul102o2qc"]
 
-[ext_resource type="Script" uid="uid://c6yqdfdoebi6w" path="res://resources/catalog/stat_catalog.gd" id="1_wi4u4"]
-[ext_resource type="Script" uid="uid://dtfo78qbpmwvv" path="res://entities/starship/starship_stat.gd" id="2_et6gs"]
-[ext_resource type="Resource" path="res://data/stats/power.tres" id="3_xr0qh"]
-[ext_resource type="Resource" path="res://data/stats/speed.tres" id="4_t314x"]
-[ext_resource type="Resource" path="res://data/stats/cargo.tres" id="5_7w1wu"]
-[ext_resource type="Resource" path="res://data/stats/fuel.tres" id="6_xjlse"]
-[ext_resource type="Resource" path="res://data/stats/armor.tres" id="7_fj6s6"]
-[ext_resource type="Resource" path="res://data/stats/shields.tres" id="8_vlthv"]
-[ext_resource type="Resource" path="res://data/stats/sensors.tres" id="9_7mnrd"]
-[ext_resource type="Resource" path="res://data/stats/life_support.tres" id="10_u7bsj"]
-[ext_resource type="Resource" path="res://data/stats/damage.tres" id="11_nd6jq"]
-[ext_resource type="Resource" path="res://data/stats/energy.tres" id="12_ads34"]
-[ext_resource type="Resource" path="res://data/stats/warp_capacity.tres" id="13_kcp0u"]
-[ext_resource type="Resource" path="res://data/stats/health.tres" id="14_b83p3"]
+[ext_resource type="Script" uid="uid://c6yqdfdoebi6w" path="res://resources/catalog/stat_catalog.gd" id="1_et6gs"]
+[ext_resource type="Script" uid="uid://dtfo78qbpmwvv" path="res://entities/starship/starship_stat.gd" id="2_xr0qh"]
+[ext_resource type="Resource" path="res://data/stats/power.tres" id="3_t314x"]
+[ext_resource type="Resource" path="res://data/stats/speed.tres" id="4_7w1wu"]
+[ext_resource type="Resource" path="res://data/stats/cargo.tres" id="5_xjlse"]
+[ext_resource type="Resource" path="res://data/stats/fuel.tres" id="6_fj6s6"]
+[ext_resource type="Resource" path="res://data/stats/armor.tres" id="7_vlthv"]
+[ext_resource type="Resource" path="res://data/stats/defense.tres" id="8_7mnrd"]
+[ext_resource type="Resource" path="res://data/stats/sensors.tres" id="9_u7bsj"]
+[ext_resource type="Resource" path="res://data/stats/life_support.tres" id="10_nd6jq"]
+[ext_resource type="Resource" path="res://data/stats/weapons.tres" id="11_ads34"]
+[ext_resource type="Resource" path="res://data/stats/energy.tres" id="12_kcp0u"]
+[ext_resource type="Resource" path="res://data/stats/warp_capacity.tres" id="13_b83p3"]
+[ext_resource type="Resource" path="res://data/stats/health.tres" id="14_5dlp4"]
+[ext_resource type="Resource" path="res://data/stats/block.tres" id="15_v1xjo"]
 
 [resource]
-script = ExtResource("1_wi4u4")
-stats = Array[ExtResource("2_et6gs")]([ExtResource("3_xr0qh"), ExtResource("4_t314x"), ExtResource("5_7w1wu"), ExtResource("6_xjlse"), ExtResource("7_fj6s6"), ExtResource("8_vlthv"), ExtResource("9_7mnrd"), ExtResource("10_u7bsj"), ExtResource("11_nd6jq"), ExtResource("12_ads34"), ExtResource("13_kcp0u"), ExtResource("14_b83p3")])
+script = ExtResource("1_et6gs")
+stats = Array[ExtResource("2_xr0qh")]([ExtResource("3_t314x"), ExtResource("4_7w1wu"), ExtResource("5_xjlse"), ExtResource("6_fj6s6"), ExtResource("7_vlthv"), ExtResource("8_7mnrd"), ExtResource("9_u7bsj"), ExtResource("10_nd6jq"), ExtResource("11_ads34"), ExtResource("12_kcp0u"), ExtResource("13_b83p3"), ExtResource("14_5dlp4"), ExtResource("15_v1xjo")])
 catalog_name = "Stats"
 directory = "res://data/stats"

@@ -4,12 +4,11 @@ extends Resource
 ## screen) has, which the 3D game never reads. Null on [GameState] when no encounter is running.
 ## Lives under [member GameState.encounter], serialized with the one save.
 ##
-## Holds the two starships fighting it out — the combatants whose own [member StarshipState.health] is the
-## encounter's health, so the starship itself is the thing that's destroyed — and the turn/round counter that the
-## match minigame advances after each move and shows in its top row.
-
-## The two combatants. Turn 1 of a round is the player's, turn 2 the opponent's.
-enum Combatant { PLAYER, OPPONENT }
+## Holds the two [Combatant]s fighting it out — each an engine [Entity] wrapped around the starship it fights as,
+## carrying its own live combat stats (health, the buff layer), statuses (shield, dodge, buffs/debuffs) and banked
+## resources — and the turn/round counter the match advances after each move. Combat runs through the effect
+## engine: damage flows through the [ModificationPipeline] (shield absorbs, dodge negates), statuses fold via
+## [StatusModifiers], all driven by the one [member runtime] this state holds.
 
 ## A round is one turn per combatant.
 const TURNS_PER_ROUND: int = 2
@@ -23,32 +22,38 @@ const SHIELD: Status = preload("res://data/statuses/shield.tres")
 const DODGE: Status = preload("res://data/statuses/dodge.tres")
 const TARGET_LOCK: Status = preload("res://data/statuses/target_lock.tres")
 
-## The two combatants — each an [EncounterStarshipState], the encounter-scoped form of a starship that also holds
-## its banked resources and turn budget (see [method Encounter.create]). The player's is built from the
-## persistent starship so combat damage and Debug edits stay on the fight copy; the opponent is its own starship, not a
-## copy of the player's. Each owns its own [member StarshipState.health].
-@export var player: EncounterStarshipState
-## The opponent's starship — its own default, distinct from the player's. Human-controlled for now; AI lands later.
-@export var opponent: EncounterStarshipState
+## The two combatants — each a [Combatant] (an engine [Entity]) holding its banked resources, live combat stats
+## and turn budget (see [method Encounter.create]). The player's wraps a clone of the persistent starship so
+## combat damage and Debug edits stay on the fight copy; the opponent wraps its own starship, not a copy of the
+## player's. Each owns its own health (a stat on its [member Entity.current_stats]). The two are told apart by
+## identity (and by [member Entity.id]: the player's is 0, the opponent's 1) — there is no side enum.
+@export var player: Combatant
+## The opponent's combatant — its own default, distinct from the player's. Human-controlled for now; AI lands later.
+@export var opponent: Combatant
 
 ## 1-based round counter.
 @export var round_number: int = 1
-## Which turn within the current round, 1..[constant TURNS_PER_ROUND].
+## Which turn within the current round, 1..[constant TURNS_PER_ROUND]. Turn 1 is the player's, turn 2 the opponent's.
 @export var turn_in_round: int = 1
 
-## Each combatant's current and max health — read-throughs to the starship that owns them ([member player] /
+# The one effect-engine runtime this encounter drives all combat through (damage pipeline, decay-on-hit, status
+# folding). Built lazily on first use so a freshly loaded state has one; the host seeds its [member
+# EffectRuntime.rng_seed] from the board RNG (see [method MatchGame.bind_session]).
+var _runtime: EffectRuntime
+
+## Each combatant's current and max health — read-throughs to the [Combatant] that owns them ([member player] /
 ## [member opponent]), kept as named pairs for the combat code and HUD. Current depletes from matched damage
-## tiles (see [method deal_damage]); max is the starship's derived hull (see [method StarshipState.max_health]).
+## tiles (see [method deal_damage]); max is the starship's derived hull (see [method Combatant.max_health]).
 var player_health: int:
-	get: return health_of(Combatant.PLAYER)
-	set(value): _set_health(Combatant.PLAYER, value)
+	get: return health_of(player)
+	set(value): _set_health(player, value)
 var opponent_health: int:
-	get: return health_of(Combatant.OPPONENT)
-	set(value): _set_health(Combatant.OPPONENT, value)
+	get: return health_of(opponent)
+	set(value): _set_health(opponent, value)
 var player_max_health: int:
-	get: return max_health_of(Combatant.PLAYER)
+	get: return max_health_of(player)
 var opponent_max_health: int:
-	get: return max_health_of(Combatant.OPPONENT)
+	get: return max_health_of(opponent)
 
 ## Cells currently disabled on each combatant's module grid, mapping a cell [Vector2i] to the turns of
 ## disable it has left (granted by Disruptor; see [method disable_cell]). A disabled cell deactivates the
@@ -72,79 +77,113 @@ var opponent_max_health: int:
 ## negative and they win at -[member opponent_warp_max]. Campaign leaves this false — the opponent's warp only
 ## drains the player's (floored at zero) and can never win.
 @export var warp_tug: bool = false
-## The combatant who Jumped (filled their warp and cashed it in), or -1 if none. Decides a warp victory.
-@export var warp_winner: int = -1
+## The combatant who Jumped (filled their warp and cashed it in), or null if none. Decides a warp victory.
+@export var warp_winner: Combatant
 
-## The combatant whose turn it currently is.
+## The one [EffectRuntime] all combat resolves through — built on first access with an [AutoChooser] (1v1 needs
+## no interactive picker) and the live status catalog. The host seeds its seed from the board RNG.
+func runtime() -> EffectRuntime:
+	if _runtime == null:
+		_runtime = EffectRuntime.new()
+		_runtime.chooser = AutoChooser.new()
+		_runtime.status_catalog = _status_catalog()
+	return _runtime
+
+# The status catalog the runtime resolves names through ([ApplyStatusAction] / [RemoveStatusAction]): every
+# authored [Status] keyed by its name, from the live [Catalogs] autoload.
+func _status_catalog() -> Dictionary:
+	var catalog: Dictionary = {}
+	if Catalogs != null and Catalogs.statuses != null:
+		for status: Status in Catalogs.statuses.entries():
+			if status != null:
+				catalog[status.name] = status
+	return catalog
+
+## The combatant whose turn it currently is — the player on turn 1 of the round, the opponent on turn 2.
 func active_combatant() -> Combatant:
-	return Combatant.PLAYER if turn_in_round == 1 else Combatant.OPPONENT
+	return player if turn_in_round == 1 else opponent
 
-## The combatant opposing [param combatant] — the target a mover's damage tiles hit.
+## The combatant opposing [param combatant] — the target a mover's damage tiles hit. Returns the player for
+## anything that isn't the player (so a null or stray reference resolves to the player's foe, the opponent).
 func opponent_of(combatant: Combatant) -> Combatant:
-	return Combatant.OPPONENT if combatant == Combatant.PLAYER else Combatant.PLAYER
+	return opponent if combatant == player else player
 
-## The starship [param combatant] is fighting in — the owner of its health, stats, module grid, and banked
-## resources (the encounter-scoped [EncounterStarshipState]).
-func starship_of(combatant: Combatant) -> EncounterStarshipState:
-	return player if combatant == Combatant.PLAYER else opponent
+## The two combatants as engine [Entity]s, [param combatant] first (its allies are itself, its opponents the
+## other) — what the runtime's phase/hook calls take.
+func _allies_of(combatant: Combatant) -> Array[Entity]:
+	var entities: Array[Entity] = []
+	if combatant != null:
+		entities.append(combatant)
+	return entities
 
-## [param combatant]'s current health — its starship's current hull (0 if it has no starship).
+func _opponents_of(combatant: Combatant) -> Array[Entity]:
+	var entities: Array[Entity] = []
+	var foe: Combatant = opponent_of(combatant)
+	if foe != null:
+		entities.append(foe)
+	return entities
+
+## [param combatant]'s current health — its live hull (0 if null).
 func health_of(combatant: Combatant) -> int:
-	var starship: StarshipState = starship_of(combatant)
-	return starship.health if starship != null else 0
+	return combatant.health() if combatant != null else 0
 
-## [param combatant]'s max health — its starship's derived hull, the bar's cap (0 if it has no starship).
+## [param combatant]'s max health — its starship's derived hull, the bar's cap (0 if null).
 func max_health_of(combatant: Combatant) -> int:
-	var starship: StarshipState = starship_of(combatant)
-	return starship.max_health() if starship != null else 0
+	return combatant.max_health() if combatant != null else 0
 
-## Sets [param combatant]'s current health on its starship, floored at zero. The hull is the source of truth.
+## Sets [param combatant]'s current health, floored at zero. The combatant's stat is the source of truth.
 func _set_health(combatant: Combatant, value: int) -> void:
-	var starship: StarshipState = starship_of(combatant)
-	if starship != null:
-		starship.health = maxi(0, value)
+	if combatant != null:
+		combatant.set_health(maxi(0, value))
 
-## [param combatant]'s current shield — its [code]shield[/code] status count.
+## [param combatant]'s current shield — the live [code]shield[/code] pool stat the shield status's AbsorbStep soaks into.
 func shield_of(combatant: Combatant) -> int:
-	var starship: EncounterStarshipState = starship_of(combatant)
-	return starship.status_count(&"shield") if starship != null else 0
+	return combatant.current_stats.get_stat(Stats.block) if combatant != null and combatant.current_stats != null else 0
 
-## Grants [param combatant] [param amount] more shield (the Shields ability) — stacks the [code]shield[/code] status.
+## Grants [param combatant] [param amount] more shield (the Shields ability) — adds to the shield pool stat and keeps
+## the [code]shield[/code] status applied so its AbsorbStep is in the damage pipeline.
 func add_shield(combatant: Combatant, amount: int) -> void:
 	if amount <= 0:
 		return
-	var starship: EncounterStarshipState = starship_of(combatant)
-	if starship != null:
-		starship.add_status(SHIELD, amount)
+	_set_shield(combatant, shield_of(combatant) + amount)
+
+## [param combatant]'s shield pool, in sync: writes the [code]shield[/code] stat and mirrors the [code]shield[/code]
+## status (present with that count while shield remains, removed at zero) so the AbsorbStep stays collected.
+func _set_shield(combatant: Combatant, value: int) -> void:
+	if combatant == null or combatant.current_stats == null:
+		return
+	var amount: int = maxi(0, value)
+	combatant.current_stats.set_stat(Stats.block, amount)
+	if amount > 0:
+		combatant.set_status(SHIELD, amount)
+	else:
+		StatusEngine.remove_status(combatant, &"shield")
 
 ## Whether [param combatant] is set to dodge the next attack against them (holds the [code]dodge[/code] status).
 func dodge_of(combatant: Combatant) -> bool:
-	var starship: EncounterStarshipState = starship_of(combatant)
-	return starship != null and starship.status_count(&"dodge") > 0
+	return combatant != null and combatant.status_count(&"dodge") > 0
 
 ## Arms or clears [param combatant]'s dodge (Evasive Maneuvers arms it; the next attack consumes it).
 func set_dodge(combatant: Combatant, on: bool) -> void:
-	var starship: EncounterStarshipState = starship_of(combatant)
-	if starship != null:
-		starship.set_status(DODGE, 1 if on else 0)
+	if combatant != null:
+		combatant.set_status(DODGE, 1 if on else 0)
 
-## Applies [param count] stacks of [param status] to [param combatant] — a buff or debuff. A stat-modifying
-## status shifts that combatant's [method effective_stats]; it stacks for the encounter (Target Lock's +damage
-## lands this way).
+## Applies [param count] stacks of [param status] to [param combatant] — a buff or debuff. A stat-modifying status
+## shifts that combatant's [method effective_stats]; it stacks for the encounter (Target Lock's +weapons lands
+## this way).
 func add_status(combatant: Combatant, status: Status, count: int) -> void:
-	var starship: EncounterStarshipState = starship_of(combatant)
-	if starship != null:
-		starship.add_status(status, count)
+	if combatant != null:
+		combatant.add_status(status, count)
 
-## [param combatant]'s effective stats: its permanent module-grid profile ([param base], supplied by the
-## host since the starship owns the grid) with this encounter's active-status [Modifier]s folded on top. The
-## stats combat consumes — the damage stat bonuses the hit, the four colored stats the resource they bank.
+## [param combatant]'s effective stats: its permanent module-grid profile ([param base], supplied by the host since
+## the starship owns the grid) with this encounter's active-status [Modifier]s folded on top by the engine's
+## [StatusModifiers]. The stats combat consumes — the weapons stat bonuses the hit, the four colored stats the
+## resource they bank.
 func effective_stats(combatant: Combatant, base: StarshipStats) -> StarshipStats:
 	var total := StarshipStats.new()
 	total.add(base)
-	var starship: EncounterStarshipState = starship_of(combatant)
-	if starship != null:
-		starship.add_status_modifiers(total)
+	if combatant != null:
+		StatusModifiers.apply(combatant, total)
 	return total
 
 ## The cells currently disabled on [param combatant]'s grid — each deactivates the module covering it.
@@ -154,10 +193,10 @@ func disabled_cells_of(combatant: Combatant) -> Array[Vector2i]:
 		result.append(cell)
 	return result
 
-## Disables [param cell] on [param combatant]'s grid for [param turns] turns — the module covering it stops
-## counting until the disable expires. Refreshes to the longer remaining if the cell is already disabled.
-## Counted down one per turn by [method advance_turn], so a value of N keeps the cell disabled through the
-## next N turn changes. A non-positive duration is a no-op (the Disruptor ability).
+## Disables [param cell] on [param combatant]'s grid for [param turns] turns — the module covering it stops counting
+## until the disable expires. Refreshes to the longer remaining if the cell is already disabled. Counted down one
+## per turn by [method advance_turn], so a value of N keeps the cell disabled through the next N turn changes. A
+## non-positive duration is a no-op (the Disruptor ability — this stays on the game-side path, not the engine).
 func disable_cell(combatant: Combatant, cell: Vector2i, turns: int) -> void:
 	if turns <= 0:
 		return
@@ -166,58 +205,81 @@ func disable_cell(combatant: Combatant, cell: Vector2i, turns: int) -> void:
 	map[cell] = maxi(current, turns)
 
 func _disabled_map(combatant: Combatant) -> Dictionary[Vector2i, int]:
-	return player_disabled_cells if combatant == Combatant.PLAYER else opponent_disabled_cells
+	return player_disabled_cells if combatant == player else opponent_disabled_cells
 
 # Counts every disabled cell down one turn and re-enables those that reach zero. Run once per turn change.
 func _tick_disabled_cells() -> void:
-	for combatant: Combatant in [Combatant.PLAYER, Combatant.OPPONENT]:
+	for combatant: Combatant in [player, opponent]:
 		var map: Dictionary[Vector2i, int] = _disabled_map(combatant)
 		for cell: Vector2i in map.keys():
 			map[cell] -= 1
 			if map[cell] <= 0:
 				map.erase(cell)
 
-## Applies [param amount] of incoming damage to [param target]: a dodge negates it whole (and is spent), then
-## shield absorbs before health. Returns the damage that reached health, or [code]-1[/code] if it was dodged.
-## A non-positive amount is a no-op (returns 0).
+## Applies [param amount] of incoming damage to [param target], through the effect engine: a dodge negates it
+## whole (the engine consumes the dodge stack on the [WhenHitHook]) and leaves shield untouched, otherwise the
+## hit runs through the [ModificationPipeline] — the target's [code]shield[/code] AbsorbStep soaks before health.
+## Returns the damage that reached health, or [code]-1[/code] if it was dodged. A non-positive amount is a no-op
+## (returns 0).
 func deal_damage(target: Combatant, amount: int) -> int:
 	if amount <= 0:
 		return 0
+	if target == null or target.current_stats == null:
+		return 0
+	var source: Combatant = opponent_of(target)
+	# Dodge negates the whole hit and is spent. Routing the spend through the engine: raise WhenHitHook on the
+	# target so its dodge status's TriggerDecayRule consumes a stack. (Bare-hook raise completes synchronously —
+	# dodge carries no hook-triggered effects, only the decay rule.) Shield is left untouched, as before.
 	if dodge_of(target):
-		set_dodge(target, false)
+		runtime().raise_hook(target, _allies_of(target), _opponents_of(target), WhenHitHook.new(), source)
 		return -1
-	var shield: int = shield_of(target)
-	var absorbed: int = mini(shield, amount)
-	if absorbed > 0:
-		_set_shield(target, shield - absorbed)
-	var to_health: int = amount - absorbed
+	# Not dodging: run the damage through the pipeline so shield's AbsorbStep soaks it before it reaches health.
+	var modification := Modification.new()
+	modification.source = source
+	modification.target = target
+	modification.stat = Stats.health
+	modification.amount = amount
+	modification.tag = &"damage"
+	var context := ResolutionContext.create(modification.source, _opponents_of(target), _allies_of(target), 0, runtime().chooser)
+	context.status_catalog = runtime().status_catalog
+	var to_health: int = ModificationPipeline.resolve(modification, context)
 	if to_health > 0:
 		_set_health(target, health_of(target) - to_health)
+	# The AbsorbStep drained the shield stat in place; resync the shield status to match (drop it at zero).
+	_sync_shield_status(target)
+	# Mark that a hit landed so any further "when hit" reactions fire (dodge already handled above).
+	runtime().raise_hook(target, _allies_of(target), _opponents_of(target), WhenHitHook.new(), modification.source)
 	return to_health
 
-func _set_shield(combatant: Combatant, value: int) -> void:
-	var starship: EncounterStarshipState = starship_of(combatant)
-	if starship != null:
-		starship.set_status(SHIELD, maxi(0, value))
+# Re-points the [code]shield[/code] status's count at the live shield pool stat the AbsorbStep just changed, so
+# the badge/stack count stays in step — removing the status when the pool is empty.
+func _sync_shield_status(combatant: Combatant) -> void:
+	if combatant == null or combatant.current_stats == null:
+		return
+	var pool: int = combatant.current_stats.get_stat(Stats.block)
+	if pool > 0:
+		combatant.set_status(SHIELD, pool)
+	else:
+		StatusEngine.remove_status(combatant, &"shield")
 
 ## Whether the encounter has been decided — a combatant Jumped, or one is out of health.
 func is_over() -> bool:
-	return warp_winner != -1 or player_health <= 0 or opponent_health <= 0
+	return warp_winner != null or player_health <= 0 or opponent_health <= 0
 
-## The combatant who lost. Only meaningful once [method is_over] is true: the one who didn't Jump if there
-## was a warp victory, else the one out of health.
+## The combatant that lost. Only meaningful once [method is_over] is true: the one who didn't Jump if there was a
+## warp victory, else the one out of health.
 func defeated() -> Combatant:
-	if warp_winner != -1:
+	if warp_winner != null:
 		return opponent_of(warp_winner)
-	return Combatant.PLAYER if player_health <= 0 else Combatant.OPPONENT
+	return player if player_health <= 0 else opponent
 
 ## [param combatant]'s filled warp bars — the side of the shared meter in their favor (0 if they're behind).
 func warp_of(combatant: Combatant) -> int:
-	return maxi(0, warp) if combatant == Combatant.PLAYER else maxi(0, -warp)
+	return maxi(0, warp) if combatant == player else maxi(0, -warp)
 
 ## [param combatant]'s warp capacity — the bars their side holds before they can Jump.
 func warp_max_of(combatant: Combatant) -> int:
-	return player_warp_max if combatant == Combatant.PLAYER else opponent_warp_max
+	return player_warp_max if combatant == player else opponent_warp_max
 
 ## Adds [param bars] of warp for [param combatant]: the player's pushes the meter up, the opponent's down.
 ## Clamps to each side's own capacity; without a tug (Campaign) it never drops below zero, so the opponent's
@@ -225,14 +287,14 @@ func warp_max_of(combatant: Combatant) -> int:
 func add_warp(combatant: Combatant, bars: int) -> void:
 	if bars <= 0:
 		return
-	warp += bars if combatant == Combatant.PLAYER else -bars
+	warp += bars if combatant == player else -bars
 	var low: int = -opponent_warp_max if warp_tug else 0
 	warp = clampi(warp, low, player_warp_max)
 
 ## Whether [param combatant] has filled their warp and may Jump. The player can at a full meter; the opponent
 ## only in a tug (Quick Match).
 func can_jump(combatant: Combatant) -> bool:
-	if combatant == Combatant.PLAYER:
+	if combatant == player:
 		return player_warp_max > 0 and warp >= player_warp_max
 	return warp_tug and opponent_warp_max > 0 and warp <= -opponent_warp_max
 

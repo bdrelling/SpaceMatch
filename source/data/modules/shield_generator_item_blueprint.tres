@@ -14,7 +14,7 @@ offsets = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0)])
 script = ExtResource("2_stats")
 values = {
 &"energy": -1,
-&"shields": 4
+&"defense": 4
 }
 
 [resource]

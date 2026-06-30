@@ -1,7 +1,7 @@
 class_name ActionBudgetRule
 extends Rule
 ## Sets how many board moves the mover gets this turn, and what using an ability does to the turn. Fires on
-## [constant MatchPhase.TURN_START], writing the budget onto the active combatant's [EncounterStarshipState];
+## [constant MatchPhase.TURN_START], writing the budget onto the active combatant's [Combatant];
 ## the match spends it down as moves resolve and passes the turn once it's gone (see [MatchGame]). The
 ## default — one action, an ability ends the turn — reproduces the original "a move or an ability ends your
 ## turn" exactly. A starship overrides it by carrying its own [ActionBudgetRule] of the same [member
@@ -25,10 +25,8 @@ func _init() -> void:
 
 func apply(context: RuleContext) -> void:
 	var match_context := context as MatchRuleContext
-	if match_context == null or match_context.encounter == null or match_context.combatant < 0:
+	if match_context == null or match_context.encounter == null or match_context.combatant == null:
 		return
-	var starship: EncounterStarshipState = match_context.encounter.starship_of(match_context.combatant)
-	if starship == null:
-		return
+	var starship: Combatant = match_context.combatant
 	starship.actions_remaining = maxi(1, actions_per_turn)
 	starship.ability_turn_cost = ability_turn_cost

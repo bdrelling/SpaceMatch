@@ -51,9 +51,10 @@ func test_ship_fill_rule_overrides_match_default_by_name() -> void:
 	assert_int(fills).is_equal(1)
 	assert_vector(_active_fill(composed).direction_vector()).is_equal(Vector2i(0, -1))
 
-func test_territory_rule_colours_by_side() -> void:
+func test_territory_rule_colours_by_owner() -> void:
+	# color_for takes a combatant id — the player's is 0, the opponent's 1 (the tile-ownership marker).
 	var territory := TerritoryRule.new()
-	assert_bool(territory.color_for(EncounterState.Combatant.PLAYER) == territory.player_color).is_true()
-	assert_bool(territory.color_for(EncounterState.Combatant.OPPONENT) == territory.opponent_color).is_true()
+	assert_bool(territory.color_for(0) == territory.player_color).is_true()
+	assert_bool(territory.color_for(1) == territory.opponent_color).is_true()
 	# Neutral / unowned tiles get a transparent (undrawn) ring.
 	assert_float(territory.color_for(-1).a).is_equal(0.0)

@@ -23,8 +23,10 @@ static func create(player_state: StarshipState, opponent_state: StarshipState) -
 	encounter.add_child(player_starship)
 	encounter.add_child(opponent_starship)
 	var enc := EncounterState.new()
-	# Each combatant fights as an encounter-scoped starship that also carries its banked resources and turn budget.
-	enc.player = EncounterStarshipState.for_combatant(player_starship.state)
-	enc.opponent = EncounterStarshipState.for_combatant(opponent_starship.state)
+	# Each side fights as a Combatant — an engine Entity wrapping the starship, carrying its banked resources,
+	# live combat stats and turn budget. The ids (player 0, opponent 1) tell them apart and tag tile ownership
+	# on a shared board; the matching team (0 / 1) is the side they fight on, for future 2v2 grouping.
+	enc.player = Combatant.create(player_starship.state, 0, 0)
+	enc.opponent = Combatant.create(opponent_starship.state, 1, 1)
 	encounter.state = enc
 	return encounter

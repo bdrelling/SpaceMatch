@@ -36,12 +36,12 @@ var armor: int:
 		return value
 	set(value):
 		values[&"armor"] = value
-var shields: int:
+var defense: int:
 	get:
-		var value: int = values.get(&"shields", 0)
+		var value: int = values.get(&"defense", 0)
 		return value
 	set(value):
-		values[&"shields"] = value
+		values[&"defense"] = value
 var sensors: int:
 	get:
 		var value: int = values.get(&"sensors", 0)
@@ -54,12 +54,12 @@ var life_support: int:
 		return value
 	set(value):
 		values[&"life_support"] = value
-var damage: int:
+var weapons: int:
 	get:
-		var value: int = values.get(&"damage", 0)
+		var value: int = values.get(&"weapons", 0)
 		return value
 	set(value):
-		values[&"damage"] = value
+		values[&"weapons"] = value
 var energy: int:
 	get:
 		var value: int = values.get(&"energy", 0)

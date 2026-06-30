@@ -16,12 +16,13 @@ extends Rule
 func _init() -> void:
 	rule_name = &"territory"
 
-## The outline colour for [param owner] (an [enum EncounterState.Combatant]), transparent for neutral/unowned.
+## The outline colour for [param owner] — a combatant's [member Entity.id] (0 = player, 1 = opponent),
+## transparent for neutral/unowned (-1).
 func color_for(owner: int) -> Color:
 	match owner:
-		EncounterState.Combatant.PLAYER:
+		0:
 			return player_color
-		EncounterState.Combatant.OPPONENT:
+		1:
 			return opponent_color
 		_:
 			return Color(0, 0, 0, 0)

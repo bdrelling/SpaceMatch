@@ -22,6 +22,7 @@ func apply(context: RuleContext) -> void:
 	var count: int = match_context.counts[kind]
 	var reward: int = match_context.reward_for(count)
 	# Only the player banks scrap; the opponent has no wallet.
-	if match_context.combatant == EncounterState.Combatant.PLAYER and match_context.wallet != null:
+	var is_player: bool = match_context.encounter != null and match_context.combatant == match_context.encounter.player
+	if is_player and match_context.wallet != null:
 		match_context.wallet.earn(reward)
 	match_context.visuals.append({"type": "resource", "kind": kind, "amount": reward, "center": match_context.centers.get(kind, Vector2.ZERO)})
