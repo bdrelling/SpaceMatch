@@ -36,7 +36,7 @@ const _LOSS_COLOR := Color(0.96, 0.55, 0.45)
 
 var _mode: Mode = Mode.READ_ONLY
 var _grid_view: ModuleGridView
-var _module_grid: Loadout
+var _module_grid: StarshipLoadout
 
 # The module the player tapped to inspect (null when nothing is focused). Its footprint is outlined on
 # the board and its per-stat contribution is split out of each stat total.
@@ -84,7 +84,7 @@ func set_mode(mode: Mode) -> void:
 # Rebuilds the board and stat list for [param module_grid], freeing the prior view first
 # ([BoardCanvas.set_board] detaches the old board but doesn't free it, so re-pointing would otherwise
 # leak views) and re-pointing the stats at the shown starship.
-func _show_grid(module_grid: Loadout) -> void:
+func _show_grid(module_grid: StarshipLoadout) -> void:
 	if module_grid == null:
 		return
 	if _module_grid != null and _module_grid.changed.is_connected(_on_grid_changed):

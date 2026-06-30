@@ -29,7 +29,7 @@ func apply_blueprint(_blueprint: StarshipBlueprint) -> void:
 	state.base_stats = _blueprint.stats.duplicate() if _blueprint.stats != null else StarshipStats.new()
 	# Build the loadout from the blueprint's grid and persist it, then mount a ModuleGrid child (Starship →
 	# ModuleGrid) to represent it in the tree — the node wraps the same loadout the starship holds.
-	var loadout := Loadout.create(_blueprint.module_grid)
+	var loadout := StarshipLoadout.create(_blueprint.module_grid)
 	state.loadout = loadout
 	add_child(ModuleGrid.with_state(loadout))
 	# Rules and abilities are the starship's, not the match's: a hull authors its own, else it gets the standard

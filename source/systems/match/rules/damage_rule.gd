@@ -3,23 +3,14 @@ extends Rule
 ## Matched damage tiles deplete the other combatant's health — the match reward plus the mover's effective
 ## DAMAGE stat (module-grid profile + temporary buffs, e.g. Target Lock) — and fly to the struck portrait.
 ## Fires on [constant MatchPhase.ON_CLEAR]. Emits a "damage" visual (the cells, target, dealt and result) for
-## the host to animate; the hit lands here.
+## the host to animate; the hit lands here. How often the damage tile drops is a [SpawnResourceRule]'s job.
 
-## The damage resource — its [member StarshipResource.tile_kind] is the damage tile.
+## The damage resource — its [member StarshipResource.id] is the damage tile.
 @export var resource: StarshipResource = preload("res://data/ability_resources/damage.tres")
-## Relative spawn weight for the damage tile — how often it fills the board. Drop this rule and damage tiles
-## stop spawning entirely.
-@export var spawn_weight: int = 10
 
 func _init() -> void:
 	rule_name = &"damage"
 	phase = MatchPhase.ON_CLEAR
-
-# The tile this rule contributes to the board's spawn pool: damage at its weight.
-func spawn_contribution() -> Dictionary:
-	if resource == null:
-		return {}
-	return {resource.tile_kind: maxi(0, spawn_weight)}
 
 func apply(context: RuleContext) -> void:
 	var match_context := context as MatchRuleContext

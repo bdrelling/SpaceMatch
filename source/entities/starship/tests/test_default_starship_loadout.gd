@@ -7,11 +7,11 @@ extends GdUnitTestSuite
 const _DEFAULT_STARSHIP := preload("res://data/starships/default_starship_blueprint.tres")
 const _COMPUTER_STARSHIP := preload("res://data/starships/computer_default_starship_blueprint.tres")
 
-func _default_grid() -> Loadout:
+func _default_grid() -> StarshipLoadout:
 	var starship: Starship = auto_free(Starship.create(_DEFAULT_STARSHIP))
 	return starship.state.loadout
 
-func _computer_grid() -> Loadout:
+func _computer_grid() -> StarshipLoadout:
 	var starship: Starship = auto_free(Starship.create(_COMPUTER_STARSHIP))
 	return starship.state.loadout
 

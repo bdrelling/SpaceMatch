@@ -6,7 +6,7 @@
 [resource]
 script = ExtResource("1")
 name = &"warp"
-tile_kind = 5
+id = 5
 label = "Warp"
 color = Color(0.66, 0.47, 0.86, 1)
 texture = ExtResource("2")

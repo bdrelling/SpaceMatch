@@ -15,9 +15,10 @@ extends Resource
 ## directory-backed, and [method regenerate] is a no-op.
 @export_dir var directory: String = ""
 
-## Rebuilds the entries from [member directory]: scans it (recursively) for resource files, loads each,
-## and keeps the ones of this catalog's type via [method matches]. Entries are added in path order so the
-## result is stable. No-op when [member directory] is empty, so a hand-authored catalog is never wiped.
+## Rebuilds the entries from [member directory]: scans it (recursively) for resource files, loads each, keeps
+## the ones of this catalog's type via [method matches], then orders them ascending by [method entry_sort_key]
+## (id, else name, else path) so the catalog reads in id order rather than file-path order. No-op when
+## [member directory] is empty, so a hand-authored catalog is never wiped.
 func regenerate() -> void:
 	if directory.is_empty():
 		return
@@ -29,6 +30,7 @@ func regenerate() -> void:
 		var resource: Resource = load(path)
 		if resource != null and matches(resource):
 			collection.append(resource)
+	collection.sort_custom(_entries_ascending)
 
 ## The entries as an untyped Array — the subclass returns its typed Array. The editor iterates this.
 func entries() -> Array:
@@ -52,6 +54,23 @@ func remove_entry(_entry: Resource) -> void:
 ## only matching resources from [member directory]. Override per type.
 func matches(_entry: Resource) -> bool:
 	return false
+
+## Sort key for [param entry], ordering [method regenerate]'s collection ascending: the entry's [code]id[/code]
+## when it has one, else its [code]name[/code], else its resource path. Override for a custom ordering.
+func entry_sort_key(entry: Resource) -> Variant:
+	var id_value: Variant = entry.get(&"id")
+	if id_value != null:
+		return id_value
+	var name_value: Variant = entry.get(&"name")
+	if name_value != null:
+		# As a String: a StringName name compares equal under `<` (no lexicographic order), which would leave a
+		# name-keyed catalog unsorted.
+		return str(name_value)
+	return entry.resource_path
+
+# Ascending comparator over [method entry_sort_key], for [method Array.sort_custom].
+func _entries_ascending(a: Resource, b: Resource) -> bool:
+	return entry_sort_key(a) < entry_sort_key(b)
 
 # Absolute paths of every resource file under [param search_directory], recursively.
 func _resource_paths(search_directory: String) -> Array[String]:

@@ -36,8 +36,12 @@ func _build() -> void:
 
 # A plain-language sentence for what a rule does, for the player.
 func _summary(rule: Rule) -> String:
+	if rule is SpawnResourceRule:
+		var spawn := rule as SpawnResourceRule
+		var spawn_name: String = MatchTile.name_of(spawn.resource.id) if spawn.resource != null else "These"
+		return "%s tiles drop onto the board." % spawn_name
 	var kind := RulePresentation.kind_of(rule)
-	var kind_name := MatchTile.name_of(kind) if kind >= 0 and kind < MatchTile.KIND_COUNT else ""
+	var kind_name := MatchTile.name_of(kind) if kind >= 0 else ""
 	match String(rule.rule_name):
 		"resource_grant":
 			return "Matching stat tiles banks their resource to whoever cleared them."

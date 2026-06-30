@@ -5,3 +5,4 @@
 [resource]
 script = ExtResource("1")
 name = &"warp_capacity"
+id = 10

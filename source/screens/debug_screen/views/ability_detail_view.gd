@@ -43,7 +43,7 @@ func _build() -> void:
 
 # One cost: the tile it spends, the amount, and a remove row.
 func _build_cost(cost: AbilityCost, index: int) -> void:
-	var current_kind: int = cost.resource.tile_kind if cost.resource != null else 0
+	var current_kind: int = cost.resource.id if cost.resource != null else 0
 	add_child(DebugRow.option("Cost %d tile" % (index + 1), MatchTile.names(), current_kind,
 		func(picked: int) -> void: cost.resource = Catalogs.ability_resources.for_tile(picked)))
 	add_child(DebugRow.slider("Amount", MatchTile.color_of(current_kind), 0, 30, cost.amount,

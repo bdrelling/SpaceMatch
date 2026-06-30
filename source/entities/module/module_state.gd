@@ -12,12 +12,12 @@ extends Resource
 @export var id: int = -1
 @export var name: String = ""
 @export var color: Color = Color.WHITE
-## The stat profile this module contributes to its starship while enabled (summed by [method Loadout.stats]). Its
+## The stat profile this module contributes to its starship while enabled (summed by [method StarshipLoadout.stats]). Its
 ## own copy, so two instances of one module type never share a mutable block.
 @export var stats: StarshipStats
-## Abilities this module grants its starship while enabled (aggregated by [method Loadout.abilities]).
+## Abilities this module grants its starship while enabled (aggregated by [method StarshipLoadout.abilities]).
 @export var abilities: Array[MatchAbility] = []
-## Phase rules this module grants its starship while enabled (aggregated by [method Loadout.rules]).
+## Phase rules this module grants its starship while enabled (aggregated by [method StarshipLoadout.rules]).
 @export var rules: Array[Rule] = []
 
 ## Builds a module state from [param _blueprint], copying its authored profile once — the blueprint is factory

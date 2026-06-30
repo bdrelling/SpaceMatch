@@ -1,7 +1,7 @@
 class_name DebugView
 extends VBoxContainer
 ## Base for one screen in the [DebugNavigator] stack — an editor page. A view reports its [method title]
-## and builds its body in [method _build] (collapsible [DebugSection]s, [DebugRow] controls, or a list of
+## and builds its body in [method _build] ([DebugSection] groups, [DebugRow] controls, or a list of
 ## nav rows into deeper views). To drill into another view, call [method _push]; the navigator owns the
 ## stack, header, and back button. A view is a vertical column the navigator scrolls.
 

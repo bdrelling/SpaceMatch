@@ -127,13 +127,17 @@ release-web: export-web deploy-web ## Export and deploy web build
 # armory's DeviceUtils (the source of truth). The px below DUPLICATE DeviceUtils.DEVICE_RESOLUTIONS ×
 # the device's preview scale — when those change, update these to match.
 #   iPhone 17 Pro 402×874 pt → 724×1573 (× 1.8)    iPad Pro 11" 834×1194 pt → 1112×1592 (× 4/3)
-DEVICE_WINDOW_MODE        ?= tablet
-DEVICE_WINDOW_ORIENTATION ?= portrait
+DEVICE_WINDOW_MODE        ?= desktop
+DEVICE_WINDOW_ORIENTATION ?= landscape
 
 PHONE_WINDOW_WIDTH   := 724
 PHONE_WINDOW_HEIGHT  := 1573
 TABLET_WINDOW_WIDTH  := 1112
 TABLET_WINDOW_HEIGHT := 1592
+# `desktop` isn't a device — it's the game's 9:16 design aspect. The window re-orients live (main.gd
+# flips the layout 16:9 <-> 9:16 on resize). Base 1080x1920 portrait -> 1920x1080 (16:9) in landscape.
+DESKTOP_WINDOW_WIDTH  := 1080
+DESKTOP_WINDOW_HEIGHT := 1920
 
 ifeq ($(DEVICE_WINDOW_MODE),phone)
   _DEVICE_W := $(PHONE_WINDOW_WIDTH)
@@ -141,8 +145,11 @@ ifeq ($(DEVICE_WINDOW_MODE),phone)
 else ifeq ($(DEVICE_WINDOW_MODE),tablet)
   _DEVICE_W := $(TABLET_WINDOW_WIDTH)
   _DEVICE_H := $(TABLET_WINDOW_HEIGHT)
+else ifeq ($(DEVICE_WINDOW_MODE),desktop)
+  _DEVICE_W := $(DESKTOP_WINDOW_WIDTH)
+  _DEVICE_H := $(DESKTOP_WINDOW_HEIGHT)
 else
-  $(error DEVICE_WINDOW_MODE must be 'phone' or 'tablet' (got '$(DEVICE_WINDOW_MODE)'))
+  $(error DEVICE_WINDOW_MODE must be 'desktop', 'phone' or 'tablet' (got '$(DEVICE_WINDOW_MODE)'))
 endif
 
 ifeq ($(DEVICE_WINDOW_ORIENTATION),portrait)
@@ -155,14 +162,14 @@ else
   $(error DEVICE_WINDOW_ORIENTATION must be 'portrait' or 'landscape' (got '$(DEVICE_WINDOW_ORIENTATION)'))
 endif
 
-play: ## Launch the game in a device window (DEVICE_WINDOW_MODE=phone|tablet, default tablet).
+play: ## Launch the game in a window (DEVICE_WINDOW_MODE=desktop|phone|tablet, default desktop 16:9 landscape).
 	@./scripts/play.sh -w --resolution $(_WINDOW_W)x$(_WINDOW_H) -- --device=$(DEVICE_WINDOW_MODE) --orientation=$(DEVICE_WINDOW_ORIENTATION)
 
 play-tablet: ## Launch as a tablet (portrait).
-	@$(MAKE) play DEVICE_WINDOW_MODE=tablet
+	@$(MAKE) play DEVICE_WINDOW_MODE=tablet DEVICE_WINDOW_ORIENTATION=portrait
 
 play-phone: ## Launch as a phone (portrait).
-	@$(MAKE) play DEVICE_WINDOW_MODE=phone
+	@$(MAKE) play DEVICE_WINDOW_MODE=phone DEVICE_WINDOW_ORIENTATION=portrait
 
 playtest: ## Run the game with screenshot capture. Pass extra args after `--`.
 	@./scripts/playtest.sh $(ARGS)

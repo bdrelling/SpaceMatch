@@ -2,7 +2,7 @@ class_name ModuleGridState
 extends GridState
 ## A grid of modules — a grid_system [GridState] specialized for placing and arranging [ModuleBlueprint]s: each
 ## placed module is a [GridObjectState] occupant carrying its blueprint. Pure size/placement/query operations,
-## with no notion of stats — that derivation lives on [Loadout] (a starship's grid), keeping this reusable for
+## with no notion of stats — that derivation lives on [StarshipLoadout] (a starship's grid), keeping this reusable for
 ## grids that don't have stats (inventories, puzzles). The [ModuleGrid] node builds and represents one.
 
 const _LAYER := 0
@@ -10,7 +10,7 @@ const _MODULE_KEY := &"module"
 
 ## Stamps [param blueprint]'s hull silhouette (its usable cells) and its authored modules, in placement order,
 ## onto [param grid] — already sized to the blueprint; a placement that doesn't fit is skipped. The shared
-## blueprint build behind the [ModuleGrid] node and a starship's [Loadout]; a null blueprint leaves it untouched.
+## blueprint build behind the [ModuleGrid] node and a starship's [StarshipLoadout]; a null blueprint leaves it untouched.
 static func stamp(grid: ModuleGridState, blueprint: ModuleGridBlueprint) -> void:
 	if blueprint == null:
 		return

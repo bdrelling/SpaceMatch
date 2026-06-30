@@ -20,12 +20,12 @@ static func kind_of(rule: Rule) -> int:
 	var single: Variant = rule.get("resource")
 	if single is StarshipResource:
 		var resource: StarshipResource = single
-		return resource.tile_kind
+		return resource.id
 	var many: Variant = rule.get("resources")
 	if many is Array:
 		var resources: Array = many
 		for entry: Variant in resources:
 			if entry is StarshipResource:
 				var resource: StarshipResource = entry
-				return resource.tile_kind
+				return resource.id
 	return -1

@@ -1,4 +1,4 @@
-class_name Loadout
+class_name StarshipLoadout
 extends ModuleGridState
 ## A starship's loadout — its [ModuleGridState] plus the stat/ability/rule profile its placed modules sum to.
 ## A loadout IS a module grid (it stores and arranges modules the same way); what it adds is the derivation a
@@ -10,10 +10,10 @@ extends ModuleGridState
 
 ## Builds a loadout from [param blueprint] — an empty grid at the blueprint's size, stamped with its hull
 ## silhouette and authored modules (see [method ModuleGridState.stamp]). A null blueprint yields an empty loadout.
-static func create(blueprint: ModuleGridBlueprint) -> Loadout:
+static func create(blueprint: ModuleGridBlueprint) -> StarshipLoadout:
 	if blueprint == null:
-		return Loadout.new()
-	var loadout := Loadout.new(blueprint.columns, blueprint.rows, 1)
+		return StarshipLoadout.new()
+	var loadout := StarshipLoadout.new(blueprint.columns, blueprint.rows, 1)
 	ModuleGridState.stamp(loadout, blueprint)
 	return loadout
 

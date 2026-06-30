@@ -13,6 +13,14 @@
 [ext_resource type="Script" path="res://systems/match/rules/reload_split_rule.gd" id="11_reload"]
 [ext_resource type="Script" path="res://addons/grid_system/rules/ruleset.gd" id="12_ruleset"]
 [ext_resource type="Script" path="res://systems/match/scoring_formula.gd" id="13_formula"]
+[ext_resource type="Script" path="res://systems/match/rules/spawn_resource_rule.gd" id="14_spawn"]
+[ext_resource type="Resource" uid="uid://b2kqyh4632a1r" path="res://data/ability_resources/combat.tres" id="15_combat"]
+[ext_resource type="Resource" uid="uid://cyhafv6x2udqt" path="res://data/ability_resources/propulsion.tres" id="16_prop"]
+[ext_resource type="Resource" uid="uid://b63jse3fv7g7k" path="res://data/ability_resources/science.tres" id="17_sci"]
+[ext_resource type="Resource" uid="uid://dx8npskqws2tb" path="res://data/ability_resources/defense.tres" id="18_def"]
+[ext_resource type="Resource" uid="uid://dhitpgn63v7tc" path="res://data/ability_resources/scrap.tres" id="19_scrap"]
+[ext_resource type="Resource" uid="uid://u2s7rrhiurg8" path="res://data/ability_resources/warp.tres" id="20_warp"]
+[ext_resource type="Resource" uid="uid://dwymbod6coevg" path="res://data/ability_resources/damage.tres" id="21_damage"]
 
 [sub_resource type="Resource" id="Res_resgrant"]
 script = ExtResource("2_resgrant")
@@ -48,6 +56,48 @@ formula = SubResource("Res_formula")
 [sub_resource type="Resource" id="Res_reload"]
 script = ExtResource("11_reload")
 
+[sub_resource type="Resource" id="Spawn_combat"]
+script = ExtResource("14_spawn")
+resource = ExtResource("15_combat")
+weight = 20
+
+[sub_resource type="Resource" id="Spawn_prop"]
+script = ExtResource("14_spawn")
+resource = ExtResource("16_prop")
+weight = 20
+
+[sub_resource type="Resource" id="Spawn_sci"]
+script = ExtResource("14_spawn")
+resource = ExtResource("17_sci")
+weight = 20
+
+[sub_resource type="Resource" id="Spawn_def"]
+script = ExtResource("14_spawn")
+resource = ExtResource("18_def")
+weight = 20
+
+[sub_resource type="Resource" id="Spawn_scrap"]
+script = ExtResource("14_spawn")
+resource = ExtResource("19_scrap")
+weight = 10
+
+[sub_resource type="Resource" id="Spawn_warp"]
+script = ExtResource("14_spawn")
+resource = ExtResource("20_warp")
+weight = 2
+
+[sub_resource type="Resource" id="Spawn_damage"]
+script = ExtResource("14_spawn")
+resource = ExtResource("21_damage")
+weight = 10
+
+[sub_resource type="Resource" id="Res_spawn_set"]
+script = ExtResource("12_ruleset")
+ruleset_name = &"Spawn"
+rulesets = Array[ExtResource("12_ruleset")]([])
+rules = Array[ExtResource("1_rule")]([SubResource("Spawn_combat"), SubResource("Spawn_prop"), SubResource("Spawn_sci"), SubResource("Spawn_def"), SubResource("Spawn_scrap"), SubResource("Spawn_warp"), SubResource("Spawn_damage")])
+
 [resource]
 script = ExtResource("12_ruleset")
+rulesets = Array[ExtResource("12_ruleset")]([SubResource("Res_spawn_set")])
 rules = Array[ExtResource("1_rule")]([SubResource("Res_resgrant"), SubResource("Res_scrap"), SubResource("Res_damage"), SubResource("Res_warp"), SubResource("Res_action"), SubResource("Res_cap"), SubResource("Res_offset"), SubResource("Res_fill"), SubResource("Res_scoring"), SubResource("Res_reload")])

@@ -1,29 +1,28 @@
 class_name MatchTile
 extends GridTile
-## A component tile for the match-3 board: one of seven kinds (combat, propulsion, science, defense, scrap, warp,
-## damage) chosen by [member kind], drawn centred on the node origin in unit cell-space so a pop scales about the
-## centre. Its sprite, colour and label come from the [StarshipResource] bound to its kind (see
-## [method _resource_for]) — the resources own the tile's representation, there is no separate tile-data table.
-## The damage tile has no sprite yet, so it falls back to a hand-drawn starburst. A non-zero [member tint]
-## modulates the art.
-
-const KIND_COUNT: int = 7
+## A component tile for the match-3 board: one kind per spawnable [StarshipResource] (combat, propulsion,
+## science, defense, scrap, warp, damage, plus any added in-editor), chosen by [member kind] and drawn centred
+## on the node origin in unit cell-space so a pop scales about the centre. Its sprite, colour and label come from
+## the [StarshipResource] bound to its kind (see [method _resource_for]) — the resources own the tile's
+## representation, there is no separate tile-data table, and the set of kinds comes from the resource catalog
+## ([method AbilityResourceCatalog.tile_kinds]) rather than a fixed count. The damage tile has no sprite yet, so
+## it falls back to a hand-drawn starburst. A non-zero [member tint] modulates the art.
 
 ## Glyph half-extent in cell units; leaves a margin inside the cell.
 const _HALF: float = 0.40
 const _LINE: float = 0.045
 
 # Tile kind -> its StarshipResource, built once from the resource catalog. The resources own the art/colour/label;
-# this just indexes them by their tile_kind for the board.
+# this just indexes them by their id for the board.
 static var _by_kind: Dictionary = {}
 
-# The StarshipResource bound to [param kind] (matched on its tile_kind), or null when none maps to it.
+# The StarshipResource bound to [param kind] (matched on its id), or null when none maps to it.
 static func _resource_for(kind: int) -> StarshipResource:
 	if _by_kind.is_empty():
 		for resource: AbilityResource in Catalogs.ability_resources.ability_resources:
 			var starship_resource := resource as StarshipResource
 			if starship_resource != null:
-				_by_kind[starship_resource.tile_kind] = starship_resource
+				_by_kind[starship_resource.id] = starship_resource
 	return _by_kind.get(kind, null)
 
 ## Sprite for [param kind], or null for a kind drawn procedurally (damage).
@@ -44,7 +43,7 @@ static func name_of(kind: int) -> String:
 ## Display names for every kind, in kind order — for pickers that list the kinds.
 static func names() -> Array[String]:
 	var result: Array[String] = []
-	for kind: int in KIND_COUNT:
+	for kind: int in Catalogs.ability_resources.tile_kinds():
 		result.append(name_of(kind))
 	return result
 
@@ -118,7 +117,7 @@ func _draw_explosion(color: Color) -> void:
 ## the opaque cutoff (0–1); [param epsilon] simplifies the traced outline.
 static func bake_collision_outlines(alpha_threshold: float, epsilon: float) -> Array[PackedVector2Array]:
 	var outlines: Array[PackedVector2Array] = []
-	for kind: int in KIND_COUNT:
+	for kind: int in Catalogs.ability_resources.tile_kinds():
 		var resource := _resource_for(kind)
 		if resource != null and resource.texture != null:
 			outlines.append(_trace_outline(resource.texture, alpha_threshold, epsilon))

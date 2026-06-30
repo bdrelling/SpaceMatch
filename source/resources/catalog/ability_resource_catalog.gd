@@ -12,12 +12,24 @@ const _DIRECTORY := "res://data/ability_resources"
 func entries() -> Array:
 	return ability_resources
 
+## Every board-tile kind: each [StarshipResource]'s [member StarshipResource.id] of 0 or more, ascending. The
+## spawn pool and tile pickers iterate this instead of a fixed count, so authoring a new resource adds its tile
+## kind automatically — nothing keys off a hardcoded number of kinds.
+func tile_kinds() -> Array[int]:
+	var kinds: Array[int] = []
+	for resource: AbilityResource in ability_resources:
+		var starship_resource := resource as StarshipResource
+		if starship_resource != null and starship_resource.id >= 0:
+			kinds.append(starship_resource.id)
+	kinds.sort()
+	return kinds
+
 ## The [StarshipResource] backing board tile [param tile_kind], or null when no resource maps to that kind.
 ## Bridges the grid's int tile kind to the resource the encounter/ability/rules layer references.
 func for_tile(tile_kind: int) -> StarshipResource:
 	for resource: AbilityResource in ability_resources:
 		var starship_resource := resource as StarshipResource
-		if starship_resource != null and starship_resource.tile_kind == tile_kind:
+		if starship_resource != null and starship_resource.id == tile_kind:
 			return starship_resource
 	return null
 

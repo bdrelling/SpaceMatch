@@ -78,7 +78,7 @@ static func for_combatant(source: StarshipState) -> EncounterStarshipState:
 	return starship
 
 ## The [ResourcePool] backing [param resource] (matched by the resource's name), or null when this starship has
-## no pool for it. The pools are still index-aligned to [member StarshipResource.tile_kind] (their order comes
+## no pool for it. The pools are still index-aligned to [member StarshipResource.id] (their order comes
 ## from [constant _RESOURCE_DEFINITIONS]), but lookup goes by name so callers reference resources, not indices.
 func _pool_for(resource: StarshipResource) -> ResourcePool:
 	if resource == null:
@@ -99,7 +99,7 @@ func add_resource(resource: StarshipResource, amount: int) -> void:
 	var pool: ResourcePool = _pool_for(resource)
 	if amount <= 0 or pool == null:
 		return
-	var kind: int = resource.tile_kind
+	var kind: int = resource.id
 	var total: int = pool.amount + amount
 	var maximum: int = resource_maximums[kind] if kind >= 0 and kind < resource_maximums.size() else 0
 	pool.amount = total if maximum <= 0 else mini(total, maximum)

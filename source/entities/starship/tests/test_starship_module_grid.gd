@@ -45,10 +45,10 @@ func test_module_at_and_remove() -> void:
 	assert_int(grid.remove_at(Vector2i(1, 0)).id).is_equal(module.id)
 	assert_int(grid.filled_cell_count()).is_equal(0)
 
-# A full 3×3 [Loadout] — the stat/ability/rule tests below assert on the loadout-level derivation, so this
-# builds a Loadout (a ModuleGridState with that derivation) rather than the bare grid.
-func _full_grid() -> Loadout:
-	var grid := Loadout.new(3, 3, 1)
+# A full 3×3 [StarshipLoadout] — the stat/ability/rule tests below assert on the loadout-level derivation, so this
+# builds a StarshipLoadout (a ModuleGridState with that derivation) rather than the bare grid.
+func _full_grid() -> StarshipLoadout:
+	var grid := StarshipLoadout.new(3, 3, 1)
 	for cell: Vector2i in [
 		Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0),
 		Vector2i(0, 1), Vector2i(1, 1), Vector2i(2, 1),

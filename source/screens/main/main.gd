@@ -45,17 +45,39 @@ func _boot() -> void:
 			# TODO: THIS SHOULD BE AN ERROR SCREEN!
 			SceneLoader.transition_to(MainMenuScreen.create())
 
-## Sets [param window]'s content scaling for the touch UI (canvas-items in both cases). The window's size
-## and shape come entirely from the launch — the platform on a real device, the `make` targets' `--resolution`
-## on desktop — and nothing is resized here. Mobile fills the device screen edge-to-edge (EXPAND); desktop
-## locks to the launched window's aspect (KEEP) so it fills with no letterbox at launch, then letterboxes on
-## resize rather than squashing the view square or landscape.
+## Sets [param window]'s content scaling for the touch UI (canvas-items in every case). On a REAL phone or
+## tablet the screen IS the device, so the UI fills it edge-to-edge (EXPAND) with no aspect bounding; the
+## export pins orientation. On desktop — a plain window or a `--device` preview — the window is arbitrary, so
+## the UI is bound (KEEP, letterboxed) to a fixed aspect: the previewed device's for a phone/tablet preview,
+## or the 9:16 design for a plain window. See [method _update_desktop_scale_size].
 func _apply_window(window: Window) -> void:
 	window.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
-	if DeviceInfo.is_handheld():
+	if OS.has_feature("mobile"):
 		window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_EXPAND
 		window.content_scale_size = _DESIGN_SIZE
 	else:
 		window.content_scale_aspect = Window.CONTENT_SCALE_ASPECT_KEEP
-		var aspect: float = float(window.size.x) / float(window.size.y)
-		window.content_scale_size = Vector2i(roundi(_DESIGN_SIZE.y * aspect), _DESIGN_SIZE.y)
+		_update_desktop_scale_size()
+		window.size_changed.connect(_update_desktop_scale_size)
+
+## Desktop only. Binds content_scale_size to a fixed aspect at the design height — the previewed device's
+## (phone/tablet) or the 9:16 design for a plain window — flipped to portrait or landscape to match the
+## window, so KEEP letterboxes any off-aspect window instead of stretching. Constant within an orientation,
+## so a resize drag doesn't churn. Real devices use EXPAND and never call this — iPhone/iPad are untouched.
+func _update_desktop_scale_size() -> void:
+	var window := get_window()
+	var base := _preview_base_size()
+	var portrait := window.size.y > window.size.x
+	var aspect := (float(base.x) / float(base.y)) if portrait else (float(base.y) / float(base.x))
+	var size := Vector2i(roundi(_DESIGN_SIZE.y * aspect), _DESIGN_SIZE.y)
+	if window.content_scale_size != size:
+		window.content_scale_size = size
+
+## The portrait base whose aspect a desktop window binds to: the previewed device's points for a
+## `--device=phone`/`tablet` launch, else the 9:16 design size for a plain desktop window.
+func _preview_base_size() -> Vector2i:
+	var device := DeviceInfo.device_type()
+	if DeviceUtils.DEVICE_RESOLUTIONS.has(device):
+		var points: Vector2 = DeviceUtils.DEVICE_RESOLUTIONS[device]
+		return Vector2i(points)
+	return _DESIGN_SIZE

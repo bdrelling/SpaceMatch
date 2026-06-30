@@ -23,7 +23,6 @@ var status_text: String = "":
 		status_changed.emit(value)
 
 const _CELL_SIZE: float = 64.0
-const _KIND_COUNT: int = MatchTile.KIND_COUNT
 
 # The four colored stat tiles (combat, propulsion, science, defense) whose match counts show as
 # resources beneath the portraits, in [MatchTile] kind order — index-aligned with PortraitPanel's strip.
@@ -140,7 +139,7 @@ var _resolving: bool = false
 # every later bind is the shell's Restart (Settings menu), which has to start the match over on a fresh board.
 var _bound: bool = false
 
-# Every tile kind, cached as the default spawn pool so refills don't rebuild the list each cascade step.
+# Every tile kind (from the resource catalog), cached so refills don't rebuild the list each cascade step.
 var _all_kinds: Array[int] = []
 # The largest match cleared during the move in progress, accumulated across its cascade steps in
 # [method _on_cells_cleared] and read by [method _on_move_resolved] for the extra-turn rule.
@@ -168,8 +167,6 @@ func _ready() -> void:
 	# Same fallback for the board-level config, so size / min-run / warp tune live from the Debug panel.
 	if config == null:
 		config = DebugConfig.match_config
-	for kind: int in _KIND_COUNT:
-		_all_kinds.append(kind)
 
 	var blueprint := MatchBlueprint.new()
 	blueprint.rng_seed = board_seed
@@ -419,7 +416,7 @@ func _open_fallback_encounter() -> void:
 func _starship_for(combatant: int) -> StarshipState:
 	return _player_starship() if combatant == EncounterState.Combatant.PLAYER else _opponent_starship()
 
-func _loadout_of(starship: StarshipState) -> Loadout:
+func _loadout_of(starship: StarshipState) -> StarshipLoadout:
 	return starship.loadout if starship != null else null
 
 # The acting [param combatant]'s phase rules: its starship's ruleset plus its enabled modules' rules. The match
@@ -433,8 +430,8 @@ func _starship_rules(combatant: int) -> Array[Rule]:
 	if starship == null:
 		return result
 	if starship.ruleset != null:
-		result.append_array(starship.ruleset.rules)
-	var loadout: Loadout = _loadout_of(starship)
+		result.append_array(starship.ruleset.flattened())
+	var loadout: StarshipLoadout = _loadout_of(starship)
 	if loadout != null and _encounter != null:
 		result.append_array(loadout.rules(_encounter.disabled_cells_of(combatant)))
 	return result
@@ -449,7 +446,7 @@ func _starship_abilities(combatant: int) -> Array[MatchAbility]:
 	if starship == null:
 		return result
 	result.append_array(starship.abilities)
-	var loadout: Loadout = _loadout_of(starship)
+	var loadout: StarshipLoadout = _loadout_of(starship)
 	if loadout != null and _encounter != null:
 		result.append_array(loadout.abilities(_encounter.disabled_cells_of(combatant)))
 	return result
@@ -465,7 +462,7 @@ func _effective_stats(combatant: int) -> StarshipStats:
 	var base := StarshipStats.new()
 	if starship != null and starship.base_stats != null:
 		base.add(starship.base_stats)
-	var loadout: Loadout = _loadout_of(starship)
+	var loadout: StarshipLoadout = _loadout_of(starship)
 	if loadout != null:
 		base.add(loadout.stats(_encounter.disabled_cells_of(combatant)))
 	return _encounter.effective_stats(combatant, base)
@@ -807,7 +804,7 @@ func _configure_ability_button(button: Button, ability: MatchAbility) -> void:
 				plus.add_theme_font_size_override("font_size", 22)
 				cost_row.add_child(plus)
 			var icon := MatchTileIcon.new()
-			icon.kind = cost.resource.tile_kind if cost.resource != null else 0
+			icon.kind = cost.resource.id if cost.resource != null else 0
 			icon.custom_minimum_size = Vector2(30, 30)
 			icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			cost_row.add_child(icon)
@@ -836,7 +833,7 @@ func _refresh_abilities() -> void:
 		var button: Button = _ability_buttons[i]
 		button.disabled = not usable
 		var primary: StarshipResource = _primary_cost_resource(ability)
-		var tile_kind: int = primary.tile_kind if primary != null else -1
+		var tile_kind: int = primary.id if primary != null else -1
 		_style_ability_button(button, tile_kind, usable)
 
 # Swaps the button's box for the affordable look (a bright border in the tile color) or the idle look
@@ -959,7 +956,7 @@ func _drain_resources(combatant: int, amount: int) -> void:
 # the module from the board's seeded RNG so it's reproducible; a no-op when the target has no grid or every
 # module is already down.
 func _disable_opponent_module(target: int, turns: int) -> void:
-	var grid: Loadout = _loadout_of(_starship_for(target))
+	var grid: StarshipLoadout = _loadout_of(_starship_for(target))
 	if grid == null:
 		return
 	var disabled: Array[Vector2i] = _encounter.disabled_cells_of(target)
@@ -1038,7 +1035,7 @@ func _cost_text(ability: MatchAbility) -> String:
 func _cost_name(cost: AbilityCost) -> String:
 	if cost == null or cost.resource == null:
 		return ""
-	return _kind_name(cost.resource.tile_kind)
+	return _kind_name(cost.resource.id)
 
 # Whether it's the player's turn (or there's no encounter, e.g. the standalone scene — then always theirs).
 func _is_player_turn() -> bool:
@@ -1087,7 +1084,7 @@ func _warp_active() -> bool:
 func _find_warp_rule() -> WarpRule:
 	if ruleset == null:
 		return null
-	for rule: Rule in ruleset.rules:
+	for rule: Rule in ruleset.resolved():
 		if rule is WarpRule:
 			return rule as WarpRule
 	return null
@@ -1304,9 +1301,9 @@ func _fly_glyph(from_global: Vector2, to_global: Vector2, delay: float) -> void:
 func _portrait_for(combatant: int) -> PortraitPanel:
 	return _player_portrait if combatant == EncounterState.Combatant.PLAYER else _opponent_portrait
 
-# A kind's display name, clamped to the catalog.
+# A kind's display name, from the resource catalog.
 func _kind_name(kind: int) -> String:
-	return MatchTile.name_of(clampi(kind, 0, MatchTile.KIND_COUNT - 1))
+	return MatchTile.name_of(kind)
 
 #endregion
 
@@ -1544,32 +1541,29 @@ func _refresh_turn_tracker() -> void:
 func _run_phase(phase: StringName, context: MatchRuleContext) -> void:
 	_effective_ruleset(context.combatant).run(phase, context)
 
-# The match-scope ruleset with the acting starship's rules layered over it — the same default + per-starship override
-# that selection uses (see [method _active_selection]). A starship rule replaces a match rule of the same
-# [member Rule.rule_name] (override), else adds to the set. Rebuilt per phase run: cheap, and always current
-# with the acting starship and its enabled modules.
+# The match-scope ruleset with the acting starship's rules layered over it — the same default + per-starship
+# override that selection uses (see [method _active_selection]). The match ruleset folds in as a nested set and
+# the starship's rules come last, so [method Ruleset.resolved] lets a starship rule replace (or stack onto) a
+# match rule of the same [method Rule.combine_key]. Rebuilt per phase run: cheap, and always current with the
+# acting starship and its enabled modules.
 func _effective_ruleset(combatant: int) -> Ruleset:
 	var composed := Ruleset.new()
 	if ruleset != null:
-		for rule: Rule in ruleset.rules:
-			composed.add(rule)
-	for rule: Rule in _starship_rules(combatant):
-		if rule == null:
-			continue
-		if rule.rule_name != &"":
-			composed.remove_named(rule.rule_name)
-		composed.add(rule)
+		var nested: Array[Ruleset] = [ruleset]
+		composed.rulesets = nested
+	composed.rules = _starship_rules(combatant)
 	return composed
 
 # The last enabled rule that is [param type] in [param source] (the match ruleset when omitted), or null.
 # Config-style rules — scoring, selection default, board fill, territory, reload split — are read out of the
-# ruleset this way, so a rule layered in later (a ship's, added last) wins, the same as override-by-name.
+# resolved ruleset this way, so a rule layered in later (a ship's, or one folded in from a nested set) wins, the
+# same as override-by-key.
 func _rule_of(type: Variant, source: Ruleset = null) -> Rule:
 	var search: Ruleset = source if source != null else ruleset
 	if search == null:
 		return null
 	var found: Rule = null
-	for rule: Rule in search.rules:
+	for rule: Rule in search.resolved():
 		if rule != null and rule.enabled and is_instance_of(rule, type):
 			found = rule
 	return found
@@ -1751,16 +1745,24 @@ func _generate_board() -> GridState:
 			state.place_object(0, _TileState.new(cells, _pick_kind_avoiding_runs(state, x, y)))
 	return state
 
+# Every board tile kind, from the resource catalog (each StarshipResource's id). Cached on first use because
+# Catalogs is an autoload that may not have populated when this board's _ready ran. Adding a resource in-editor
+# adds its kind here automatically.
+func _tile_kinds() -> Array[int]:
+	if _all_kinds.is_empty():
+		_all_kinds = Catalogs.ability_resources.tile_kinds()
+	return _all_kinds
+
 # A weighted kind for a refill — the board is a generator, so it can't stall and a refill may roll a
 # fresh match (the cascades). Weights come from the encounter [member rules].
 func _pick_kind() -> int:
-	return _weighted_choice(_all_kinds)
+	return _weighted_choice(_tile_kinds())
 
 # A kind for cell (x, y) that doesn't complete a 3-run there, so a freshly generated board starts
 # stable; weighted (per the rules) among the safe kinds.
 func _pick_kind_avoiding_runs(state: GridState, x: int, y: int) -> int:
 	var safe: Array[int] = []
-	for kind: int in _KIND_COUNT:
+	for kind: int in _tile_kinds():
 		if not _would_complete_run(state, x, y, kind):
 			safe.append(kind)
 	if safe.is_empty():
@@ -1786,11 +1788,14 @@ func _weighted_choice(candidates: Array[int]) -> int:
 			return kind
 	return candidates[candidates.size() - 1]
 
-# The board's spawn pool: the rules' composed spawn weights (each rule declares its own tiles), with warp
-# forced off unless a starship can actually warp (rule on + a warp core). Rebuilt per refill, so a live rule edit
-# — adding, dropping, or retuning a rule — reshapes the board immediately.
+# The board's spawn pool: every SpawnResourceRule's weight, composed — the match's set plus the active
+# starship's, layered and merged (see [method _effective_ruleset]) — with warp forced off unless a starship can
+# actually warp (rule on + a warp core). Rebuilt per refill against whoever is filling now, so a starship's own
+# spawn rules drive its refills and a live rule edit reshapes the board immediately.
 func _spawn_table() -> Dictionary:
-	var table: Dictionary = ruleset.aggregate(&"spawn_contribution") if ruleset != null else {}
+	var active: int = _refill_owner()
+	var source: Ruleset = _effective_ruleset(active) if active >= 0 and ruleset != null else ruleset
+	var table: Dictionary = source.aggregate(&"spawn_contribution") if source != null else {}
 	if not _warp_active():
 		table[_WARP_KIND] = 0
 	return table

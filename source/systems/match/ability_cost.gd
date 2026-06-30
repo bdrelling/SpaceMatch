@@ -5,7 +5,7 @@ extends Resource
 ## once — or none, for a free ability. Every cost must be affordable to use the ability; using it spends each.
 
 ## The [StarshipResource] this cost is paid in (combat / propulsion / science / defense). Its
-## [member StarshipResource.tile_kind] is the board tile that banks it.
+## [member StarshipResource.id] is the board tile that banks it.
 @export var resource: StarshipResource
 ## How many matched tiles of [member resource] one use spends.
 @export var amount: int = 5

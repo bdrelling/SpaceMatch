@@ -1,13 +1,14 @@
 class_name MatchRulesView
 extends DebugView
-## The match-tuning page. Each rule in the shared [DebugConfig.match_ruleset] is drawn as a named,
-## dashed [DebugRuleCard] — title from its [member Rule.rule_name], accent from the resource it acts on, and
-## a row per configurable field (introspected). Resource-bound rules read in their tile's colour; independent
-## ones (e.g. extra turns) stand on their own. Spawn weights and scoring follow as match-level config cards.
-## Edits hit the shared rules, so they apply live on a running board. The header "+" opens the rule catalog.
+## The match-tuning page. Each rule in the shared [DebugConfig.match_ruleset] is drawn as a named, dashed
+## [DebugRuleCard] — title from its [member Rule.rule_name] (or the resource a spawn rule drops), accent from the
+## resource it acts on, and a row per configurable field (introspected). Nested rulesets
+## ([member Ruleset.rulesets], e.g. the Spawn set) show as a labelled group with their rules under it. Edits hit
+## the shared rules, so they apply live on a running board. The header "+" opens the rule catalog.
 
-# Base [Rule] fields shown as the card's on/off and title rather than generic config rows.
-const _SKIP_PROPS: Array[String] = ["rule_name", "phase", "enabled"]
+# Base [Rule] fields shown as the card's on/off and title rather than generic config rows. combine_mode is
+# rendered as its own Replace / Stack picker.
+const _SKIP_PROPS: Array[String] = ["rule_name", "phase", "enabled", "combine_mode"]
 
 var _ruleset: Ruleset
 
@@ -32,16 +33,45 @@ func action() -> Button:
 func _build() -> void:
 	if _ruleset == null:
 		return
+	_add_ruleset(_ruleset)
 
-	for rule: Rule in _ruleset.rules:
+# Draws a ruleset: each nested child set as a labelled group with its rules under it (recursively), then this
+# set's own rules as cards. Mirrors how [method Ruleset.flattened] folds the tree together.
+func _add_ruleset(ruleset: Ruleset) -> void:
+	for child: Ruleset in ruleset.rulesets:
+		if child == null:
+			continue
+		add_child(_group_header(child))
+		_add_ruleset(child)
+	for rule: Rule in ruleset.rules:
 		if rule == null:
 			continue
-		var card := DebugRuleCard.create(RulePresentation.display_name(rule), RulePresentation.accent_for(rule))
+		var card := DebugRuleCard.create(_rule_title(rule), RulePresentation.accent_for(rule))
 		add_child(card)
 		_add_rule_rows(card, rule)
 
+# A heading for a nested ruleset group, from its [member Ruleset.ruleset_name].
+func _group_header(ruleset: Ruleset) -> Label:
+	var label := Label.new()
+	var group_name := String(ruleset.ruleset_name)
+	label.text = group_name.capitalize() if not group_name.is_empty() else "Rules"
+	label.add_theme_font_size_override("font_size", DebugRow.ROW_FONT)
+	return label
+
+# A card title: a spawn rule reads as the resource it drops; every other rule as its name.
+func _rule_title(rule: Rule) -> String:
+	if rule is SpawnResourceRule:
+		var spawn := rule as SpawnResourceRule
+		if spawn.resource != null:
+			return MatchTile.name_of(spawn.resource.id)
+	return RulePresentation.display_name(rule)
+
 # Builds a card's rows: an on/off toggle, then a control per configurable field, read off the rule by type.
 func _add_rule_rows(card: DebugRuleCard, rule: Rule) -> void:
+	if rule is SpawnResourceRule:
+		_add_spawn_resource_rows(card, rule as SpawnResourceRule)
+		return
+
 	card.add_row(DebugRow.toggle("Enabled", rule.enabled,
 		func(value: bool) -> void: rule.enabled = value))
 
@@ -58,15 +88,9 @@ func _add_rule_rows(card: DebugRuleCard, rule: Rule) -> void:
 		var prop_type: int = prop.type
 		match prop_type:
 			TYPE_INT:
-				if p == "spawn_weight":
-					# The rule's own spawn weight — tinted by the tile it spawns, ranged like the old pool card.
-					var weight: int = r.get(p)
-					card.add_row(DebugRow.slider("Spawn weight", _rule_tile_color(r), 0, 50, weight,
-						func(value: float) -> void: r.set(p, int(value))))
-				else:
-					var current_int: int = r.get(p)
-					card.add_row(DebugRow.slider(label, Color.WHITE, 0, 10, current_int,
-						func(value: float) -> void: r.set(p, int(value))))
+				var current_int: int = r.get(p)
+				card.add_row(DebugRow.slider(label, Color.WHITE, 0, 10, current_int,
+					func(value: float) -> void: r.set(p, int(value))))
 			TYPE_OBJECT:
 				# A single-resource rule (scrap / damage / warp) — show which resource it acts on, read-only.
 				if p == "resource":
@@ -84,10 +108,10 @@ func _add_rule_rows(card: DebugRuleCard, rule: Rule) -> void:
 				card.add_row(DebugRow.slider(label, Color.WHITE, 0, 10, current_float,
 					func(value: float) -> void: r.set(p, value)))
 			TYPE_PACKED_INT32_ARRAY:
-				if p == "spawn_weights":
-					_add_spawn_weight_rows(card, r)
-				else:
-					card.add_row(_kinds_label(label, r.get(p)))
+				card.add_row(_kinds_label(label, r.get(p)))
+
+	# How this rule merges with a same-key rule when a starship layers its own over the match's.
+	card.add_row(_combine_mode_row(rule))
 
 	# Scoring's formula is a resource, not a scalar field — surface it as a Linear / Fibonacci pick.
 	if rule is ScoringRule:
@@ -97,13 +121,27 @@ func _add_rule_rows(card: DebugRuleCard, rule: Rule) -> void:
 			func(index: int) -> void:
 				scoring.formula = FibonacciScoringFormula.new() if index == 1 else ScoringFormula.new()))
 
+# A spawn rule's rows: on/off, its tile-tinted weight, and how it merges with a same-resource rule.
+func _add_spawn_resource_rows(card: DebugRuleCard, rule: SpawnResourceRule) -> void:
+	card.add_row(DebugRow.toggle("Enabled", rule.enabled,
+		func(value: bool) -> void: rule.enabled = value))
+	var color: Color = MatchTile.color_of(rule.resource.id) if rule.resource != null else Color.WHITE
+	card.add_row(DebugRow.slider("Weight", color, 0, 50, rule.weight,
+		func(value: float) -> void: rule.weight = int(value)))
+	card.add_row(_combine_mode_row(rule))
+
+# A Replace / Stack picker for a rule's [member Rule.combine_mode] (REPLACE = 0, STACK = 1).
+func _combine_mode_row(rule: Rule) -> Control:
+	return DebugRow.option("On collision", ["Replace", "Stack"], rule.combine_mode,
+		func(index: int) -> void: rule.combine_mode = index)
+
 # A read-only summary of a per-kind int array (e.g. capacity maximums) as resource names.
 func _kinds_label(label: String, raw: Variant) -> Label:
 	var names := PackedStringArray()
 	if typeof(raw) == TYPE_PACKED_INT32_ARRAY:
 		var kinds: PackedInt32Array = raw
 		for k: int in kinds:
-			if k >= 0 and k < MatchTile.KIND_COUNT:
+			if k >= 0:
 				names.append(MatchTile.name_of(k))
 	var node := Label.new()
 	node.text = "%s: %s" % [label, ", ".join(names)]
@@ -115,8 +153,8 @@ func _resource_label(label: String, raw: Variant) -> Label:
 	var text := ""
 	if raw is StarshipResource:
 		var resource: StarshipResource = raw
-		if resource.tile_kind >= 0 and resource.tile_kind < MatchTile.KIND_COUNT:
-			text = MatchTile.name_of(resource.tile_kind)
+		if resource.id >= 0:
+			text = MatchTile.name_of(resource.id)
 	var node := Label.new()
 	node.text = "%s: %s" % [label, text]
 	node.add_theme_font_size_override("font_size", DebugRow.ROW_FONT)
@@ -130,36 +168,9 @@ func _resources_label(label: String, raw: Variant) -> Label:
 		for entry: Variant in entries:
 			if entry is StarshipResource:
 				var resource: StarshipResource = entry
-				if resource.tile_kind >= 0 and resource.tile_kind < MatchTile.KIND_COUNT:
-					names.append(MatchTile.name_of(resource.tile_kind))
+				if resource.id >= 0:
+					names.append(MatchTile.name_of(resource.id))
 	var node := Label.new()
 	node.text = "%s: %s" % [label, ", ".join(names)]
 	node.add_theme_font_size_override("font_size", DebugRow.ROW_FONT)
 	return node
-
-# A slider per resource a multi-resource rule (the resource grant) spawns, tinted by that tile — the per-stat-
-# tile weights that used to live on the match-level card now sit on the rule that owns those tiles.
-func _add_spawn_weight_rows(card: DebugRuleCard, rule: Rule) -> void:
-	var resources: Array = rule.get("resources")
-	var weights: PackedInt32Array = rule.get("spawn_weights")
-	for i: int in weights.size():
-		var index := i
-		var kind := index
-		if index < resources.size() and resources[index] is StarshipResource:
-			var resource: StarshipResource = resources[index]
-			kind = resource.tile_kind
-		var current: int = weights[index]
-		card.add_row(DebugRow.slider(MatchTile.name_of(kind), MatchTile.color_of(kind), 0, 50, current,
-			func(value: float) -> void:
-				var array: PackedInt32Array = rule.get("spawn_weights")
-				array[index] = int(value)
-				rule.set("spawn_weights", array)))
-
-# The colour of the tile a single-resource rule spawns (scrap / damage / warp), for tinting its weight slider.
-func _rule_tile_color(rule: Rule) -> Color:
-	var raw: Variant = rule.get("resource")
-	if raw is StarshipResource:
-		var resource: StarshipResource = raw
-		if resource.tile_kind >= 0 and resource.tile_kind < MatchTile.KIND_COUNT:
-			return MatchTile.color_of(resource.tile_kind)
-	return Color.WHITE

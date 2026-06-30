@@ -7,8 +7,8 @@ extends Resource
 ## modules. Effective stats are this plus the loadout's profile (see [method effective_stats]).
 @export var base_stats: StarshipStats
 ## The loadout fitted into this starship — its arranged modules and the stat/ability/rule profile they grant
-## (see [Loadout]). Persisted here; the match reads its profile each turn.
-@export var loadout: Loadout
+## (see [StarshipLoadout]). Persisted here; the match reads its profile each turn.
+@export var loadout: StarshipLoadout
 ## The starship's current hull — what depletes as it takes damage in an encounter. At zero the starship is destroyed
 ## and its pilot loses: the starship itself is the thing that dies, so combat damage lives here rather than on
 ## a per-side counter. Seeded to [method max_health] when the starship is built (see [method Starship.apply_blueprint]).
@@ -19,11 +19,11 @@ extends Resource
 ## Phase rules this starship brings to a match — its extra-turn rule and any module/hull behaviour. On the starship's
 ## turn these layer over (and override, by [member Rule.rule_name]) the match's default ruleset, the same way
 ## [member selection_override] overrides the default selection. The match composes starship + module rules per
-## turn (see [method MatchGame._effective_ruleset]); modules add more via [method Loadout.rules].
+## turn (see [method MatchGame._effective_ruleset]); modules add more via [method StarshipLoadout.rules].
 @export var ruleset: Ruleset
 ## Abilities this starship can use — its hull kit plus whatever its modules grant. Abilities are a property of the
 ## starship, never the match: the acting starship's set drives its ability bar (player) or AI pick (opponent). Modules
-## contribute more via [method Loadout.abilities].
+## contribute more via [method StarshipLoadout.abilities].
 @export var abilities: Array[MatchAbility] = []
 
 ## A fight copy of this starship for an encounter: its own [member base_stats] block and [member health], so combat
@@ -42,7 +42,7 @@ func clone() -> StarshipState:
 	return copy
 
 ## The starship's effective stats — its own [member base_stats] plus its loadout's module profile (see [method
-## Loadout.stats]). The permanent layer a fresh fight seeds health from; combat stacks the encounter's temporary
+## StarshipLoadout.stats]). The permanent layer a fresh fight seeds health from; combat stacks the encounter's temporary
 ## buffs on top of this (see [method EncounterState.effective_stats]).
 func effective_stats() -> StarshipStats:
 	var total := StarshipStats.new()

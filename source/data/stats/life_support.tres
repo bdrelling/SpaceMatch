@@ -5,3 +5,4 @@
 [resource]
 script = ExtResource("1")
 name = &"life_support"
+id = 7

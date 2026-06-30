@@ -284,7 +284,8 @@ func test_default_rules_match_the_designed_config() -> void:
 	assert_bool(scoring.formula is FibonacciScoringFormula).is_false()
 	# Reloading a dead board splits it between both sides — the rule is present.
 	assert_object(ruleset.find(&"reload_split")).is_not_null()
-	# Spawn weights live on the rules now, composed into one pool — warp is rarer than any stat tile.
+	# Spawn weights live on per-resource SpawnResourceRules (the nested Spawn set), composed into one pool —
+	# warp is rarer than any stat tile.
 	var weights := ruleset.aggregate(&"spawn_contribution")
 	var warp_weight: int = weights[_WARP_KIND]
 	for stat_kind: int in 4:
@@ -426,7 +427,7 @@ func test_default_starship_defines_the_standard_abilities() -> void:
 	var abilities := GameSession.game_state.starship.abilities
 	assert_int(abilities.size()).is_equal(5)
 	for i: int in 4:
-		assert_int(abilities[i].costs[0].resource.tile_kind).is_equal(i)
+		assert_int(abilities[i].costs[0].resource.id).is_equal(i)
 	assert_bool(abilities[0].effects[0] is DamageBuffEffect).is_true()
 	assert_bool(abilities[1].effects[0] is DodgeEffect).is_true()
 	assert_bool(abilities[2].effects[0] is DrainEffect).is_true()
@@ -436,7 +437,7 @@ func test_default_starship_defines_the_standard_abilities() -> void:
 	# Disruptor: disables an opponent module for 3 turns, paid for with green (the science tile).
 	var disruptor := abilities[4]
 	assert_bool(disruptor.effects[0] is DisableEffect).is_true()
-	assert_int(disruptor.costs[0].resource.tile_kind).is_equal(2)
+	assert_int(disruptor.costs[0].resource.id).is_equal(2)
 	assert_int((disruptor.effects[0] as DisableEffect).turns).is_equal(3)
 
 # Using an ability spends its tiles from the player's tally and deals its damage to the opponent. Line-shift
@@ -473,7 +474,7 @@ func test_opponent_picks_an_affordable_ability() -> void:
 	game._encounter.opponent.resources[1].amount = 5  # enough for Evasive Maneuvers (kind 1, the cost-5 ability)
 	var pick: MatchAbility = game._best_affordable_ability(EncounterState.Combatant.OPPONENT)
 	assert_object(pick).is_not_null()
-	assert_int(pick.costs[0].resource.tile_kind).is_equal(1)
+	assert_int(pick.costs[0].resource.id).is_equal(1)
 	game.queue_free()
 
 # The AI won't refresh a dodge it already has — so it can't sit on Evasive Maneuvers every turn and make the
@@ -796,7 +797,7 @@ func test_disruptor_disables_an_opponent_module() -> void:
 	game._use_ability(EncounterState.Combatant.PLAYER, disrupt)
 	var disabled: Array[Vector2i] = game._encounter.disabled_cells_of(EncounterState.Combatant.OPPONENT)
 	assert_int(disabled.size()).is_equal(1)
-	var grid: Loadout = game._opponent_starship().loadout
+	var grid: StarshipLoadout = game._opponent_starship().loadout
 	assert_object(grid.module_at(disabled[0])).is_not_null()  # it landed on a real module
 	var down: int = 0
 	for module_state: ModuleState in grid.modules:
