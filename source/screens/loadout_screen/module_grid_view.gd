@@ -89,11 +89,11 @@ func _draw() -> void:
 # A module as one cohesive piece: its cells filled seamlessly (internal seams meet at full cell extent),
 # a single outline around the whole footprint, and its name lettered across it.
 func _draw_module(module_state: ModuleState, cells: Array[Vector2i]) -> void:
-	var fill: Color = module_state.blueprint.color
+	var fill: Color = module_state.color
 	fill.a = 1.0
 	for cell: Vector2i in cells:
 		draw_rect(_module_cell_rectangle(cell, cells), fill)
-	_draw_footprint_outline(cells, module_state.blueprint.color.lightened(0.4), _MODULE_BORDER_WIDTH)
+	_draw_footprint_outline(cells, module_state.color.lightened(0.4), _MODULE_BORDER_WIDTH)
 	_draw_module_name(module_state, cells)
 
 # A cell's fill rectangle within its module: pulled in by [_MODULE_GAP] on sides that face outside the
@@ -129,7 +129,7 @@ func _draw_footprint_outline(cells: Array[Vector2i], color: Color, width: float)
 # Letters the module's name across its footprint, centred and wrapped to the footprint width, with a
 # dark outline so it stays legible over any module colour.
 func _draw_module_name(module_state: ModuleState, cells: Array[Vector2i]) -> void:
-	if module_state.blueprint == null or module_state.blueprint.name.is_empty():
+	if module_state == null or module_state.name.is_empty():
 		return
 	var font := ThemeDB.fallback_font
 	if font == null:
@@ -137,7 +137,7 @@ func _draw_module_name(module_state: ModuleState, cells: Array[Vector2i]) -> voi
 	var bounds := _footprint_bounds(cells)
 	var font_size := maxi(12, roundi(cell_size * 0.2))
 	var wrap_width := bounds.size.x - (_MODULE_GAP + _NAME_PADDING) * 2.0
-	var text := module_state.blueprint.name
+	var text := module_state.name
 	var text_size := font.get_multiline_string_size(text, HORIZONTAL_ALIGNMENT_CENTER, wrap_width, font_size)
 	var origin_x := bounds.position.x + _MODULE_GAP + _NAME_PADDING
 	var baseline_y := bounds.position.y + (bounds.size.y - text_size.y) * 0.5 + font.get_ascent(font_size)

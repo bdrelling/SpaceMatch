@@ -89,10 +89,9 @@ func test_enums_have_expected_baseline_values() -> void:
 	assert_int(StatThresholdCondition.Comparison.LESS).is_equal(0)
 
 
-func test_ability_resource_constructs_with_name_and_maximum() -> void:
-	# The neutral spendable-resource base a game extends for its own mana/tile kinds.
+func test_ability_resource_constructs_with_name() -> void:
+	# The neutral spendable-resource base a game extends for its own mana/tile kinds — purely a definition;
+	# capacity is the ResourcePool's, not the resource's.
 	var resource := AbilityResource.new()
 	resource.name = &"energy"
-	resource.maximum = 10
 	assert_bool(resource.name == &"energy").is_true()
-	assert_int(resource.maximum).is_equal(10)

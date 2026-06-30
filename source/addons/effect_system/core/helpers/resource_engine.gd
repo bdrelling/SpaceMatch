@@ -44,8 +44,7 @@ static func spend(entity: Entity, costs: Array[ResourceCost]) -> void:
 
 
 ## Adds [param amount] of [param resource] to [param entity], creating its pool if absent and clamping to the
-## pool's [member ResourcePool.maximum] (falling back to the resource's [member AbilityResource.maximum]; 0 =
-## unlimited).
+## pool's [member ResourcePool.maximum] (0 = unlimited).
 static func grant(entity: Entity, resource: AbilityResource, amount: int) -> void:
 	if entity == null or resource == null:
 		return
@@ -55,9 +54,8 @@ static func grant(entity: Entity, resource: AbilityResource, amount: int) -> voi
 		pool.resource = resource
 		entity.resources.append(pool)
 	pool.amount += amount
-	var cap: int = pool.maximum if pool.maximum > 0 else resource.maximum
-	if cap > 0:
-		pool.amount = mini(pool.amount, cap)
+	if pool.maximum > 0:
+		pool.amount = mini(pool.amount, pool.maximum)
 	pool.amount = maxi(0, pool.amount)
 
 

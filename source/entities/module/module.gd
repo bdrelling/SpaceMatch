@@ -10,17 +10,13 @@ const SCENE: PackedScene = preload(SCENE_PATH)
 
 @export var state: ModuleState
 
-## The module's type — the shared [ModuleBlueprint] this is an instance of.
-func blueprint() -> ModuleBlueprint:
-	return state.blueprint if state != null else null
-
 #region Blueprinting
 
-## Builds the module's state from [param _blueprint]. The module is position-free; a grid assigns it a
-## placement when it's slotted (see [member ModuleGridState.placements]).
+## Builds the module's state from [param _blueprint] — copying its authored profile (see [method
+## ModuleState.create]). The module is position-free; a grid assigns it a placement when it's slotted (see
+## [member ModuleGridState.placements]).
 func apply_blueprint(_blueprint: ModuleBlueprint) -> void:
-	state = ModuleState.new()
-	state.blueprint = _blueprint
+	state = ModuleState.create(_blueprint)
 
 static func create(_blueprint: ModuleBlueprint) -> Module:
 	var module: Module = SCENE.instantiate()

@@ -39,9 +39,10 @@ func test_module_at_and_remove() -> void:
 	var grid := _grid([Vector2i(0, 0), Vector2i(1, 0)])
 	var module := _module()
 	grid.place(module, Vector2i(1, 0), 0)
-	assert_object(grid.module_at(Vector2i(1, 0))).is_same(module)
+	# place() copies the blueprint into a ModuleState, so the placed state matches the type by id, not object identity.
+	assert_int(grid.module_at(Vector2i(1, 0)).id).is_equal(module.id)
 	assert_object(grid.module_at(Vector2i(0, 0))).is_null()
-	assert_object(grid.remove_at(Vector2i(1, 0))).is_same(module)
+	assert_int(grid.remove_at(Vector2i(1, 0)).id).is_equal(module.id)
 	assert_int(grid.filled_cell_count()).is_equal(0)
 
 # A full 3×3 [Loadout] — the stat/ability/rule tests below assert on the loadout-level derivation, so this
@@ -61,7 +62,7 @@ func test_placed_at_returns_footprint_for_any_covered_cell() -> void:
 	grid.place(module, Vector2i(0, 0), 0)
 	var placed := grid.state_at(Vector2i(1, 0))
 	assert_object(placed).is_not_null()
-	assert_object(placed.blueprint).is_same(module)
+	assert_int(placed.id).is_equal(module.id)
 	assert_int(grid.cells_of(placed).size()).is_equal(2)
 	assert_object(grid.state_at(Vector2i(2, 2))).is_null()
 
@@ -70,7 +71,7 @@ func test_move_translates_module_to_empty_cell() -> void:
 	var module := _module()
 	grid.place(module, Vector2i(0, 0), 0)
 	assert_bool(grid.move(Vector2i(0, 0), Vector2i(2, 2))).is_true()
-	assert_object(grid.module_at(Vector2i(2, 2))).is_same(module)
+	assert_int(grid.module_at(Vector2i(2, 2)).id).is_equal(module.id)
 	assert_object(grid.module_at(Vector2i(0, 0))).is_null()
 	assert_int(grid.filled_cell_count()).is_equal(1)
 
@@ -79,8 +80,8 @@ func test_move_preserves_multi_cell_footprint() -> void:
 	var module := _module([Vector2i(0, 0), Vector2i(1, 0)])
 	grid.place(module, Vector2i(0, 0), 0)
 	assert_bool(grid.move(Vector2i(0, 0), Vector2i(0, 1))).is_true()
-	assert_object(grid.module_at(Vector2i(0, 1))).is_same(module)
-	assert_object(grid.module_at(Vector2i(1, 1))).is_same(module)
+	assert_int(grid.module_at(Vector2i(0, 1)).id).is_equal(module.id)
+	assert_int(grid.module_at(Vector2i(1, 1)).id).is_equal(module.id)
 	assert_object(grid.module_at(Vector2i(0, 0))).is_null()
 
 func test_move_allows_overlap_with_own_footprint() -> void:
@@ -90,20 +91,22 @@ func test_move_allows_overlap_with_own_footprint() -> void:
 	var module := _module([Vector2i(0, 0), Vector2i(1, 0)])
 	grid.place(module, Vector2i(0, 0), 0)
 	assert_bool(grid.move(Vector2i(0, 0), Vector2i(1, 0))).is_true()
-	assert_object(grid.module_at(Vector2i(1, 0))).is_same(module)
-	assert_object(grid.module_at(Vector2i(2, 0))).is_same(module)
+	assert_int(grid.module_at(Vector2i(1, 0)).id).is_equal(module.id)
+	assert_int(grid.module_at(Vector2i(2, 0)).id).is_equal(module.id)
 	assert_object(grid.module_at(Vector2i(0, 0))).is_null()
 
 func test_move_blocked_by_another_module_leaves_grid_unchanged() -> void:
 	var grid := _full_grid()
 	var first := _module()
+	first.id = 1
 	var second := _module()
+	second.id = 2
 	grid.place(first, Vector2i(0, 0), 0)
 	grid.place(second, Vector2i(1, 0), 0)
 	assert_bool(grid.can_move(Vector2i(0, 0), Vector2i(1, 0))).is_false()
 	assert_bool(grid.move(Vector2i(0, 0), Vector2i(1, 0))).is_false()
-	assert_object(grid.module_at(Vector2i(0, 0))).is_same(first)
-	assert_object(grid.module_at(Vector2i(1, 0))).is_same(second)
+	assert_int(grid.module_at(Vector2i(0, 0)).id).is_equal(first.id)
+	assert_int(grid.module_at(Vector2i(1, 0)).id).is_equal(second.id)
 
 func test_move_off_silhouette_is_rejected() -> void:
 	var grid := _grid([Vector2i(0, 0), Vector2i(1, 0)])
@@ -111,7 +114,7 @@ func test_move_off_silhouette_is_rejected() -> void:
 	grid.place(module, Vector2i(0, 0), 0)
 	assert_bool(grid.can_move(Vector2i(0, 0), Vector2i(0, 1))).is_false()
 	assert_bool(grid.move(Vector2i(0, 0), Vector2i(0, 1))).is_false()
-	assert_object(grid.module_at(Vector2i(0, 0))).is_same(module)
+	assert_int(grid.module_at(Vector2i(0, 0)).id).is_equal(module.id)
 
 func test_disabled_cell_drops_its_module_from_the_profile() -> void:
 	var grid := _full_grid()
@@ -169,5 +172,5 @@ func test_generator_stamps_blueprint_modules() -> void:
 	var module_grid: ModuleGrid = auto_free(ModuleGrid.create(blueprint))
 	var grid := module_grid.state
 	assert_int(grid.modules.size()).is_equal(1)
-	assert_object(grid.module_at(Vector2i(1, 1))).is_same(placement.module)
-	assert_object(grid.module_at(Vector2i(2, 1))).is_same(placement.module)
+	assert_int(grid.module_at(Vector2i(1, 1)).id).is_equal(placement.module.id)
+	assert_int(grid.module_at(Vector2i(2, 1)).id).is_equal(placement.module.id)

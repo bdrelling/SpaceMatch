@@ -28,7 +28,7 @@ func _draw() -> void:
 		_draw_module(origin, cell_size, module_state, grid.cells_of(module_state))
 
 func _draw_module(origin: Vector2, cell_size: float, module_state: ModuleState, cells: Array[Vector2i]) -> void:
-	var fill: Color = module_state.blueprint.color
+	var fill: Color = module_state.color
 	fill.a = 1.0
 	for cell: Vector2i in cells:
 		draw_rect(_cell_rectangle(origin, cell_size, cell), fill)

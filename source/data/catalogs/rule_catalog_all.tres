@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="RuleCatalog" format=3 uid="uid://bv3yw564cwrsv"]
+[gd_resource type="Resource" script_class="RuleCatalog" format=3 uid="uid://os0c38aywdoc"]
 
 [ext_resource type="Script" uid="uid://cboblywqkoy5m" path="res://addons/grid_system/rules/ruleset.gd" id="1_syefe"]
 [ext_resource type="Resource" path="res://data/rulesets/alternate.tres" id="2_inujf"]

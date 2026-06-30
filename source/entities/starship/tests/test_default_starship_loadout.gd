@@ -33,7 +33,7 @@ func test_default_modules_sit_where_authored() -> void:
 func test_default_stat_profile() -> void:
 	var total := StarshipStats.new()
 	for module_state: ModuleState in _default_grid().modules:
-		total.add(module_state.blueprint.stats)
+		total.add(module_state.stats)
 	assert_int(total.power).is_equal(0)         # power is combat power; no default (non-weapon) module grants it
 	assert_int(total.speed).is_equal(4)          # engine
 	assert_int(total.shields).is_equal(4)        # shield generator
@@ -62,8 +62,8 @@ func test_computer_default_has_no_warp_core() -> void:
 	var grid := _computer_grid()
 	assert_int(grid.modules.size()).is_equal(5)
 	for module_state: ModuleState in grid.modules:
-		assert_str(module_state.blueprint.name).is_not_equal("Warp Core")
+		assert_str(module_state.name).is_not_equal("Warp Core")
 	var total := StarshipStats.new()
 	for module_state: ModuleState in grid.modules:
-		total.add(module_state.blueprint.stats)
+		total.add(module_state.stats)
 	assert_int(total.warp_capacity).is_equal(0)

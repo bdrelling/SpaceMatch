@@ -1,7 +1,7 @@
 class_name StatusCatalog
 extends Catalog
 ## The catalog of [Status] definitions — every authored status effect (shield, dodge, target lock, ...).
-## Directory-backed: it gathers every status from [code]data/statuses/[/code]. A master "everything" catalog
+## Directory-backed: it gathers every status from [code]data/statuses/[/code]. A full catalog of every status,
 ## meant for runtime lookups; these are mostly facts and don't all need editor pages.
 
 const _DIRECTORY := "res://data/statuses"

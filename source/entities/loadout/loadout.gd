@@ -29,8 +29,8 @@ func stats(disabled_cells: Array[Vector2i] = []) -> StarshipStats:
 	var total := StarshipStats.new()
 	for occupant: GridObjectState in objects_on_layer(_LAYER):
 		var module_state: ModuleState = occupant.state.get(_MODULE_KEY)
-		if module_state != null and module_state.blueprint != null and _cells_enabled(occupant.cells, disabled_cells):
-			total.add(module_state.blueprint.stats)
+		if module_state != null and module_state.stats != null and _cells_enabled(occupant.cells, disabled_cells):
+			total.add(module_state.stats)
 	return total
 
 ## The abilities this loadout's enabled modules grant the starship — same "all cells enabled to count" rule as
@@ -39,8 +39,8 @@ func abilities(disabled_cells: Array[Vector2i] = []) -> Array[MatchAbility]:
 	var result: Array[MatchAbility] = []
 	for occupant: GridObjectState in objects_on_layer(_LAYER):
 		var module_state: ModuleState = occupant.state.get(_MODULE_KEY)
-		if module_state != null and module_state.blueprint != null and _cells_enabled(occupant.cells, disabled_cells):
-			result.append_array(module_state.blueprint.abilities)
+		if module_state != null and _cells_enabled(occupant.cells, disabled_cells):
+			result.append_array(module_state.abilities)
 	return result
 
 ## The phase rules this loadout's enabled modules grant the starship — same enabled rule as [method stats].
@@ -48,8 +48,8 @@ func rules(disabled_cells: Array[Vector2i] = []) -> Array[Rule]:
 	var result: Array[Rule] = []
 	for occupant: GridObjectState in objects_on_layer(_LAYER):
 		var module_state: ModuleState = occupant.state.get(_MODULE_KEY)
-		if module_state != null and module_state.blueprint != null and _cells_enabled(occupant.cells, disabled_cells):
-			result.append_array(module_state.blueprint.rules)
+		if module_state != null and _cells_enabled(occupant.cells, disabled_cells):
+			result.append_array(module_state.rules)
 	return result
 
 func _cells_enabled(cells: Array[Vector2i], disabled_cells: Array[Vector2i]) -> bool:

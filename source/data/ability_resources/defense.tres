@@ -5,4 +5,3 @@
 [resource]
 script = ExtResource("1")
 name = &"defense"
-maximum = 0

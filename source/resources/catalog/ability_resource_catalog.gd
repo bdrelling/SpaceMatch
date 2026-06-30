@@ -2,8 +2,8 @@ class_name AbilityResourceCatalog
 extends Catalog
 ## The catalog of [AbilityResource]s — every spendable resource kind (the game's "mana" pools: damage, scrap,
 ## warp, ...). Directory-backed: it gathers every authored resource from [code]data/ability_resources/[/code].
-## A master "everything" catalog meant for runtime lookups; these are mostly facts and don't all need editor
-## pages.
+## A full catalog of every resource, meant for runtime lookups; these are mostly facts and don't all need
+## editor pages.
 
 const _DIRECTORY := "res://data/ability_resources"
 

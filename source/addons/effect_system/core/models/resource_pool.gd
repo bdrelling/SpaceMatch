@@ -6,6 +6,6 @@ extends Resource
 
 @export var resource: AbilityResource
 @export var amount: int = 0
-## The most this pool may hold; 0 means fall back to the resource's [member AbilityResource.maximum] (itself 0 =
-## unlimited). Lets the host cap a specific pool — e.g. a per-encounter ceiling — above or below the kind's own.
+## The most this pool may hold; 0 means unlimited. The pool — not the resource definition — owns its ceiling, so
+## the host can cap a specific pool (e.g. a per-encounter capacity) without touching the shared [AbilityResource].
 @export var maximum: int = 0

@@ -1,6 +1,6 @@
 # AUTOLOAD: Catalogs
 extends Node
-## The live, in-memory master catalogs — every authored resource of a type, gathered from its data folder. The
+## The live, in-memory catalogs — every authored resource of a type, gathered from its data folder. The
 ## catalog generator plugin keeps the `all.tres` files current; each loads its generated `all.tres` if one
 ## exists, else falls back to a code-built default that rebuilds from the folder on the spot. Some catalogs are
 ## editor-facing (modules, starships, rules); others are just facts read at runtime (ability resources,

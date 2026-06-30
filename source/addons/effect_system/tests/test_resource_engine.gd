@@ -2,10 +2,9 @@ extends GdUnitTestSuite
 ## Tests [ResourceEngine]: holding, granting (with cap), affording, and spending [AbilityResource] pools — and that
 ## costs and pools match by resource name.
 
-func _resource(name: StringName, maximum: int = 0) -> AbilityResource:
+func _resource(name: StringName) -> AbilityResource:
 	var resource := AbilityResource.new()
 	resource.name = name
-	resource.maximum = maximum
 	return resource
 
 
@@ -24,17 +23,10 @@ func test_grant_creates_pool_and_accumulates() -> void:
 	assert_int(ResourceEngine.amount_of(entity, energy)).is_equal(5)
 
 
-func test_grant_clamps_to_maximum() -> void:
-	var entity := Entity.new()
-	var energy := _resource(&"energy", 4)
-	ResourceEngine.grant(entity, energy, 10)
-	assert_int(ResourceEngine.amount_of(entity, energy)).is_equal(4)
-
-
 func test_grant_clamps_to_pool_maximum() -> void:
-	# A per-pool ceiling caps the amount even when the resource itself is unlimited.
+	# The per-pool ceiling caps the amount; the resource definition no longer carries one.
 	var entity := Entity.new()
-	var energy := _resource(&"energy")  # resource maximum 0 = unlimited
+	var energy := _resource(&"energy")
 	var pool := ResourcePool.new()
 	pool.resource = energy
 	pool.maximum = 4
@@ -43,16 +35,12 @@ func test_grant_clamps_to_pool_maximum() -> void:
 	assert_int(ResourceEngine.amount_of(entity, energy)).is_equal(4)
 
 
-func test_pool_maximum_overrides_resource_maximum() -> void:
-	# When set, the per-pool ceiling wins over the kind's own maximum (here raising it).
+func test_grant_unbounded_when_no_pool_maximum() -> void:
+	# A pool grant() creates itself (maximum 0) is unlimited.
 	var entity := Entity.new()
-	var energy := _resource(&"energy", 4)
-	var pool := ResourcePool.new()
-	pool.resource = energy
-	pool.maximum = 7
-	entity.resources.append(pool)
-	ResourceEngine.grant(entity, energy, 100)
-	assert_int(ResourceEngine.amount_of(entity, energy)).is_equal(7)
+	var energy := _resource(&"energy")
+	ResourceEngine.grant(entity, energy, 1000)
+	assert_int(ResourceEngine.amount_of(entity, energy)).is_equal(1000)
 
 
 func test_drain_reduces_pool_floored_at_zero() -> void:

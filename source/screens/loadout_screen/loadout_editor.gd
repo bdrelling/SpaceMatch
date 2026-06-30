@@ -40,7 +40,7 @@ var _module_grid: Loadout
 
 # The module the player tapped to inspect (null when nothing is focused). Its footprint is outlined on
 # the board and its per-stat contribution is split out of each stat total.
-var _focused_module: ModuleBlueprint
+var _focused_module: ModuleState
 
 # Drag-to-rearrange state. While a module is held, [_grabbed_cell] is the cell it was grabbed by and
 # [_grabbed_cells] its full footprint; the held module keeps drawing in place and a validity-tinted
@@ -138,7 +138,7 @@ func _on_board_input(event: InputEvent) -> bool:
 func _press(global_position: Vector2) -> bool:
 	var cell := _grid_view.cell_at(global_position)
 	var placed := _module_grid.state_at(cell) if cell.x != -1 else null
-	if placed == null or placed.blueprint == null:
+	if placed == null:
 		_set_focus(null)
 		return false
 	_grabbed_cell = cell
@@ -189,7 +189,7 @@ func _preview_at(hover_cell: Vector2i) -> void:
 
 # Focuses [param module] (or clears focus when null): outlines its footprint on the board, names it in
 # the stat block, and splits its contribution out of each stat total.
-func _set_focus(module: ModuleBlueprint) -> void:
+func _set_focus(module: ModuleState) -> void:
 	_focused_module = module
 	_apply_focus()
 
@@ -216,7 +216,7 @@ func _focused_cells() -> Array[Vector2i]:
 	if _focused_module == null or _module_grid == null:
 		return result
 	for module_state: ModuleState in _module_grid.modules:
-		if module_state.blueprint == _focused_module:
+		if module_state == _focused_module:
 			return _module_grid.cells_of(module_state)
 	return result
 
@@ -288,9 +288,9 @@ func _energy_row() -> HBoxContainer:
 	var generated := 0
 	if _module_grid != null:
 		for module_state: ModuleState in _module_grid.modules:
-			if module_state.blueprint == null or not _module_grid.enabled(module_state):
+			if module_state.stats == null or not _module_grid.enabled(module_state):
 				continue
-			var contribution := module_state.blueprint.stats.energy
+			var contribution := module_state.stats.energy
 			if contribution > 0:
 				generated += contribution
 			else:

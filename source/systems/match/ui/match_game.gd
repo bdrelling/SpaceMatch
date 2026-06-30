@@ -938,7 +938,7 @@ func _disable_opponent_module(target: int, turns: int) -> void:
 	var disabled: Array[Vector2i] = _encounter.disabled_cells_of(target)
 	var live: Array[ModuleState] = []
 	for module_state: ModuleState in grid.modules:
-		if module_state.blueprint != null and grid.enabled(module_state, disabled) and not grid.cells_of(module_state).is_empty():
+		if module_state != null and grid.enabled(module_state, disabled) and not grid.cells_of(module_state).is_empty():
 			live.append(module_state)
 	if live.is_empty():
 		return
