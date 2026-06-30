@@ -12,7 +12,7 @@ enum Comparison {
 
 @export var target: Target
 @export var other: Target
-@export var stat: StringName
+@export var stat: Stat
 @export var comparison: Comparison = Comparison.GREATER
 
 
@@ -27,8 +27,8 @@ func holds(context: ResolutionContext) -> bool:
 		return false
 	if targets[0].current_stats == null or others[0].current_stats == null:
 		return false
-	var value := int(targets[0].current_stats.get_stat(stat))
-	var against := int(others[0].current_stats.get_stat(stat))
+	var value := targets[0].current_stats.get_stat(stat)
+	var against := others[0].current_stats.get_stat(stat)
 	match comparison:
 		Comparison.LESS:
 			return value < against

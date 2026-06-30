@@ -11,8 +11,8 @@ var source: Entity
 ## Who the change lands on. Incoming steps come from this entity's statuses, and the final amount is written
 ## to its [member stat].
 var target: Entity
-## The stat being changed (the named value: health, a shield pool, a resource, ...).
-var stat: StringName
+## The stat being changed (health, a shield pool, a resource, ...).
+var stat: Stat
 ## The current magnitude of the change. Steps read and rewrite this; the pipeline floors it at zero.
 var amount: int
 ## What kind of change this is ("damage", "heal", ...). Steps and hooks key off it to scope themselves.

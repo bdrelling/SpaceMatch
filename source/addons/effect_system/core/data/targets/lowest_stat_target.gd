@@ -8,7 +8,7 @@ extends Target
 ## are skipped.
 @export var from: Target
 ## The stat compared across the pool.
-@export var stat: StringName
+@export var stat: Stat
 
 
 ## Resolves [member from], then returns the one entity whose [member stat] is smallest. Empty when the pool is
@@ -22,7 +22,7 @@ func resolve(context: ResolutionContext) -> Array[Entity]:
 	for entity in await from.resolve(context):
 		if entity == null or entity.current_stats == null:
 			continue
-		var value := int(entity.current_stats.get_stat(stat))
+		var value := entity.current_stats.get_stat(stat)
 		if best == null or value < best_value:
 			best = entity
 			best_value = value

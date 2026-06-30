@@ -13,13 +13,13 @@ Generic entity status/effect engine: entities with stats and stacking statuses, 
 # The abstract bases (StatBlock, StackRule, DecayRule, Trigger, Hook, Target, Amount, Action,
 # Condition, ModificationStep) plus the structural types (Entity, Status, StatusStack, Modifier,
 # TriggeredEffect, Ability, Effect, Modification, ResolutionContext) ARE the system. Every concrete
-# subtype below them — ModifyStat, ApplyStatus, PhaseTrigger, SelfTarget, MultiplierStep, ... — ships
+# subtype below them — ModifyStatAction, ApplyStatusAction, PhaseTrigger, SelfTarget, MultiplierStep, ... — ships
 # as an EXAMPLE: reusable, but removable. A game keeps the ones it wants and adds its own.
 
 # Entity — a combatant the engine acts on. The engine reaches stats ONLY through the StatBlock contract
 # (get_stat/set_stat/stat_names); it never computes the base→effective→current layering — the GAME owns that.
 # base_stats is the baseline the game supplies (its effective profile: intrinsic stats + loadout). current_stats
-# is the live layer: seeded from the baseline, depleting pools (health, shields) fall below it via ModifyStat,
+# is the live layer: seeded from the baseline, depleting pools (health, shields) fall below it via ModifyStatAction,
 # and the runtime folds active-status modifiers into it (see Runtime → stat contribution). The game decides what
 # is a depleting pool vs a derived stat; the engine only reads and writes by name.
 Entity {
@@ -169,9 +169,9 @@ StatAmount     extends Amount { stat: StringName }   # reads the source entity's
 Action {
   resolve(ctx, target)    # carries out the action against one resolved target
 }
-# ModifyStat — the single value-changing action. Damage, healing, and resource gain are all this, with
+# ModifyStatAction — the single value-changing action. Damage, healing, and resource gain are all this, with
 # a different tag and direction. The magnitude runs through the ModificationPipeline first.
-ModifyStat   extends Action {
+ModifyStatAction   extends Action {
   stat:          StringName
   amount:        Amount
   tag:           StringName    # "damage", "heal", ... — names the change for steps and hooks
@@ -179,16 +179,16 @@ ModifyStat   extends Action {
   minimum:       int           # floor the stat lands on (default 0)
   maximum_stat:  StringName     # optional ceiling read from another stat (e.g. max_health); empty = none
 }
-ApplyStatus  extends Action { status: StringName,  count: int }
-RemoveStatus extends Action { status: StringName }
+ApplyStatusAction  extends Action { status: StringName,  count: int }
+RemoveStatusAction extends Action { status: StringName }
 
 
 # ── Condition (gates an Effect on game state) ─────
 Condition {
   holds(ctx) -> bool    # whether condition is satisfied in context
 }
-HasStatus     extends Condition { target: Target,  status: StringName }
-StatThreshold extends Condition {
+HasStatusCondition     extends Condition { target: Target,  status: StringName }
+StatThresholdCondition extends Condition {
   enum Comparison { LESS, EQUAL, GREATER }
 
   target:      Target
@@ -210,7 +210,7 @@ ResolutionContext {
   instigator:  Entity                                       # who raised the current hook, if any
   rng:         RandomNumberGenerator                        # seeded
   chooser:     EffectChooser                                # handles target/decision selection
-  status_catalog:  Dictionary                               # StringName -> Status; how ApplyStatus/RemoveStatus resolve a name to its resource
+  status_catalog:  Dictionary                               # StringName -> Status; how ApplyStatusAction/RemoveStatusAction resolve a name to its resource
 }
 
 EffectChooser {
@@ -220,7 +220,7 @@ AutoChooser extends EffectChooser { }    # default; synchronously picks the firs
 
 
 # ── Modification pipeline ──────────────────────────
-# ModifyStat builds a mutable Modification and runs it through a fixed-order pipeline. Each Status can
+# ModifyStatAction builds a mutable Modification and runs it through a fixed-order pipeline. Each Status can
 # carry ModificationSteps that reshape the change (amplify, mitigate, absorb, clamp). Order is enforced
 # by order() (lowest first): amplify (Vulnerable), mitigate (armor), absorb (Block), clamp (Intangible),
 # floor to zero. Steps act on any tag/stat — damage, healing, energy — so the engine has no special
@@ -257,7 +257,7 @@ ClampStep          extends ModificationStep { minimum: int, maximum: int }    # 
 # rest. Entry points build/carry a ResolutionContext so resolution stays deterministic (seeded RNG, one chooser).
 
 # Status lifecycle — apply honours the StackRule (sum vs keep-highest) and the cap; decay reduces a stack and
-# removes it at zero. The ApplyStatus / RemoveStatus actions delegate here (resolving the name via status_catalog).
+# removes it at zero. The ApplyStatusAction / RemoveStatusAction actions delegate here (resolving the name via status_catalog).
 apply_status(entity, status, count, ctx) -> StatusStack
 remove_status(entity, status_name)
 

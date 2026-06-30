@@ -5,7 +5,7 @@ extends Action
 ## mitigate, only a new reading ("set hull to 1", "refill shields to [code]max_shields[/code]").
 
 ## The stat to overwrite.
-@export var stat: StringName
+@export var stat: Stat
 ## The value to set it to.
 @export var amount: Amount
 
