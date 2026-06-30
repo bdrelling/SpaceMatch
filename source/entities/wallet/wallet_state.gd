@@ -1,6 +1,6 @@
 class_name WalletState
 extends Resource
-## The player's currency data — scrap for now. The persisted state behind a [Wallet] node: serializes
+## The player's currency data — scrap for now. Held directly on [GameState] (no wrapping node): serializes
 ## cleanly and can move whole onto a per-player object later (e.g. co-op) without touching callers.
 
 ## Emitted whenever the balance changes ([method earn] / [method spend]) — the HUD scrap counter listens

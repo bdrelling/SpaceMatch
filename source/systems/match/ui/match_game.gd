@@ -4,7 +4,7 @@ extends Control
 ## ([[SwapInteraction]]), line up three-or-more of one kind and they pop ([[MatchClearPassive]]). Tiles
 ## fall and fresh ones stream in ([[GravityPassive]]); the board is an equal-frequency generator, so it
 ## never stalls. The board owns its tiles and rules; the encounter UI around it (the two portraits)
-## reads the bound game's starship stats and [Wallet] once a session is bound.
+## reads the bound game's starship stats and [WalletState] once a session is bound.
 
 ## Drives the one-line status string; assigning [member status_text] emits this.
 signal status_changed(text: String)

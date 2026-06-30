@@ -2,8 +2,8 @@ extends Node
 ## The running game — the `GameSession` autoload. Globally reachable so any screen reads the current game
 ## without being handed it. Holds the [member game_state] today; the session grows to own more than its state
 ## over time (the tick clock, run/match config, save slot), which is why the state is a named field, not the
-## session itself. The entity nodes that represent the state ([Starship], [Wallet], [Encounter]) are owned by
-## the hosts that show them ([Game]), not by the session.
+## session itself. The entity nodes that represent the state ([Starship], [Encounter]) are owned by the hosts
+## that show them ([Game]), not by the session; the wallet is plain state with no node.
 
 ## The persisted state of the running game — the player starship, wallet, and active encounter. The save reads
 ## this; hosts build the entity nodes that represent it. Replaced wholesale by [method start_new_game].
