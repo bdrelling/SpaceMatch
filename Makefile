@@ -13,7 +13,7 @@
 # USAGE
 # =============================================================================
 
-.PHONY: help setup play play-tablet play-phone playtest test test-debug export-macos export-ios export-android export-linux export-web deploy-macos deploy-ios-store deploy-ios-sim deploy-iphone deploy-ipad deploy-android deploy-linux deploy-web release-macos release-ios release-android release-linux release-web lint lint-staged format format-write check import verify clean
+.PHONY: help setup play play-tablet play-phone playtest test test-debug export-macos export-ios export-android export-linux export-web deploy-macos deploy-ios-store deploy-ios-sim deploy-iphone deploy-ipad deploy-android deploy-linux deploy-web release-macos release-ios release-android release-linux release-web lint lint-staged format format-write format-staged check import verify clean
 
 help: ## Show available commands
 	@echo "MACOS:"
@@ -38,7 +38,7 @@ help: ## Show available commands
 	@grep -E '^test[a-zA-Z_-]*:.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
 	@echo ""
 	@echo "VALIDATION:"
-	@grep -E '^(lint|lint-staged|format|format-write|check|import|verify):.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^(lint|lint-staged|format|format-write|format-staged|check|import|verify):.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
 	@echo ""
 	@echo "CLAUDOT:"
 	@grep -hE '^claudot-[a-zA-Z_-]*:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -199,6 +199,9 @@ format: ## Preview gdformat changes (dry-run). ARGS scopes it.
 
 format-write: ## Apply gdformat formatting in place. ARGS scopes it.
 	@./scripts/gdtoolkit.sh format --write $(ARGS)
+
+format-staged: ## Preview gdformat changes for staged GDScript only (dry-run).
+	@./scripts/gdtoolkit.sh format --staged
 
 check: ## Parse-check GDScript (no run). ARGS scopes to .gd files, else whole project.
 	@./scripts/godot.sh check $(ARGS)

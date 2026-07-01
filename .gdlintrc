@@ -1,4 +1,4 @@
-# gdlint configuration — see armory/docs/languages/gdscript/linting.md
+# gdlint configuration — see armory/docs/languages/gdscript/style.md (Linting & Formatting)
 #
 # This file OVERRIDES only what we care about; every unset check keeps its gdlint
 # default. Regenerate the full default set (to reconcile exact key names / add
@@ -9,12 +9,6 @@
 excluded_directories:
   - addons
   - .git
-
-# class-definitions-order is TEMPORARILY disabled. Our guide conforms to Godot's member order
-# (signals -> enums -> constants -> ...), but the existing code hasn't been reordered yet, so the
-# check would fire everywhere. Re-enable once the codebase is migrated to the new order.
-disable:
-  - class-definitions-order
 
 # Thresholds — adjust in follow-up:
 max-line-length: 160  # wider than gdlint's default 100; must match gdformat --line-length in gdtoolkit.sh
