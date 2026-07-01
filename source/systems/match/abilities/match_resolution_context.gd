@@ -1,0 +1,19 @@
+class_name MatchResolutionContext
+extends ResolutionContext
+## The [ResolutionContext] the match hands its ability [Action]s: the base resolution state plus the two things a
+## match-side action needs that the engine's generic context doesn't carry — the live [EncounterState] to drive
+## combat through (shield, damage, disable) and a [member visuals] list the host drains to play popups and glyphs.
+## Mirrors how [MatchRuleContext] extends [RuleContext] for the rule engine.
+
+## The encounter the ability resolves in — the actions read it to mutate combat state (health, shield, statuses,
+## disabled cells) through the same [EncounterState] methods the rest of the match uses.
+var encounter: EncounterState
+## Presentation events the actions emit as they resolve — one entry per effect ([code]{"kind": ..., "target":
+## ..., ...}[/code]), drained by [MatchGame] after the ability runs to play the portrait popups, health refresh
+## and attack glyphs. Keeping visuals as data (not calls) keeps the actions host-agnostic.
+var visuals: Array[Dictionary] = []
+
+
+## Appends one presentation [param event] for the host to play once the ability finishes resolving.
+func add_visual(event: Dictionary) -> void:
+	visuals.append(event)

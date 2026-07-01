@@ -113,7 +113,7 @@ var _popup_layer: Node2D
 var _ability_buttons: Array[Button] = []
 # The player starship's abilities, captured when the bar is wired (see [method _setup_abilities]) — what the
 # buttons map to. Abilities are the starship's, not the match's.
-var _player_abilities: Array[MatchAbility] = []
+var _player_abilities: Array[Ability] = []
 # The "JUMP" call-to-action, shown only when the player has filled their warp meter (see [method _refresh_jump]).
 var _jump_button: Button
 # The shared warp meter's segment cells, left to right, sitting immediately above the board. Filled to show
@@ -462,8 +462,8 @@ func _starship_rules(combatant: Combatant) -> Array[Rule]:
 
 # The acting [param combatant]'s abilities: its starship's hull kit plus its enabled modules' abilities. Drives
 # the player's ability bar and the opponent AI's pick — abilities belong to the starship, never the match.
-func _starship_abilities(combatant: Combatant) -> Array[MatchAbility]:
-	var result: Array[MatchAbility] = []
+func _starship_abilities(combatant: Combatant) -> Array[Ability]:
+	var result: Array[Ability] = []
 	if combatant == null:
 		return result
 	var starship: StarshipState = _starship_for(combatant)
@@ -632,7 +632,7 @@ func _take_opponent_turn_if_needed() -> void:
 		return
 	# Spend tiles on an attack when it can afford one — an ability ends the turn, so it's played instead of a
 	# board move (and works in any selection mode, since it's not a board move).
-	var ability: MatchAbility = _best_affordable_ability(_encounter.opponent)
+	var ability: Ability = _best_affordable_ability(_encounter.opponent)
 	if ability != null:
 		_use_ability(_encounter.opponent, ability)
 		return
@@ -814,11 +814,11 @@ func _setup_abilities() -> void:
 
 # Lays out one ability button: the cost tile and its count over the ability's name. Built in code so the
 # button stays data-driven off the rules. The content ignores the mouse so the whole button stays clickable.
-func _configure_ability_button(button: Button, ability: MatchAbility) -> void:
+func _configure_ability_button(button: Button, ability: Ability) -> void:
 	button.text = ""
 	button.focus_mode = Control.FOCUS_NONE
 	button.clip_contents = true
-	button.tooltip_text = "%s — %s (%s)" % [ability.ability_name, ability.describe(), _cost_text(ability)]
+	button.tooltip_text = "%s — %s (%s)" % [str(ability.name), ability.describe(), _cost_text(ability)]
 
 	# A full-width padded column, so a long ability name can wrap to the button width rather than clip.
 	var pad := MarginContainer.new()
@@ -849,14 +849,14 @@ func _configure_ability_button(button: Button, ability: MatchAbility) -> void:
 	else:
 		# One tile + count per cost, joined with a "+" so a multi-tile price reads at a glance.
 		for i: int in ability.costs.size():
-			var cost: AbilityCost = ability.costs[i]
+			var cost: ResourceCost = ability.costs[i]
 			if i > 0:
 				var plus := Label.new()
 				plus.text = "+"
 				plus.add_theme_font_size_override("font_size", 22)
 				cost_row.add_child(plus)
 			var icon := MatchTileIcon.new()
-			icon.kind = cost.resource.id if cost.resource != null else 0
+			icon.kind = (cost.resource as StarshipResource).id if cost.resource != null else 0
 			icon.custom_minimum_size = Vector2(30, 30)
 			icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			cost_row.add_child(icon)
@@ -866,7 +866,7 @@ func _configure_ability_button(button: Button, ability: MatchAbility) -> void:
 			cost_row.add_child(cost_label)
 
 	var name_label := Label.new()
-	name_label.text = ability.ability_name
+	name_label.text = str(ability.name)
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -881,7 +881,7 @@ func _configure_ability_button(button: Button, ability: MatchAbility) -> void:
 func _refresh_abilities() -> void:
 	var can_act: bool = _is_player_turn() and not _game_over and not _resolving
 	for i: int in _ability_buttons.size():
-		var ability: MatchAbility = _player_abilities[i]
+		var ability: Ability = _player_abilities[i]
 		var usable: bool = can_act and _affordable(_encounter.player if _encounter != null else null, ability)
 		var button: Button = _ability_buttons[i]
 		button.disabled = not usable
@@ -912,7 +912,7 @@ func _style_ability_button(button: Button, tile_kind: int, affordable: bool) -> 
 
 # A tapped ability button: the player uses it, but only on their own turn (abilities end the turn, so
 # they're off-limits during the opponent's). A stale tap off-turn does nothing.
-func _on_ability_pressed(ability: MatchAbility) -> void:
+func _on_ability_pressed(ability: Ability) -> void:
 	if not _is_player_turn():
 		return
 	_use_ability(_encounter.player if _encounter != null else null, ability)
@@ -922,18 +922,16 @@ func _on_ability_pressed(ability: MatchAbility) -> void:
 # applies each of its effects in order, then ends the turn and lets the next combatant act. Shared by the
 # player's button and the AI opponent. Guarded so a stale call (no encounter, can't afford) does nothing.
 # (Keeping the turn is no longer a flag on the ability — that'll come from a future extra-turn effect.)
-func _use_ability(combatant: Combatant, ability: MatchAbility) -> void:
+func _use_ability(combatant: Combatant, ability: Ability) -> void:
 	if _encounter == null or _game_over or _resolving or not _affordable(combatant, ability):
 		return
 	_resolving = true  # freezes input and the buttons until the action finishes resolving
-	var actor: Combatant = combatant
-	# Pay the ability's costs through the engine's ResourceEngine (the actor is an Entity; its pools match a cost
-	# by the resource's name), so spending runs the same path as the rest of combat.
-	if actor != null:
-		ResourceEngine.spend(actor, _resource_costs(ability))
-	_apply_ability_effect(combatant, ability)
+	# The engine pays the costs and resolves the effects (see [method EncounterState.use_ability]); it hands back
+	# the context carrying the presentation events each effect emitted, which the host plays out below.
+	var context: MatchResolutionContext = await _encounter.use_ability(combatant, ability)
+	_play_ability_visuals(context)
 	_refresh_portraits()
-	_message = "%s used %s." % [_name_for(combatant), ability.ability_name]
+	_message = "%s used %s." % [_name_for(combatant), ability.name]
 	_compose_status()
 	# An attacking ability may have decided the encounter; stop before handing the turn over.
 	if _check_for_end():
@@ -944,14 +942,14 @@ func _use_ability(combatant: Combatant, ability: MatchAbility) -> void:
 	_resolving = false
 	# What an ability does to the turn is the mover's policy (default ENDS_TURN — the original behavior): end the
 	# turn, spend one action like a move, or be free (keep acting, gated only by resources).
-	var policy: int = actor.ability_turn_cost if actor != null else ActionBudgetRule.AbilityTurnCost.ENDS_TURN
+	var policy: int = combatant.ability_turn_cost if combatant != null else ActionBudgetRule.AbilityTurnCost.ENDS_TURN
 	var ends_turn: bool = true
 	if policy == ActionBudgetRule.AbilityTurnCost.FREE:
 		ends_turn = false
 	elif policy == ActionBudgetRule.AbilityTurnCost.COSTS_ACTION:
-		if actor != null:
-			actor.consume_action()
-		ends_turn = actor == null or not actor.has_actions_left()
+		if combatant != null:
+			combatant.consume_action()
+		ends_turn = combatant == null or not combatant.has_actions_left()
 	if ends_turn:
 		_advance_turn()
 	else:
@@ -966,85 +964,34 @@ func _settle_action() -> void:
 		await get_tree().create_timer(action_resolve_delay).timeout
 
 
-# Applies each of an ability's effects for the combatant using it, in order. The health/tally changes land
-# here; the caller refreshes the HUD and resolves the turn.
-func _apply_ability_effect(combatant: Combatant, ability: MatchAbility) -> void:
-	for effect: AbilityEffect in ability.effects:
-		if effect != null:
-			_apply_effect(combatant, effect)
-
-
-# Applies one [AbilityEffect], dispatched by its type — each effect carries its own parameters (no shared
-# magnitude). A new effect kind slots in as a new [AbilityEffect] subclass plus a branch here.
-func _apply_effect(combatant: Combatant, effect: AbilityEffect) -> void:
-	var user_portrait: Control = _portrait_for(combatant)
-	var foe: Combatant = _encounter.opponent_of(combatant)
-	if effect is ShieldEffect:
-		var shield: int = (effect as ShieldEffect).amount
-		_encounter.add_shield(combatant, shield)
-		_refresh_health()
-		_spawn_portrait_popup(user_portrait, "+%d shield" % shield, MatchTile.color_of(3))
-	elif effect is DodgeEffect:
-		_encounter.set_dodge(combatant, true)
-		_spawn_portrait_popup(user_portrait, "Evading", MatchTile.color_of(1))
-	elif effect is DrainEffect:
-		_drain_resources(foe, (effect as DrainEffect).amount)
-		_spawn_portrait_popup(_portrait_for(foe), "Drained", MatchTile.color_of(2))
-	elif effect is DamageBuffEffect:
-		_encounter.add_status(combatant, EncounterState.TARGET_LOCK, (effect as DamageBuffEffect).amount)
-		_spawn_portrait_popup(user_portrait, "Damage +%d" % (effect as DamageBuffEffect).amount, MatchTile.color_of(0))
-	elif effect is DisableEffect:
-		_disable_opponent_module(foe, (effect as DisableEffect).turns)
-		_spawn_portrait_popup(_portrait_for(foe), "Disabled", MatchTile.color_of(2))
-	elif effect is AttackEffect:
-		var dealt: int = (effect as AttackEffect).amount
-		var result: int = _encounter.deal_damage(foe, dealt)
-		_refresh_health()
-		_fly_attack_glyphs(combatant, foe, clampi(dealt, 1, 5))
-		_spawn_portrait_popup_delayed(_portrait_for(foe), _damage_text(result, dealt), MatchTile.color_of(_DAMAGE_KIND), _FLY_DURATION)
-
-
-# Removes [param amount] from each of [param combatant]'s four stat resources — the Siphon drain, run through
-# the engine's ResourceEngine (the symmetric counterpart of granting).
-func _drain_resources(combatant: Combatant, amount: int) -> void:
-	var actor: Combatant = combatant
-	if actor == null:
+# Plays the presentation events an ability's effects emitted (see [member MatchResolutionContext.visuals]) — the
+# portrait popups, health refresh and attack glyphs that used to live inline in the per-effect apply. They're read
+# as data so the actions stay host-agnostic; a new visual kind adds a branch here.
+func _play_ability_visuals(context: MatchResolutionContext) -> void:
+	if context == null:
 		return
-	for resource: StarshipResource in _stat_resources_cached():
-		ResourceEngine.drain(actor, resource, amount)
-
-
-# The ability's costs as engine [ResourceCost]s — what [ResourceEngine] pays from / checks against the actor's
-# pools. A [StarshipResource] is an [AbilityResource], so the pools match a cost by the resource's name.
-func _resource_costs(ability: MatchAbility) -> Array[ResourceCost]:
-	var costs: Array[ResourceCost] = []
-	for cost: AbilityCost in ability.costs:
-		if cost == null:
-			continue
-		var resource_cost := ResourceCost.new()
-		resource_cost.resource = cost.resource
-		resource_cost.amount = cost.amount
-		costs.append(resource_cost)
-	return costs
-
-
-# Disables one of [param target]'s still-active modules for [param turns] turns — disabling one of its cells
-# deactivates the whole module, so it stops counting toward [param target]'s stats until it re-enables. Picks
-# the module from the board's seeded RNG so it's reproducible; a no-op when the target has no grid or every
-# module is already down.
-func _disable_opponent_module(target: Combatant, turns: int) -> void:
-	var grid: StarshipLoadout = _loadout_of(_starship_for(target))
-	if grid == null:
-		return
-	var disabled: Array[Vector2i] = _encounter.disabled_cells_of(target)
-	var live: Array[ModuleState] = []
-	for module_state: ModuleState in grid.modules:
-		if module_state != null and grid.enabled(module_state, disabled) and not grid.cells_of(module_state).is_empty():
-			live.append(module_state)
-	if live.is_empty():
-		return
-	var pick: ModuleState = live[_rng.randi_range(0, live.size() - 1)]
-	_encounter.disable_cell(target, grid.cells_of(pick)[0], turns)
+	for event: Dictionary in context.visuals:
+		var target: Combatant = event.get("target")
+		var kind: StringName = event.get("kind", &"")
+		var amount: int = event.get("amount", 0)
+		match kind:
+			&"shield":
+				_refresh_health()
+				_spawn_portrait_popup(_portrait_for(target), "+%d shield" % amount, MatchTile.color_of(3))
+			&"dodge":
+				_spawn_portrait_popup(_portrait_for(target), "Evading", MatchTile.color_of(1))
+			&"drain":
+				_spawn_portrait_popup(_portrait_for(target), "Drained", MatchTile.color_of(2))
+			&"damage_buff":
+				_spawn_portrait_popup(_portrait_for(target), "Damage +%d" % amount, MatchTile.color_of(0))
+			&"disable":
+				_spawn_portrait_popup(_portrait_for(target), "Disabled", MatchTile.color_of(2))
+			&"attack":
+				var result: int = event.get("result", 0)
+				var source: Combatant = event.get("source")
+				_refresh_health()
+				_fly_attack_glyphs(source, target, clampi(amount, 1, 5))
+				_spawn_portrait_popup_delayed(_portrait_for(target), _damage_text(result, amount), MatchTile.color_of(_DAMAGE_KIND), _FLY_DURATION)
 
 
 # The popup text for an attack: "Dodged!" when the target evaded it (result < 0), else the damage dealt.
@@ -1054,21 +1001,21 @@ func _damage_text(result: int, dealt: int) -> String:
 
 # Whether [param combatant] holds enough matched tiles to pay every one of [param ability]'s costs — checked
 # through the engine's ResourceEngine. A cost-less (free) ability is always affordable.
-func _affordable(combatant: Combatant, ability: MatchAbility) -> bool:
+func _affordable(combatant: Combatant, ability: Ability) -> bool:
 	if _encounter == null:
 		return false
 	if combatant == null:
 		return false
-	return ResourceEngine.can_afford(combatant, _resource_costs(ability))
+	return ResourceEngine.can_afford(combatant, ability.costs)
 
 
 # The most expensive affordable ability for [param combatant] (summed cost as an impact proxy), or null if
 # none is affordable — the AI opponent's ability pick. A dodge already armed is skipped, so the opponent spends
 # its turn attacking (or arming something else) instead of refreshing a dodge that would otherwise feel permanent.
-func _best_affordable_ability(combatant: Combatant) -> MatchAbility:
-	var best: MatchAbility = null
+func _best_affordable_ability(combatant: Combatant) -> Ability:
+	var best: Ability = null
 	var best_cost: int = -1
-	for ability: MatchAbility in _starship_abilities(combatant):
+	for ability: Ability in _starship_abilities(combatant):
 		if _arms_dodge(ability) and _encounter != null and _encounter.dodge_of(combatant):
 			continue
 		if not _affordable(combatant, ability):
@@ -1081,42 +1028,42 @@ func _best_affordable_ability(combatant: Combatant) -> MatchAbility:
 
 
 # Whether [param ability] arms a dodge — keeps the AI from re-casting a dodge it already has.
-func _arms_dodge(ability: MatchAbility) -> bool:
-	for effect: AbilityEffect in ability.effects:
-		if effect is DodgeEffect:
+func _arms_dodge(ability: Ability) -> bool:
+	for effect: Effect in ability.effects:
+		if effect != null and effect.action is DodgeAction:
 			return true
 	return false
 
 
 # The summed tile cost of [param ability] — the AI's crude impact proxy when picking what to play.
-func _total_cost(ability: MatchAbility) -> int:
+func _total_cost(ability: Ability) -> int:
 	var total: int = 0
-	for cost: AbilityCost in ability.costs:
+	for cost: ResourceCost in ability.costs:
 		if cost != null:
 			total += cost.amount
 	return total
 
 
 # The resource of [param ability]'s first cost (for the button's accent color), or null when the ability is free.
-func _primary_cost_resource(ability: MatchAbility) -> StarshipResource:
-	return ability.costs[0].resource if not ability.costs.is_empty() else null
+func _primary_cost_resource(ability: Ability) -> StarshipResource:
+	return ability.costs[0].resource as StarshipResource if not ability.costs.is_empty() else null
 
 
 # A one-line price for the tooltip — "10 combat + 12 science", or "Free" when the ability has no costs.
-func _cost_text(ability: MatchAbility) -> String:
+func _cost_text(ability: Ability) -> String:
 	if ability.costs.is_empty():
 		return "Free"
 	var parts: Array[String] = []
-	for cost: AbilityCost in ability.costs:
+	for cost: ResourceCost in ability.costs:
 		parts.append("%d %s" % [cost.amount, _cost_name(cost)])
 	return " + ".join(parts)
 
 
 # The display name of a cost's resource (the tile name), or "" when the cost names no resource.
-func _cost_name(cost: AbilityCost) -> String:
+func _cost_name(cost: ResourceCost) -> String:
 	if cost == null or cost.resource == null:
 		return ""
-	return _kind_name(cost.resource.id)
+	return _kind_name((cost.resource as StarshipResource).id)
 
 
 # Whether it's the player's turn (or there's no encounter, e.g. the standalone scene — then always theirs).

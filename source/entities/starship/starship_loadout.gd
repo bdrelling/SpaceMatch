@@ -8,6 +8,7 @@ extends ModuleGridState
 ## as [member StarshipState.loadout]; a starship's effective stats are its base block plus this loadout's (see
 ## [method StarshipState.effective_stats]).
 
+
 ## Builds a loadout from [param blueprint] — an empty grid at the blueprint's size, stamped with its hull
 ## silhouette and authored modules (see [method ModuleGridState.stamp]). A null blueprint yields an empty loadout.
 static func create(blueprint: ModuleGridBlueprint) -> StarshipLoadout:
@@ -17,10 +18,12 @@ static func create(blueprint: ModuleGridBlueprint) -> StarshipLoadout:
 	ModuleGridState.stamp(loadout, blueprint)
 	return loadout
 
+
 ## True when [param module_state] is fully enabled — none of the cells it occupies is in [param disabled_cells].
 ## A single disabled cell deactivates the whole module, so it stops counting toward stats.
 func enabled(module_state: ModuleState, disabled_cells: Array[Vector2i] = []) -> bool:
 	return _cells_enabled(cells_of(module_state), disabled_cells)
+
 
 ## The stat profile this loadout's modules sum to — the starship's contribution to its stats. Only fully-enabled
 ## modules count (see [method enabled]); a module with any cell in [param disabled_cells] adds nothing. The one
@@ -33,15 +36,17 @@ func stats(disabled_cells: Array[Vector2i] = []) -> StarshipStats:
 			total.add(module_state.stats)
 	return total
 
+
 ## The abilities this loadout's enabled modules grant the starship — same "all cells enabled to count" rule as
 ## [method stats]. A disabled module grants nothing.
-func abilities(disabled_cells: Array[Vector2i] = []) -> Array[MatchAbility]:
-	var result: Array[MatchAbility] = []
+func abilities(disabled_cells: Array[Vector2i] = []) -> Array[Ability]:
+	var result: Array[Ability] = []
 	for occupant: GridObjectState in objects_on_layer(_LAYER):
 		var module_state: ModuleState = occupant.state.get(_MODULE_KEY)
 		if module_state != null and _cells_enabled(occupant.cells, disabled_cells):
 			result.append_array(module_state.abilities)
 	return result
+
 
 ## The phase rules this loadout's enabled modules grant the starship — same enabled rule as [method stats].
 func rules(disabled_cells: Array[Vector2i] = []) -> Array[Rule]:
@@ -51,6 +56,7 @@ func rules(disabled_cells: Array[Vector2i] = []) -> Array[Rule]:
 		if module_state != null and _cells_enabled(occupant.cells, disabled_cells):
 			result.append_array(module_state.rules)
 	return result
+
 
 func _cells_enabled(cells: Array[Vector2i], disabled_cells: Array[Vector2i]) -> bool:
 	for cell: Vector2i in cells:

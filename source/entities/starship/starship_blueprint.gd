@@ -14,4 +14,4 @@ extends Resource
 @export var ruleset: Ruleset
 ## The starship's hull abilities. Left empty, [method Starship.apply_blueprint] grants the standard set. Modules add more on top
 ## (see [member ModuleBlueprint.abilities]). Author here to give a hull its own kit.
-@export var abilities: Array[MatchAbility] = []
+@export var abilities: Array[Ability] = []

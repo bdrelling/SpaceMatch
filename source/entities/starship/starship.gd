@@ -15,6 +15,7 @@ const SCENE: PackedScene = preload(SCENE_PATH)
 
 #region Blueprinting
 
+
 ## Builds a fresh [StarshipState] onto this node from [param _blueprint]: copies its base stats, builds its
 ## module grid, and gives it the hull's ruleset/abilities (or the standard kit when the blueprint authors none).
 ## The live hull is encounter-scoped (it starts full on the [Combatant]'s health pool), so nothing to seed here.
@@ -37,6 +38,7 @@ func apply_blueprint(_blueprint: StarshipBlueprint) -> void:
 	state.ruleset = _blueprint.ruleset if _blueprint.ruleset != null else _standard_ruleset()
 	state.abilities = _blueprint.abilities.duplicate() if not _blueprint.abilities.is_empty() else _standard_abilities()
 
+
 static func create(_blueprint: StarshipBlueprint) -> Starship:
 	if not _blueprint:
 		push_error("Blueprint required to create Starship")
@@ -44,6 +46,7 @@ static func create(_blueprint: StarshipBlueprint) -> Starship:
 	var starship: Starship = SCENE.instantiate()
 	starship.apply_blueprint(_blueprint)
 	return starship
+
 
 ## Wraps [param _state] in a fresh node — the load/clone path, where the data already exists (a saved starship or
 ## a fight clone) and only needs a node to live in the tree. Mounts a [ModuleGrid] child for the starship's loadout.
@@ -54,6 +57,7 @@ static func with_state(_state: StarshipState) -> Starship:
 		starship.add_child(ModuleGrid.with_state(_state.loadout))
 	return starship
 
+
 ## The baseline hull kit: a match of four or more keeps the board (the extra-turn rule, now starship-owned).
 static func _standard_ruleset() -> Ruleset:
 	var ruleset := Ruleset.new()
@@ -62,6 +66,7 @@ static func _standard_ruleset() -> Ruleset:
 	ruleset.add(extra_turn)
 	return ruleset
 
+
 ## The stat resources the standard abilities are priced in — combat / propulsion / science / defense (the four
 ## stat tiles), preloaded so the kit builds without reaching the catalog autoload.
 const _COMBAT: StarshipResource = preload("res://data/ability_resources/combat.tres")
@@ -69,19 +74,20 @@ const _PROPULSION: StarshipResource = preload("res://data/ability_resources/prop
 const _SCIENCE: StarshipResource = preload("res://data/ability_resources/science.tres")
 const _SHIELDS: StarshipResource = preload("res://data/ability_resources/shields.tres")
 
+
 ## The baseline hull abilities: one per stat tile (red/yellow/green/blue), plus a Disruptor that spends green.
 ##   Red — Target Lock: +1 to your tile damage for the rest of the encounter (stacks).
 ##   Yellow — Evasive Maneuvers: dodge the next attack (cheap).
 ##   Green — Siphon: drain 2 of each of the opponent's resources.
 ##   Blue — Shields: gain 10 shield (absorbed before health).
 ##   Green — Disruptor: disable one of the opponent's modules for 3 turns.
-static func _standard_abilities() -> Array[MatchAbility]:
+static func _standard_abilities() -> Array[Ability]:
 	return [
-		MatchAbility.make("Target Lock", AbilityCost.make(_COMBAT, 10), DamageBuffEffect.make(1)),
-		MatchAbility.make("Evasive Maneuvers", AbilityCost.make(_PROPULSION, 5), DodgeEffect.make()),
-		MatchAbility.make("Siphon", AbilityCost.make(_SCIENCE, 10), DrainEffect.make(2)),
-		MatchAbility.make("Shields", AbilityCost.make(_SHIELDS, 10), ShieldEffect.make(10)),
-		MatchAbility.make("Disruptor", AbilityCost.make(_SCIENCE, 12), DisableEffect.make(3)),
+		MatchAbilities.damage_buff("Target Lock", _COMBAT, 10, 1),
+		MatchAbilities.dodge("Evasive Maneuvers", _PROPULSION, 5),
+		MatchAbilities.drain("Siphon", _SCIENCE, 10, 2),
+		MatchAbilities.shield("Shields", _SHIELDS, 10, 10),
+		MatchAbilities.disable("Disruptor", _SCIENCE, 12, 3),
 	]
 
 #endregion

@@ -20,7 +20,8 @@ extends Resource
 ## Abilities this starship can use — its hull kit plus whatever its modules grant. Abilities are a property of the
 ## starship, never the match: the acting starship's set drives its ability bar (player) or AI pick (opponent). Modules
 ## contribute more via [method StarshipLoadout.abilities].
-@export var abilities: Array[MatchAbility] = []
+@export var abilities: Array[Ability] = []
+
 
 ## A fight copy of this starship for an encounter: its own [member base_stats] block, so combat and Debug edits
 ## stay on the copy and a fresh fight starts fresh. The live hull is encounter-scoped — it lives on the
@@ -37,6 +38,7 @@ func clone() -> StarshipState:
 	copy.abilities = abilities
 	return copy
 
+
 ## The starship's effective stats — its own [member base_stats] plus its loadout's module profile (see [method
 ## StarshipLoadout.stats]). The permanent layer a fresh fight seeds health from; combat stacks the encounter's temporary
 ## buffs on top of this (see [method EncounterState.effective_stats]).
@@ -47,6 +49,7 @@ func effective_stats() -> StarshipStats:
 	if loadout != null:
 		total.add(loadout.stats())
 	return total
+
 
 ## The starship's max hull — its effective health (base stat plus every hull module's), the cap the live hull pool
 ## starts at and the bar's top (see [method Combatant.create]). Derived from the starship (stats + modules), so

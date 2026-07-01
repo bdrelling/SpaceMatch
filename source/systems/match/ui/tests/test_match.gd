@@ -48,7 +48,7 @@ func _make(ruleset: Ruleset = null, mode := MatchBoardView.InputMode.SWAP, ai :=
 
 # Applies `amount` to `stat_name` on a combatant as a status-backed stat modifier (a unit-amount [Modifier]
 # stacked `amount` times) — the test stand-in for an authored buff/debuff status.
-func _buff(enc: EncounterState, combatant: int, stat_name: StringName, amount: int) -> void:
+func _buff(enc: EncounterState, combatant: Combatant, stat_name: StringName, amount: int) -> void:
 	var status := Status.new()
 	status.name = stat_name
 	var stat := StarshipStat.new()
@@ -461,18 +461,18 @@ func test_default_starship_defines_the_standard_abilities() -> void:
 	var abilities := GameSession.game_state.starship.abilities
 	assert_int(abilities.size()).is_equal(5)
 	for i: int in 4:
-		assert_int(abilities[i].costs[0].resource.id).is_equal(i)
-	assert_bool(abilities[0].effects[0] is DamageBuffEffect).is_true()
-	assert_bool(abilities[1].effects[0] is DodgeEffect).is_true()
-	assert_bool(abilities[2].effects[0] is DrainEffect).is_true()
-	assert_bool(abilities[3].effects[0] is ShieldEffect).is_true()
+		assert_int((abilities[i].costs[0].resource as StarshipResource).id).is_equal(i)
+	assert_bool(abilities[0].effects[0].action is DamageBuffAction).is_true()
+	assert_bool(abilities[1].effects[0].action is DodgeAction).is_true()
+	assert_bool(abilities[2].effects[0].action is DrainAction).is_true()
+	assert_bool(abilities[3].effects[0].action is ShieldAction).is_true()
 	assert_int(abilities[1].costs[0].amount).is_equal(5)  # Evasive Maneuvers is the cheap one
 	assert_int(abilities[3].costs[0].amount).is_equal(10)  # Shields
 	# Disruptor: disables an opponent module for 3 turns, paid for with green (the science tile).
 	var disruptor := abilities[4]
-	assert_bool(disruptor.effects[0] is DisableEffect).is_true()
-	assert_int(disruptor.costs[0].resource.id).is_equal(2)
-	assert_int((disruptor.effects[0] as DisableEffect).turns).is_equal(3)
+	assert_bool(disruptor.effects[0].action is DisableAction).is_true()
+	assert_int((disruptor.costs[0].resource as StarshipResource).id).is_equal(2)
+	assert_int((disruptor.effects[0].action as DisableAction).turns).is_equal(3)
 
 
 # Using an ability spends its tiles from the player's tally and deals its damage to the opponent. Line-shift
@@ -480,7 +480,7 @@ func test_default_starship_defines_the_standard_abilities() -> void:
 func test_ability_use_spends_gems_and_deals_damage() -> void:
 	var game := _make(RuleCatalog.default_ruleset(), MatchBoardView.InputMode.LINE_SHIFT, false)
 	await await_idle_frame()
-	var ability := MatchAbility.make("Test", AbilityCost.make(_resource(_COMBAT_KIND), 10), AttackEffect.make(5))
+	var ability := MatchAbilities.attack("Test", _resource(_COMBAT_KIND), 10, 5)
 	game._encounter.player.resources[_COMBAT_KIND].amount = 12
 	var max_health: int = game._encounter.opponent_max_health
 	game._on_ability_pressed(ability)
@@ -494,7 +494,7 @@ func test_ability_use_spends_gems_and_deals_damage() -> void:
 func test_using_an_ability_ends_the_turn() -> void:
 	var game := _make(RuleCatalog.default_ruleset(), MatchBoardView.InputMode.LINE_SHIFT, false)
 	await await_idle_frame()
-	var ability := MatchAbility.make("Test", AbilityCost.make(_resource(_COMBAT_KIND), 5), AttackEffect.make(5))
+	var ability := MatchAbilities.attack("Test", _resource(_COMBAT_KIND), 5, 5)
 	game._encounter.player.resources[_COMBAT_KIND].amount = 10
 	assert_object(game._encounter.active_combatant()).is_same(game._encounter.player)
 	game._use_ability(game._encounter.player, ability)
@@ -509,9 +509,9 @@ func test_opponent_picks_an_affordable_ability() -> void:
 	await await_idle_frame()
 	assert_object(game._best_affordable_ability(game._encounter.opponent)).is_null()
 	game._encounter.opponent.resources[1].amount = 5  # enough for Evasive Maneuvers (kind 1, the cost-5 ability)
-	var pick: MatchAbility = game._best_affordable_ability(game._encounter.opponent)
+	var pick: Ability = game._best_affordable_ability(game._encounter.opponent)
 	assert_object(pick).is_not_null()
-	assert_int(pick.costs[0].resource.id).is_equal(1)
+	assert_int((pick.costs[0].resource as StarshipResource).id).is_equal(1)
 	game.queue_free()
 
 
@@ -577,7 +577,7 @@ func test_reload_splits_board_resources_between_players() -> void:
 func test_ability_unaffordable_does_nothing() -> void:
 	var game := _make()
 	await await_idle_frame()
-	var ability := MatchAbility.make("Test", AbilityCost.make(_resource(_COMBAT_KIND), 10), AttackEffect.make(5))
+	var ability := MatchAbilities.attack("Test", _resource(_COMBAT_KIND), 10, 5)
 	game._encounter.player.resources[_COMBAT_KIND].amount = 3
 	var health_before: int = game._encounter.opponent_health
 	game._on_ability_pressed(ability)
@@ -795,7 +795,7 @@ func test_warp_core_module_grants_capacity() -> void:
 func test_shield_ability_grants_and_absorbs() -> void:
 	var game := _make(RuleCatalog.default_ruleset(), MatchBoardView.InputMode.LINE_SHIFT, false)
 	await await_idle_frame()
-	var shield_ability := MatchAbility.make("Shields", AbilityCost.make(_resource(3), 5), ShieldEffect.make(10))
+	var shield_ability := MatchAbilities.shield("Shields", _resource(3), 5, 10)
 	game._encounter.player.resources[3].amount = 5
 	game._use_ability(game._encounter.player, shield_ability)
 	assert_int(game._encounter.shield_of(game._encounter.player)).is_equal(10)
@@ -848,7 +848,7 @@ func test_stat_for_tile_mapping() -> void:
 func test_matched_tile_resource_includes_stat_bonus() -> void:
 	var game := _make()  # neutral, one-to-one scoring; no session, so base profile is empty
 	await await_idle_frame()
-	_buff(game._encounter, enc.player, &"power", 4)
+	_buff(game._encounter, game._encounter.player, &"power", 4)
 	var board: GridState = game._session.state
 	var cells: Array[Vector2i] = [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0)]
 	_force_kind(board, cells, 0)  # combat tile -> POWER
@@ -881,7 +881,7 @@ func test_siphon_drains_opponent_resources() -> void:
 	await await_idle_frame()
 	for k: int in 4:
 		game._encounter.opponent.resources[k].amount = 5
-	var drain := MatchAbility.make("Siphon", AbilityCost.make(_resource(2), 5), DrainEffect.make(2))
+	var drain := MatchAbilities.drain("Siphon", _resource(2), 5, 2)
 	game._encounter.player.resources[2].amount = 5
 	game._use_ability(game._encounter.player, drain)
 	for k: int in 4:
@@ -894,7 +894,7 @@ func test_siphon_drains_opponent_resources() -> void:
 func test_disruptor_disables_an_opponent_module() -> void:
 	var game := _make(RuleCatalog.default_ruleset(), MatchBoardView.InputMode.LINE_SHIFT, false)
 	await await_idle_frame()
-	var disrupt := MatchAbility.make("Disruptor", AbilityCost.make(_resource(2), 5), DisableEffect.make(3))
+	var disrupt := MatchAbilities.disable("Disruptor", _resource(2), 5, 3)
 	game._encounter.player.resources[2].amount = 5
 	assert_int(game._encounter.disabled_cells_of(game._encounter.opponent).size()).is_equal(0)
 	game._use_ability(game._encounter.player, disrupt)
@@ -1237,7 +1237,7 @@ func test_ability_costs_an_action_when_policy_set() -> void:
 	game._encounter.player.resources[_COMBAT_KIND].amount = 100
 	game._encounter.player.actions_remaining = 2
 	game._encounter.player.ability_turn_cost = ActionBudgetRule.AbilityTurnCost.COSTS_ACTION
-	var ability := MatchAbility.make("Test", AbilityCost.make(_resource(_COMBAT_KIND), 5), AttackEffect.make(1))
+	var ability := MatchAbilities.attack("Test", _resource(_COMBAT_KIND), 5, 1)
 	game._use_ability(game._encounter.player, ability)
 	assert_object(game._encounter.active_combatant()).is_same(game._encounter.player)  # one action left
 	game._use_ability(game._encounter.player, ability)

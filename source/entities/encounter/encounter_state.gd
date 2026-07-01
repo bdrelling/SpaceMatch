@@ -17,6 +17,10 @@ const TURNS_PER_ROUND: int = 2
 ## resource arrays; a fresh encounter starts them all at zero.
 const RESOURCE_KINDS: int = 7
 
+## The four stat resource kinds (combat / propulsion / science / shields) — the leading pools the Siphon effect
+## drains. Kinds 0..3 of a combatant's resource pools; the remaining kinds (scrap, warp, damage) aren't stats.
+const STAT_RESOURCE_KINDS: int = 4
+
 ## The statuses combat stamps onto a combatant as data — preloaded so the encounter can apply them by reference.
 const SHIELD: Status = preload("res://data/statuses/shield.tres")
 const DODGE: Status = preload("res://data/statuses/dodge.tres")
@@ -45,15 +49,21 @@ var _runtime: EffectRuntime
 ## [member opponent]), kept as named pairs for the combat code and HUD. Current depletes from matched damage
 ## tiles (see [method deal_damage]); max is the starship's derived hull (see [method Combatant.max_health]).
 var player_health: int:
-	get: return health_of(player)
-	set(value): _set_health(player, value)
+	get:
+		return health_of(player)
+	set(value):
+		_set_health(player, value)
 var opponent_health: int:
-	get: return health_of(opponent)
-	set(value): _set_health(opponent, value)
+	get:
+		return health_of(opponent)
+	set(value):
+		_set_health(opponent, value)
 var player_max_health: int:
-	get: return max_health_of(player)
+	get:
+		return max_health_of(player)
 var opponent_max_health: int:
-	get: return max_health_of(opponent)
+	get:
+		return max_health_of(opponent)
 
 ## Cells currently disabled on each combatant's module grid, mapping a cell [Vector2i] to the turns of
 ## disable it has left (granted by Disruptor; see [method disable_cell]). A disabled cell deactivates the
@@ -80,6 +90,7 @@ var opponent_max_health: int:
 ## The combatant who Jumped (filled their warp and cashed it in), or null if none. Decides a warp victory.
 @export var warp_winner: Combatant
 
+
 ## The one [EffectRuntime] all combat resolves through — built on first access with an [AutoChooser] (1v1 needs
 ## no interactive picker) and the live status catalog. The host seeds its seed from the board RNG.
 func runtime() -> EffectRuntime:
@@ -88,6 +99,7 @@ func runtime() -> EffectRuntime:
 		_runtime.chooser = AutoChooser.new()
 		_runtime.status_catalog = _status_catalog()
 	return _runtime
+
 
 # The status catalog the runtime resolves names through ([ApplyStatusAction] / [RemoveStatusAction]): every
 # authored [Status] keyed by its name, from the live [Catalogs] autoload.
@@ -99,14 +111,34 @@ func _status_catalog() -> Dictionary:
 				catalog[status.name] = status
 	return catalog
 
+
+## Runs [param ability] for [param source] through the effect engine: builds the match resolution context (this
+## encounter, the source's sides, the seeded RNG and the status catalog), pays the costs and resolves the effects
+## via [AbilityRunner], and returns the context so the host can drain its [member MatchResolutionContext.visuals].
+func use_ability(source: Combatant, ability: Ability) -> MatchResolutionContext:
+	var context := MatchResolutionContext.new()
+	context.source = source
+	context.allies = _allies_of(source)
+	context.opponents = _opponents_of(source)
+	context.rng = RandomNumberGenerator.new()
+	context.rng.seed = runtime().rng_seed
+	context.chooser = runtime().chooser
+	context.status_catalog = runtime().status_catalog
+	context.encounter = self
+	await AbilityRunner.run(ability, context)
+	return context
+
+
 ## The combatant whose turn it currently is — the player on turn 1 of the round, the opponent on turn 2.
 func active_combatant() -> Combatant:
 	return player if turn_in_round == 1 else opponent
+
 
 ## The combatant opposing [param combatant] — the target a mover's damage tiles hit. Returns the player for
 ## anything that isn't the player (so a null or stray reference resolves to the player's foe, the opponent).
 func opponent_of(combatant: Combatant) -> Combatant:
 	return opponent if combatant == player else player
+
 
 ## The two combatants as engine [Entity]s, [param combatant] first (its allies are itself, its opponents the
 ## other) — what the runtime's phase/hook calls take.
@@ -116,6 +148,7 @@ func _allies_of(combatant: Combatant) -> Array[Entity]:
 		entities.append(combatant)
 	return entities
 
+
 func _opponents_of(combatant: Combatant) -> Array[Entity]:
 	var entities: Array[Entity] = []
 	var foe: Combatant = opponent_of(combatant)
@@ -123,22 +156,27 @@ func _opponents_of(combatant: Combatant) -> Array[Entity]:
 		entities.append(foe)
 	return entities
 
+
 ## [param combatant]'s current health — its live hull (0 if null).
 func health_of(combatant: Combatant) -> int:
 	return combatant.health() if combatant != null else 0
 
+
 ## [param combatant]'s max health — its starship's derived hull, the bar's cap (0 if null).
 func max_health_of(combatant: Combatant) -> int:
 	return combatant.max_health() if combatant != null else 0
+
 
 ## Sets [param combatant]'s current health, floored at zero. The combatant's stat is the source of truth.
 func _set_health(combatant: Combatant, value: int) -> void:
 	if combatant != null:
 		combatant.set_health(maxi(0, value))
 
+
 ## [param combatant]'s current shield — the live [code]shield[/code] pool stat the shield status's AbsorbStep soaks into.
 func shield_of(combatant: Combatant) -> int:
 	return combatant.current_stats.get_stat(Stats.block) if combatant != null and combatant.current_stats != null else 0
+
 
 ## Grants [param combatant] [param amount] more shield (the Shields ability) — adds to the shield pool stat and keeps
 ## the [code]shield[/code] status applied so its AbsorbStep is in the damage pipeline.
@@ -146,6 +184,7 @@ func add_shield(combatant: Combatant, amount: int) -> void:
 	if amount <= 0:
 		return
 	_set_shield(combatant, shield_of(combatant) + amount)
+
 
 ## [param combatant]'s shield pool, in sync: writes the [code]shield[/code] stat and mirrors the [code]shield[/code]
 ## status (present with that count while shield remains, removed at zero) so the AbsorbStep stays collected.
@@ -159,14 +198,17 @@ func _set_shield(combatant: Combatant, value: int) -> void:
 	else:
 		StatusEngine.remove_status(combatant, &"shield")
 
+
 ## Whether [param combatant] is set to dodge the next attack against them (holds the [code]dodge[/code] status).
 func dodge_of(combatant: Combatant) -> bool:
 	return combatant != null and combatant.status_count(&"dodge") > 0
+
 
 ## Arms or clears [param combatant]'s dodge (Evasive Maneuvers arms it; the next attack consumes it).
 func set_dodge(combatant: Combatant, on: bool) -> void:
 	if combatant != null:
 		combatant.set_status(DODGE, 1 if on else 0)
+
 
 ## Applies [param count] stacks of [param status] to [param combatant] — a buff or debuff. A stat-modifying status
 ## shifts that combatant's [method effective_stats]; it stacks for the encounter (Target Lock's +weapons lands
@@ -174,6 +216,20 @@ func set_dodge(combatant: Combatant, on: bool) -> void:
 func add_status(combatant: Combatant, status: Status, count: int) -> void:
 	if combatant != null:
 		combatant.add_status(status, count)
+
+
+## Drains [param amount] from each of [param target]'s stat resource pools (the four stat tiles) — the Siphon
+## effect, run through the engine's [ResourceEngine] like the grant it mirrors. The stat pools are the leading
+## [constant STAT_RESOURCE_KINDS] of the combatant's pools.
+func drain_stat_resources(target: Combatant, amount: int) -> void:
+	if target == null or amount <= 0:
+		return
+	for kind: int in STAT_RESOURCE_KINDS:
+		if kind < target.resources.size():
+			var pool: ResourcePool = target.resources[kind]
+			if pool != null and pool.resource != null:
+				ResourceEngine.drain(target, pool.resource, amount)
+
 
 ## [param combatant]'s effective stats: its permanent module-grid profile ([param base], supplied by the host since
 ## the starship owns the grid) with this encounter's active-status [Modifier]s folded on top by the engine's
@@ -186,12 +242,14 @@ func effective_stats(combatant: Combatant, base: StarshipStats) -> StarshipStats
 		StatusModifiers.apply(combatant, total)
 	return total
 
+
 ## The cells currently disabled on [param combatant]'s grid — each deactivates the module covering it.
 func disabled_cells_of(combatant: Combatant) -> Array[Vector2i]:
 	var result: Array[Vector2i] = []
 	for cell: Vector2i in _disabled_map(combatant):
 		result.append(cell)
 	return result
+
 
 ## Disables [param cell] on [param combatant]'s grid for [param turns] turns — the module covering it stops counting
 ## until the disable expires. Refreshes to the longer remaining if the cell is already disabled. Counted down one
@@ -204,8 +262,31 @@ func disable_cell(combatant: Combatant, cell: Vector2i, turns: int) -> void:
 	var current: int = map[cell] if map.has(cell) else 0
 	map[cell] = maxi(current, turns)
 
+
 func _disabled_map(combatant: Combatant) -> Dictionary[Vector2i, int]:
 	return player_disabled_cells if combatant == player else opponent_disabled_cells
+
+
+## Disables one of [param target]'s still-active modules for [param turns] turns, picked from [param rng] so it's
+## reproducible — disabling one of the module's cells deactivates the whole module (see [method disable_cell]). A
+## no-op when the target has no loadout or every module is already down. The Disruptor ability's board effect,
+## kept here on the game side because the effect engine is entity-centric, not board-aware.
+func disable_random_module(target: Combatant, turns: int, rng: RandomNumberGenerator) -> void:
+	if target == null or target.starship == null:
+		return
+	var loadout: StarshipLoadout = target.starship.loadout
+	if loadout == null:
+		return
+	var disabled: Array[Vector2i] = disabled_cells_of(target)
+	var live: Array[ModuleState] = []
+	for module_state: ModuleState in loadout.modules:
+		if module_state != null and loadout.enabled(module_state, disabled) and not loadout.cells_of(module_state).is_empty():
+			live.append(module_state)
+	if live.is_empty():
+		return
+	var pick: ModuleState = live[rng.randi_range(0, live.size() - 1)]
+	disable_cell(target, loadout.cells_of(pick)[0], turns)
+
 
 # Counts every disabled cell down one turn and re-enables those that reach zero. Run once per turn change.
 func _tick_disabled_cells() -> void:
@@ -215,6 +296,7 @@ func _tick_disabled_cells() -> void:
 			map[cell] -= 1
 			if map[cell] <= 0:
 				map.erase(cell)
+
 
 ## Applies [param amount] of incoming damage to [param target], through the effect engine: a dodge negates it
 ## whole (the engine consumes the dodge stack on the [WhenHitHook]) and leaves shield untouched, otherwise the
@@ -251,6 +333,7 @@ func deal_damage(target: Combatant, amount: int) -> int:
 	runtime().raise_hook(target, _allies_of(target), _opponents_of(target), WhenHitHook.new(), modification.source)
 	return to_health
 
+
 # Re-points the [code]shield[/code] status's count at the live shield pool stat the AbsorbStep just changed, so
 # the badge/stack count stays in step — removing the status when the pool is empty.
 func _sync_shield_status(combatant: Combatant) -> void:
@@ -262,9 +345,11 @@ func _sync_shield_status(combatant: Combatant) -> void:
 	else:
 		StatusEngine.remove_status(combatant, &"shield")
 
+
 ## Whether the encounter has been decided — a combatant Jumped, or one is out of health.
 func is_over() -> bool:
 	return warp_winner != null or player_health <= 0 or opponent_health <= 0
+
 
 ## The combatant that lost. Only meaningful once [method is_over] is true: the one who didn't Jump if there was a
 ## warp victory, else the one out of health.
@@ -273,13 +358,16 @@ func defeated() -> Combatant:
 		return opponent_of(warp_winner)
 	return player if player_health <= 0 else opponent
 
+
 ## [param combatant]'s filled warp bars — the side of the shared meter in their favor (0 if they're behind).
 func warp_of(combatant: Combatant) -> int:
 	return maxi(0, warp) if combatant == player else maxi(0, -warp)
 
+
 ## [param combatant]'s warp capacity — the bars their side holds before they can Jump.
 func warp_max_of(combatant: Combatant) -> int:
 	return player_warp_max if combatant == player else opponent_warp_max
+
 
 ## Adds [param bars] of warp for [param combatant]: the player's pushes the meter up, the opponent's down.
 ## Clamps to each side's own capacity; without a tug (Campaign) it never drops below zero, so the opponent's
@@ -291,12 +379,14 @@ func add_warp(combatant: Combatant, bars: int) -> void:
 	var low: int = -opponent_warp_max if warp_tug else 0
 	warp = clampi(warp, low, player_warp_max)
 
+
 ## Whether [param combatant] has filled their warp and may Jump. The player can at a full meter; the opponent
 ## only in a tug (Quick Match).
 func can_jump(combatant: Combatant) -> bool:
 	if combatant == player:
 		return player_warp_max > 0 and warp >= player_warp_max
 	return warp_tug and opponent_warp_max > 0 and warp <= -opponent_warp_max
+
 
 ## [param combatant] Jumps: expends the warp and wins the encounter (see [method defeated]). A no-op when they
 ## can't yet.
@@ -305,6 +395,7 @@ func jump(combatant: Combatant) -> void:
 		return
 	warp_winner = combatant
 	warp = 0
+
 
 ## Ends the active combatant's turn: advances to the next turn, rolling into the next round once both
 ## combatants have moved.

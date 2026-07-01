@@ -16,9 +16,10 @@ extends Resource
 ## own copy, so two instances of one module type never share a mutable block.
 @export var stats: StarshipStats
 ## Abilities this module grants its starship while enabled (aggregated by [method StarshipLoadout.abilities]).
-@export var abilities: Array[MatchAbility] = []
+@export var abilities: Array[Ability] = []
 ## Phase rules this module grants its starship while enabled (aggregated by [method StarshipLoadout.rules]).
 @export var rules: Array[Rule] = []
+
 
 ## Builds a module state from [param _blueprint], copying its authored profile once — the blueprint is factory
 ## input, never held or read afterwards. A null blueprint yields an empty state. Mirrors [method
