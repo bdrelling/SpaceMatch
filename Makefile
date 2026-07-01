@@ -209,7 +209,7 @@ check: ## Parse-check GDScript (no run). ARGS scopes to .gd files, else whole pr
 import: ## Rebuild the import/UID cache
 	@./scripts/godot.sh import
 
-verify: lint-staged import check test ## Full gate: lint (staged) -> import -> check -> test (stops at first failure)
+verify: lint-staged format-staged import check test ## Full gate: lint + format (staged) -> import -> check -> test (stops at first failure)
 
 # =============================================================================
 # CLEANUP

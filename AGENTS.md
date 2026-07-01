@@ -93,9 +93,6 @@ Automated testing is critical to keeping the game stable. Test coverage will be 
 
 ## Linting & formatting (gdtoolkit)
 
-- **Scripts take a scope** — `./scripts/gdtoolkit.sh lint|format [--write] [targets…]` and `./scripts/godot.sh check|test [targets…]` accept the whole project (no args), a dir, or specific files. Use the scope; don't hand-tweak `gdlint`/`gdformat`/`godot` invocations.
-- **During dev:** `make lint` / `make format` (dry-run; `make format-write` writes) on what you touched — cheap, no engine boot.
-- **End of a task, once:** `make verify` = `lint → import → check → test`, stopping at the first failure. It's the ~2–3 min engine gate — run it once at the end, never per turn.
-- gdtoolkit is installed by `make setup` (or `./scripts/gdtoolkit.sh install`).
+`make verify` is the gate: `lint-staged → format-staged → import → check → test`, fail-fast. Also `make lint` / `make format` (whole `source/`, minus `addons/`; `format-write` applies) and their `-staged` variants; `ARGS="<files>"` scopes any of them. See `make help`. Installed via `make setup`.
 
 @armory/AGENTS.md

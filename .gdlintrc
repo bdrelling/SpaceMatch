@@ -3,7 +3,7 @@
 # This file OVERRIDES only what we care about; every unset check keeps its gdlint
 # default. Regenerate the full default set (to reconcile exact key names / add
 # thresholds) with:  gdlint --dump-default-config
-# Reconciling + tuning against real output is a follow-up (gdtoolkit isn't installed yet).
+# Reconciling + tuning against real output is an ongoing follow-up.
 
 # Skip third-party addons (AGENTS.md: addons/ is third-party — ignore it) and VCS metadata.
 excluded_directories:
