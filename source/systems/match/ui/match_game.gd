@@ -13,7 +13,7 @@ signal status_changed(text: String)
 signal drill_requested(starship: StarshipState)
 ## Asks the host to rebuild and reopen the active encounter (a fresh fight). The encounter screen wires
 ## this; the match's win/lose overlay Restart emits it. Standing alone (no host), the match restarts itself.
-signal restart_requested()
+signal restart_requested
 
 var status_text: String = "":
 	set(value):
@@ -38,6 +38,7 @@ const _DAMAGE_KIND: int = 6
 # autoload that populates in its own _ready.
 var _stat_resources: Array[StarshipResource] = []
 
+
 # The four stat resources, resolved once from the catalog (index-aligned with [constant _STAT_KINDS]).
 func _stat_resources_cached() -> Array[StarshipResource]:
 	if _stat_resources.is_empty():
@@ -46,6 +47,7 @@ func _stat_resources_cached() -> Array[StarshipResource]:
 			if resource != null:
 				_stat_resources.append(resource)
 	return _stat_resources
+
 
 # Damage tiles fly from the match to the target portrait before the hit lands: glyph size, travel time,
 # the impact pop at the end, and the head-start between successive tiles so they stream rather than stack.
@@ -159,6 +161,7 @@ var _applied_fill: BoardFillRule
 # shared-board fight — gates whether refilled tiles are tagged and tinted by side.
 var _territory: TerritoryRule
 
+
 func _ready() -> void:
 	# Fall back to the shared debug rules so the board plays when mounted without authored rules of its own,
 	# and so the Debug panel's live edits reach the running board (it shares this instance).
@@ -251,10 +254,12 @@ func _ready() -> void:
 	# The match is set up — let SETUP then TURN_START rules seed starting state and the first mover's budget.
 	_begin_encounter()
 
+
 func actions() -> Array[MatchAction]:
 	# The player-facing Rules button lives in the top bar — a read-only summary of this match's rules.
 	var list: Array[MatchAction] = [MatchAction.new("Rules", _open_rules)]
 	return list
+
 
 # Opens the read-only player Rules view over the board (a top-most layer; the dim blocks the board behind).
 # Reads this match's own rules, so it reflects exactly the rules in force. Done frees it.
@@ -268,7 +273,9 @@ func _open_rules() -> void:
 	layer.add_child(navigator)
 	add_child(layer)
 
+
 #region Portraits
+
 
 ## Mounts the running game (read from the [code]GameSession[/code] autoload) so the portraits show each starship's
 ## stats and the player's wallet, and the top row tracks the encounter's turns. Called by the host when it
@@ -299,6 +306,7 @@ func bind_session() -> void:
 		_begin_encounter()
 	_bound = true
 
+
 func _refresh_portraits() -> void:
 	_refresh_readouts()
 	if _player_portrait != null:
@@ -310,6 +318,7 @@ func _refresh_portraits() -> void:
 	_refresh_abilities()
 	_refresh_jump()
 
+
 # Repaints both portraits' resource readouts from the starships' live tallies. Cheap and idempotent, so it runs
 # once per cascade step (banked resources tick up as each match clears) as well as in the full portrait pass.
 func _refresh_readouts() -> void:
@@ -317,6 +326,7 @@ func _refresh_readouts() -> void:
 		_player_portrait.set_readouts(_player_readouts())
 	if _opponent_portrait != null:
 		_opponent_portrait.set_readouts(_opponent_readouts())
+
 
 # Repaints both portraits' health bars from the encounter's current health.
 func _refresh_health() -> void:
@@ -328,6 +338,7 @@ func _refresh_health() -> void:
 		_opponent_portrait.set_health(_encounter.opponent_health, _encounter.opponent_max_health, _encounter.shield_of(_encounter.opponent))
 	_refresh_dodge()
 
+
 # Toggles each portrait's EVADE badge to match the encounter's dodge state — armed by Evasive Maneuvers, spent
 # by the next attack, expired when the owner's turn returns — so a live dodge is always visible on the HUD.
 func _refresh_dodge() -> void:
@@ -337,6 +348,7 @@ func _refresh_dodge() -> void:
 		_player_portrait.set_dodge_active(_encounter.dodge_of(_encounter.player))
 	if _opponent_portrait != null:
 		_opponent_portrait.set_dodge_active(_encounter.dodge_of(_encounter.opponent))
+
 
 # Repaints the warp bar above the board as a tug of war: the side currently ahead sets the bar's length to its
 # own capacity and fills toward its own Jump — the player from the left (purple), the opponent from the right
@@ -360,15 +372,18 @@ func _refresh_warp() -> void:
 		var filled: bool = (i < level) if leads_player else (i >= capacity - level)
 		_paint_warp_segment(_warp_segments[i], filled, fill)
 
+
 # The four resource readouts beneath the player portrait, in [constant _STAT_KINDS] order (combat,
 # propulsion, science, defense): the tiles the player has matched of each kind this encounter. Starts at
 # zero — these are matched-this-fight resources, not the starship's base stats (those live on the stats screen).
 func _player_readouts() -> PackedStringArray:
 	return _readouts_for(_encounter.player if _encounter != null else null)
 
+
 # The opponent's four resource readouts — its own matched-this-encounter resources.
 func _opponent_readouts() -> PackedStringArray:
 	return _readouts_for(_encounter.opponent if _encounter != null else null)
+
 
 # A combatant's four stat-tile readouts: the count matched of each resource this fight, read off the encounter.
 func _readouts_for(combatant: Combatant) -> PackedStringArray:
@@ -377,9 +392,11 @@ func _readouts_for(combatant: Combatant) -> PackedStringArray:
 		out.append(str(_resource_of(combatant, resource)))
 	return out
 
+
 # A combatant's banked count of a resource this encounter (zero when there's no combatant).
 func _resource_of(combatant: Combatant, resource: StarshipResource) -> int:
 	return combatant.resource_of(resource) if combatant != null else 0
+
 
 # Drills into a combatant's module grid: hands the shell that combatant's starship so the Loadout stage
 # opens it. No starship (e.g. running this scene standalone, no bound session) ⇒ no drill.
@@ -388,18 +405,22 @@ func _on_player_pressed() -> void:
 	if starship != null:
 		drill_requested.emit(starship)
 
+
 func _on_opponent_pressed() -> void:
 	var starship: StarshipState = _opponent_starship()
 	if starship != null:
 		drill_requested.emit(starship)
+
 
 # Both fight starships are the encounter's now — the player's a clone of the game's persistent starship (see
 # [method _seed_player_starship]), the opponent's the encounter's own. Null-safe (no encounter ⇒ no starship).
 func _player_starship() -> StarshipState:
 	return _encounter.player.starship if _encounter != null and _encounter.player != null else null
 
+
 func _opponent_starship() -> StarshipState:
 	return _encounter.opponent.starship if _encounter != null and _encounter.opponent != null else null
+
 
 # Opens the match's own fallback encounter, used ONLY when it stands alone (raw match.tscn, no host).
 # GameCoordinator builds the fight (a clone of the running starship vs the computer default) and points the
@@ -412,11 +433,14 @@ func _open_fallback_encounter() -> void:
 	add_child(_fallback_encounter)
 	_encounter = _fallback_encounter.state
 
+
 func _starship_for(combatant: Combatant) -> StarshipState:
 	return combatant.starship if combatant != null else null
 
+
 func _loadout_of(starship: StarshipState) -> StarshipLoadout:
 	return starship.loadout if starship != null else null
+
 
 # The acting [param combatant]'s phase rules: its starship's ruleset plus its enabled modules' rules. The match
 # layers these over its own defaults each turn (see [method _effective_ruleset]), so a starship's extra-turn or
@@ -435,6 +459,7 @@ func _starship_rules(combatant: Combatant) -> Array[Rule]:
 		result.append_array(loadout.rules(_encounter.disabled_cells_of(combatant)))
 	return result
 
+
 # The acting [param combatant]'s abilities: its starship's hull kit plus its enabled modules' abilities. Drives
 # the player's ability bar and the opponent AI's pick — abilities belong to the starship, never the match.
 func _starship_abilities(combatant: Combatant) -> Array[MatchAbility]:
@@ -449,6 +474,7 @@ func _starship_abilities(combatant: Combatant) -> Array[MatchAbility]:
 	if loadout != null and _encounter != null:
 		result.append_array(loadout.abilities(_encounter.disabled_cells_of(combatant)))
 	return result
+
 
 # [param combatant]'s effective stats: its starship's own base stat block plus its module-grid profile (honoring
 # any disabled cells — the permanent layer), with the encounter's temporary buff layer stacked on top. Empty
@@ -466,7 +492,9 @@ func _effective_stats(combatant: Combatant) -> StarshipStats:
 		base.add(loadout.stats(_encounter.disabled_cells_of(combatant)))
 	return _encounter.effective_stats(combatant, base)
 
+
 #endregion
+
 
 # Press G to unlock gravity — the tiles fall off the board into a physics heap. One-way for now.
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -477,6 +505,7 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_unlock()
 		get_viewport().set_input_as_handled()
 
+
 # Mount the overlay on the board's current on-screen framing, hand physics the tiles, and kill swap input.
 func _unlock() -> void:
 	_gravity.position = _view.position
@@ -485,10 +514,13 @@ func _unlock() -> void:
 	_message = "Gravity unlocked — the tiles broke free."
 	_compose_status()
 
+
 #region Match-3
+
 
 func _compose_status() -> void:
 	status_text = _message
+
 
 # A resolved move ends the active combatant's turn and hands the board to the next — unless a MOVE_RESOLVED
 # rule (e.g. [ExtraTurnRule]) keeps the board with the mover for another go. The player and the AI opponent both resolve through here — the
@@ -552,7 +584,9 @@ func _on_move_resolved(made_match: bool, cells_cleared: int) -> void:
 		await _reshuffle_board()
 	_take_opponent_turn_if_needed()
 
+
 #region AI opponent
+
 
 # Routes pointer events to the board, but only when the human may act — the AI
 # opponent's turn (its think beat and its move) is hands-off so the player can't
@@ -562,6 +596,7 @@ func _on_board_input(event: InputEvent) -> bool:
 		return false
 	return _match_view.handle_event(event)
 
+
 func _accepts_player_input() -> bool:
 	if _game_over or _resolving:
 		return false
@@ -569,14 +604,17 @@ func _accepts_player_input() -> bool:
 		return true
 	return _encounter.active_combatant() == _encounter.player
 
+
 # Whether the opponent is computer-controlled. When false, the opponent shares the board as a human and
 # the AI never acts (used for a hot-seat opponent and to isolate turn logic in tests).
 func _ai_controls_opponent() -> bool:
 	return ai_opponent
 
+
 # When the turn has passed to the AI opponent, think for a beat, then play the best
 # move the solver can find. Fire-and-forget: the resulting move re-enters
 # [method _on_move_resolved], which hands the turn back to the player.
+# gdlint:disable=max-returns
 func _take_opponent_turn_if_needed() -> void:
 	if _game_over or not _ai_controls_opponent() or _match_view == null:
 		return
@@ -615,6 +653,10 @@ func _take_opponent_turn_if_needed() -> void:
 		return
 	await _match_view.perform_move(move)
 
+
+# gdlint:enable=max-returns
+
+
 # A dead board (no swap makes a match) — skip the opponent's move so play doesn't
 # stall, handing the turn straight back to the player.
 func _pass_opponent_turn() -> void:
@@ -624,7 +666,9 @@ func _pass_opponent_turn() -> void:
 	_message = "%s has no move — %s's turn." % [passer, _active_name()]
 	_compose_status()
 
+
 #endregion
+
 
 # Per-clear hooks. A line clear (swap / slide / teleport, and every cascade) sizes its match by intersecting
 # straight runs; a drag/trace clear sizes it by the traced path. The two can't be told apart from the cells
@@ -633,8 +677,10 @@ func _pass_opponent_turn() -> void:
 func _on_cells_cleared(board: GridState, cells: Array[Vector2i]) -> void:
 	_resolve_clear(board, cells, false)
 
+
 func _on_path_cleared(board: GridState, cells: Array[Vector2i]) -> void:
 	_resolve_clear(board, cells, true)
+
 
 # Fires the ON_CLEAR rules over the popped batch — they bank resources, deal damage and charge warp. Runs
 # once per cascade step with the cells about to be removed, so the kinds are still readable on the board.
@@ -686,6 +732,7 @@ func _resolve_clear(board: GridState, cells: Array[Vector2i], is_path: bool) -> 
 	_run_phase(MatchPhase.ON_CLEAR, match_context)
 	_render_clear_visuals(match_context)
 
+
 # Renders the visual events the ON_CLEAR rules emitted: resource / warp popups, and the damage fly plus its
 # delayed hit number. The rules mutate state; the host owns the scene nodes, so visuals come back via the context.
 func _render_clear_visuals(match_context: MatchRuleContext) -> void:
@@ -721,9 +768,11 @@ func _render_clear_visuals(match_context: MatchRuleContext) -> void:
 	if charged:
 		_refresh_warp()
 
+
 # The player's wallet state from the running game, or null when there's no game state.
 func _wallet() -> WalletState:
 	return GameSession.game_state.wallet if GameSession.game_state != null else null
+
 
 # A match's reward for clearing [param count] tiles of a kind, per the active [ScoringRule]'s formula (one-to-
 # one by default; a [FibonacciScoringFormula] makes bigger matches pay super-linearly). Falls back to one-to-
@@ -733,12 +782,15 @@ func _reward_for(count: int) -> int:
 	var scoring_rule := _rule_of(ScoringRule, _effective_ruleset(combatant)) as ScoringRule
 	return scoring_rule.reward_for(count) if scoring_rule != null else maxi(0, count)
 
+
 # Adds matched scrap to the player's wallet (a no-op when there's no wallet).
 func _earn_scrap(amount: int) -> void:
 	if GameSession.game_state != null and GameSession.game_state.wallet != null:
 		GameSession.game_state.wallet.earn(amount)
 
+
 #region Abilities
+
 
 # Wires the scene's buttons to the encounter's abilities, left to right. Extra buttons (more than there
 # are abilities) hide; the affordability pass runs once so they start in the right state.
@@ -758,6 +810,7 @@ func _setup_abilities() -> void:
 		else:
 			button.visible = false
 	_refresh_abilities()
+
 
 # Lays out one ability button: the cost tile and its count over the ability's name. Built in code so the
 # button stays data-driven off the rules. The content ignores the mouse so the whole button stays clickable.
@@ -821,6 +874,7 @@ func _configure_ability_button(button: Button, ability: MatchAbility) -> void:
 	name_label.add_theme_color_override("font_color", Color(0.70, 0.75, 0.88))
 	column.add_child(name_label)
 
+
 # Repaints each ability button from the player's tiles and whose turn it is: usable ones (affordable, on the
 # player's turn) light up in the tile color and stay pressable; the rest are disabled and dimmed. Abilities
 # end the turn, so they're only usable on the player's own turn. A no-op until the buttons are wired in _ready.
@@ -834,6 +888,7 @@ func _refresh_abilities() -> void:
 		var primary: StarshipResource = _primary_cost_resource(ability)
 		var tile_kind: int = primary.id if primary != null else -1
 		_style_ability_button(button, tile_kind, usable)
+
 
 # Swaps the button's box for the affordable look (a bright border in the tile color) or the idle look
 # (dim, faint border). Disabled buttons show the idle box; affordable ones show the lit box.
@@ -854,12 +909,14 @@ func _style_ability_button(button: Button, tile_kind: int, affordable: bool) -> 
 	for state: String in ["normal", "hover", "pressed", "disabled"]:
 		button.add_theme_stylebox_override(state, style)
 
+
 # A tapped ability button: the player uses it, but only on their own turn (abilities end the turn, so
 # they're off-limits during the opponent's). A stale tap off-turn does nothing.
 func _on_ability_pressed(ability: MatchAbility) -> void:
 	if not _is_player_turn():
 		return
 	_use_ability(_encounter.player if _encounter != null else null, ability)
+
 
 # Uses [param ability] for [param combatant]: spends every one of its costs from that combatant's tally,
 # applies each of its effects in order, then ends the turn and lets the next combatant act. Shared by the
@@ -902,10 +959,12 @@ func _use_ability(combatant: Combatant, ability: MatchAbility) -> void:
 	# If that handed the board to the AI opponent, set it playing; if it's the player's turn, this no-ops.
 	_take_opponent_turn_if_needed()
 
+
 # Waits out the action beat so an ability's effect and animation finish before the turn passes. Zero in tests.
 func _settle_action() -> void:
 	if action_resolve_delay > 0.0:
 		await get_tree().create_timer(action_resolve_delay).timeout
+
 
 # Applies each of an ability's effects for the combatant using it, in order. The health/tally changes land
 # here; the caller refreshes the HUD and resolves the turn.
@@ -913,6 +972,7 @@ func _apply_ability_effect(combatant: Combatant, ability: MatchAbility) -> void:
 	for effect: AbilityEffect in ability.effects:
 		if effect != null:
 			_apply_effect(combatant, effect)
+
 
 # Applies one [AbilityEffect], dispatched by its type — each effect carries its own parameters (no shared
 # magnitude). A new effect kind slots in as a new [AbilityEffect] subclass plus a branch here.
@@ -943,6 +1003,7 @@ func _apply_effect(combatant: Combatant, effect: AbilityEffect) -> void:
 		_fly_attack_glyphs(combatant, foe, clampi(dealt, 1, 5))
 		_spawn_portrait_popup_delayed(_portrait_for(foe), _damage_text(result, dealt), MatchTile.color_of(_DAMAGE_KIND), _FLY_DURATION)
 
+
 # Removes [param amount] from each of [param combatant]'s four stat resources — the Siphon drain, run through
 # the engine's ResourceEngine (the symmetric counterpart of granting).
 func _drain_resources(combatant: Combatant, amount: int) -> void:
@@ -951,6 +1012,7 @@ func _drain_resources(combatant: Combatant, amount: int) -> void:
 		return
 	for resource: StarshipResource in _stat_resources_cached():
 		ResourceEngine.drain(actor, resource, amount)
+
 
 # The ability's costs as engine [ResourceCost]s — what [ResourceEngine] pays from / checks against the actor's
 # pools. A [StarshipResource] is an [AbilityResource], so the pools match a cost by the resource's name.
@@ -964,6 +1026,7 @@ func _resource_costs(ability: MatchAbility) -> Array[ResourceCost]:
 		resource_cost.amount = cost.amount
 		costs.append(resource_cost)
 	return costs
+
 
 # Disables one of [param target]'s still-active modules for [param turns] turns — disabling one of its cells
 # deactivates the whole module, so it stops counting toward [param target]'s stats until it re-enables. Picks
@@ -983,9 +1046,11 @@ func _disable_opponent_module(target: Combatant, turns: int) -> void:
 	var pick: ModuleState = live[_rng.randi_range(0, live.size() - 1)]
 	_encounter.disable_cell(target, grid.cells_of(pick)[0], turns)
 
+
 # The popup text for an attack: "Dodged!" when the target evaded it (result < 0), else the damage dealt.
 func _damage_text(result: int, dealt: int) -> String:
 	return "Dodged!" if result < 0 else "%d damage" % dealt
+
 
 # Whether [param combatant] holds enough matched tiles to pay every one of [param ability]'s costs — checked
 # through the engine's ResourceEngine. A cost-less (free) ability is always affordable.
@@ -995,6 +1060,7 @@ func _affordable(combatant: Combatant, ability: MatchAbility) -> bool:
 	if combatant == null:
 		return false
 	return ResourceEngine.can_afford(combatant, _resource_costs(ability))
+
 
 # The most expensive affordable ability for [param combatant] (summed cost as an impact proxy), or null if
 # none is affordable — the AI opponent's ability pick. A dodge already armed is skipped, so the opponent spends
@@ -1013,12 +1079,14 @@ func _best_affordable_ability(combatant: Combatant) -> MatchAbility:
 			best_cost = total
 	return best
 
+
 # Whether [param ability] arms a dodge — keeps the AI from re-casting a dodge it already has.
 func _arms_dodge(ability: MatchAbility) -> bool:
 	for effect: AbilityEffect in ability.effects:
 		if effect is DodgeEffect:
 			return true
 	return false
+
 
 # The summed tile cost of [param ability] — the AI's crude impact proxy when picking what to play.
 func _total_cost(ability: MatchAbility) -> int:
@@ -1028,9 +1096,11 @@ func _total_cost(ability: MatchAbility) -> int:
 			total += cost.amount
 	return total
 
+
 # The resource of [param ability]'s first cost (for the button's accent color), or null when the ability is free.
 func _primary_cost_resource(ability: MatchAbility) -> StarshipResource:
 	return ability.costs[0].resource if not ability.costs.is_empty() else null
+
 
 # A one-line price for the tooltip — "10 combat + 12 science", or "Free" when the ability has no costs.
 func _cost_text(ability: MatchAbility) -> String:
@@ -1041,19 +1111,23 @@ func _cost_text(ability: MatchAbility) -> String:
 		parts.append("%d %s" % [cost.amount, _cost_name(cost)])
 	return " + ".join(parts)
 
+
 # The display name of a cost's resource (the tile name), or "" when the cost names no resource.
 func _cost_name(cost: AbilityCost) -> String:
 	if cost == null or cost.resource == null:
 		return ""
 	return _kind_name(cost.resource.id)
 
+
 # Whether it's the player's turn (or there's no encounter, e.g. the standalone scene — then always theirs).
 func _is_player_turn() -> bool:
 	return _encounter == null or _encounter.active_combatant() == _encounter.player
 
+
 #endregion
 
 #region Warp & Jump
+
 
 # Sets the encounter's warp mode for this board: Quick Match runs warp as a two-way tug (the opponent can win
 # on it too), Campaign as a one-way meter the opponent only drains. Seeds each side's warp capacity from its
@@ -1065,6 +1139,7 @@ func _configure_warp() -> void:
 	_encounter.player_warp_max = _warp_capacity_of(_encounter.player)
 	_encounter.opponent_warp_max = _warp_capacity_of(_encounter.opponent)
 
+
 # Fills both combatants to full hull at the start of an encounter — max is the starship's own derived hull (base
 # health stat plus any hull modules), so HP is starship-driven. The live hull is a stat on the combatant's
 # current_stats. A side with no combatant (the standalone scene) is skipped.
@@ -1075,10 +1150,12 @@ func _configure_health() -> void:
 		if combatant != null:
 			combatant.set_health(combatant.max_health())
 
+
 # [param combatant]'s warp capacity — the warp_capacity their slotted modules sum to (a disabled core stops
 # counting, like any module). Zero means the starship carries no warp core and can't warp.
 func _warp_capacity_of(combatant: Combatant) -> int:
 	return _effective_stats(combatant).warp_capacity
+
 
 # Whether warp is in play this board: the WarpRule must be ruled in and enabled, and at least one starship must
 # carry a warp core — if neither can warp, there's nothing to charge, so warp tiles don't spawn and no meter
@@ -1088,6 +1165,7 @@ func _warp_active() -> bool:
 	if rule == null or not rule.enabled:
 		return false
 	return _encounter != null and (_encounter.player_warp_max > 0 or _encounter.opponent_warp_max > 0)
+
 
 # The active WarpRule in the encounter's ruleset, or null if warp isn't ruled in — its enabled flag is the
 # match-level warp switch (see [method _warp_active]).
@@ -1099,11 +1177,13 @@ func _find_warp_rule() -> WarpRule:
 			return rule as WarpRule
 	return null
 
+
 # Builds the warp meter once, the first time warp is active for this board — the capacity isn't known until a
 # session binds its starships, so the bar can't be built unconditionally in _ready like the rest of the HUD.
 func _ensure_warp_bar() -> void:
 	if _warp_segments.is_empty() and _warp_active():
 		_build_warp_bar()
+
 
 # The most segments the meter ever needs: the larger of the two sides' capacities, since the bar shows the
 # leader's capacity and the lead can swing either way.
@@ -1111,6 +1191,7 @@ func _max_warp_segments() -> int:
 	if _encounter == null:
 		return 0
 	return maxi(_encounter.player_warp_max, _encounter.opponent_warp_max)
+
 
 # Listens for [signal Resource.changed] on the current encounter so a Debug-panel edit (the stat editor's
 # health/stat sliders) repaints the live readouts at once rather than waiting for the next move. Also seeds the
@@ -1121,16 +1202,19 @@ func _watch_encounter() -> void:
 	if _encounter != null:
 		_encounter.runtime().rng_seed = board_seed
 
+
 func _on_encounter_changed() -> void:
 	_refresh_health()
 	_refresh_warp()
 	_refresh_jump()
+
 
 # The encounter is the running game's, not this node's — drop the Debug panel's handle to it when the board
 # leaves the tree (back to the menu) so the stat editor reads "no encounter" instead of a stale one.
 func _exit_tree() -> void:
 	if DebugConfig.active_state == GameSession.game_state:
 		DebugConfig.active_state = null
+
 
 # Builds the warp meter — a row of [method _max_warp_segments] segment cells — and slots it into the layout
 # immediately above the board. Filled by [method _refresh_warp] to show how charged the meter is, and how many
@@ -1168,6 +1252,7 @@ func _build_warp_bar() -> void:
 	body.move_child(row, board_panel.get_index())  # sit immediately above the board
 	_refresh_warp()
 
+
 # Paints one warp segment: the leader's fill (bright, white-edged) when charged, a dim empty cell otherwise.
 func _paint_warp_segment(seg: Panel, filled: bool, fill: Color) -> void:
 	var style := StyleBoxFlat.new()
@@ -1181,6 +1266,7 @@ func _paint_warp_segment(seg: Panel, filled: bool, fill: Color) -> void:
 		style.set_border_width_all(1)
 		style.border_color = Color(1, 1, 1, 0.08)
 	seg.add_theme_stylebox_override("panel", style)
+
 
 # Builds the "JUMP" call-to-action: a bold, warp-colored button low over the board, hidden until the player
 # fills their warp meter. Pressing it wins the encounter (see [method _on_jump_pressed]).
@@ -1211,12 +1297,14 @@ func _build_jump_button() -> void:
 	add_child(button)
 	_jump_button = button
 
+
 # Shows the Jump button only when the player has filled their warp and can cash it in — and not mid-resolve or
 # after the encounter's been decided.
 func _refresh_jump() -> void:
 	if _jump_button == null:
 		return
 	_jump_button.visible = _encounter != null and not _game_over and not _resolving and _encounter.can_jump(_encounter.player)
+
 
 # The player taps Jump: expend the full warp meter and win the encounter outright. Guarded so a stale tap
 # (no full meter, game over, mid-resolve) does nothing.
@@ -1229,13 +1317,16 @@ func _on_jump_pressed() -> void:
 	_refresh_portraits()
 	_check_for_end()
 
+
 #endregion
 
 #region Popups
 
+
 # The center of a board cell in the view's local pixel space (the grid is anchored at the origin).
 func _cell_center(cell: Vector2i) -> Vector2:
 	return (Vector2(cell) + Vector2(0.5, 0.5)) * _CELL_SIZE
+
 
 # A floating popup for a cleared kind: "+N <name>" for resources (damage is shown by flying tiles instead),
 # colored by the tile.
@@ -1245,17 +1336,20 @@ func _spawn_match_popup(kind: int, count: int, center_local: Vector2) -> void:
 	var text: String = "%d damage" % count if kind == _DAMAGE_KIND else "+%d %s" % [count, _kind_name(kind)]
 	_emit_popup(_view.to_global(center_local), text, MatchTile.color_of(kind))
 
+
 # A floating popup centered over a portrait — used for ability hits, which have no board cell.
 func _spawn_portrait_popup(portrait: Control, text: String, color: Color) -> void:
 	if _popup_layer == null or portrait == null:
 		return
 	_emit_popup(portrait.get_global_rect().get_center(), text, color)
 
+
 func _emit_popup(global_pos: Vector2, text: String, color: Color) -> void:
 	var popup := FloatingText.new()
 	_popup_layer.add_child(popup)
 	popup.global_position = global_pos
 	popup.setup(text, color)
+
 
 # Same as [method _spawn_portrait_popup] but after [param delay] seconds — so a damage number lands when the
 # tiles that carry it reach the portrait. Bails if the board tears down before the delay elapses.
@@ -1264,6 +1358,7 @@ func _spawn_portrait_popup_delayed(portrait: Control, text: String, color: Color
 	if not is_inside_tree():
 		return
 	_spawn_portrait_popup(portrait, text, color)
+
 
 # Flings one damage-tile glyph per cleared damage cell at the struck portrait — the "the match throws its
 # damage at them" beat. Purely cosmetic; the hit already landed.
@@ -1274,6 +1369,7 @@ func _fly_damage_to_portrait(cells: Array[Vector2i], target_combatant: Combatant
 	var target: Vector2 = portrait.get_global_rect().get_center()
 	for i: int in cells.size():
 		_fly_glyph(_view.to_global(_cell_center(cells[i])), target, i * _FLY_STAGGER)
+
 
 # Flings a few damage glyphs from the attacker portrait to the target — the version used when an ability
 # deals the damage, since an ability has no board cells of its own.
@@ -1286,6 +1382,7 @@ func _fly_attack_glyphs(from_combatant: Combatant, to_combatant: Combatant, coun
 	var target: Vector2 = to_portrait.get_global_rect().get_center()
 	for i: int in count:
 		_fly_glyph(from, target, i * _FLY_STAGGER)
+
 
 # Sends a single damage glyph from one screen point to another: it launches fast, holds full size across
 # the trip, then pops (shrinks + fades) as it lands, and frees itself. The visible half of "dealing damage".
@@ -1310,17 +1407,21 @@ func _fly_glyph(from_global: Vector2, to_global: Vector2, delay: float) -> void:
 	tween.parallel().tween_property(glyph, "modulate:a", 0.0, _FLY_POP)
 	tween.tween_callback(glyph.queue_free)
 
+
 # The portrait belonging to a combatant (the player's on the left, the opponent's on the right).
 func _portrait_for(combatant: Combatant) -> PortraitPanel:
 	return _opponent_portrait if _encounter != null and combatant == _encounter.opponent else _player_portrait
+
 
 # A kind's display name, from the resource catalog.
 func _kind_name(kind: int) -> String:
 	return MatchTile.name_of(kind)
 
+
 #endregion
 
 #region Reshuffle & move count
+
 
 # Drops the whole board off the bottom, regenerates it, and pours a fresh one in — the dead-board reset.
 # Sets the "No moves" message and waits out the rebuild so the board is playable before returning.
@@ -1336,6 +1437,7 @@ func _reshuffle_board() -> void:
 		await get_tree().process_frame
 	_reshuffling = false
 	_refresh_move_debug()
+
 
 # Divides every tile on the current board between the two combatants as resources, each taking the floor of
 # half a kind's count (the odd tile is discarded). Banks the four stat kinds into both tallies and scrap into
@@ -1371,10 +1473,12 @@ func _split_board_resources() -> void:
 					opponent_starship.add_resource(resource, each)
 	_refresh_portraits()
 
+
 # Whether the board has a move to play. Unknown for non-swap modes (no cheap test) counts as "yes", so only
 # a confirmed dead swap board reshuffles.
 func _has_moves() -> bool:
 	return _available_moves() != 0
+
 
 # Count of adjacent swaps that would make a match, or -1 when there's no cheap way to know (non-swap modes).
 func _available_moves() -> int:
@@ -1384,6 +1488,7 @@ func _available_moves() -> int:
 	if swap == null:
 		return -1
 	return SwapSolver.count_moves(_session.state, swap)
+
 
 # Builds the debug move-count chip: monospace on a flat-blue panel at the top center, deliberately ugly so
 # it's obvious it's debug-only. Delete this call (and _refresh_move_debug's) to remove it.
@@ -1408,6 +1513,7 @@ func _build_move_debug() -> void:
 	add_child(panel)
 	_move_debug_label = label
 
+
 # Updates the debug chip with the live move count ("n/a" for modes without a count).
 func _refresh_move_debug() -> void:
 	if _move_debug_label == null:
@@ -1415,9 +1521,11 @@ func _refresh_move_debug() -> void:
 	var moves: int = _available_moves()
 	_move_debug_label.text = "moves: %d" % moves if moves >= 0 else "moves: n/a"
 
+
 #endregion
 
 #region End state
+
 
 # Ends the encounter if a combatant has fallen: in Quick Match, freezes play and shows the win/lose overlay
 # with a Restart. Returns true when the encounter is over, so callers stop handing the turn around.
@@ -1440,6 +1548,7 @@ func _check_for_end() -> bool:
 		_refresh_abilities()
 		_show_end_overlay()
 	return true
+
 
 # Builds the full-screen win/lose overlay: a dimmer, the verdict, and a Restart button. Player down → GAME
 # OVER; opponent down → YOU WIN. The overlay eats input so the frozen board underneath can't be touched.
@@ -1484,6 +1593,7 @@ func _show_end_overlay() -> void:
 	add_child(overlay)
 	_end_overlay = overlay
 
+
 # Restarts the Quick Match on a fresh board: clears the overlay, resets the encounter and both tallies, and
 # pours in a new board. Wired to the overlay's Restart button. (Campaign would replace this with its own flow.)
 func _restart_encounter() -> void:
@@ -1497,6 +1607,7 @@ func _restart_encounter() -> void:
 		_encounter = GameSession.game_state.encounter
 	_watch_encounter()
 	_restart_board()
+
 
 # Starts the match over on a fresh board against the current [member _encounter]: clears the end overlay and
 # the game-over flags, regenerates the board, and re-runs SETUP. The overlay's Restart makes a fresh encounter
@@ -1516,12 +1627,15 @@ func _restart_board() -> void:
 	_compose_status()
 	_begin_encounter()  # a fresh match is set up — seed SETUP + the first mover's turn-start budget
 
+
 func _hide_end_overlay() -> void:
 	if _end_overlay != null:
 		_end_overlay.queue_free()
 		_end_overlay = null
 
+
 #endregion
+
 
 # Repaints the top row (round, turn-of-round, whose turn) and highlights the active portrait.
 func _refresh_turn_tracker() -> void:
@@ -1546,13 +1660,16 @@ func _refresh_turn_tracker() -> void:
 	# Ability buttons depend on whose turn it is (they end the turn), so refresh them when the turn flips.
 	_refresh_abilities()
 
+
 #region Rules
+
 
 # Runs every rule registered for [param phase] against [param context] — the host firing one phase of play
 # (see [MatchPhase]) across the effective ruleset: the match's defaults with the acting starship's rules layered
 # over them, so a phase fires the union of match + starship (+ module) rules, the starship's winning on conflict.
 func _run_phase(phase: StringName, context: MatchRuleContext) -> void:
 	_effective_ruleset(context.combatant).run(phase, context)
+
 
 # The match-scope ruleset with the acting starship's rules layered over it — the same default + per-starship
 # override that selection uses (see [method _active_selection]). The match ruleset folds in as a nested set and
@@ -1566,6 +1683,7 @@ func _effective_ruleset(combatant: Combatant) -> Ruleset:
 		composed.rulesets = nested
 	composed.rules = _starship_rules(combatant)
 	return composed
+
 
 # The last enabled rule that is [param type] in [param source] (the match ruleset when omitted), or null.
 # Config-style rules — scoring, selection default, board fill, territory, reload split — are read out of the
@@ -1581,12 +1699,14 @@ func _rule_of(type: Variant, source: Ruleset = null) -> Rule:
 			found = rule
 	return found
 
+
 # A minimal context for a lifecycle phase (no per-clear payload): the encounter and the active combatant.
 func _phase_context() -> MatchRuleContext:
 	var match_context := MatchRuleContext.new(_session.state if _session != null else null)
 	match_context.encounter = _encounter
 	match_context.combatant = _encounter.active_combatant() if _encounter != null else null
 	return match_context
+
 
 # Centralised turn handover: fire TURN_END for the mover, advance, repaint, then fire TURN_START for the new
 # mover — so turn-scoped rules (board rotation, draws, …) hook the boundary in one place.
@@ -1601,6 +1721,7 @@ func _advance_turn() -> void:
 	_tick_turn_start_decay()
 	_run_phase(MatchPhase.TURN_START, _phase_context())
 
+
 # Seeds a fresh match's opening turn: fires SETUP, then TURN_START for the first mover — so the turn-start rules
 # (action budget, resource capacity, scoring offset) configure them before they act, exactly as every later
 # turn boundary does via [method _advance_turn].
@@ -1608,6 +1729,7 @@ func _begin_encounter() -> void:
 	_run_phase(MatchPhase.SETUP, _phase_context())
 	_tick_turn_start_decay()
 	_run_phase(MatchPhase.TURN_START, _phase_context())
+
 
 # Fires the engine's turn-start phase decay for the active combatant: its statuses' TimingDecayRules tick (and
 # expire) through DecayEngine. A bare-phase tick completes synchronously (our statuses carry no phase-triggered
@@ -1627,9 +1749,11 @@ func _tick_turn_start_decay() -> void:
 		foes.append(foe)
 	_encounter.runtime().tick_phase(mover, allies, foes, &"turn_start")
 
+
 #endregion
 
 #region Selection rules
+
 
 # The starship acting this turn (the player's, or the opponent's on its turn). Null-safe for the
 # standalone scene with no bound game.
@@ -1637,6 +1761,7 @@ func _active_starship() -> StarshipState:
 	if _encounter != null and _encounter.active_combatant() == _encounter.opponent:
 		return _opponent_starship()
 	return _player_starship()
+
 
 # The selection rule in force this turn: the active starship's override wins, else the encounter's default,
 # else the legacy-export fallback. Never null once _ready has run.
@@ -1649,6 +1774,7 @@ func _active_selection() -> SelectionRule:
 		return default_rule.selection
 	return _fallback
 
+
 # Re-points the board at the active turn's selection rule, but only when it actually changed — so a board
 # whose combatants share one rule never churns the view, while differing per-starship rules switch on the turn.
 func _sync_selection() -> void:
@@ -1659,6 +1785,7 @@ func _sync_selection() -> void:
 		return
 	_apply_selection(selection)
 	_applied_selection = selection
+
 
 # Applies a selection rule live: enables exactly its interaction, retunes adjacency / run length / range on
 # every verb and match condition, and re-points the view's input handling. No board rebuild — the verbs all
@@ -1692,9 +1819,11 @@ func _apply_selection(rule: SelectionRule) -> void:
 	input_mode = mode
 	allow_diagonal = rule.allow_diagonal
 
+
 #endregion
 
 #region Board rules
+
 
 # Re-derives the board-level rules that depend on whose turn it is — refill direction and territory ownership —
 # from the effective ruleset (the same compose that drives every phase), applying fill only when it changed so
@@ -1714,6 +1843,7 @@ func _sync_board_rules() -> void:
 	# Territory's presence is what turns on tile ownership and tinting; null leaves an ordinary board.
 	_territory = _rule_of(TerritoryRule, effective) as TerritoryRule
 
+
 # Sets the gravity direction live on every gravity rule in the session — the one knob that decides which way
 # tiles settle and which edge fresh tiles stream in. Null fill = the default downward fall.
 func _apply_fill(fill: BoardFillRule) -> void:
@@ -1721,7 +1851,9 @@ func _apply_fill(fill: BoardFillRule) -> void:
 	for gravity: GravityPassive in _session.find_rules(GravityPassive):
 		gravity.direction = dir
 
+
 #endregion
+
 
 # The display name of the combatant whose turn it currently is.
 func _active_name() -> String:
@@ -1729,10 +1861,12 @@ func _active_name() -> String:
 		return _player_portrait.portrait_name
 	return _name_for(_encounter.active_combatant())
 
+
 func _name_for(combatant: Combatant) -> String:
 	if _encounter != null and combatant == _encounter.opponent:
 		return _opponent_portrait.portrait_name
 	return _player_portrait.portrait_name
+
 
 ## The how-to-play line for the active input mode.
 func _prompt_for_mode() -> String:
@@ -1746,6 +1880,7 @@ func _prompt_for_mode() -> String:
 		_:
 			return "Match %d in a row to clear." % config.min_run
 
+
 func _make_tile(object: GridObjectState) -> Node2D:
 	var tile := MatchTile.new()
 	var tile_state := object as _TileState
@@ -1754,11 +1889,13 @@ func _make_tile(object: GridObjectState) -> Node2D:
 		tile.owner_outline = _owner_color(tile_state.owner)
 	return tile
 
+
 func _spawn_tile(_board: GridState, cell: Vector2i) -> GridObjectState:
 	var cells: Array[Vector2i] = [cell]
 	# Only a territory match tags ownership; ordinary modes spawn neutral tiles (no owner, no outline).
 	var owner: int = _refill_owner() if _territory != null else -1
 	return _TileState.new(cells, _pick_kind(), owner)
+
 
 # The owner marker a freshly refilled tile belongs to: whoever is clearing now drives the refill, so new tiles
 # enter owned by the active side. The marker is the active combatant's [member Entity.id] (0 player, 1 opponent).
@@ -1767,10 +1904,12 @@ func _refill_owner() -> int:
 	var active: Combatant = _encounter.active_combatant() if _encounter != null else null
 	return active.id if active != null else -1
 
+
 # The outline tint marking which side owns a tile, from the active [TerritoryRule] (which carries the team
 # colours). Transparent — no ring — for neutral tiles or any match without a territory rule.
 func _owner_color(owner: int) -> Color:
 	return _territory.color_for(owner) if _territory != null else Color(0, 0, 0, 0)
+
 
 func _generate_board() -> GridState:
 	var state := GridState.new(config.board_width, config.board_height, 1)
@@ -1782,6 +1921,7 @@ func _generate_board() -> GridState:
 			state.place_object(0, _TileState.new(cells, _pick_kind_avoiding_runs(state, x, y)))
 	return state
 
+
 # Every board tile kind, from the resource catalog (each StarshipResource's id). Cached on first use because
 # Catalogs is an autoload that may not have populated when this board's _ready ran. Adding a resource in-editor
 # adds its kind here automatically.
@@ -1790,10 +1930,12 @@ func _tile_kinds() -> Array[int]:
 		_all_kinds = Catalogs.ability_resources.tile_kinds()
 	return _all_kinds
 
+
 # A weighted kind for a refill — the board is a generator, so it can't stall and a refill may roll a
 # fresh match (the cascades). Weights come from the encounter [member rules].
 func _pick_kind() -> int:
 	return _weighted_choice(_tile_kinds())
+
 
 # A kind for cell (x, y) that doesn't complete a 3-run there, so a freshly generated board starts
 # stable; weighted (per the rules) among the safe kinds.
@@ -1805,6 +1947,7 @@ func _pick_kind_avoiding_runs(state: GridState, x: int, y: int) -> int:
 	if safe.is_empty():
 		return _pick_kind()
 	return _weighted_choice(safe)
+
 
 # Roulette-wheel pick over [param candidates], each kind weighted by the rules' spawn weight and drawn
 # from the board's seeded stream so generation stays reproducible. Falls back to a uniform pick when the
@@ -1825,6 +1968,7 @@ func _weighted_choice(candidates: Array[int]) -> int:
 			return kind
 	return candidates[candidates.size() - 1]
 
+
 # The board's spawn pool: every SpawnResourceRule's weight, composed — the match's set plus the active
 # starship's, layered and merged (see [method _effective_ruleset]) — with warp forced off unless a starship can
 # actually warp (rule on + a warp core). Rebuilt per refill against whoever is filling now, so a starship's own
@@ -1837,6 +1981,7 @@ func _spawn_table() -> Dictionary:
 		table[_WARP_KIND] = 0
 	return table
 
+
 func _would_complete_run(state: GridState, x: int, y: int, kind: int) -> bool:
 	if x >= 2 and _kind_at(state, x - 1, y) == kind and _kind_at(state, x - 2, y) == kind:
 		return true
@@ -1844,11 +1989,13 @@ func _would_complete_run(state: GridState, x: int, y: int, kind: int) -> bool:
 		return true
 	return false
 
+
 func _kind_at(state: GridState, x: int, y: int) -> int:
 	var tile := state.get_object_at(0, x, y) as _TileState
 	if tile == null:
 		return -1
 	return tile.kind
+
 
 # The one way a match's size is measured anywhere — extra turns, warp, all of it — so the shape rules are
 # identical for every tile, never per type. How a match is sized depends only on how it was cleared, never on
@@ -1901,17 +2048,20 @@ func _largest_match(board: GridState, cells: Array[Vector2i], is_path: bool) -> 
 		best = maxi(best, sizes[root])
 	return best
 
+
 func _find_cell(parent: Dictionary[Vector2i, Vector2i], cell: Vector2i) -> Vector2i:
 	var root: Vector2i = cell
 	while parent[root] != root:
 		root = parent[root]
 	return root
 
+
 func _union_cells(parent: Dictionary[Vector2i, Vector2i], a: Vector2i, b: Vector2i) -> void:
 	var root_a: Vector2i = _find_cell(parent, a)
 	var root_b: Vector2i = _find_cell(parent, b)
 	if root_a != root_b:
 		parent[root_b] = root_a
+
 
 func _on_regenerated() -> void:
 	if _grid == null:
@@ -1924,11 +2074,14 @@ func _on_regenerated() -> void:
 	if not _reshuffling and not _has_moves():
 		await _reshuffle_board()
 
+
 #endregion
+
 
 ## Single-cell tile. `kind` doubles into `state["kind"]`, which is what [[MatchCondition]]'s default
 ## resolver matches on.
-class _TileState extends GridObjectState:
+class _TileState:
+	extends GridObjectState
 	var kind: int
 	## Which combatant owns this tile on a shared board — its [member Entity.id] (0 player, 1 opponent), or -1
 	## for neutral. Doubles into `state["owner"]` so a board scan (e.g. a future occupation-scoring rule) can
@@ -1936,7 +2089,7 @@ class _TileState extends GridObjectState:
 	var owner: int
 
 	func _init(occupied_cells: Array[Vector2i] = [], tile_kind: int = 0, tile_owner: int = -1) -> void:
-		super (occupied_cells)
+		super(occupied_cells)
 		kind = tile_kind
 		owner = tile_owner
 		state["kind"] = tile_kind

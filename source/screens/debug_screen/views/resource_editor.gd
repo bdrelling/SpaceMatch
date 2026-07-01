@@ -22,6 +22,7 @@ var _ranges: Dictionary = {}
 # Per-property custom control providers: property -> Callable(resource) -> Control.
 var _custom_fields: Dictionary = {}
 
+
 ## Builds an editor for [param resource]; [param title_text] is the page header (e.g. the catalog entry title).
 static func create(resource: Resource, title_text: String = "") -> ResourceEditor:
 	var editor := ResourceEditor.new()
@@ -29,10 +30,12 @@ static func create(resource: Resource, title_text: String = "") -> ResourceEdito
 	editor._title = title_text
 	return editor
 
+
 ## Sets the slider range for numeric [param property]. Returns self for chaining.
 func with_range(property: String, minimum: float, maximum: float) -> ResourceEditor:
 	_ranges[property] = [minimum, maximum]
 	return self
+
 
 ## Renders [param property] with a host-supplied control instead of a generic row. [param provider] receives
 ## the edited resource and returns the [Control] to use (e.g. a shape editor). Returns self for chaining.
@@ -40,10 +43,12 @@ func with_custom_field(property: String, provider: Callable) -> ResourceEditor:
 	_custom_fields[property] = provider
 	return self
 
+
 func title() -> String:
 	if not _title.is_empty():
 		return _title
 	return _resource.get_class() if _resource != null else "Editor"
+
 
 func _build() -> void:
 	if _resource == null:
@@ -57,6 +62,7 @@ func _build() -> void:
 		if not (usage & PROPERTY_USAGE_STORAGE):
 			continue
 		add_child(_row_for(prop))
+
 
 # The editing control for one property: a host override wins, then a scalar gets an editable row and anything
 # composite a dimmed read-only summary (editing nested resources and arrays is the next milestone).
@@ -77,34 +83,33 @@ func _row_for(prop: Dictionary) -> Control:
 		var hint_string: String = prop.hint_string
 		return _enum_row(label, p, hint_string)
 
+	var row: Control
 	match prop_type:
 		TYPE_STRING, TYPE_STRING_NAME:
 			var current_string := str(resource.get(p))
-			return DebugRow.text(label, current_string,
-				func(value: String) -> void: _set_text(p, prop_type, value))
+			row = DebugRow.text(label, current_string, func(value: String) -> void: _set_text(p, prop_type, value))
 		TYPE_INT:
 			var current_int: int = resource.get(p)
 			var span := _range_for(p)
 			var minimum: float = span[0]
 			var maximum: float = span[1]
-			return DebugRow.slider(label, Color.WHITE, minimum, maximum, current_int,
-				func(value: float) -> void: resource.set(p, int(value)))
+			row = DebugRow.slider(label, Color.WHITE, minimum, maximum, current_int, func(value: float) -> void: resource.set(p, int(value)))
 		TYPE_FLOAT:
 			var current_float: float = resource.get(p)
 			var fspan := _range_for(p)
 			var fmin: float = fspan[0]
 			var fmax: float = fspan[1]
-			return DebugRow.slider(label, Color.WHITE, fmin, fmax, current_float,
-				func(value: float) -> void: resource.set(p, value))
+			row = DebugRow.slider(label, Color.WHITE, fmin, fmax, current_float, func(value: float) -> void: resource.set(p, value))
 		TYPE_BOOL:
 			var current_bool: bool = resource.get(p)
-			return DebugRow.toggle(label, current_bool,
-				func(value: bool) -> void: resource.set(p, value))
+			row = DebugRow.toggle(label, current_bool, func(value: bool) -> void: resource.set(p, value))
 		TYPE_COLOR:
 			var current_color: Color = resource.get(p)
-			return DebugRow.color(label, current_color,
-				func(value: Color) -> void: resource.set(p, value))
-	return _readonly_row(label, p, prop_type)
+			row = DebugRow.color(label, current_color, func(value: Color) -> void: resource.set(p, value))
+		_:
+			row = _readonly_row(label, p, prop_type)
+	return row
+
 
 # A dropdown over an enum field. Enum hint tokens are "Name" or "Name:Value"; the option index is stored
 # directly, which matches the sequential enums these resources use (e.g. Status.sign).
@@ -114,8 +119,8 @@ func _enum_row(label: String, p: String, hint_string: String) -> Control:
 	for token: String in hint_string.split(",", false):
 		options.append(token.get_slice(":", 0).capitalize())
 	var current: int = resource.get(p)
-	return DebugRow.option(label, options, current,
-		func(index: int) -> void: resource.set(p, index))
+	return DebugRow.option(label, options, current, func(index: int) -> void: resource.set(p, index))
+
 
 # Writes a string field back, preserving StringName fields as StringName.
 func _set_text(p: String, prop_type: int, value: String) -> void:
@@ -124,9 +129,11 @@ func _set_text(p: String, prop_type: int, value: String) -> void:
 	else:
 		_resource.set(p, value)
 
+
 # [min, max] for property [param p] — its host-set range, else the default.
 func _range_for(p: String) -> Array:
 	return _ranges[p] if _ranges.has(p) else _DEFAULT_RANGE
+
 
 # A dimmed, read-only summary for a field this editor can't edit yet (nested resource, array, etc.).
 func _readonly_row(label: String, p: String, prop_type: int) -> Control:
@@ -135,6 +142,7 @@ func _readonly_row(label: String, p: String, prop_type: int) -> Control:
 	node.add_theme_font_size_override("font_size", DebugRow.ROW_FONT)
 	node.modulate = Color(1.0, 1.0, 1.0, 0.6)
 	return node
+
 
 func _readonly_text(p: String, prop_type: int) -> String:
 	var raw: Variant = _resource.get(p)

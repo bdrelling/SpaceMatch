@@ -29,11 +29,12 @@ func holds(context: ResolutionContext) -> bool:
 		return false
 	var value := targets[0].current_stats.get_stat(stat)
 	var against := others[0].current_stats.get_stat(stat)
+	var result := false
 	match comparison:
 		Comparison.LESS:
-			return value < against
+			result = value < against
 		Comparison.EQUAL:
-			return value == against
+			result = value == against
 		Comparison.GREATER:
-			return value > against
-	return false
+			result = value > against
+	return result

@@ -13,7 +13,7 @@
 # USAGE
 # =============================================================================
 
-.PHONY: help setup play play-tablet play-phone playtest test test-debug export-macos export-ios export-android export-linux export-web deploy-macos deploy-ios-store deploy-ios-sim deploy-iphone deploy-ipad deploy-android deploy-linux deploy-web release-macos release-ios release-android release-linux release-web lint format format-write check import verify clean
+.PHONY: help setup play play-tablet play-phone playtest test test-debug export-macos export-ios export-android export-linux export-web deploy-macos deploy-ios-store deploy-ios-sim deploy-iphone deploy-ipad deploy-android deploy-linux deploy-web release-macos release-ios release-android release-linux release-web lint lint-staged format format-write check import verify clean
 
 help: ## Show available commands
 	@echo "MACOS:"
@@ -38,7 +38,7 @@ help: ## Show available commands
 	@grep -E '^test[a-zA-Z_-]*:.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
 	@echo ""
 	@echo "VALIDATION:"
-	@grep -E '^(lint|format|format-write|check|import|verify):.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^(lint|lint-staged|format|format-write|check|import|verify):.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
 	@echo ""
 	@echo "CLAUDOT:"
 	@grep -hE '^claudot-[a-zA-Z_-]*:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -191,6 +191,9 @@ test-debug: ## Run tests with debug output
 lint: ## Lint GDScript with gdlint (report-only). ARGS scopes to files/dirs, else whole project.
 	@./scripts/gdtoolkit.sh lint $(ARGS)
 
+lint-staged: ## Lint only staged GDScript (what you're committing) — the `verify` scope.
+	@./scripts/gdtoolkit.sh lint --staged
+
 format: ## Preview gdformat changes (dry-run). ARGS scopes it.
 	@./scripts/gdtoolkit.sh format $(ARGS)
 
@@ -203,7 +206,7 @@ check: ## Parse-check GDScript (no run). ARGS scopes to .gd files, else whole pr
 import: ## Rebuild the import/UID cache
 	@./scripts/godot.sh import
 
-verify: lint import check test ## Full gate: lint -> import -> check -> test (stops at first failure)
+verify: lint-staged import check test ## Full gate: lint (staged) -> import -> check -> test (stops at first failure)
 
 # =============================================================================
 # CLEANUP

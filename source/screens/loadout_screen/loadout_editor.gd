@@ -10,8 +10,8 @@ extends Control
 ## dragged (and, later, whether the module tray is shown).
 enum Mode {
 	READ_ONLY,  ## Mid-combat: inspect only — no rearranging, no tray.
-	EDIT,       ## Modify the current starship's modules (e.g. a shop). Drag to rearrange; tray available.
-	SELECT,     ## Load out a starship at game start. Drag to rearrange; tray available.
+	EDIT,  ## Modify the current starship's modules (e.g. a shop). Drag to rearrange; tray available.
+	SELECT,  ## Load out a starship at game start. Drag to rearrange; tray available.
 }
 
 ## DEBUG: the player's own loadout page (mounted via [method bind_session]) defaults to [constant
@@ -48,12 +48,14 @@ var _focused_module: ModuleState
 var _grabbed_cell := Vector2i(-1, -1)
 var _grabbed_cells: Array[Vector2i] = []
 
+
 func _ready() -> void:
 	# Seed a fresh default game so the loadout and its stats render on their own — the dev preview (F6) and
 	# the standalone scene both need a session, and there's no host that binds one. [LoadoutScreen] re-binds
 	# the run it sets up immediately after this, so its session is the one that ends up shown.
 	GameSession.start_new_game()
 	bind_session()
+
 
 ## Mounts the player's module grid as the board and lists the stats its modules sum to. Called by the host
 ## screen ([LoadoutScreen]); reads the running game from the [code]GameSession[/code] autoload and defaults
@@ -64,6 +66,7 @@ func bind_session() -> void:
 	set_mode(Mode.EDIT if DEBUG_DEFAULT_EDIT else Mode.READ_ONLY)
 	_show_grid(GameSession.game_state.starship.loadout)
 
+
 ## Re-points the board at [param starship]'s loadout, shown [constant Mode.READ_ONLY] — for inspecting a
 ## starship you don't own. Rebuilds the board and stats.
 func show_starship(starship: StarshipState) -> void:
@@ -71,6 +74,7 @@ func show_starship(starship: StarshipState) -> void:
 		return
 	set_mode(Mode.READ_ONLY)
 	_show_grid(starship.loadout)
+
 
 ## Sets the screen's [enum Mode]; the shell picks it per context (see [enum Mode]). Clears any in-flight
 ## drag so flipping mode mid-gesture can't strand a preview ghost.
@@ -80,6 +84,7 @@ func set_mode(mode: Mode) -> void:
 	_grabbed_cells = []
 	if _grid_view != null:
 		_grid_view.clear_preview()
+
 
 # Rebuilds the board and stat list for [param module_grid], freeing the prior view first
 # ([BoardCanvas.set_board] detaches the old board but doesn't free it, so re-pointing would otherwise
@@ -103,17 +108,21 @@ func _show_grid(module_grid: StarshipLoadout) -> void:
 		_module_grid.changed.connect(_on_grid_changed)
 	_apply_focus()
 
+
 # True when the current [enum Mode] permits rearranging modules — the editable modes ([constant
 # Mode.EDIT], [constant Mode.SELECT]). [constant Mode.READ_ONLY] (mid-combat) is inspect-only.
 func _editable() -> bool:
 	return _mode == Mode.EDIT or _mode == Mode.SELECT
 
+
 #region Tap to inspect, drag to rearrange
+
 
 # Pointer events forwarded from the [BoardCanvas] (positions already in global space). Finger 0 / left
 # mouse picks up the module under the press; dragging it to another fitting cell moves it (editable
 # starships only), while a press-and-release on the same module taps it into focus. A press on empty space
 # clears the focus.
+# gdlint:disable=max-returns
 func _on_board_input(event: InputEvent) -> bool:
 	var touch := event as InputEventScreenTouch
 	if touch != null:
@@ -133,6 +142,10 @@ func _on_board_input(event: InputEvent) -> bool:
 		return _move_preview(motion.position)
 	return false
 
+
+# gdlint:enable=max-returns
+
+
 # Picks up the module under [param global_position]; a press on empty space clears the focus instead.
 # The footprint preview only appears on an editable board (the player's own starship, between combats).
 func _press(global_position: Vector2) -> bool:
@@ -147,6 +160,7 @@ func _press(global_position: Vector2) -> bool:
 		_preview_at(cell)
 	return true
 
+
 # Re-previews the held footprint at the hovered cell (off-grid clears the preview). A no-op unless a
 # module is held on an editable board, so plain mouse motion and view-only starships ignore it.
 func _move_preview(global_position: Vector2) -> bool:
@@ -158,6 +172,7 @@ func _move_preview(global_position: Vector2) -> bool:
 	else:
 		_preview_at(cell)
 	return true
+
 
 # Releases the held module: a move when it was dragged to another fitting cell on an editable board,
 # otherwise a tap that focuses it. Either way the released module ends up focused.
@@ -175,6 +190,7 @@ func _release(global_position: Vector2) -> bool:
 	_set_focus(grabbed)
 	return true
 
+
 # Tints the held footprint at [param hover_cell] green (fits) or red (blocked / off the silhouette).
 func _preview_at(hover_cell: Vector2i) -> void:
 	var delta := hover_cell - _grabbed_cell
@@ -183,9 +199,11 @@ func _preview_at(hover_cell: Vector2i) -> void:
 		cells.append(cell + delta)
 	_grid_view.set_preview(cells, _module_grid.can_move(_grabbed_cell, hover_cell))
 
+
 #endregion
 
 #region Focus
+
 
 # Focuses [param module] (or clears focus when null): outlines its footprint on the board, names it in
 # the stat block, and splits its contribution out of each stat total.
@@ -193,9 +211,11 @@ func _set_focus(module: ModuleState) -> void:
 	_focused_module = module
 	_apply_focus()
 
+
 # The grid changed under us (e.g. a module moved), so the focused module may have shifted or vanished.
 func _on_grid_changed() -> void:
 	_apply_focus()
+
 
 # Reflects the current focus into the board outline (the module is named on its footprint, not here) and
 # the stat list — where the focused module's contribution is split out of each stat total.
@@ -210,6 +230,7 @@ func _apply_focus() -> void:
 			_grid_view.clear_focus()
 	_rebuild_stats()
 
+
 # The cells the focused module currently occupies, or empty when nothing is focused / it's been removed.
 func _focused_cells() -> Array[Vector2i]:
 	var result: Array[Vector2i] = []
@@ -220,7 +241,9 @@ func _focused_cells() -> Array[Vector2i]:
 			return _module_grid.cells_of(module_state)
 	return result
 
+
 #endregion
+
 
 # The stat readout: one row per stat-bearing match tile kind, each shown beside its tile, in [MatchTile]
 # kind order. Each entry is [stat, label, tile kind]. The scrap (kind 4) and warp (kind 5) tiles aren't starship
@@ -233,6 +256,7 @@ func _stat_rows() -> Array:
 		[Stats.defense, "Defense", 3],
 		[Stats.weapons, "Weapons", 6],
 	]
+
 
 # Repopulates the stat list from the grid's current loadout: one row per stat, tile + name + value. When
 # a module is focused, each stat it touches shows the resolved total with its signed contribution.
@@ -251,10 +275,12 @@ func _rebuild_stats() -> void:
 		var contribution: int = focus_stats.get_stat(stat) if focus_stats != null else 0
 		_stat_list.add_child(_stat_row(label, tile_kind, _stat_value_text(profile.get_stat(stat), contribution), _value_color(contribution)))
 
+
 # A stat profile summed from the loadout's modules (zeros when empty). The grid owns the counting rule
 # (only fully-enabled modules count); the outfitting bay has no disabled cells, so this reads the lot.
 func _profile() -> StarshipStats:
 	return _module_grid.stats() if _module_grid != null else StarshipStats.new()
+
 
 # One stat row: [tile][name ............ value]. The tile slot keeps its size even when the stat has no
 # tile, so the name column stays aligned. The caller supplies the value text and its color (green/red when
@@ -281,6 +307,7 @@ func _stat_row(label: String, tile_kind: int, value_text: String, value_color: C
 	line.add_child(value_label)
 	return line
 
+
 # The energy row, shown as "used / generated": reactors generate energy, powered modules consume it. Only
 # fully-enabled modules count, matching the stat profile's rule. Has no match tile, so the icon slot is empty.
 func _energy_row() -> HBoxContainer:
@@ -297,6 +324,7 @@ func _energy_row() -> HBoxContainer:
 				used += -contribution
 	return _stat_row("Energy", -1, "%d / %d" % [used, generated], _TOTAL_COLOR)
 
+
 # The value color: green when the focused module raises this stat, red when it lowers it, the default
 # total color when it doesn't touch it (or nothing is focused).
 func _value_color(contribution: int) -> Color:
@@ -306,6 +334,7 @@ func _value_color(contribution: int) -> Color:
 		return _LOSS_COLOR
 	return _TOTAL_COLOR
 
+
 # The value cell text: the plain total, or — when the focused module touches this stat — the resolved
 # total with the module's signed contribution in parentheses (e.g. "4 (+4)" for a stat it raises to 4,
 # "0 (−2)" for one it drops to 0).
@@ -314,6 +343,7 @@ static func _stat_value_text(total: int, contribution: int) -> String:
 		return str(total)
 	var sign_text := "+" if contribution > 0 else "−"
 	return "%d (%s%d)" % [total, sign_text, absi(contribution)]
+
 
 # A fixed-size slot holding the stat's match-3 tile glyph, or an empty slot of the same size when the
 # stat has no tile (kind < 0). Reuses [MatchTile]'s glyph art so the icon matches the board exactly.

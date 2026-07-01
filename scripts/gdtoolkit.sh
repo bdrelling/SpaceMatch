@@ -16,6 +16,12 @@ ROOT="$(cd "$DIR/.." && pwd)"
 # exclude config, so exclusion has to happen here. No targets => the whole source/ tree.
 # Directory targets are expanded (minus addons); file targets pass through (unless under addons).
 resolve_files() {
+	if [ "${1:-}" = "--staged" ]; then
+		# Staged .gd under source/, minus addons — the commit / verify scope.
+		git -C "$ROOT" diff --cached --name-only --diff-filter=ACM -- source \
+			| grep '\.gd$' | grep -v '/addons/' | sed "s#^#$ROOT/#"
+		return
+	fi
 	local roots=("$@")
 	[ "${#roots[@]}" -eq 0 ] && roots=("$ROOT/source")
 	local r
