@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Parse check (GDScript)
-        run: bash scripts/godot-check.sh
+        run: bash scripts/godot.sh check
         continue-on-error: false
 
       - name: Run gdUnit4 tests

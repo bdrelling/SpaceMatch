@@ -71,7 +71,7 @@ for a word you'd never speak that way (`cndtn`, `vp`, `attr`), spell it out.
 4. **Style rule.** Ensure `armory/docs/languages/gdscript/style.md` states the no-shorthand
    rule with the keep-list categories above. Add it if missing; don't duplicate.
 5. **Verify.** Re-run the scan → zero chopped-word identifiers outside the skip list. If any
-   files were created/renamed run `scripts/godot-import.sh`, then `scripts/godot-check.sh`
+   files were created/renamed run `scripts/godot.sh import`, then `scripts/godot.sh check`
    (must parse clean), then the `test-runner` agent on the touched suites. Never tell the user
    to re-import themselves.
 

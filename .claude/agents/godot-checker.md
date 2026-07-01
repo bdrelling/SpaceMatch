@@ -16,11 +16,11 @@ Run the headless parse check, read the output, and return a tight error report. 
 
 1. If files were created or renamed since the last check, rebuild the import/UID cache first — a check without a fresh import can silently misresolve UIDs:
    ```
-   ./scripts/godot-import.sh
+   ./scripts/godot.sh import
    ```
 2. Run the parse check:
    ```
-   ./scripts/godot-check.sh
+   ./scripts/godot.sh check
    ```
    It prints `EXIT: <code>` and exits with that code.
 3. **The exit code is the verdict, not your reading of the log.** Exit 0 = clean, nonzero = parse/script errors. Use the log only to describe *what* failed.
@@ -32,5 +32,5 @@ Run the headless parse check, read the output, and return a tight error report. 
 
 - **Never edit files.** You run and report; you don't fix.
 - Ignore any parse errors reported from `addons/` — that's third-party code.
-- Note that `godot-check.sh` does NOT compile files under `tests/`; a parse error in a test file only surfaces when the suite is actually run (that's `test-runner`'s job, not yours).
+- Note that `godot.sh check` does NOT compile files under `tests/`; a parse error in a test file only surfaces when the suite is actually run (that's `test-runner`'s job, not yours).
 - Don't editorialize or suggest fixes. Just the errors.

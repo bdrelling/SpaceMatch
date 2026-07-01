@@ -87,8 +87,15 @@ Automated testing is critical to keeping the game stable. Test coverage will be 
 
 ## Validating Godot
 
-- Before running `scripts/godot-check.sh`, if any files were created or renamed, run `scripts/godot-import.sh` first — it rebuilds the UID cache; check without a fresh import can silently misresolve UIDs.
-- **End of every change:** run the parse check — via the `godot-checker` subagent, or `scripts/godot-check.sh` directly.
+- Before running `scripts/godot.sh check`, if any files were created or renamed, run `scripts/godot.sh import` first — it rebuilds the UID cache; check without a fresh import can silently misresolve UIDs.
+- **End of every change:** run the parse check — via the `godot-checker` subagent, or `scripts/godot.sh check` directly.
 - Never tell the user to reload/re-import the project themselves.
+
+## Linting & formatting (gdtoolkit)
+
+- **Scripts take a scope** — `./scripts/gdtoolkit.sh lint|format [--write] [targets…]` and `./scripts/godot.sh check|test [targets…]` accept the whole project (no args), a dir, or specific files. Use the scope; don't hand-tweak `gdlint`/`gdformat`/`godot` invocations.
+- **During dev:** `make lint` / `make format` (dry-run; `make format-write` writes) on what you touched — cheap, no engine boot.
+- **End of a task, once:** `make verify` = `lint → import → check → test`, stopping at the first failure. It's the ~2–3 min engine gate — run it once at the end, never per turn.
+- gdtoolkit is installed by `make setup` (or `./scripts/gdtoolkit.sh install`).
 
 @armory/AGENTS.md

@@ -16,7 +16,7 @@ Run the requested tests, parse the output, and return a tight failure report. Ve
 
 1. Run via the project script (never call gdUnit4 directly — the script resolves the godot binary with `which godot` and handles headless detection, so it stays machine-agnostic):
    ```
-   HEADLESS=true ./scripts/test.sh <path>
+   HEADLESS=true ./scripts/godot.sh test <path>
    ```
    - `<path>` is relative to `source/` (e.g. `systems`, `systems/puzzle`). Omit it to run everything; `make test` is the default-everything shortcut.
    - `HEADLESS=true` forces headless and suppresses the HTML-report browser popup. Never set `CI=true` to get a headless run — `CI` means "running in CI", period.

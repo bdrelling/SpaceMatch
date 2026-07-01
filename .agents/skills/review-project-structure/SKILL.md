@@ -49,7 +49,7 @@ Present findings grouped by rule, most-common first. For each group: state the f
 Moving or renaming a `.gd` / `.tscn` / `.tres` breaks `res://` and `uid://` references. After any move:
 
 1. Grep the whole project for the old `res://` path **and** the file's `uid://`, and update every reference (scenes, `[ext_resource]`, `preload`/`load`, `.godot` is regenerated so skip it).
-2. Run `scripts/godot-import.sh` then `scripts/godot-check.sh`. Don't tell the user to re-import themselves.
+2. Run `scripts/godot.sh import` then `scripts/godot.sh check`. Don't tell the user to re-import themselves.
 
 Never touch files the user marked intentional. Genuine one-off outliers the user keeps are fine — note and move on.
 

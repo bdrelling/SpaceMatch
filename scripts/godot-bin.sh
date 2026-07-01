@@ -1,7 +1,7 @@
 #!/bin/bash
 # Resolve the godot binary path: PATH first, then the known Docker container
 # fallback (/usr/local/bin/godot). Prints the path; exits nonzero if not found.
-# Shared by godot-check.sh, godot-import.sh, and test.sh so all three agree.
+# Shared by godot.sh and test.sh so they agree.
 if command -v godot >/dev/null 2>&1; then
   command -v godot
 elif [ -x /usr/local/bin/godot ]; then

@@ -13,8 +13,7 @@ REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || REPO_ROOT="${0:A:h:h}"
 # Get the path to the godot binary (PATH first, then the Docker fallback)
 GODOT_BIN=$("$REPO_ROOT/scripts/godot-bin.sh")
 
-# Get the test directory from the first argument
-TEST_DIRECTORY=${1:-}
+# Test targets come from the args ("$@") — dirs or files. No args = auto-discovered suites.
 
 # We need to step into the source directory to run the test runner
 cd "$REPO_ROOT/source"
@@ -33,8 +32,11 @@ GDUNIT4_TEST_RUNNER="./addons/gdUnit4/runtest.sh"
 #   - crashes the macOS headless backend at exit with SIGABRT (engine bug:
 #     leaked GDScript objects torn down after script-language cleanup;
 #     see godotengine/godot#95174 / #98182)
-if [ -n "$TEST_DIRECTORY" ]; then
-	ADD_FLAGS="--add \"$TEST_DIRECTORY\""
+if [ "$#" -gt 0 ]; then
+	ADD_FLAGS=""
+	for _target in "$@"; do
+		ADD_FLAGS="$ADD_FLAGS --add \"$_target\""
+	done
 else
 	ADD_FLAGS=$(grep -rl --include='test_*.gd' --exclude-dir=addons 'extends GdUnitTestSuite' . \
 		| xargs -n1 dirname | sed 's|^\./||' | sort -u | sed 's/^/--add /' | tr '\n' ' ')

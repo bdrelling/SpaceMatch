@@ -1,0 +1,15 @@
+#!/bin/bash
+# Pre-commit hook: format staged GDScript in place, re-stage it, then lint it.
+# A lint failure blocks the commit. Installed into .git/hooks/ by scripts/install_hooks.sh
+# (wired into `make setup`); inert until then. Git runs hooks from the repo root.
+set -o pipefail
+
+staged=$(git diff --cached --name-only --diff-filter=ACM -- '*.gd')
+[ -z "$staged" ] && exit 0
+
+# Format staged files (writes), then re-stage the results.
+printf '%s\n' "$staged" | tr '\n' '\0' | xargs -0 ./scripts/gdtoolkit.sh format --write
+printf '%s\n' "$staged" | tr '\n' '\0' | xargs -0 git add
+
+# Lint staged files — non-zero here blocks the commit.
+printf '%s\n' "$staged" | tr '\n' '\0' | xargs -0 ./scripts/gdtoolkit.sh lint

@@ -1,0 +1,22 @@
+# gdlint configuration — see armory/docs/languages/gdscript/linting.md
+#
+# This file OVERRIDES only what we care about; every unset check keeps its gdlint
+# default. Regenerate the full default set (to reconcile exact key names / add
+# thresholds) with:  gdlint --dump-default-config
+# Reconciling + tuning against real output is a follow-up (gdtoolkit isn't installed yet).
+
+# Skip third-party addons (AGENTS.md: addons/ is third-party — ignore it) and VCS metadata.
+excluded_directories:
+  - addons
+  - .git
+
+# NOTE: class-definitions-order is intentionally NOT disabled. Our style guide
+# conforms to Godot's member order (signals -> enums -> constants -> ...), so the
+# default check is exactly what we want.
+
+# Thresholds (gdlint defaults, restated for visibility — adjust in follow-up):
+max-line-length: 100
+max-file-lines: 1000
+function-arguments-number: 10
+max-returns: 6
+max-public-methods: 20

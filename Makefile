@@ -13,7 +13,7 @@
 # USAGE
 # =============================================================================
 
-.PHONY: help setup play play-tablet play-phone playtest test test-debug export-macos export-ios export-android export-linux export-web deploy-macos deploy-ios-store deploy-ios-sim deploy-iphone deploy-ipad deploy-android deploy-linux deploy-web release-macos release-ios release-android release-linux release-web check import clean
+.PHONY: help setup play play-tablet play-phone playtest test test-debug export-macos export-ios export-android export-linux export-web deploy-macos deploy-ios-store deploy-ios-sim deploy-iphone deploy-ipad deploy-android deploy-linux deploy-web release-macos release-ios release-android release-linux release-web lint format format-write check import verify clean
 
 help: ## Show available commands
 	@echo "MACOS:"
@@ -38,7 +38,7 @@ help: ## Show available commands
 	@grep -E '^test[a-zA-Z_-]*:.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
 	@echo ""
 	@echo "VALIDATION:"
-	@grep -E '^(check|import):.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^(lint|format|format-write|check|import|verify):.*?## .*$$' $(firstword $(MAKEFILE_LIST)) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
 	@echo ""
 	@echo "CLAUDOT:"
 	@grep -hE '^claudot-[a-zA-Z_-]*:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
@@ -178,27 +178,38 @@ playtest: ## Run the game with screenshot capture. Pass extra args after `--`.
 # TESTING
 # =============================================================================
 
-test: ## Run all tests
-	@./scripts/test.sh
+test: ## Run tests (gdUnit4). ARGS scopes to dirs/files, else the whole suite.
+	@./scripts/godot.sh test $(ARGS)
 
 test-debug: ## Run tests with debug output
-	@DEBUG=true ./scripts/test.sh
+	@DEBUG=true ./scripts/godot.sh test $(ARGS)
 
 # =============================================================================
 # VALIDATION
 # =============================================================================
 
-check: ## Parse-check all GDScript (no run)
-	@./scripts/godot-check.sh
+lint: ## Lint GDScript with gdlint (report-only). ARGS scopes to files/dirs, else whole project.
+	@./scripts/gdtoolkit.sh lint $(ARGS)
+
+format: ## Preview gdformat changes (dry-run). ARGS scopes it.
+	@./scripts/gdtoolkit.sh format $(ARGS)
+
+format-write: ## Apply gdformat formatting in place. ARGS scopes it.
+	@./scripts/gdtoolkit.sh format --write $(ARGS)
+
+check: ## Parse-check GDScript (no run). ARGS scopes to .gd files, else whole project.
+	@./scripts/godot.sh check $(ARGS)
 
 import: ## Rebuild the import/UID cache
-	@./scripts/godot-import.sh
+	@./scripts/godot.sh import
+
+verify: lint import check test ## Full gate: lint -> import -> check -> test (stops at first failure)
 
 # =============================================================================
 # CLEANUP
 # =============================================================================
 
-setup: ## Link docs/obsidian to $OBSIDIAN_VAULT and sync it into Claude settings
+setup: ## Provision the checkout: obsidian link, Claude env, gdtoolkit + git hooks
 	@if [ -z "$(OBSIDIAN_VAULT)" ]; then \
 		echo "ERROR: OBSIDIAN_VAULT is not set. Set it in .env.local or your shell."; \
 		exit 1; \
@@ -212,6 +223,8 @@ setup: ## Link docs/obsidian to $OBSIDIAN_VAULT and sync it into Claude settings
 		tmp=`mktemp`; \
 		jq --arg v "$$target" '.env.OBSIDIAN_VAULT = $$v' "$$settings" > "$$tmp" && mv "$$tmp" "$$settings"; \
 		echo "Synced env.OBSIDIAN_VAULT into $$settings"
+	@./scripts/gdtoolkit.sh install
+	@./scripts/install_hooks.sh
 
 clean: ## Clean build artifacts
 	@rm -rf reports/
