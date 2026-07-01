@@ -10,6 +10,7 @@ extends Resource
 ## engine: damage flows through the [ModificationPipeline] (shield absorbs, dodge negates), statuses fold via
 ## [StatusModifiers], all driven by the one [member runtime] this state holds.
 
+#region Constants
 ## A round is one turn per combatant.
 const TURNS_PER_ROUND: int = 2
 
@@ -25,7 +26,9 @@ const STAT_RESOURCE_KINDS: int = 4
 const SHIELD: Status = preload("res://data/statuses/shield.tres")
 const DODGE: Status = preload("res://data/statuses/dodge.tres")
 const TARGET_LOCK: Status = preload("res://data/statuses/target_lock.tres")
+#endregion
 
+#region Properties
 ## The two combatants — each a [Combatant] (an engine [Entity]) holding its banked resources, live combat stats
 ## and turn budget (see [method Encounter.create]). The player's wraps a clone of the persistent starship so
 ## combat damage and Debug edits stay on the fight copy; the opponent wraps its own starship, not a copy of the
@@ -40,10 +43,14 @@ const TARGET_LOCK: Status = preload("res://data/statuses/target_lock.tres")
 ## Which turn within the current round, 1..[constant TURNS_PER_ROUND]. Turn 1 is the player's, turn 2 the opponent's.
 @export var turn_in_round: int = 1
 
-# The one effect-engine runtime this encounter drives all combat through (damage pipeline, decay-on-hit, status
-# folding). Built lazily on first use so a freshly loaded state has one; the host seeds its [member
-# EffectRuntime.rng_seed] from the board RNG (see [method MatchGame.bind_session]).
-var _runtime: EffectRuntime
+## The cells currently disabled on each combatant's module grid (granted by Disruptor) — a [DisabledCells]
+## value object keyed by side. A disabled cell deactivates the module covering it, so that module stops counting
+## toward the starship's stat profile until it re-enables. Counted down one per turn by [method advance_turn].
+@export var disabled: DisabledCells = DisabledCells.new()
+
+## The shared warp meter — the signed tug between the two combatants' Jump progress (see [WarpMeter]). The match
+## seeds its capacities from each starship's warp-core modules at setup; encounter-scoped, so it starts empty.
+@export var warp_meter: WarpMeter = WarpMeter.new()
 
 ## Each combatant's current and max health — read-throughs to the [Combatant] that owns them ([member player] /
 ## [member opponent]), kept as named pairs for the combat code and HUD. Current depletes from matched damage
@@ -65,32 +72,14 @@ var opponent_max_health: int:
 	get:
 		return max_health_of(opponent)
 
-## Cells currently disabled on each combatant's module grid, mapping a cell [Vector2i] to the turns of
-## disable it has left (granted by Disruptor; see [method disable_cell]). A disabled cell deactivates the
-## module covering it, so that module stops counting toward the starship's stat profile until it re-enables.
-## Counted down one per turn by [method advance_turn].
-@export var player_disabled_cells: Dictionary[Vector2i, int] = {}
-@export var opponent_disabled_cells: Dictionary[Vector2i, int] = {}
-
-## Each combatant's warp capacity — the bars their side of the meter holds before they can Jump (see
-## [method can_jump]) to win outright. Granted by warp-core modules, so it's a copy of the starship's
-## [member StarshipStats.warp_capacity]; the match seeds these at setup. Zero means that starship can't warp at all —
-## no Jump, and the board spawns no warp tiles when neither side can warp. The two can differ (a six-bar core
-## versus a four-bar one), which is why the capacities live per combatant rather than as one shared cap.
-@export var player_warp_max: int = 0
-@export var opponent_warp_max: int = 0
-
-## The shared warp meter, signed: positive is the player's progress, negative the opponent's. Matching Warp
-## tiles pushes it toward the mover's end ([method add_warp]). Encounter-scoped, so it starts at zero.
-@export var warp: int = 0
-## Quick Match runs warp as a two-way tug: the opponent collects toward their own Jump, so the meter can go
-## negative and they win at -[member opponent_warp_max]. Campaign leaves this false — the opponent's warp only
-## drains the player's (floored at zero) and can never win.
-@export var warp_tug: bool = false
-## The combatant who Jumped (filled their warp and cashed it in), or null if none. Decides a warp victory.
-@export var warp_winner: Combatant
+# The one effect-engine runtime this encounter drives all combat through (damage pipeline, decay-on-hit, status
+# folding). Built lazily on first use so a freshly loaded state has one; the host seeds its [member
+# EffectRuntime.rng_seed] from the board RNG (see [method MatchGame.bind_session]).
+var _runtime: EffectRuntime
+#endregion
 
 
+#region Methods
 ## The one [EffectRuntime] all combat resolves through — built on first access with an [AutoChooser] (1v1 needs
 ## no interactive picker) and the live status catalog. The host seeds its seed from the board RNG.
 func runtime() -> EffectRuntime:
@@ -243,33 +232,9 @@ func effective_stats(combatant: Combatant, base: StarshipStats) -> StarshipStats
 	return total
 
 
-## The cells currently disabled on [param combatant]'s grid — each deactivates the module covering it.
-func disabled_cells_of(combatant: Combatant) -> Array[Vector2i]:
-	var result: Array[Vector2i] = []
-	for cell: Vector2i in _disabled_map(combatant):
-		result.append(cell)
-	return result
-
-
-## Disables [param cell] on [param combatant]'s grid for [param turns] turns — the module covering it stops counting
-## until the disable expires. Refreshes to the longer remaining if the cell is already disabled. Counted down one
-## per turn by [method advance_turn], so a value of N keeps the cell disabled through the next N turn changes. A
-## non-positive duration is a no-op (the Disruptor ability — this stays on the game-side path, not the engine).
-func disable_cell(combatant: Combatant, cell: Vector2i, turns: int) -> void:
-	if turns <= 0:
-		return
-	var map: Dictionary[Vector2i, int] = _disabled_map(combatant)
-	var current: int = map[cell] if map.has(cell) else 0
-	map[cell] = maxi(current, turns)
-
-
-func _disabled_map(combatant: Combatant) -> Dictionary[Vector2i, int]:
-	return player_disabled_cells if combatant == player else opponent_disabled_cells
-
-
 ## Disables one of [param target]'s still-active modules for [param turns] turns, picked from [param rng] so it's
-## reproducible — disabling one of the module's cells deactivates the whole module (see [method disable_cell]). A
-## no-op when the target has no loadout or every module is already down. The Disruptor ability's board effect,
+## reproducible — disabling one of the module's cells deactivates the whole module (see [method DisabledCells.disable]).
+## A no-op when the target has no loadout or every module is already down. The Disruptor ability's board effect,
 ## kept here on the game side because the effect engine is entity-centric, not board-aware.
 func disable_random_module(target: Combatant, turns: int, rng: RandomNumberGenerator) -> void:
 	if target == null or target.starship == null:
@@ -277,25 +242,16 @@ func disable_random_module(target: Combatant, turns: int, rng: RandomNumberGener
 	var loadout: StarshipLoadout = target.starship.loadout
 	if loadout == null:
 		return
-	var disabled: Array[Vector2i] = disabled_cells_of(target)
+	var is_player: bool = target == player
+	var already: Array[Vector2i] = disabled.cells_of(is_player)
 	var live: Array[ModuleState] = []
 	for module_state: ModuleState in loadout.modules:
-		if module_state != null and loadout.enabled(module_state, disabled) and not loadout.cells_of(module_state).is_empty():
+		if module_state != null and loadout.enabled(module_state, already) and not loadout.cells_of(module_state).is_empty():
 			live.append(module_state)
 	if live.is_empty():
 		return
 	var pick: ModuleState = live[rng.randi_range(0, live.size() - 1)]
-	disable_cell(target, loadout.cells_of(pick)[0], turns)
-
-
-# Counts every disabled cell down one turn and re-enables those that reach zero. Run once per turn change.
-func _tick_disabled_cells() -> void:
-	for combatant: Combatant in [player, opponent]:
-		var map: Dictionary[Vector2i, int] = _disabled_map(combatant)
-		for cell: Vector2i in map.keys():
-			map[cell] -= 1
-			if map[cell] <= 0:
-				map.erase(cell)
+	disabled.disable(is_player, loadout.cells_of(pick)[0], turns)
 
 
 ## Applies [param amount] of incoming damage to [param target], through the effect engine: a dodge negates it
@@ -348,53 +304,15 @@ func _sync_shield_status(combatant: Combatant) -> void:
 
 ## Whether the encounter has been decided — a combatant Jumped, or one is out of health.
 func is_over() -> bool:
-	return warp_winner != null or player_health <= 0 or opponent_health <= 0
+	return warp_meter.has_winner or player_health <= 0 or opponent_health <= 0
 
 
 ## The combatant that lost. Only meaningful once [method is_over] is true: the one who didn't Jump if there was a
 ## warp victory, else the one out of health.
 func defeated() -> Combatant:
-	if warp_winner != null:
-		return opponent_of(warp_winner)
+	if warp_meter.has_winner:
+		return opponent if warp_meter.winner_is_player else player
 	return player if player_health <= 0 else opponent
-
-
-## [param combatant]'s filled warp bars — the side of the shared meter in their favor (0 if they're behind).
-func warp_of(combatant: Combatant) -> int:
-	return maxi(0, warp) if combatant == player else maxi(0, -warp)
-
-
-## [param combatant]'s warp capacity — the bars their side holds before they can Jump.
-func warp_max_of(combatant: Combatant) -> int:
-	return player_warp_max if combatant == player else opponent_warp_max
-
-
-## Adds [param bars] of warp for [param combatant]: the player's pushes the meter up, the opponent's down.
-## Clamps to each side's own capacity; without a tug (Campaign) it never drops below zero, so the opponent's
-## warp only cancels the player's progress.
-func add_warp(combatant: Combatant, bars: int) -> void:
-	if bars <= 0:
-		return
-	warp += bars if combatant == player else -bars
-	var low: int = -opponent_warp_max if warp_tug else 0
-	warp = clampi(warp, low, player_warp_max)
-
-
-## Whether [param combatant] has filled their warp and may Jump. The player can at a full meter; the opponent
-## only in a tug (Quick Match).
-func can_jump(combatant: Combatant) -> bool:
-	if combatant == player:
-		return player_warp_max > 0 and warp >= player_warp_max
-	return warp_tug and opponent_warp_max > 0 and warp <= -opponent_warp_max
-
-
-## [param combatant] Jumps: expends the warp and wins the encounter (see [method defeated]). A no-op when they
-## can't yet.
-func jump(combatant: Combatant) -> void:
-	if not can_jump(combatant):
-		return
-	warp_winner = combatant
-	warp = 0
 
 
 ## Ends the active combatant's turn: advances to the next turn, rolling into the next round once both
@@ -408,4 +326,5 @@ func advance_turn() -> void:
 	# it expires (used or not) so it can't linger forever.
 	set_dodge(active_combatant(), false)
 	# Disabled cells count toward re-enabling each turn; modules whose cells expire start counting again.
-	_tick_disabled_cells()
+	disabled.advance()
+#endregion

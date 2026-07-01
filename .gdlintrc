@@ -12,7 +12,7 @@ excluded_directories:
 
 # Thresholds — adjust in follow-up:
 max-line-length: 160  # wider than gdlint's default 100; must match gdformat --line-length in gdtoolkit.sh
-max-file-lines: 600   # only match_game.gd (~1943) and test_match.gd (~1245) exceed this today
+max-file-lines: 600   # hard cap on file length; split a file that grows past it rather than raising this
 function-arguments-number: 10
 max-returns: 6
 max-public-methods: 20
