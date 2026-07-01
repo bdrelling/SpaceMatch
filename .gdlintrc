@@ -10,13 +10,15 @@ excluded_directories:
   - addons
   - .git
 
-# NOTE: class-definitions-order is intentionally NOT disabled. Our style guide
-# conforms to Godot's member order (signals -> enums -> constants -> ...), so the
-# default check is exactly what we want.
+# class-definitions-order is TEMPORARILY disabled. Our guide conforms to Godot's member order
+# (signals -> enums -> constants -> ...), but the existing code hasn't been reordered yet, so the
+# check would fire everywhere. Re-enable once the codebase is migrated to the new order.
+disable:
+  - class-definitions-order
 
 # Thresholds — adjust in follow-up:
 max-line-length: 160  # wider than gdlint's default 100; must match gdformat --line-length in gdtoolkit.sh
-max-file-lines: 1000
+max-file-lines: 600   # only match_game.gd (~1943) and test_match.gd (~1245) exceed this today
 function-arguments-number: 10
 max-returns: 6
 max-public-methods: 20
