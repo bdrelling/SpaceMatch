@@ -5,15 +5,20 @@
 [ext_resource type="Script" uid="uid://8bcao2gsr46i" path="res://addons/grid_system/rules/rule.gd" id="2_riw5m"]
 [ext_resource type="Script" uid="uid://ha1rkn84cbir" path="res://entities/starship/starship_stats.gd" id="2_stats"]
 [ext_resource type="Script" uid="uid://dy25mpv7s2ajw" path="res://addons/grid_system/data/piece_shape.gd" id="3_shape"]
+[ext_resource type="Script" uid="uid://bl6uxd0ruqe6l" path="res://systems/effect/core/models/stat_pool.gd" id="4_pool"]
 
 [sub_resource type="Resource" id="Shape_warp_core"]
 script = ExtResource("3_shape")
 offsets = Array[Vector2i]([Vector2i(0, 0)])
 
+[sub_resource type="Resource" id="Pool_warp_capacity"]
+script = ExtResource("4_pool")
+current = 4
+
 [sub_resource type="Resource" id="Stats_warp_core"]
 script = ExtResource("2_stats")
 values = {
-&"warp_capacity": 4
+&"warp_capacity": SubResource("Pool_warp_capacity")
 }
 
 [resource]

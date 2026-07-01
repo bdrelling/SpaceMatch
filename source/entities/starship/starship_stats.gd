@@ -41,9 +41,13 @@ var energy: int:
 var warp_capacity: int:
 	get: return get_named(&"warp_capacity")
 	set(value): set_named(&"warp_capacity", value)
-## Hit points this block contributes — the starship's hull. A base block carries the starting health; a hull/armor
-## module can add more. The encounter's starting max health is seeded from the effective total, and the live hull
-## pool is capped to it (see [method Combatant.create]).
+## Max hull this block contributes — the starship's health cap. A base block carries the starting hull (its pool
+## authors current = maximum); a hull/armor module can add more. In a profile the value is the pool's ceiling, so
+## summing blocks ([method EntityStats.add]) gives the effective max hull; the live hull depletes on the
+## combatant's own pool (see [method Combatant.create]). Reads/writes the pool's maximum (and keeps current level
+## with it, so a fresh ship reads full).
 var health: int:
-	get: return get_named(&"health")
-	set(value): set_named(&"health", value)
+	get: return get_maximum_named(&"health")
+	set(value):
+		set_maximum_named(&"health", value)
+		set_named(&"health", value)

@@ -79,11 +79,9 @@ static func create(source: StarshipState, combatant_id: int = 0, combatant_team:
 	combatant.starship = source
 	if source != null:
 		combatant.base_stats = source.effective_stats()
-		# Live stats start as a copy of the effective profile; health is the live hull and depletes from here. Cap
-		# the hull pool at the starship's max — current already starts full from the effective profile, so the bar
-		# begins topped and healing can't overfill.
+		# Live stats start as a copy of the effective profile: the health pool carries both the current hull and its
+		# max straight from the authored stats, so the bar begins full and capped, and depletes from here.
 		combatant.current_stats = source.effective_stats()
-		combatant.current_stats.set_maximum(Stats.health, source.max_health())
 	return combatant
 
 ## Persists this encounter's outcome back onto the fight [member starship] at the encounter's end. The combat

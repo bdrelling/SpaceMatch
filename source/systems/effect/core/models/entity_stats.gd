@@ -4,28 +4,14 @@ extends Resource
 ## required — so the same block works for any entity; stats match by key ([member EntityStat.name]), the way a
 ## [ResourcePool] matches an [AbilityResource]. Games may layer typed-field sugar over it (see [StarshipStats]),
 ## but the dictionary is the storage and the math lives here. Keys are stat names ([StringName]); values are
-## [StatPool]s, so one key owns both a stat's live value and its bounds.
-
-# Backing storage for [member values]; the export normalizes assignment so authoring stays simple.
-var _values: Dictionary = {}
-
-## A [StatPool] per stat key. Authoring may use a bare int as shorthand for a pool whose current is that int
-## (bounds zero, i.e. unbounded); it is lifted into a [StatPool] on load and any assigned pool is copied, so the
-## runtime is uniformly independent pools.
-@export var values: Dictionary:
-	get:
-		return _values
-	set(incoming):
-		var source_values: Dictionary = incoming
-		_values = {}
-		for key: StringName in source_values:
-			_values[key] = _as_pool(source_values[key])
+## [StatPool]s (authored as sub-resources in data), so one key owns both a stat's live value and its bounds.
+@export var values: Dictionary = {}
 
 
 func _init() -> void:
 	# A fresh dict per instance so two blocks never share one (an exported default can be shared). A .tres load
 	# overwrites this right after with its authored values.
-	_values = {}
+	values = {}
 
 
 ## The [StatPool] for [param stat], or null when this block holds none.
@@ -49,7 +35,7 @@ func set_stat(stat: EntityStat, value: int) -> void:
 	_pool(stat).set_current(value)
 
 
-## [param stat]'s ceiling (0 = unlimited); zero when this block holds none.
+## [param stat]'s ceiling (0 = unbounded); zero when this block holds none.
 func get_maximum(stat: EntityStat) -> int:
 	var pool := pool_for(stat)
 	return pool.maximum if pool != null else 0
@@ -79,17 +65,29 @@ func set_minimum(stat: EntityStat, value: int) -> void:
 	pool.set_current(pool.current)
 
 
-## The current value stored under raw stat-name [param key] (zero when absent). The seam typed-field sugar
-## (see [StarshipStats]) reads through.
+## The current value under raw stat-name [param key] (zero when absent). The seam typed-field sugar reads through.
 func get_named(key: StringName) -> int:
 	var pool: StatPool = values.get(key, null)
 	return pool.current if pool != null else 0
 
 
-## Sets the current value under raw stat-name [param key], clamped to its pool bounds. The seam typed-field sugar
-## writes through.
+## Sets the current value under raw stat-name [param key], clamped to its pool bounds.
 func set_named(key: StringName, value: int) -> void:
 	_pool_named(key).set_current(value)
+
+
+## The ceiling under raw stat-name [param key] (0 = unbounded; zero when absent). The seam a cap-carrying stat's
+## typed sugar (e.g. [member StarshipStats.health]) reads through.
+func get_maximum_named(key: StringName) -> int:
+	var pool: StatPool = values.get(key, null)
+	return pool.maximum if pool != null else 0
+
+
+## Sets the ceiling under raw stat-name [param key], then re-clamps its current value under the new bound.
+func set_maximum_named(key: StringName, value: int) -> void:
+	var pool := _pool_named(key)
+	pool.maximum = value
+	pool.set_current(pool.current)
 
 
 ## Sums [param other]'s pools into this block, key by key: current, minimum, and maximum each add (raw — a stat
@@ -117,18 +115,6 @@ func stat_names() -> Array[StringName]:
 	for key: StringName in values:
 		names.append(key)
 	return names
-
-
-## Lifts authored values into [StatPool]s: a bare int becomes a pool whose current is that int; an existing pool
-## is copied so instances never share one.
-static func _as_pool(value: Variant) -> StatPool:
-	if value is StatPool:
-		var existing: StatPool = value
-		return existing.copy()
-	var pool := StatPool.new()
-	var number: float = value
-	pool.current = int(number)
-	return pool
 
 
 ## Finds [param stat]'s pool, creating an empty (unbounded) one when absent.

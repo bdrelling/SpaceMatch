@@ -4,11 +4,18 @@
 [ext_resource type="Script" uid="uid://nu16uu48mhs2" path="res://systems/match/match_ability.gd" id="1_vg3ai"]
 [ext_resource type="Resource" uid="uid://cbgedqlvb0ki6" path="res://data/module_grids/computer_default_module_grid_blueprint.tres" id="2"]
 [ext_resource type="Script" uid="uid://ha1rkn84cbir" path="res://entities/starship/starship_stats.gd" id="3_stats"]
+[ext_resource type="Script" uid="uid://bl6uxd0ruqe6l" path="res://systems/effect/core/models/stat_pool.gd" id="4_pool"]
+
+[sub_resource type="Resource" id="Pool_health"]
+script = ExtResource("4_pool")
+current = 25
+minimum = 0
+maximum = 25
 
 [sub_resource type="Resource" id="Stats_computer"]
 script = ExtResource("3_stats")
 values = {
-&"health": 25
+&"health": SubResource("Pool_health")
 }
 
 [resource]

@@ -30,7 +30,7 @@ extends Resource
 func clone() -> StarshipState:
 	var copy := StarshipState.new()
 	copy.name = name
-	copy.base_stats = base_stats.duplicate() if base_stats != null else null
+	copy.base_stats = base_stats.duplicate(true) if base_stats != null else null
 	copy.loadout = loadout
 	copy.selection_override = selection_override
 	copy.ruleset = ruleset

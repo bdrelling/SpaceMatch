@@ -5,16 +5,25 @@
 [ext_resource type="Script" uid="uid://8bcao2gsr46i" path="res://addons/grid_system/rules/rule.gd" id="2_hnfq8"]
 [ext_resource type="Script" uid="uid://ha1rkn84cbir" path="res://entities/starship/starship_stats.gd" id="2_stats"]
 [ext_resource type="Script" uid="uid://dy25mpv7s2ajw" path="res://addons/grid_system/data/piece_shape.gd" id="3_shape"]
+[ext_resource type="Script" uid="uid://bl6uxd0ruqe6l" path="res://systems/effect/core/models/stat_pool.gd" id="4_pool"]
 
 [sub_resource type="Resource" id="Shape_shield_generator"]
 script = ExtResource("3_shape")
 offsets = Array[Vector2i]([Vector2i(0, 0), Vector2i(1, 0)])
 
+[sub_resource type="Resource" id="Pool_energy"]
+script = ExtResource("4_pool")
+current = -1
+
+[sub_resource type="Resource" id="Pool_defense"]
+script = ExtResource("4_pool")
+current = 4
+
 [sub_resource type="Resource" id="Stats_shield_generator"]
 script = ExtResource("2_stats")
 values = {
-&"energy": -1,
-&"defense": 4
+&"energy": SubResource("Pool_energy"),
+&"defense": SubResource("Pool_defense")
 }
 
 [resource]

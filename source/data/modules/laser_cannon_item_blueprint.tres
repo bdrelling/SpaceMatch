@@ -3,10 +3,22 @@
 [ext_resource type="Script" uid="uid://daxrkag063tph" path="res://entities/module/module_blueprint.gd" id="1_script"]
 [ext_resource type="Script" uid="uid://ha1rkn84cbir" path="res://entities/starship/starship_stats.gd" id="2_stats"]
 [ext_resource type="Script" uid="uid://dy25mpv7s2ajw" path="res://addons/grid_system/data/piece_shape.gd" id="3_shape"]
+[ext_resource type="Script" uid="uid://bl6uxd0ruqe6l" path="res://systems/effect/core/models/stat_pool.gd" id="4_pool"]
+
+[sub_resource type="Resource" id="Pool_power"]
+script = ExtResource("4_pool")
+current = 4
+
+[sub_resource type="Resource" id="Pool_energy"]
+script = ExtResource("4_pool")
+current = -1
 
 [sub_resource type="Resource" id="Stats_laser_cannon"]
 script = ExtResource("2_stats")
-values = { &"power": 4, &"energy": -1 }
+values = {
+&"power": SubResource("Pool_power"),
+&"energy": SubResource("Pool_energy")
+}
 
 [sub_resource type="Resource" id="Shape_laser_cannon"]
 script = ExtResource("3_shape")
