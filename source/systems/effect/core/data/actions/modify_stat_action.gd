@@ -18,11 +18,9 @@ const MAX_CASCADE_DEPTH := 8
 ## When true the magnitude is subtracted from the stat (damage, paying a cost); when false it is added
 ## (healing, resource gain).
 @export var subtracts: bool = false
-## Floor the stat lands on after the change. Defaults to 0 (stats that model pools never go negative).
+## Extra floor the stat lands on after the change, on top of its pool's own [member StatPool.minimum]. Defaults
+## to 0 (stats that model pools never go negative).
 @export var minimum: int = 0
-## Optional ceiling, read from another stat (e.g. the max-health [EntityStat] so healing cannot overfill).
-## Null means no ceiling.
-@export var maximum_stat: EntityStat
 
 
 ## Builds a [Modification], runs it through the [ModificationPipeline], then writes the clamped result to the
@@ -42,9 +40,8 @@ func resolve(context: ResolutionContext, target: Entity) -> void:
 	context.modification = modification
 	var current := target.current_stats.get_stat(stat)
 	var result := (current - magnitude) if subtracts else (current + magnitude)
-	if maximum_stat != null and maximum_stat.name in target.current_stats.stat_names():
-		result = mini(result, target.current_stats.get_stat(maximum_stat))
 	result = maxi(result, minimum)
+	# set_stat clamps to the stat's own pool bounds, so its maximum is the healing ceiling.
 	target.current_stats.set_stat(stat, result)
 	# Let statuses react to the change: the actor's outgoing reactions, then the subject's. Depth-capped so a
 	# reflection of a reflection terminates. Entities for the reactions come from the context, not the hook.

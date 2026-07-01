@@ -12,6 +12,7 @@ const _SLIDER_SCENE := preload("res://screens/debug_screen/widgets/rows/slider_r
 const _OPTION_SCENE := preload("res://screens/debug_screen/widgets/rows/option_row.tscn")
 const _TOGGLE_SCENE := preload("res://screens/debug_screen/widgets/rows/toggle_row.tscn")
 const _TEXT_SCENE := preload("res://screens/debug_screen/widgets/rows/text_row.tscn")
+const _COLOR_SCENE := preload("res://screens/debug_screen/widgets/rows/color_row.tscn")
 const _NAV_SCENE := preload("res://screens/debug_screen/widgets/rows/nav_row.tscn")
 
 ## A labelled slider with a live integer readout; [param on_change] receives the value as the user drags.
@@ -36,6 +37,12 @@ static func toggle(label_text: String, value: bool, on_change: Callable) -> Cont
 ## A labelled text field; [param on_change] receives the edited text on every keystroke.
 static func text(label_text: String, value: String, on_change: Callable) -> Control:
 	var row := _TEXT_SCENE.instantiate() as DebugTextRow
+	row.configure(label_text, value, on_change)
+	return row
+
+## A labelled colour picker; [param on_change] receives the chosen [Color].
+static func color(label_text: String, value: Color, on_change: Callable) -> Control:
+	var row := _COLOR_SCENE.instantiate() as DebugColorRow
 	row.configure(label_text, value, on_change)
 	return row
 

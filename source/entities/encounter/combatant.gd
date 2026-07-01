@@ -79,17 +79,18 @@ static func create(source: StarshipState, combatant_id: int = 0, combatant_team:
 	combatant.starship = source
 	if source != null:
 		combatant.base_stats = source.effective_stats()
-		# Live stats start as a copy of the effective profile; health is the live hull and depletes from here.
+		# Live stats start as a copy of the effective profile; health is the live hull and depletes from here. Cap
+		# the hull pool at the starship's max — current already starts full from the effective profile, so the bar
+		# begins topped and healing can't overfill.
 		combatant.current_stats = source.effective_stats()
-		combatant.current_stats.set_stat(Stats.health, source.health)
+		combatant.current_stats.set_maximum(Stats.health, source.max_health())
 	return combatant
 
 ## Persists this encounter's outcome back onto the fight [member starship] at the encounter's end. The combat
 ## state lives on the combatant (its [member Entity.current_stats]); this is the seam where a finished fight
-## writes anything durable back. Near-empty for now — health is encounter-scoped and a fresh fight reseeds it.
+## writes anything durable back. A no-op for now — health is encounter-scoped and a fresh fight reseeds it full.
 func commit() -> void:
-	if starship != null:
-		starship.health = health()
+	pass
 
 ## This combatant's live hull — the health stat on its [member Entity.current_stats].
 func health() -> int:

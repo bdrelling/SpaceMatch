@@ -12,7 +12,7 @@ func _stat(name: StringName) -> EntityStat:
 func _entity(health: int = 20) -> Entity:
 	var stats := EntityStats.new()
 	stats.set_stat(_stat(&"health"), health)
-	stats.set_stat(_stat(&"max_health"), 20)
+	stats.set_maximum(_stat(&"health"), 20)
 	var entity := Entity.new()
 	entity.current_stats = stats
 	return entity

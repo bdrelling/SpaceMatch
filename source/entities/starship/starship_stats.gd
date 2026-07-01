@@ -1,84 +1,49 @@
 class_name StarshipStats
 extends EntityStats
 ## A starship's stat profile — an [EntityStats] with typed sugar for the starship's stats. The
-## [member EntityStats.values] dictionary is the storage and the math ([method EntityStats.add],
-## [method EntityStats.get_stat]); these typed accessors are convenience over it. A module authors one as its +/-
-## contribution when slotted; summing the blocks of a starship's slotted modules ([method EntityStats.add]) gives
-## the starship's stat profile.
+## [member EntityStats.values] dictionary of [StatPool]s is the storage and the math ([method EntityStats.add],
+## [method EntityStats.get_stat]); these typed accessors are convenience over each pool's current value. A module
+## authors one as its +/- contribution when slotted; summing the blocks of a starship's slotted modules
+## ([method EntityStats.add]) gives the starship's stat profile.
 
 var power: int:
-	get:
-		var value: int = values.get(&"power", 0)
-		return value
-	set(value):
-		values[&"power"] = value
+	get: return get_named(&"power")
+	set(value): set_named(&"power", value)
 var speed: int:
-	get:
-		var value: int = values.get(&"speed", 0)
-		return value
-	set(value):
-		values[&"speed"] = value
+	get: return get_named(&"speed")
+	set(value): set_named(&"speed", value)
 var cargo: int:
-	get:
-		var value: int = values.get(&"cargo", 0)
-		return value
-	set(value):
-		values[&"cargo"] = value
+	get: return get_named(&"cargo")
+	set(value): set_named(&"cargo", value)
 var fuel: int:
-	get:
-		var value: int = values.get(&"fuel", 0)
-		return value
-	set(value):
-		values[&"fuel"] = value
+	get: return get_named(&"fuel")
+	set(value): set_named(&"fuel", value)
 var armor: int:
-	get:
-		var value: int = values.get(&"armor", 0)
-		return value
-	set(value):
-		values[&"armor"] = value
+	get: return get_named(&"armor")
+	set(value): set_named(&"armor", value)
 var defense: int:
-	get:
-		var value: int = values.get(&"defense", 0)
-		return value
-	set(value):
-		values[&"defense"] = value
+	get: return get_named(&"defense")
+	set(value): set_named(&"defense", value)
 var sensors: int:
-	get:
-		var value: int = values.get(&"sensors", 0)
-		return value
-	set(value):
-		values[&"sensors"] = value
+	get: return get_named(&"sensors")
+	set(value): set_named(&"sensors", value)
 var life_support: int:
-	get:
-		var value: int = values.get(&"life_support", 0)
-		return value
-	set(value):
-		values[&"life_support"] = value
+	get: return get_named(&"life_support")
+	set(value): set_named(&"life_support", value)
 var weapons: int:
-	get:
-		var value: int = values.get(&"weapons", 0)
-		return value
-	set(value):
-		values[&"weapons"] = value
+	get: return get_named(&"weapons")
+	set(value): set_named(&"weapons", value)
 var energy: int:
-	get:
-		var value: int = values.get(&"energy", 0)
-		return value
-	set(value):
-		values[&"energy"] = value
+	get: return get_named(&"energy")
+	set(value): set_named(&"energy", value)
 ## Bars of warp meter a starship can hold — its warp-bar capacity, granted by a warp-core module. Zero means the
 ## starship can't warp at all (no Jump, and warp tiles don't spawn for it). Summed from modules like any stat.
 var warp_capacity: int:
-	get:
-		var value: int = values.get(&"warp_capacity", 0)
-		return value
-	set(value):
-		values[&"warp_capacity"] = value
+	get: return get_named(&"warp_capacity")
+	set(value): set_named(&"warp_capacity", value)
 ## Hit points this block contributes — the starship's hull. A base block carries the starting health; a hull/armor
-## module can add more. The encounter's starting max health is seeded from the effective total.
+## module can add more. The encounter's starting max health is seeded from the effective total, and the live hull
+## pool is capped to it (see [method Combatant.create]).
 var health: int:
-	get:
-		var value: int = values.get(&"health", 0)
-		return value
-	set(value):
-		values[&"health"] = value
+	get: return get_named(&"health")
+	set(value): set_named(&"health", value)

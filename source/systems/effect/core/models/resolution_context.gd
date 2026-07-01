@@ -4,7 +4,7 @@ extends RefCounted
 ## services resolution needs (a seeded RNG and a chooser). One context flows through target selection, amount
 ## evaluation, condition checks, and the modification pipeline, so every step reads from the same place.
 
-## The entity that owns the effect being resolved (the source of a change, the stat [StatAmount] reads, ...).
+## The entity that owns the effect being resolved (the source of a change, the stat [CurrentStatAmount] reads, ...).
 var source: Entity
 ## [member source]'s own side, including [member source]. Used by self/ally relations.
 var allies: Array[Entity] = []

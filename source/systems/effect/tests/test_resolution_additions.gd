@@ -18,7 +18,7 @@ func _stat(name: StringName) -> EntityStat:
 func _entity(health: int = 20, power: int = 0) -> Entity:
 	var stats := EntityStats.new()
 	stats.set_stat(_stat(&"health"), health)
-	stats.set_stat(_stat(&"max_health"), maxi(health, 20))
+	stats.set_maximum(_stat(&"health"), maxi(health, 20))
 	stats.set_stat(_stat(&"power"), power)
 	var entity := Entity.new()
 	entity.current_stats = stats
@@ -146,16 +146,15 @@ func test_random_amount_stays_in_range_and_is_deterministic() -> void:
 
 
 func test_missing_stat_amount_is_the_shortfall() -> void:
-	var source := _entity(8)  # health 8, max_health 20
+	var source := _entity(8)  # health 8, max 20
 	var amount := MissingStatAmount.new()
 	amount.stat = _stat(&"health")
-	amount.maximum_stat = _stat(&"max_health")
 	assert_int(amount.evaluate(_ctx(source, [source], []))).is_equal(12)
 
 
 func test_math_amount_combines_operands() -> void:
 	var source := _entity(20, 4)
-	var power := StatAmount.new()
+	var power := CurrentStatAmount.new()
 	power.stat = _stat(&"power")
 	var base := ConstantAmount.new()
 	base.value = 3

@@ -9,10 +9,6 @@ extends Resource
 ## The loadout fitted into this starship — its arranged modules and the stat/ability/rule profile they grant
 ## (see [StarshipLoadout]). Persisted here; the match reads its profile each turn.
 @export var loadout: StarshipLoadout
-## The starship's current hull — what depletes as it takes damage in an encounter. At zero the starship is destroyed
-## and its pilot loses: the starship itself is the thing that dies, so combat damage lives here rather than on
-## a per-side counter. Seeded to [method max_health] when the starship is built (see [method Starship.apply_blueprint]).
-@export var health: int = 0
 ## An optional tile-selection rule this starship forces on its turn, overriding the encounter's default
 ## (see [SelectionRule]). Null means it plays by the board's default selection.
 @export var selection_override: SelectionRule
@@ -26,16 +22,16 @@ extends Resource
 ## contribute more via [method StarshipLoadout.abilities].
 @export var abilities: Array[MatchAbility] = []
 
-## A fight copy of this starship for an encounter: its own [member base_stats] block and [member health], so combat
-## and Debug edits stay on the copy and a fresh fight starts fresh. The loadout, ruleset and abilities are shared,
-## not deep-copied — the match only reads them (it composes a fresh ruleset per turn), and grid_system's
+## A fight copy of this starship for an encounter: its own [member base_stats] block, so combat and Debug edits
+## stay on the copy and a fresh fight starts fresh. The live hull is encounter-scoped — it lives on the
+## [Combatant]'s [member Entity.current_stats] health pool, not here. The loadout, ruleset and abilities are
+## shared, not deep-copied — the match only reads them (it composes a fresh ruleset per turn), and grid_system's
 ## [GridState] doesn't survive a deep duplicate.
 func clone() -> StarshipState:
 	var copy := StarshipState.new()
 	copy.name = name
 	copy.base_stats = base_stats.duplicate() if base_stats != null else null
 	copy.loadout = loadout
-	copy.health = health
 	copy.selection_override = selection_override
 	copy.ruleset = ruleset
 	copy.abilities = abilities
@@ -52,8 +48,9 @@ func effective_stats() -> StarshipStats:
 		total.add(loadout.stats())
 	return total
 
-## The starship's max hull — its effective health (base stat plus every hull module's), the cap [member health]
-## starts at and the bar's top. Derived from the starship (stats + modules), so editing the hull stat or slotting
-## a hull module raises it. Stable through a fight: disabling a module doesn't lower it.
+## The starship's max hull — its effective health (base stat plus every hull module's), the cap the live hull pool
+## starts at and the bar's top (see [method Combatant.create]). Derived from the starship (stats + modules), so
+## editing the hull stat or slotting a hull module raises it. Stable through a fight: disabling a module doesn't
+## lower it.
 func max_health() -> int:
 	return effective_stats().health

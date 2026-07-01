@@ -16,8 +16,8 @@ const SCENE: PackedScene = preload(SCENE_PATH)
 #region Blueprinting
 
 ## Builds a fresh [StarshipState] onto this node from [param _blueprint]: copies its base stats, builds its
-## module grid, and gives it the hull's ruleset/abilities (or the standard kit when the blueprint authors
-## none). Seeds [member StarshipState.health] to full — derivable now from the assembled stats and modules.
+## module grid, and gives it the hull's ruleset/abilities (or the standard kit when the blueprint authors none).
+## The live hull is encounter-scoped (it starts full on the [Combatant]'s health pool), so nothing to seed here.
 func apply_blueprint(_blueprint: StarshipBlueprint) -> void:
 	if not _blueprint:
 		push_error("Unable to apply blueprint; blueprint not found")
@@ -36,8 +36,6 @@ func apply_blueprint(_blueprint: StarshipBlueprint) -> void:
 	# kit (a match-4 extra turn, the five stat abilities). Modules layer more on at match time.
 	state.ruleset = _blueprint.ruleset if _blueprint.ruleset != null else _standard_ruleset()
 	state.abilities = _blueprint.abilities.duplicate() if not _blueprint.abilities.is_empty() else _standard_abilities()
-	# A fresh starship starts at full hull — its max is derived from its stats and modules, so this is known now.
-	state.health = state.max_health()
 
 static func create(_blueprint: StarshipBlueprint) -> Starship:
 	if not _blueprint:

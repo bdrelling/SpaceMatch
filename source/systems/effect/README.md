@@ -28,14 +28,17 @@ Entity {
   resources:      Array[ResourcePool]    # spendable AbilityResource amounts the entity holds (its "mana")
 }
 
-# EntityStats — the stat collection: a dictionary of values keyed by an EntityStat (its name). The dict is the
-# storage AND the math, so a block holds whatever stats it is given with no typed subclass required. Games may
-# layer typed-field sugar over it (the game's StarshipStats does), but the dictionary is the source of truth.
+# EntityStats — the stat collection: a StatPool keyed by an EntityStat (its name). The dict is the storage AND
+# the math, so a block holds whatever stats it is given with no typed subclass required. Games may layer
+# typed-field sugar over it (the game's StarshipStats does), but the dictionary is the source of truth.
 EntityStats {
-  values:         Dictionary[StringName, int]   # value per stat key
-  get_stat(stat: EntityStat)  -> int            # zero when the block holds no such stat
-  set_stat(stat: EntityStat, value)
-  add(other: EntityStats)                        # sums another block in, key by key
+  values:         Dictionary[StringName, StatPool]   # a current/min/max pool per stat key
+  get_stat(stat: EntityStat)  -> int            # the pool's current; zero when the block holds no such stat
+  set_stat(stat: EntityStat, value)             # writes current, clamped to the pool's minimum..maximum
+  get_maximum/set_maximum(stat[, value])        # the pool's ceiling (0 = unlimited)
+  get_minimum/set_minimum(stat[, value])        # the pool's floor
+  pool_for(stat: EntityStat)  -> StatPool
+  add(other: EntityStats)                        # sums another block in (current, minimum, maximum) key by key
   stat_names()    -> Array[StringName]
 }
 
@@ -114,6 +117,16 @@ ResourcePool {
   maximum:   int                     # most this pool may hold; 0 = unlimited (the pool owns its cap, not the resource)
 }
 
+# StatPool — the live value of one stat plus its bounds (the EntityStats counterpart of ResourcePool). One stat
+# key owns its current amount and the floor/ceiling it is held within, so a stat's value and cap never split.
+StatPool {
+  current:   int
+  minimum:   int                     # least this stat may hold (usually 0)
+  maximum:   int                     # most this stat may hold; 0 = unlimited (mirrors ResourcePool)
+  set_current(value)                 # clamps to minimum..maximum
+  missing()  -> int                  # maximum − current, floored at 0; 0 when unbounded
+}
+
 
 # ── Phase (shared turn-lifecycle tag) ─────────────
 Phase { TURN_START, TURN_END, ROUND_END }
@@ -168,7 +181,9 @@ Amount {
   evaluate(ctx) -> int    # computes the numeric value in context
 }
 ConstantAmount     extends Amount { value: int }
-StatAmount         extends Amount { stat: EntityStat }   # reads the source entity's stat
+CurrentStatAmount  extends Amount { stat: EntityStat }   # reads the stat pool's current value on the source
+MaximumStatAmount  extends Amount { stat: EntityStat }   # reads the stat pool's ceiling on the source
+MissingStatAmount  extends Amount { stat: EntityStat }   # maximum − current of the stat's pool on the source
 ModificationAmount extends Amount { }                    # the magnitude of the change being reacted to (ctx.modification.amount)
 
 
@@ -183,9 +198,9 @@ ModifyStatAction   extends Action {
   amount:        Amount
   tag:           StringName    # "damage", "heal", ... — names the change for steps and hooks
   subtracts:     bool          # true = remove (damage, paying a cost);  false = add (heal, gain)
-  minimum:       int           # floor the stat lands on (default 0)
-  maximum_stat:  EntityStat     # optional ceiling read from another stat (e.g. max_health); null = none
+  minimum:       int           # extra floor on top of the stat pool's own minimum (default 0)
 }
+# The ceiling comes from the target stat's StatPool.maximum — set_stat clamps to it, so healing cannot overfill.
 ApplyStatusAction   extends Action { status: StringName,  count: int }
 RemoveStatusAction  extends Action { status: StringName }
 DrainResourceAction extends Action { resources: Array[AbilityResource], amount: Amount }  # subtracts amount from each pool on the target

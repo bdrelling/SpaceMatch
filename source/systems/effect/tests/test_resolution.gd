@@ -19,7 +19,7 @@ func _entity(health: int = 20, armor: int = 0, shields: int = 0, power: int = 0)
 	var entity := Entity.new()
 	var stats := EntityStats.new()
 	stats.set_stat(_stat(&"health"), health)
-	stats.set_stat(_stat(&"max_health"), maxi(health, 20))
+	stats.set_maximum(_stat(&"health"), maxi(health, 20))
 	stats.set_stat(_stat(&"armor"), armor)
 	stats.set_stat(_stat(&"shields"), shields)
 	stats.set_stat(_stat(&"power"), power)
@@ -51,7 +51,7 @@ func test_constant_amount_evaluates_to_its_value() -> void:
 
 func test_stat_amount_reads_the_source_stat() -> void:
 	var source := _entity(20, 0, 0, 4)
-	var amount := StatAmount.new()
+	var amount := CurrentStatAmount.new()
 	amount.stat = _stat(&"power")
 	assert_int(amount.evaluate(_context(source, []))).is_equal(4)
 
@@ -156,7 +156,7 @@ func test_outgoing_multiplier_on_the_source_weakens_damage() -> void:
 # ── Healing ───────────────────────────────────────
 
 func test_heal_restores_and_caps_at_max() -> void:
-	var ally := _entity(5)  # max_health stays 20
+	var ally := _entity(5)  # health pool max stays 20
 	var heal := _heal(8)
 	heal.resolve(_context(_entity(), []), ally)
 	assert_int(ally.current_stats.get_stat(_stat(&"health"))).is_equal(13)
@@ -233,7 +233,6 @@ func _heal(value: int) -> ModifyStatAction:
 	var action := ModifyStatAction.new()
 	action.stat = _stat(&"health")
 	action.tag = &"heal"
-	action.maximum_stat = _stat(&"max_health")
 	action.amount = _const(value)
 	return action
 
