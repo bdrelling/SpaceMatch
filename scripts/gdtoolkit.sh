@@ -12,13 +12,23 @@ set -o pipefail
 DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$DIR/.." && pwd)"
 
-# Print the target file list: explicit args verbatim, else the whole project minus addons.
+# Print the .gd file list to operate on. source/addons/ is NEVER included — gdformat has no
+# exclude config, so exclusion has to happen here. No targets => the whole source/ tree.
+# Directory targets are expanded (minus addons); file targets pass through (unless under addons).
 resolve_files() {
-	if [ "$#" -gt 0 ]; then
-		printf '%s\n' "$@"
-	else
-		find "$ROOT/source" -name '*.gd' -not -path '*/addons/*'
-	fi
+	local roots=("$@")
+	[ "${#roots[@]}" -eq 0 ] && roots=("$ROOT/source")
+	local r
+	for r in "${roots[@]}"; do
+		if [ -d "$r" ]; then
+			find "$r" -name '*.gd' -not -path '*/addons/*'
+		else
+			case "$r" in
+				*/addons/*) ;;                 # skip explicit files under addons
+				*) printf '%s\n' "$r" ;;
+			esac
+		fi
+	done
 }
 
 cmd="${1:-}"
@@ -38,10 +48,10 @@ case "$cmd" in
 		while IFS= read -r f; do files+=("$f"); done < <(resolve_files "$@")
 		[ "${#files[@]}" -eq 0 ] && { echo "gdtoolkit.sh: no .gd files"; exit 0; }
 		if [ "$write" -eq 1 ]; then
-			exec gdformat "${files[@]}"
+			exec gdformat --line-length 160 "${files[@]}"
 		else
 			# Dry-run: --check reports files that need formatting and exits non-zero; it never writes.
-			exec gdformat --check "${files[@]}"
+			exec gdformat --check --line-length 160 "${files[@]}"
 		fi
 		;;
 	install)
