@@ -45,6 +45,19 @@ case "$cmd" in
 		fi
 		;;
 	install)
+		if command -v gdlint >/dev/null 2>&1; then
+			echo "gdtoolkit already installed"
+			exit 0
+		fi
+		if ! command -v pipx >/dev/null 2>&1; then
+			if command -v brew >/dev/null 2>&1; then
+				echo "pipx not found — installing via Homebrew..."
+				brew install pipx || exit 1
+			else
+				echo "gdtoolkit.sh: pipx not found. Install it first (e.g. 'brew install pipx'), then re-run." >&2
+				exit 1
+			fi
+		fi
 		exec pipx install "gdtoolkit==4.*"
 		;;
 	*)

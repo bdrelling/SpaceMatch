@@ -223,8 +223,8 @@ setup: ## Provision the checkout: obsidian link, Claude env, gdtoolkit + git hoo
 		tmp=`mktemp`; \
 		jq --arg v "$$target" '.env.OBSIDIAN_VAULT = $$v' "$$settings" > "$$tmp" && mv "$$tmp" "$$settings"; \
 		echo "Synced env.OBSIDIAN_VAULT into $$settings"
-	@./scripts/gdtoolkit.sh install
 	@./scripts/install_hooks.sh
+	@./scripts/gdtoolkit.sh install
 
 clean: ## Clean build artifacts
 	@rm -rf reports/
