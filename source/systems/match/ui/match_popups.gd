@@ -52,7 +52,7 @@ func spawn_match_popup(kind: int, count: int, center_local: Vector2) -> void:
 
 # A floating popup centered over a portrait — used for ability hits, which have no board cell.
 func spawn_portrait_popup(portrait: Control, text: String, color: Color) -> void:
-	if _ctx.popup_layer == null or portrait == null:
+	if _ctx.popup_layer == null or not is_instance_valid(portrait):
 		return
 	_emit_popup(portrait.get_global_rect().get_center(), text, color)
 
@@ -63,7 +63,9 @@ func spawn_portrait_popup_delayed(portrait: Control, text: String, color: Color,
 	if _ctx.popup_layer == null:
 		return
 	await _ctx.popup_layer.get_tree().create_timer(delay).timeout
-	if not _ctx.popup_layer.is_inside_tree():
+	# The board can tear down during the delay, freeing the popup layer (and the portrait) — check the
+	# instance is still valid before touching it, or is_inside_tree() crashes on a freed reference.
+	if not is_instance_valid(_ctx.popup_layer) or not _ctx.popup_layer.is_inside_tree():
 		return
 	spawn_portrait_popup(portrait, text, color)
 

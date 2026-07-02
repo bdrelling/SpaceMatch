@@ -6,15 +6,23 @@ extends VBoxContainer
 ## Scene-backed by [code]catalog_picker.tscn[/code], which instances the browser as a child; pins no theme,
 ## inheriting the host's.
 
+#region Signals
 ## An entry was chosen.
 signal selected(entry: Resource)
+#endregion
 
+#region Constants
 const SCENE_PATH := "res://ui/catalog_picker/catalog_picker.tscn"
+#endregion
 
-@onready var _browser: CatalogBrowser = %Browser
-
+#region Properties
 var _catalog: Catalog
 
+@onready var _browser: CatalogBrowser = %Browser
+#endregion
+
+
+#region Methods
 ## Builds a picker over [param catalog].
 static func create(catalog: Catalog) -> CatalogPicker:
 	var scene: PackedScene = load(SCENE_PATH)
@@ -22,7 +30,9 @@ static func create(catalog: Catalog) -> CatalogPicker:
 	picker._catalog = catalog
 	return picker
 
+
 func _ready() -> void:
 	_browser.empty_text = "Nothing to choose yet."
 	_browser.entry_activated.connect(func(entry: Resource) -> void: selected.emit(entry))
 	_browser.setup(_catalog)
+#endregion

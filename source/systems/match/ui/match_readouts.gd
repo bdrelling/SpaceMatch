@@ -210,6 +210,18 @@ func refresh_jump(game_over: bool, resolving: bool) -> void:
 	_jump_button.visible = _ctx.encounter != null and not game_over and not resolving and _ctx.encounter.warp_meter.can_jump(true)
 
 
+# The display name of the combatant whose turn it currently is (the player's when there's no encounter).
+func active_name() -> String:
+	if _ctx.encounter == null:
+		return _ctx.player_portrait.portrait_name
+	return _name_for(_ctx.encounter.active_combatant())
+
+
+# The portrait name of [param combatant] (the opponent's when it is the opponent, else the player's).
+func name_for(combatant: Combatant) -> String:
+	return _name_for(combatant)
+
+
 # A combatant's four stat-tile readouts: the count matched of each resource this fight, read off the encounter.
 func _readouts_for(combatant: Combatant) -> PackedStringArray:
 	var out := PackedStringArray()

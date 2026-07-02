@@ -16,15 +16,11 @@ signal restart_requested
 
 #region Constants
 const _CELL_SIZE: float = 64.0
-
-# Warp (kind 5) — the one tile kind the coordinator still names, to gate it out of the spawn table when warp isn't in play.
-const _WARP_KIND: int = 5
 #endregion
 
 #region Properties
 ## Forwarded to the blueprint as the board's seed. Zero rolls a fresh board each generation.
 @export var board_seed: int = 0
-
 ## How the player moves tiles: swap a neighbour, slide a run, or trace a path.
 @export var input_mode: MatchBoardView.InputMode = MatchBoardView.InputMode.SWAP
 ## Count diagonals as adjacent (matches, swaps, connect steps). The one knob.
@@ -67,8 +63,6 @@ var _gravity: MatchGravity
 var _rng := RandomNumberGenerator.new()
 # Above-the-board overlay floating popups rise into, so they aren't clipped by the board panel.
 var _popup_layer: Node2D
-# True while a reshuffle is rebuilding the board, so the regenerate it triggers doesn't re-check and recurse.
-var _reshuffling: bool = false
 # Set once a combatant falls: freezes input and the AI until restart. The win/lose overlay lives on [MatchEndState].
 var _game_over: bool = false
 # True once the VICTORY/DEFEAT phases have fired for this encounter, so they fire exactly once. Reset on restart.
@@ -119,7 +113,7 @@ func _ready() -> void:
 	_gravity = MatchGravity.new()
 	_gravity.setup(_CELL_SIZE, config.board_width, config.board_height, _session, _spawn_tile)
 	_canvas.add_child(_gravity)
-	_session.regenerated.connect(_on_regenerated)
+	_session.regenerated.connect(_ctx.end_state.on_regenerated)
 	_session.regenerate()
 	_message = MatchBoardFactory.prompt_for_mode(input_mode, config.min_run)
 	_compose_status()
@@ -130,8 +124,8 @@ func _ready() -> void:
 	if _encounter == null:
 		_open_fallback_encounter()
 	_watch_encounter()
-	_configure_warp()
-	_ensure_warp_bar()  # built only when warp is in play; capacity may not be known until a session binds
+	_ctx.readouts.configure_warp(quick_match)
+	_ctx.readouts.ensure_warp_bar()  # built only when warp is in play; capacity may not be known until a session binds
 	_refresh_portraits()
 	_refresh_turn_tracker()
 	_setup_abilities()
@@ -141,7 +135,7 @@ func _ready() -> void:
 	_ctx.readouts.build_jump_button(_on_jump_pressed)  # the Jump CTA, hidden until the player fills their warp meter
 	_refresh_jump()
 	_ctx.end_state.build_move_debug()
-	_refresh_move_debug()
+	_ctx.end_state.refresh_move_debug()
 	_ctx.rules.begin_encounter()  # seed SETUP then TURN_START for the first mover
 
 
@@ -175,10 +169,10 @@ func bind_session() -> void:
 	_sync_context_encounter()
 	_watch_encounter()
 	DebugConfig.active_state = GameSession.game_state  # let the Debug stat editor tune this encounter
-	_configure_warp()
+	_ctx.readouts.configure_warp(quick_match)
 	# Now the bound starship is known — drive starting HP from it, then build the warp meter if warp's in play.
 	_ctx.readouts.configure_health()
-	_ensure_warp_bar()
+	_ctx.readouts.ensure_warp_bar()
 	_refresh_portraits()
 	_refresh_turn_tracker()
 	# A re-bind is the shell's Restart — the standing board may be frozen on a finished encounter, so start over on
@@ -274,7 +268,7 @@ func _on_move_resolved(made_match: bool, cells_cleared: int) -> void:
 		_message = "No match — try another move."
 		_compose_status()
 		return
-	var mover: String = _active_name()
+	var mover: String = _ctx.readouts.active_name()
 	# Read and reset the move's largest match before the next move accumulates into it.
 	var max_run: int = _move_max_run
 	_move_max_run = 0
@@ -308,13 +302,13 @@ func _on_move_resolved(made_match: bool, cells_cleared: int) -> void:
 	if go_again:
 		_message = "%s — %s! Take another action." % [mover, go_again_reason]
 	elif cells_cleared > 0:
-		_message = "%s cleared %d tiles — %s's turn." % [mover, cells_cleared, _active_name()]
+		_message = "%s cleared %d tiles — %s's turn." % [mover, cells_cleared, _ctx.readouts.active_name()]
 	else:
-		_message = "%s moved — %s's turn." % [mover, _active_name()]
+		_message = "%s moved — %s's turn." % [mover, _ctx.readouts.active_name()]
 	_compose_status()
-	_refresh_move_debug()
+	_ctx.end_state.refresh_move_debug()
 	if not _ctx.end_state.has_moves():
-		await _reshuffle_board()
+		await _ctx.end_state.reshuffle_board()
 	_take_opponent_turn_if_needed()
 
 
@@ -371,7 +365,7 @@ func _use_ability(combatant: Combatant, ability: Ability) -> void:
 	var context: MatchResolutionContext = await _encounter.use_ability(combatant, ability)
 	_ctx.abilities.play_visuals(context)
 	_refresh_portraits()
-	_message = "%s used %s." % [_name_for(combatant), ability.name]
+	_message = "%s used %s." % [_ctx.readouts.name_for(combatant), ability.name]
 	_compose_status()
 	# An attacking ability may have decided the encounter; stop before handing the turn over.
 	if _check_for_end():
@@ -403,14 +397,6 @@ func _is_player_turn() -> bool:
 	return _encounter == null or _encounter.active_combatant() == _encounter.player
 
 
-func _configure_warp() -> void:
-	_ctx.readouts.configure_warp(quick_match)
-
-
-func _ensure_warp_bar() -> void:
-	_ctx.readouts.ensure_warp_bar()
-
-
 # Listens for [signal Resource.changed] so a Debug stat edit repaints the readouts at once, and seeds the encounter's effect-engine RNG from the board seed.
 func _watch_encounter() -> void:
 	if _encounter != null and not _encounter.changed.is_connected(_on_encounter_changed):
@@ -439,33 +425,15 @@ func _on_jump_pressed() -> void:
 	if _encounter == null or _game_over or _resolving or not _encounter.warp_meter.can_jump(true):
 		return
 	_encounter.warp_meter.jump(true)
-	_message = "%s jumped to warp — clear of the fight!" % _name_for(_encounter.player)
+	_message = "%s jumped to warp — clear of the fight!" % _ctx.readouts.name_for(_encounter.player)
 	_compose_status()
 	_refresh_portraits()
 	_check_for_end()
 
 
-# Drops the whole board off the bottom, regenerates, and pours a fresh one in — the dead-board reset. Waits out the rebuild before returning.
-func _reshuffle_board() -> void:
-	_reshuffling = true
-	_split_board_resources()  # divide the dead board's tiles between the combatants first (a no-op if the rule is off)
-	_message = "No moves — board split, reshuffling."
-	_compose_status()
-	await _match_view.drop_out()
-	_session.regenerate()  # rebuilds the tiles and (via _on_regenerated) drops them in
-	while _match_view.is_busy():
-		await get_tree().process_frame
-	_reshuffling = false
-	_refresh_move_debug()
-
-
+# Test-called shim onto the board-lifecycle collaborator, which banks the dead board's tiles and repaints the portraits.
 func _split_board_resources() -> void:
 	_ctx.end_state.split_board_resources()
-	_refresh_portraits()
-
-
-func _refresh_move_debug() -> void:
-	_ctx.end_state.refresh_move_debug()
 
 
 # Ends the encounter if a combatant has fallen: in Quick Match, shows the win/lose overlay. Returns true when it's over, so callers stop handing the turn.
@@ -508,12 +476,12 @@ func _restart_board() -> void:
 	_game_over = false
 	_ended = false
 	_resolving = false
-	_configure_warp()
+	_ctx.readouts.configure_warp(quick_match)
 	_move_max_run = 0
-	_session.regenerate()  # fresh board, drops in via _on_regenerated
+	_session.regenerate()  # fresh board, drops in via on_regenerated
 	_refresh_portraits()
 	_refresh_turn_tracker()
-	_refresh_move_debug()
+	_ctx.end_state.refresh_move_debug()
 	_message = MatchBoardFactory.prompt_for_mode(input_mode, config.min_run)
 	_compose_status()
 	_ctx.rules.begin_encounter()  # a fresh match is set up — seed SETUP + the first mover's turn-start budget
@@ -545,64 +513,27 @@ func _advance_turn() -> void:
 	_ctx.rules.run_phase(MatchPhase.TURN_START, _ctx.rules.phase_context())
 
 
-func _active_name() -> String:
-	if _encounter == null:
-		return _player_portrait.portrait_name
-	return _name_for(_encounter.active_combatant())
-
-
-func _name_for(combatant: Combatant) -> String:
-	if _encounter != null and combatant == _encounter.opponent:
-		return _opponent_portrait.portrait_name
-	return _player_portrait.portrait_name
-
-
+# The session's tile callbacks and the test-facing board queries — thin shims onto [member MatchContext.board].
 func _make_tile(object: GridObjectState) -> Node2D:
-	var tile := MatchTile.new()
-	var tile_state := object as MatchTileState
-	tile.kind = tile_state.kind if tile_state != null else 0
-	if tile_state != null:
-		tile.owner_outline = MatchBoardFactory.owner_color(tile_state.owner, _ctx.rules.territory())
-	return tile
+	return _ctx.board.make_tile(object)
 
 
-func _spawn_tile(_board: GridState, cell: Vector2i) -> GridObjectState:
-	var cells: Array[Vector2i] = [cell]
-	var owner: int = MatchBoardFactory.refill_owner(_encounter) if _ctx.rules.territory() != null else -1
-	return MatchTileState.new(cells, _pick_kind(), owner)
+func _spawn_tile(board: GridState, cell: Vector2i) -> GridObjectState:
+	return _ctx.board.spawn_tile(board, cell)
 
 
 func _generate_board() -> GridState:
-	return MatchBoardFactory.generate_board(config, _rng, _session, _spawn_table())
+	return _ctx.board.generate_board()
 
 
 func _pick_kind() -> int:
-	return MatchBoardFactory.pick_kind(_rng, _spawn_table())
-
-
-func _spawn_table() -> Dictionary:
-	var active: Combatant = _encounter.active_combatant() if _encounter != null else null
-	var source: Ruleset = _ctx.rules.effective_ruleset(active) if active != null and ruleset != null else ruleset
-	return MatchBoardFactory.spawn_table(source, _ctx.readouts.warp_active(), _WARP_KIND)
+	return _ctx.board.pick_kind()
 
 
 func _kind_at(state: GridState, x: int, y: int) -> int:
-	return MatchBoardFactory.kind_at(state, x, y)
+	return _ctx.board.kind_at(state, x, y)
 
 
 func _largest_match(board: GridState, cells: Array[Vector2i], is_path: bool) -> int:
-	var selection: SelectionRule = _ctx.rules.active_selection()
-	var min_run: int = selection.min_run if selection != null else 3
-	return MatchBoardFactory.largest_match(board, cells, is_path, allow_diagonal, min_run)
-
-
-func _on_regenerated() -> void:
-	if _grid == null:
-		return
-	_canvas.recenter()
-	await _match_view.drop_in()
-	_refresh_move_debug()
-	# Reshuffle a freshly generated dead board — but not mid-reshuffle (it regenerates too, which would recurse).
-	if not _reshuffling and not _ctx.end_state.has_moves():
-		await _reshuffle_board()
+	return _ctx.board.largest_match(board, cells, is_path, allow_diagonal)
 #endregion

@@ -1,8 +1,11 @@
-[gd_resource type="Resource" script_class="Status" format=3 load_steps=4]
+[gd_resource type="Resource" script_class="Status" format=3 uid="uid://balgubtq1ysf8"]
 
-[ext_resource type="Script" path="res://systems/effect/core/models/status.gd" id="1"]
-[ext_resource type="Script" path="res://systems/effect/core/data/modification_steps/absorb_step.gd" id="2_absorb"]
+[ext_resource type="Script" uid="uid://dq0nl6lj0xbts" path="res://systems/effect/core/models/status.gd" id="1"]
+[ext_resource type="Script" uid="uid://dynbvgknnkaku" path="res://systems/effect/core/models/triggered_effect.gd" id="1_si23u"]
+[ext_resource type="Script" uid="uid://d3d5n3w2xuhqi" path="res://systems/effect/core/models/modifier.gd" id="2_7rpk0"]
+[ext_resource type="Script" uid="uid://bvr7bf42kuemj" path="res://systems/effect/core/data/modification_steps/absorb_step.gd" id="2_absorb"]
 [ext_resource type="Resource" path="res://data/stats/block.tres" id="3_shield"]
+[ext_resource type="Script" uid="uid://dkqr4xe6wvvbl" path="res://systems/effect/core/models/modification_step.gd" id="4_0ux6f"]
 
 [sub_resource type="Resource" id="Absorb_shield"]
 script = ExtResource("2_absorb")
@@ -12,5 +15,4 @@ stat = ExtResource("3_shield")
 script = ExtResource("1")
 name = &"shield"
 sign = 0
-cap = 0
-transforms = Array[ExtResource("2_absorb")]([SubResource("Absorb_shield")])
+transforms = Array[ExtResource("4_0ux6f")]([SubResource("Absorb_shield")])

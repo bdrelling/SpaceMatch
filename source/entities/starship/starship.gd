@@ -6,16 +6,26 @@ extends Node
 ## Combat and the HUD read the data off [member state]; the node makes the starship inspectable and places it in
 ## the tree.
 
+#region Constants
 const SCENE_PATH := "res://entities/starship/starship.tscn"
 const SCENE: PackedScene = preload(SCENE_PATH)
 
+## The stat resources the standard abilities are priced in — combat / propulsion / science / defense (the four
+## stat tiles), preloaded so the kit builds without reaching the catalog autoload.
+const _COMBAT: StarshipResource = preload("res://data/ability_resources/combat.tres")
+const _PROPULSION: StarshipResource = preload("res://data/ability_resources/propulsion.tres")
+const _SCIENCE: StarshipResource = preload("res://data/ability_resources/science.tres")
+const _SHIELDS: StarshipResource = preload("res://data/ability_resources/shields.tres")
+#endregion
+
+#region Properties
 ## The starship's persisted state — its name, stats, module grid, hull, ruleset, and abilities. The save reads
 ## this; combat mutates it. Built by [method apply_blueprint] or supplied by [method with_state].
 @export var state: StarshipState
+#endregion
 
-#region Blueprinting
 
-
+#region Methods
 ## Builds a fresh [StarshipState] onto this node from [param _blueprint]: copies its base stats, builds its
 ## module grid, and gives it the hull's ruleset/abilities (or the standard kit when the blueprint authors none).
 ## The live hull is encounter-scoped (it starts full on the [Combatant]'s health pool), so nothing to seed here.
@@ -65,14 +75,6 @@ static func _standard_ruleset() -> Ruleset:
 	extra_turn.min_match = 4
 	ruleset.add(extra_turn)
 	return ruleset
-
-
-## The stat resources the standard abilities are priced in — combat / propulsion / science / defense (the four
-## stat tiles), preloaded so the kit builds without reaching the catalog autoload.
-const _COMBAT: StarshipResource = preload("res://data/ability_resources/combat.tres")
-const _PROPULSION: StarshipResource = preload("res://data/ability_resources/propulsion.tres")
-const _SCIENCE: StarshipResource = preload("res://data/ability_resources/science.tres")
-const _SHIELDS: StarshipResource = preload("res://data/ability_resources/shields.tres")
 
 
 ## The baseline hull abilities: one per stat tile (red/yellow/green/blue), plus a Disruptor that spends green.

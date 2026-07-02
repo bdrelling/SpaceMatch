@@ -95,4 +95,6 @@ Automated testing is critical to keeping the game stable. Test coverage will be 
 
 `make verify` is the gate: `lint-staged → format-staged → import → check → test`, fail-fast. Also `make lint` / `make format` (whole `source/`, minus `addons/`; `format-write` applies) and their `-staged` variants; `ARGS="<files>"` scopes any of them. See `make help`. Installed via `make setup`.
 
+Editing a `.gd` file auto-runs `gdformat` (source of truth) then `gdlint` on it and surfaces the conventions, via the PostToolUse/PreToolUse hooks in `.claude/`. Write to the conventions up front — member order is exactly what `gdlint` enforces, wrapped in `#region`s. Full guide: `armory/docs/languages/gdscript/` (README = the formatter → linter → guide layering).
+
 @armory/AGENTS.md

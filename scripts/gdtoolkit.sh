@@ -55,10 +55,14 @@ case "$cmd" in
 		[ "${#files[@]}" -eq 0 ] && { echo "gdtoolkit.sh: no .gd files"; exit 0; }
 		if [ "$write" -eq 1 ]; then
 			exec gdformat --line-length 160 "${files[@]}"
-		else
-			# Dry-run: --check reports files that need formatting and exits non-zero; it never writes.
-			exec gdformat --check --line-length 160 "${files[@]}"
 		fi
+		# Dry-run: --check reports files that need formatting and exits non-zero; it never writes.
+		gdformat --check --line-length 160 "${files[@]}"
+		status=$?
+		if [ "$status" -ne 0 ]; then
+			echo "gdtoolkit.sh: apply with 'make format-write' (or 'make format-staged' for staged)." >&2
+		fi
+		exit "$status"
 		;;
 	install)
 		if command -v gdlint >/dev/null 2>&1; then

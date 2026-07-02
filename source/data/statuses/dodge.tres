@@ -1,14 +1,12 @@
-[gd_resource type="Resource" script_class="Status" format=3 load_steps=5]
+[gd_resource type="Resource" script_class="Status" format=3 uid="uid://drcxd5u8kopbv"]
 
-[ext_resource type="Script" path="res://systems/effect/core/models/status.gd" id="1"]
-[ext_resource type="Script" path="res://systems/effect/core/data/modification_steps/clamp_step.gd" id="2_clamp"]
-[ext_resource type="Script" path="res://systems/effect/core/data/decay_rules/trigger_decay_rule.gd" id="3_decay"]
-[ext_resource type="Script" path="res://systems/effect/core/data/hooks/when_hit_hook.gd" id="4_hit"]
-
-[sub_resource type="Resource" id="Clamp_zero"]
-script = ExtResource("2_clamp")
-minimum = 0
-maximum = 0
+[ext_resource type="Script" uid="uid://dq0nl6lj0xbts" path="res://systems/effect/core/models/status.gd" id="1"]
+[ext_resource type="Script" uid="uid://dk8ehfjdmxv0g" path="res://systems/effect/core/data/modification_steps/clamp_step.gd" id="2_clamp"]
+[ext_resource type="Script" uid="uid://dynbvgknnkaku" path="res://systems/effect/core/models/triggered_effect.gd" id="3_by33e"]
+[ext_resource type="Script" uid="uid://b4cku8u8q2fm2" path="res://systems/effect/core/data/decay_rules/trigger_decay_rule.gd" id="3_decay"]
+[ext_resource type="Script" uid="uid://d3d5n3w2xuhqi" path="res://systems/effect/core/models/modifier.gd" id="4_8mgf3"]
+[ext_resource type="Script" uid="uid://duodmrvuffe1" path="res://systems/effect/core/data/hooks/when_hit_hook.gd" id="4_hit"]
+[ext_resource type="Script" uid="uid://dkqr4xe6wvvbl" path="res://systems/effect/core/models/modification_step.gd" id="6_s3qnm"]
 
 [sub_resource type="Resource" id="Hit_hook"]
 script = ExtResource("4_hit")
@@ -16,7 +14,10 @@ script = ExtResource("4_hit")
 [sub_resource type="Resource" id="Decay_on_hit"]
 script = ExtResource("3_decay")
 hook = SubResource("Hit_hook")
-quantity = 1
+
+[sub_resource type="Resource" id="Clamp_zero"]
+script = ExtResource("2_clamp")
+maximum = 0
 
 [resource]
 script = ExtResource("1")
@@ -24,4 +25,4 @@ name = &"dodge"
 sign = 0
 cap = 1
 decay_rule = SubResource("Decay_on_hit")
-transforms = Array[ExtResource("2_clamp")]([SubResource("Clamp_zero")])
+transforms = Array[ExtResource("6_s3qnm")]([SubResource("Clamp_zero")])

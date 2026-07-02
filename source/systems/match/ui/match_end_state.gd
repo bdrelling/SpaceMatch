@@ -21,6 +21,8 @@ var _ctx: MatchContext
 var _end_overlay: Control
 # A flat-colored debug chip over the board showing the live available-move count; remove with its build call.
 var _move_debug_label: Label
+# True while a reshuffle is rebuilding the board, so the regenerate it triggers doesn't re-check and recurse.
+var _reshuffling: bool = false
 
 #endregion
 
@@ -113,6 +115,35 @@ func split_board_resources() -> void:
 					player_starship.add_resource(resource, each)
 				if opponent_starship != null:
 					opponent_starship.add_resource(resource, each)
+	# Reflect the freshly-banked resources in both portraits. A split only ever runs on a live board (a stalemate
+	# reshuffle or the test), never game-over or mid-resolve, so both readout gates read false.
+	_ctx.readouts.refresh_portraits(false, false)
+
+
+# Drops the whole board off the bottom, regenerates, and pours a fresh one in — the dead-board reset. Waits out the
+# rebuild before returning. Sets the reshuffle guard so the regenerate it triggers doesn't recurse.
+func reshuffle_board() -> void:
+	_reshuffling = true
+	split_board_resources()  # divide the dead board's tiles between the combatants first (a no-op if the rule is off)
+	_ctx.set_status.call("No moves — board split, reshuffling.")
+	await _ctx.match_view.drop_out()
+	_ctx.session.regenerate()  # rebuilds the tiles and (via on_regenerated) drops them in
+	while _ctx.match_view.is_busy():
+		await _ctx.match_view.get_tree().process_frame
+	_reshuffling = false
+	refresh_move_debug()
+
+
+# Recenters and pours the freshly generated board in, then re-checks for a dead board — but not mid-reshuffle (a
+# reshuffle regenerates too, which would recurse). Wired to [signal GridSession.regenerated].
+func on_regenerated() -> void:
+	if _ctx.grid == null:
+		return
+	_ctx.canvas.recenter()
+	await _ctx.match_view.drop_in()
+	refresh_move_debug()
+	if not _reshuffling and not has_moves():
+		await reshuffle_board()
 
 
 # Whether the board has a move to play. Unknown for non-swap modes (no cheap test) counts as "yes", so only a

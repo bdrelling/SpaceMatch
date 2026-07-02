@@ -6,6 +6,7 @@ extends Control
 ## Mode.SELECT] when loading out a starship at game start. Tapping a module focuses it (name + per-stat
 ## contribution) in any mode; dragging to rearrange is allowed only in the editable modes.
 
+#region Enums
 ## The context the editor runs in. The host sets it via [method set_mode]; it gates whether modules can be
 ## dragged (and, later, whether the module tray is shown).
 enum Mode {
@@ -13,7 +14,9 @@ enum Mode {
 	EDIT,  ## Modify the current starship's modules (e.g. a shop). Drag to rearrange; tray available.
 	SELECT,  ## Load out a starship at game start. Drag to rearrange; tray available.
 }
+#endregion
 
+#region Constants
 ## DEBUG: the player's own loadout page (mounted via [method bind_session]) defaults to [constant
 ## Mode.EDIT] so drag-to-rearrange can be playtested before the shop / game-start flows exist to set the
 ## mode explicitly. Flip to false to default that page to [constant Mode.READ_ONLY] (fully locked).
@@ -30,10 +33,9 @@ const _VALUE_FONT_SIZE := 28
 const _TOTAL_COLOR := Color(0.93, 0.95, 1.0)
 const _GAIN_COLOR := Color(0.45, 0.9, 0.5)
 const _LOSS_COLOR := Color(0.96, 0.55, 0.45)
+#endregion
 
-@onready var _canvas: BoardCanvas = %BoardCanvas
-@onready var _stat_list: VBoxContainer = %StatList
-
+#region Properties
 var _mode: Mode = Mode.READ_ONLY
 var _grid_view: ModuleGridView
 var _module_grid: StarshipLoadout
@@ -48,7 +50,12 @@ var _focused_module: ModuleState
 var _grabbed_cell := Vector2i(-1, -1)
 var _grabbed_cells: Array[Vector2i] = []
 
+@onready var _canvas: BoardCanvas = %BoardCanvas
+@onready var _stat_list: VBoxContainer = %StatList
+#endregion
 
+
+#region Methods
 func _ready() -> void:
 	# Seed a fresh default game so the loadout and its stats render on their own — the dev preview (F6) and
 	# the standalone scene both need a session, and there's no host that binds one. [LoadoutScreen] re-binds
@@ -113,9 +120,6 @@ func _show_grid(module_grid: StarshipLoadout) -> void:
 # Mode.EDIT], [constant Mode.SELECT]). [constant Mode.READ_ONLY] (mid-combat) is inspect-only.
 func _editable() -> bool:
 	return _mode == Mode.EDIT or _mode == Mode.SELECT
-
-
-#region Tap to inspect, drag to rearrange
 
 
 # Pointer events forwarded from the [BoardCanvas] (positions already in global space). Finger 0 / left
@@ -200,11 +204,6 @@ func _preview_at(hover_cell: Vector2i) -> void:
 	_grid_view.set_preview(cells, _module_grid.can_move(_grabbed_cell, hover_cell))
 
 
-#endregion
-
-#region Focus
-
-
 # Focuses [param module] (or clears focus when null): outlines its footprint on the board, names it in
 # the stat block, and splits its contribution out of each stat total.
 func _set_focus(module: ModuleState) -> void:
@@ -240,9 +239,6 @@ func _focused_cells() -> Array[Vector2i]:
 		if module_state == _focused_module:
 			return _module_grid.cells_of(module_state)
 	return result
-
-
-#endregion
 
 
 # The stat readout: one row per stat-bearing match tile kind, each shown beside its tile, in [MatchTile]
@@ -359,3 +355,4 @@ func _tile_icon(kind: int) -> Control:
 		tile.scale = Vector2(_TILE_ICON_SIZE, _TILE_ICON_SIZE)
 		slot.add_child(tile)
 	return slot
+#endregion

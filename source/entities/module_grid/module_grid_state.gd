@@ -5,26 +5,19 @@ extends GridState
 ## with no notion of stats — that derivation lives on [StarshipLoadout] (a starship's grid), keeping this reusable for
 ## grids that don't have stats (inventories, puzzles). The [ModuleGrid] node builds and represents one.
 
+#region Constants
 const _LAYER := 0
 const _MODULE_KEY := &"module"
+#endregion
 
-## Stamps [param blueprint]'s hull silhouette (its usable cells) and its authored modules, in placement order,
-## onto [param grid] — already sized to the blueprint; a placement that doesn't fit is skipped. The shared
-## blueprint build behind the [ModuleGrid] node and a starship's [StarshipLoadout]; a null blueprint leaves it untouched.
-static func stamp(grid: ModuleGridState, blueprint: ModuleGridBlueprint) -> void:
-	if blueprint == null:
-		return
-	for cell: Vector2i in blueprint.cells:
-		grid.usable_cells[cell] = true
-	for placement: ModulePlacement in blueprint.modules:
-		if placement != null and placement.module != null:
-			grid.place(placement.module, placement.origin, placement.rotation)
-
+#region Properties
 ## The grid's column / row counts — aliases for the inherited [member GridState.width] / [member GridState.height].
 var columns: int:
-	get: return width
+	get:
+		return width
 var rows: int:
-	get: return height
+	get:
+		return height
 
 ## The placed modules' states, in placement order. The persisted source of truth a [ModuleGrid] node mirrors
 ## as [Module] nodes (sharing these same [ModuleState] objects by reference, so an edit through either lands
@@ -49,6 +42,22 @@ var placements: Dictionary:
 			if module_state != null:
 				result[module_state] = occupant.cells
 		return result
+#endregion
+
+
+#region Methods
+## Stamps [param blueprint]'s hull silhouette (its usable cells) and its authored modules, in placement order,
+## onto [param grid] — already sized to the blueprint; a placement that doesn't fit is skipped. The shared
+## blueprint build behind the [ModuleGrid] node and a starship's [StarshipLoadout]; a null blueprint leaves it untouched.
+static func stamp(grid: ModuleGridState, blueprint: ModuleGridBlueprint) -> void:
+	if blueprint == null:
+		return
+	for cell: Vector2i in blueprint.cells:
+		grid.usable_cells[cell] = true
+	for placement: ModulePlacement in blueprint.modules:
+		if placement != null and placement.module != null:
+			grid.place(placement.module, placement.origin, placement.rotation)
+
 
 ## The cells [param module_state] occupies on this grid, or empty when it isn't placed here.
 func cells_of(module_state: ModuleState) -> Array[Vector2i]:
@@ -57,10 +66,12 @@ func cells_of(module_state: ModuleState) -> Array[Vector2i]:
 			return occupant.cells
 	return []
 
+
 ## The cells the module covering [param cell] occupies (its whole footprint), or empty when the cell is bare.
 func cells_at(cell: Vector2i) -> Array[Vector2i]:
 	var occupant := get_object_at(_LAYER, cell.x, cell.y)
 	return occupant.cells if occupant != null else []
+
 
 ## The hull silhouette's usable cells.
 func existing_cells() -> Array[Vector2i]:
@@ -69,11 +80,14 @@ func existing_cells() -> Array[Vector2i]:
 		result.append(cell)
 	return result
 
+
 func cell_exists(cell: Vector2i) -> bool:
 	return is_usable(cell.x, cell.y)
 
+
 func tile_count() -> int:
 	return usable_cells.size()
+
 
 func filled_cell_count() -> int:
 	var count := 0
@@ -81,12 +95,14 @@ func filled_cell_count() -> int:
 		count += occupant.cells.size()
 	return count
 
+
 ## True when [param shape] fits at [param origin] / [param rotation] on usable, unoccupied cells. (Named to
 ## avoid the inherited [method GridState.can_place], which works in absolute cells rather than a shape.)
 func can_place_module(shape: PieceShape, origin: Vector2i, rotation: int) -> bool:
 	if shape == null:
 		return false
 	return can_place(_LAYER, shape.cells_at(origin, rotation))
+
 
 ## Places module type [param module] at [param origin] / [param rotation], building the [ModuleState] this
 ## grid stores for it. The occupant carries the state, so [member modules] and the grid stay one source.
@@ -102,14 +118,17 @@ func place(module: ModuleBlueprint, origin: Vector2i, rotation: int) -> bool:
 	emit_changed()
 	return true
 
+
 ## The [ModuleState] covering [param cell], or null. An alias of [method state_at] for the placement-query call site.
 func module_at(cell: Vector2i) -> ModuleState:
 	return state_at(cell)
+
 
 ## The [ModuleState] covering [param cell], or null when the cell is empty.
 func state_at(cell: Vector2i) -> ModuleState:
 	var occupant := get_object_at(_LAYER, cell.x, cell.y)
 	return occupant.state.get(_MODULE_KEY) if occupant != null else null
+
 
 ## Removes the module covering [param cell] and returns its [ModuleState] (null when the cell is empty).
 func remove_at(cell: Vector2i) -> ModuleState:
@@ -121,6 +140,7 @@ func remove_at(cell: Vector2i) -> ModuleState:
 	emit_changed()
 	return module_state
 
+
 ## True when the module covering [param from_cell] could be translated by (to_cell - from_cell) — its
 ## footprint lands on usable cells and collides with nothing but itself. False when from_cell is empty.
 func can_move(from_cell: Vector2i, to_cell: Vector2i) -> bool:
@@ -128,6 +148,7 @@ func can_move(from_cell: Vector2i, to_cell: Vector2i) -> bool:
 	if occupant == null:
 		return false
 	return can_place(_LAYER, _translated(occupant.cells, to_cell - from_cell), occupant)
+
 
 ## Translates the module covering [param from_cell] by (to_cell - from_cell), preserving its rotation.
 ## Returns true on success; leaves the grid untouched and returns false when the move isn't valid.
@@ -141,8 +162,10 @@ func move(from_cell: Vector2i, to_cell: Vector2i) -> bool:
 	emit_changed()
 	return true
 
+
 func _translated(cells: Array[Vector2i], delta: Vector2i) -> Array[Vector2i]:
 	var result: Array[Vector2i] = []
 	for cell: Vector2i in cells:
 		result.append(cell + delta)
 	return result
+#endregion

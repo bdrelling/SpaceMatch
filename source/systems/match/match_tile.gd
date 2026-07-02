@@ -8,44 +8,16 @@ extends GridTile
 ## ([method AbilityResourceCatalog.tile_kinds]) rather than a fixed count. The damage tile has no sprite yet, so
 ## it falls back to a hand-drawn starburst. A non-zero [member tint] modulates the art.
 
+#region Constants
 ## Glyph half-extent in cell units; leaves a margin inside the cell.
 const _HALF: float = 0.40
 const _LINE: float = 0.045
+#endregion
 
+#region Properties
 # Tile kind -> its StarshipResource, built once from the resource catalog. The resources own the art/colour/label;
 # this just indexes them by their id for the board.
 static var _by_kind: Dictionary = {}
-
-# The StarshipResource bound to [param kind] (matched on its id), or null when none maps to it.
-static func _resource_for(kind: int) -> StarshipResource:
-	if _by_kind.is_empty():
-		for resource: AbilityResource in Catalogs.ability_resources.ability_resources:
-			var starship_resource := resource as StarshipResource
-			if starship_resource != null:
-				_by_kind[starship_resource.id] = starship_resource
-	return _by_kind.get(kind, null)
-
-## Sprite for [param kind], or null for a kind drawn procedurally (damage).
-static func texture_of(kind: int) -> Texture2D:
-	var resource := _resource_for(kind)
-	return resource.texture if resource != null else null
-
-## Glyph colour for [param kind].
-static func color_of(kind: int) -> Color:
-	var resource := _resource_for(kind)
-	return resource.color if resource != null else Color.WHITE
-
-## Display name for [param kind] (empty when none maps to it).
-static func name_of(kind: int) -> String:
-	var resource := _resource_for(kind)
-	return resource.label if resource != null else ""
-
-## Display names for every kind, in kind order — for pickers that list the kinds.
-static func names() -> Array[String]:
-	var result: Array[String] = []
-	for kind: int in Catalogs.ability_resources.tile_kinds():
-		result.append(name_of(kind))
-	return result
 
 var kind: int = 0:
 	set(value):
@@ -68,16 +40,57 @@ var owner_outline: Color = Color(0, 0, 0, 0):
 		queue_redraw()
 
 var _highlighted: bool = false
+#endregion
+
+
+#region Methods
+# The StarshipResource bound to [param kind] (matched on its id), or null when none maps to it.
+static func _resource_for(kind: int) -> StarshipResource:
+	if _by_kind.is_empty():
+		for resource: AbilityResource in Catalogs.ability_resources.ability_resources:
+			var starship_resource := resource as StarshipResource
+			if starship_resource != null:
+				_by_kind[starship_resource.id] = starship_resource
+	return _by_kind.get(kind, null)
+
+
+## Sprite for [param kind], or null for a kind drawn procedurally (damage).
+static func texture_of(kind: int) -> Texture2D:
+	var resource := _resource_for(kind)
+	return resource.texture if resource != null else null
+
+
+## Glyph colour for [param kind].
+static func color_of(kind: int) -> Color:
+	var resource := _resource_for(kind)
+	return resource.color if resource != null else Color.WHITE
+
+
+## Display name for [param kind] (empty when none maps to it).
+static func name_of(kind: int) -> String:
+	var resource := _resource_for(kind)
+	return resource.label if resource != null else ""
+
+
+## Display names for every kind, in kind order — for pickers that list the kinds.
+static func names() -> Array[String]:
+	var result: Array[String] = []
+	for kind: int in Catalogs.ability_resources.tile_kinds():
+		result.append(name_of(kind))
+	return result
+
 
 func _init() -> void:
 	# Mipmapped sampling so the high-res art downscales cleanly into a board cell.
 	texture_filter = TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
+
 
 func set_highlighted(on: bool) -> void:
 	if _highlighted == on:
 		return
 	_highlighted = on
 	queue_redraw()
+
 
 func _draw() -> void:
 	var texture: Texture2D = texture_of(kind)
@@ -96,6 +109,7 @@ func _draw() -> void:
 		var inset: float = _HALF + 0.05
 		draw_rect(Rect2(Vector2(-inset, -inset), Vector2(inset * 2.0, inset * 2.0)), Color.WHITE, false, _LINE * 1.4)
 
+
 # Damage — a spiky starburst (an explosion): eight points alternating a long and short radius, with a
 # hot, lightened core. The one kind still drawn (no sprite yet).
 func _draw_explosion(color: Color) -> void:
@@ -110,7 +124,9 @@ func _draw_explosion(color: Color) -> void:
 	draw_colored_polygon(burst, color)
 	draw_circle(Vector2.ZERO, _HALF * 0.34, color.lightened(0.5))
 
+
 # --- collision baking ---
+
 
 ## Traces a unit-cell-space collision outline from each kind's sprite alpha. Returns one polygon per kind that
 ## has a sprite (in kind order); kinds without art are left to a procedural fallback. [param alpha_threshold] is
@@ -122,6 +138,7 @@ static func bake_collision_outlines(alpha_threshold: float, epsilon: float) -> A
 		if resource != null and resource.texture != null:
 			outlines.append(_trace_outline(resource.texture, alpha_threshold, epsilon))
 	return outlines
+
 
 # The largest opaque silhouette of [param texture], normalised so the full image spans the unit cell
 # (−0.5…0.5) centred on the origin — matching how [method _draw] lays the sprite down.
@@ -145,6 +162,7 @@ static func _trace_outline(texture: Texture2D, alpha_threshold: float, epsilon: 
 		normalised.append(Vector2(point.x / size.x - 0.5, point.y / size.y - 0.5))
 	return normalised
 
+
 static func _signed_area(polygon: PackedVector2Array) -> float:
 	var total: float = 0.0
 	for i: int in polygon.size():
@@ -152,3 +170,4 @@ static func _signed_area(polygon: PackedVector2Array) -> float:
 		var b: Vector2 = polygon[(i + 1) % polygon.size()]
 		total += a.x * b.y - b.x * a.y
 	return total * 0.5
+#endregion

@@ -28,6 +28,8 @@ var turn_label: Label
 var actions: HBoxContainer
 var ruleset: Ruleset
 var config: MatchConfig
+# The seeded RNG the board draws tile kinds and refills from, so spawning stays reproducible off one board seed.
+var rng: RandomNumberGenerator
 
 # The board's cell size in pixels, so collaborators can map a cell to its centre without reaching the coordinator.
 var cell_size: float = 64.0
@@ -52,6 +54,7 @@ var readouts: MatchReadouts
 var resolver: MatchClearResolver
 var end_state: MatchEndState
 var turn_loop: MatchTurnLoop
+var board: MatchBoard
 
 #endregion
 
@@ -77,6 +80,7 @@ static func create(game: MatchGame) -> MatchContext:
 	ctx.actions = game._actions
 	ctx.ruleset = game.ruleset
 	ctx.config = game.config
+	ctx.rng = game._rng
 	ctx.cell_size = MatchGame._CELL_SIZE
 	ctx.input_mode = game.input_mode
 	ctx.allow_diagonal = game.allow_diagonal
@@ -88,6 +92,7 @@ static func create(game: MatchGame) -> MatchContext:
 	ctx.resolver = MatchClearResolver.new(ctx)
 	ctx.end_state = MatchEndState.new(ctx)
 	ctx.turn_loop = MatchTurnLoop.new(ctx)
+	ctx.board = MatchBoard.new(ctx)
 	return ctx
 
 #endregion

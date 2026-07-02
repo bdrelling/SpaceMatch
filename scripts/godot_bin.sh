@@ -7,6 +7,6 @@ if command -v godot >/dev/null 2>&1; then
 elif [ -x /usr/local/bin/godot ]; then
   echo /usr/local/bin/godot
 else
-  echo "godot-bin.sh: godot binary not found (not on PATH, not at /usr/local/bin/godot)" >&2
+  echo "godot_bin.sh: godot binary not found (not on PATH, not at /usr/local/bin/godot)" >&2
   exit 1
 fi

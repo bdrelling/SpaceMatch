@@ -11,7 +11,7 @@ replace_newlines_with_spaces() {
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || REPO_ROOT="${0:A:h:h}"
 
 # Get the path to the godot binary (PATH first, then the Docker fallback)
-GODOT_BIN=$("$REPO_ROOT/scripts/godot-bin.sh")
+GODOT_BIN=$("$REPO_ROOT/scripts/godot_bin.sh")
 
 # Test targets come from the args ("$@") — dirs or files. No args = auto-discovered suites.
 

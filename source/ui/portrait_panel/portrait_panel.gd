@@ -12,11 +12,14 @@ extends Button
 ## The layout is authored in portrait_panel.tscn so it renders in the editor; this script only binds the
 ## live data (grid, readouts, name, health, dodge, active) onto the authored nodes.
 
+#region Constants
 const _STYLE_NORMAL := preload("res://ui/styles/hud_placeholder.tres")
 const _STYLE_ACTIVE := preload("res://ui/styles/hud_box_active.tres")
 ## Height of the health bar under the name.
 const _BAR_PX: float = 24.0
+#endregion
 
+#region Properties
 ## Big glyph shown above the name — a stand-in portrait.
 @export var glyph: String = "▦"
 ## Name shown under the glyph.
@@ -24,6 +27,12 @@ const _BAR_PX: float = 24.0
 ## Current and maximum health, shown as the bar under the name.
 @export var health: float = 100.0
 @export var max_health: float = 100.0
+
+# The four stat-tile value labels, in readout order, collected from the authored strip cells.
+var _value_labels: Array[Label] = []
+# The styleboxes backing the health and shield fills — their corner radii are tuned live in set_health.
+var _health_fill_style: StyleBoxFlat
+var _shield_fill_style: StyleBoxFlat
 
 @onready var _glyph_label: Label = %Glyph
 @onready var _grid_thumbnail: ModuleGridThumbnail = %GridThumbnail
@@ -35,13 +44,10 @@ const _BAR_PX: float = 24.0
 # over the portrait so toggling it never reflows the stat strip below.
 @onready var _dodge_indicator: Control = %DodgeBadge
 @onready var _strip: HBoxContainer = %Strip
+#endregion
 
-# The four stat-tile value labels, in readout order, collected from the authored strip cells.
-var _value_labels: Array[Label] = []
-# The styleboxes backing the health and shield fills — their corner radii are tuned live in set_health.
-var _health_fill_style: StyleBoxFlat
-var _shield_fill_style: StyleBoxFlat
 
+#region Methods
 func _ready() -> void:
 	_health_fill_style = _health_fill.get_theme_stylebox("panel")
 	_shield_fill_style = _shield_fill.get_theme_stylebox("panel")
@@ -53,10 +59,12 @@ func _ready() -> void:
 	_name_label.text = portrait_name
 	set_health(health, max_health)
 
+
 ## Sets the four stat readouts, in [MatchTile] kind order (combat, propulsion, science, defense).
 func set_readouts(values: PackedStringArray) -> void:
 	for i: int in mini(values.size(), _value_labels.size()):
 		_value_labels[i].text = values[i]
+
 
 ## Shows this combatant's module grid as the portrait thumbnail (modules in their grid colors). A null
 ## grid falls back to the glyph — e.g. before a session binds, or running this scene standalone.
@@ -69,16 +77,19 @@ func set_module_grid(grid: ModuleGridState) -> void:
 	if _glyph_label != null:
 		_glyph_label.visible = not has_grid
 
+
 ## Shows or hides the "EVADE" badge — on while this combatant is armed to dodge the next attack.
 func set_dodge_active(active: bool) -> void:
 	if _dodge_indicator != null:
 		_dodge_indicator.visible = active
+
 
 ## Frames this portrait as the active combatant (whose turn it is) by swapping in the active box.
 func set_active(active: bool) -> void:
 	var style: StyleBox = _STYLE_ACTIVE if active else _STYLE_NORMAL
 	add_theme_stylebox_override("normal", style)
 	add_theme_stylebox_override("focus", style)
+
 
 ## Sets the stacked health bar: red runs to [param current], blue picks up from there and runs the length
 ## of [param shield], and the empty remainder fills the rest. The bar spans whichever is larger — max
@@ -112,3 +123,4 @@ func set_health(current: float, maximum: float, shield: float = 0.0) -> void:
 		if shield_amount > 0.0:
 			text += " (%d)" % roundi(shield_amount)
 		_health_label.text = text
+#endregion

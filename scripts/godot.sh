@@ -5,7 +5,7 @@
 #   godot.sh import                # rebuild the import/UID cache (whole project)
 #   godot.sh test   [targets...]   # gdUnit4 via test.sh: whole suite, or the given paths
 #
-# Shares godot-bin.sh (binary resolver) with test.sh. `test` delegates to test.sh so its
+# Shares godot_bin.sh (binary resolver) with test.sh. `test` delegates to test.sh so its
 # battle-tested crash-verdict logic stays verbatim.
 set -o pipefail
 
@@ -16,7 +16,7 @@ cmd="${1:-}"
 
 case "$cmd" in
 	check)
-		GODOT="$("$DIR/godot-bin.sh")" || exit 1
+		GODOT="$("$DIR/godot_bin.sh")" || exit 1
 		if [ "$#" -eq 0 ]; then
 			"$GODOT" --path source --headless --check-only --quit
 			status=$?
@@ -30,7 +30,7 @@ case "$cmd" in
 		exit $status
 		;;
 	import)
-		GODOT="$("$DIR/godot-bin.sh")" || exit 1
+		GODOT="$("$DIR/godot_bin.sh")" || exit 1
 		"$GODOT" --path source --headless --import --quit
 		status=$?
 		echo "EXIT: $status"

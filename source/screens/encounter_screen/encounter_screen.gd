@@ -5,19 +5,25 @@ extends ScreenFrame
 ## the running game (the [code]GameSession[/code] autoload) the player just set up; Back returns to the
 ## [MainMenuScreen]. The bar's settings cog opens a top-most [SettingsScreen] overlay over the paused match.
 
+#region Constants
 const SCREEN_NAME := "encounter"
 const SCENE_PATH := "res://screens/encounter_screen/encounter_screen.tscn"
+#endregion
+
+#region Properties
+# The encounter this screen hosts (a clone of the running starship vs the computer default). Owned here so the
+# match screen only renders it; pointed into GameSession.game_state.encounter.
+var _encounter: Encounter
 
 @onready var _match: MatchGame = %Match
 @onready var _footnote: Label = %Footnote
 ## The Settings overlay — a top-most [CanvasLayer] shown while the match is paused, drawn over the
 ## still-rendered (but frozen) board. Authored in the scene.
 @onready var _settings_overlay: CanvasLayer = %SettingsOverlay
+#endregion
 
-# The encounter this screen hosts (a clone of the running starship vs the computer default). Owned here so the
-# match screen only renders it; pointed into GameSession.game_state.encounter.
-var _encounter: Encounter
 
+#region Methods
 func _ready() -> void:
 	super._ready()  # wire the frame's bar signals
 	_open_encounter()
@@ -37,6 +43,7 @@ func _ready() -> void:
 	if _footnote.visible:
 		_footnote.text = BuildInfo.stamp()
 
+
 # Mounts the match's player-facing actions onto the bar's trailing action button — today just "Rules", a
 # read-only summary of the rules in force. The match owns what a press does (it opens the view over its own
 # board); this screen only surfaces the button. Falls back to a plain titled bar if the match offers none.
@@ -49,6 +56,7 @@ func _wire_actions() -> void:
 	configure_bar("Encounter", action.label)
 	action_pressed.connect(action.on_pressed)
 
+
 # Wires the bar's currency readout to the running game's wallet so the scrap balance shows over the board and
 # repaints as matches bank scrap. The wallet is campaign-scoped (it outlives a restart), so this binds once.
 func _wire_wallet() -> void:
@@ -58,13 +66,16 @@ func _wire_wallet() -> void:
 		wallet.scrap_changed.connect(_on_wallet_changed)
 	_on_wallet_changed()
 
+
 func _on_wallet_changed() -> void:
 	var wallet := _wallet()
 	set_scrap(wallet.scrap if wallet != null else 0)
 
+
 # The running game's wallet, or null when there's no game state.
 func _wallet() -> WalletState:
 	return GameSession.game_state.wallet if GameSession.game_state != null else null
+
 
 # Connects the Settings overlay: pausing shows it, resuming hides it, and its panel buttons restart/quit
 # the encounter or open Debug over the (still paused) board.
@@ -75,6 +86,7 @@ func _wire_settings() -> void:
 	settings.restart_pressed.connect(_on_settings_restart)
 	settings.quit_pressed.connect(_on_settings_quit)
 	settings.debug_pressed.connect(_on_settings_debug)
+
 
 # Opens (or reopens) the encounter this screen hosts: a fresh [Encounter] with a clone of the running
 # starship, pointed into the session so the match reads it. Frees any prior encounter so a restart doesn't
@@ -88,18 +100,23 @@ func _open_encounter() -> void:
 	_encounter.name = "Encounter"
 	add_child(_encounter)
 
+
 # The cog pauses (touch has no ESC/joypad); the overlay shows itself over the frozen board on pause.
 func _on_settings_pressed() -> void:
 	PauseMonitor.pause()
 
+
 func _open_settings() -> void:
 	_settings_overlay.visible = true
+
 
 func _close_settings() -> void:
 	_settings_overlay.visible = false
 
+
 func _settings_screen() -> SettingsScreen:
 	return _settings_overlay.get_node("Settings") as SettingsScreen
+
 
 # Restart from Settings: resume first (the new match must run unpaused), reopen the encounter in place, then
 # rebind the match so it drops the finished board and restarts on the fresh encounter (bind_session sees the
@@ -109,10 +126,12 @@ func _on_settings_restart() -> void:
 	_open_encounter()
 	_match.bind_session()
 
+
 # Quit from Settings: resume so the tree isn't left paused under the menu, then return to the main menu.
 func _on_settings_quit() -> void:
 	PauseMonitor.unpause()
 	SceneLoader.transition_to(MainMenuScreen.create())
+
 
 # Debug from Settings: open the debug navigator over the (still paused) board, above the Settings overlay.
 # Its pages edit the same shared config the running board uses, so changes apply live; Done frees it.
@@ -121,9 +140,12 @@ func _on_settings_debug() -> void:
 	navigator.closed.connect(navigator.queue_free)
 	_settings_overlay.add_child(navigator)
 
+
 func _on_back() -> void:
 	SceneLoader.transition_to(MainMenuScreen.create())
+
 
 static func create() -> EncounterScreen:
 	var scene: PackedScene = load(SCENE_PATH)
 	return scene.instantiate()
+#endregion

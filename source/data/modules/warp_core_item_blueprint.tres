@@ -1,5 +1,6 @@
 [gd_resource type="Resource" script_class="ModuleBlueprint" format=3 uid="uid://bw1rp8c0re7vk"]
 
+[ext_resource type="Script" uid="uid://nu16uu48mhs2" path="res://systems/match/match_ability.gd" id="1_llwg4"]
 [ext_resource type="Script" uid="uid://daxrkag063tph" path="res://entities/module/module_blueprint.gd" id="1_script"]
 [ext_resource type="Script" uid="uid://8bcao2gsr46i" path="res://addons/grid_system/rules/rule.gd" id="2_riw5m"]
 [ext_resource type="Script" uid="uid://ha1rkn84cbir" path="res://entities/starship/starship_stats.gd" id="2_stats"]
