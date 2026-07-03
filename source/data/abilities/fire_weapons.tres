@@ -1,0 +1,40 @@
+[gd_resource type="Resource" script_class="Ability" format=3]
+
+[ext_resource type="Script" path="res://systems/effect/core/models/ability.gd" id="1_ability"]
+[ext_resource type="Script" path="res://systems/effect/core/models/effect.gd" id="2_effect"]
+[ext_resource type="Script" path="res://systems/effect/core/models/resource_cost.gd" id="3_cost"]
+[ext_resource type="Script" path="res://systems/effect/core/data/targets/opponent_target.gd" id="4_target"]
+[ext_resource type="Script" path="res://systems/effect/core/data/actions/modify_stat_action.gd" id="5_action"]
+[ext_resource type="Script" path="res://systems/effect/core/data/amounts/constant_amount.gd" id="6_amount"]
+[ext_resource type="Resource" path="res://data/stats/health.tres" id="7_health"]
+[ext_resource type="Resource" path="res://data/ability_resources/combat.tres" id="8_combat"]
+
+[sub_resource type="Resource" id="Amount"]
+script = ExtResource("6_amount")
+value = 3
+
+[sub_resource type="Resource" id="Target"]
+script = ExtResource("4_target")
+
+[sub_resource type="Resource" id="Action"]
+script = ExtResource("5_action")
+stat = ExtResource("7_health")
+amount = SubResource("Amount")
+tag = &"damage"
+subtracts = true
+
+[sub_resource type="Resource" id="Effect"]
+script = ExtResource("2_effect")
+target = SubResource("Target")
+action = SubResource("Action")
+
+[sub_resource type="Resource" id="Cost"]
+script = ExtResource("3_cost")
+resource = ExtResource("8_combat")
+amount = 2
+
+[resource]
+script = ExtResource("1_ability")
+name = &"fire_weapons"
+costs = Array[ExtResource("3_cost")]([SubResource("Cost")])
+effects = Array[ExtResource("2_effect")]([SubResource("Effect")])

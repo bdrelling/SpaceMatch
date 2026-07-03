@@ -88,12 +88,12 @@ Automated testing is critical to keeping the game stable. Test coverage will be 
 ## Validating Godot
 
 - Before running `scripts/godot.sh check`, if any files were created or renamed, run `scripts/godot.sh import` first — it rebuilds the UID cache; check without a fresh import can silently misresolve UIDs.
-- **End of every change:** run the parse check — via the `godot-checker` subagent, or `scripts/godot.sh check` directly.
+- **End of every change:** run `make verify-staged` — full, every time. Don't stop at the parse check alone; that lets lint/test breaks through. Run `check` via `godot-checker` and `test` via `test-runner`.
 - Never tell the user to reload/re-import the project themselves.
 
 ## Linting & formatting (gdtoolkit)
 
-`make verify` is the gate: `lint-staged → format-staged → import → check → test`, fail-fast. Also `make lint` / `make format` (whole `source/`, minus `addons/`; `format-write` applies) and their `-staged` variants; `ARGS="<files>"` scopes any of them. See `make help`. Installed via `make setup`.
+`make verify-staged` is the gate: `lint-staged → format-staged → import → check → test` (staged scope), fail-fast — run it at the end of every change. `make verify` is the whole-`source/` version: `lint → format → import → check → test`. Also `make lint` / `make format` (whole `source/`, minus `addons/`; `format-write` applies) and their `-staged` variants; `ARGS="<files>"` scopes any of them. See `make help`. Installed via `make setup`.
 
 Editing a `.gd` file auto-runs `gdformat` (source of truth) then `gdlint` on it and surfaces the conventions, via the PostToolUse/PreToolUse hooks in `.claude/`. Write to the conventions up front — member order is exactly what `gdlint` enforces, wrapped in `#region`s. Full guide: `armory/docs/languages/gdscript/` (README = the formatter → linter → guide layering).
 

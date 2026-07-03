@@ -1,0 +1,32 @@
+[gd_resource type="Resource" script_class="Ability" format=3]
+
+[ext_resource type="Script" path="res://systems/effect/core/models/ability.gd" id="1_ability"]
+[ext_resource type="Script" path="res://systems/effect/core/models/effect.gd" id="2_effect"]
+[ext_resource type="Script" path="res://systems/effect/core/models/resource_cost.gd" id="3_cost"]
+[ext_resource type="Script" path="res://systems/effect/core/data/targets/self_target.gd" id="4_target"]
+[ext_resource type="Script" path="res://systems/effect/core/data/actions/apply_status_action.gd" id="5_apply"]
+[ext_resource type="Resource" path="res://data/ability_resources/science.tres" id="6_science"]
+
+[sub_resource type="Resource" id="Target"]
+script = ExtResource("4_target")
+
+[sub_resource type="Resource" id="ApplyLock"]
+script = ExtResource("5_apply")
+status = &"target_lock"
+count = 1
+
+[sub_resource type="Resource" id="Effect"]
+script = ExtResource("2_effect")
+target = SubResource("Target")
+action = SubResource("ApplyLock")
+
+[sub_resource type="Resource" id="Cost"]
+script = ExtResource("3_cost")
+resource = ExtResource("6_science")
+amount = 2
+
+[resource]
+script = ExtResource("1_ability")
+name = &"target_lock"
+costs = Array[ExtResource("3_cost")]([SubResource("Cost")])
+effects = Array[ExtResource("2_effect")]([SubResource("Effect")])
