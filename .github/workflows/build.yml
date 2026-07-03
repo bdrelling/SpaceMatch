@@ -2,11 +2,11 @@ name: Build
 
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - "source/**"
-      - ".github/workflows/build.yml"
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - "source/**"
+  #     - ".github/workflows/build.yml"
 
 jobs:
   build:

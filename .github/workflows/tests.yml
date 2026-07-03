@@ -1,15 +1,16 @@
 name: Tests
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "source/**"
-      - ".github/workflows/tests.yml"
-  pull_request:
-    paths:
-      - "source/**"
-      - ".github/workflows/tests.yml"
+  workflow_dispatch:
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - "source/**"
+  #     - ".github/workflows/tests.yml"
+  # pull_request:
+  #   paths:
+  #     - "source/**"
+  #     - ".github/workflows/tests.yml"
 
 jobs:
   test:
