@@ -1,7 +1,6 @@
 [gd_resource type="Resource" script_class="StarshipBlueprint" format=3 uid="uid://c87w5k8eywojd"]
 
 [ext_resource type="Script" uid="uid://b65lw3gmpgvux" path="res://entities/starship/starship_blueprint.gd" id="1"]
-[ext_resource type="Script" uid="uid://nu16uu48mhs2" path="res://systems/match/match_ability.gd" id="1_vg3ai"]
 [ext_resource type="Resource" uid="uid://cbgedqlvb0ki6" path="res://data/module_grids/computer_default_module_grid_blueprint.tres" id="2"]
 [ext_resource type="Script" uid="uid://ha1rkn84cbir" path="res://entities/starship/starship_stats.gd" id="3_stats"]
 [ext_resource type="Script" uid="uid://bl6uxd0ruqe6l" path="res://systems/effect/core/models/stat_pool.gd" id="4_pool"]

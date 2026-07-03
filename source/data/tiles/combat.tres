@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="Tile" format=3]
+
+[ext_resource type="Script" path="res://systems/match/tile.gd" id="1"]
+[ext_resource type="Texture2D" uid="uid://dbp1ko47vrqht" path="res://assets/tiles/combat.png" id="2"]
+
+[resource]
+script = ExtResource("1")
+name = &"combat"
+kind = 0
+label = "Combat"
+color = Color(0.88, 0.33, 0.34, 1)
+texture = ExtResource("2")

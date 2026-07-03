@@ -1,12 +1,7 @@
-[gd_resource type="Resource" script_class="StarshipResource" format=3 uid="uid://u2s7rrhiurg8"]
+[gd_resource type="Resource" script_class="AbilityResource" format=3 uid="uid://u2s7rrhiurg8"]
 
-[ext_resource type="Script" path="res://entities/starship/starship_resource.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/tiles/warp.png" id="2"]
+[ext_resource type="Script" uid="uid://bqiylpu1go50e" path="res://systems/effect/core/models/ability_resource.gd" id="1"]
 
 [resource]
 script = ExtResource("1")
 name = &"warp"
-id = 5
-label = "Warp"
-color = Color(0.66, 0.47, 0.86, 1)
-texture = ExtResource("2")

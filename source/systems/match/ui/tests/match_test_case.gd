@@ -74,10 +74,16 @@ func _buff(enc: EncounterState, combatant: Combatant, stat_name: StringName, amo
 	enc.add_status(combatant, status, amount)
 
 
-# The [StarshipResource] backing a board tile kind — the type the resource/ability API now references. Looked
-# up through the live catalog so a test reads exactly what the game banks.
-func _resource(tile_kind: int) -> StarshipResource:
-	return Catalogs.ability_resources.for_tile(tile_kind)
+# The [AbilityResource] a board tile kind rewards — resolved through the tile catalog (kind -> tile) and matched
+# to the ability resource of the same name, so a test reads exactly what a stat tile banks.
+func _resource(tile_kind: int) -> AbilityResource:
+	var tile: Tile = Catalogs.tiles.for_kind(tile_kind)
+	if tile == null:
+		return null
+	for resource: AbilityResource in Catalogs.ability_resources.ability_resources:
+		if resource.name == tile.name:
+			return resource
+	return null
 
 
 # Overwrites the kind of each given cell's tile in place — for building a known run to measure.

@@ -22,10 +22,9 @@ const _WARP_FILL_NEGATIVE := Color(0.88, 0.40, 0.42)
 
 var _ctx: MatchContext
 
-# The four stat resources (combat, propulsion, science, defense), resolved from the catalog by tile kind and
-# cached on first use — the readouts read these. Built lazily because Catalogs is an autoload that populates in
-# its own _ready.
-var _stat_resources: Array[StarshipResource] = []
+# The four stat resources (combat, propulsion, science, shields), resolved from the rules' tile->reward map and
+# cached on first use — the readouts read these. Built lazily because the rules engine populates after _init.
+var _stat_resources: Array[AbilityResource] = []
 # The shared warp meter's segment cells, left to right, sitting immediately above the board. Filled to show the
 # meter's magnitude in the leader's color (see [method refresh_warp]).
 var _warp_segments: Array[Panel] = []
@@ -225,21 +224,22 @@ func name_for(combatant: Combatant) -> String:
 # A combatant's four stat-tile readouts: the count matched of each resource this fight, read off the encounter.
 func _readouts_for(combatant: Combatant) -> PackedStringArray:
 	var out := PackedStringArray()
-	for resource: StarshipResource in _stat_resources_cached():
+	for resource: AbilityResource in _stat_resources_cached():
 		out.append(str(_resource_of(combatant, resource)))
 	return out
 
 
 # A combatant's banked count of a resource this encounter (zero when there's no combatant).
-func _resource_of(combatant: Combatant, resource: StarshipResource) -> int:
+func _resource_of(combatant: Combatant, resource: AbilityResource) -> int:
 	return combatant.resource_of(resource) if combatant != null else 0
 
 
-# The four stat resources, resolved once from the catalog (index-aligned with [constant _STAT_KINDS]).
-func _stat_resources_cached() -> Array[StarshipResource]:
+# The four stat resources, resolved once from the rules' tile->reward map (index-aligned with [constant
+# _STAT_KINDS]) — a stat kind's reward is whatever its [TileMatchRule] banks.
+func _stat_resources_cached() -> Array[AbilityResource]:
 	if _stat_resources.is_empty():
 		for kind: int in _STAT_KINDS:
-			var resource: StarshipResource = Catalogs.ability_resources.for_tile(kind)
+			var resource: AbilityResource = TileMatchRule.reward_for_kind(_ctx.ruleset, kind)
 			if resource != null:
 				_stat_resources.append(resource)
 	return _stat_resources

@@ -12,10 +12,10 @@ const SCENE: PackedScene = preload(SCENE_PATH)
 
 ## The stat resources the standard abilities are priced in — combat / propulsion / science / defense (the four
 ## stat tiles), preloaded so the kit builds without reaching the catalog autoload.
-const _COMBAT: StarshipResource = preload("res://data/ability_resources/combat.tres")
-const _PROPULSION: StarshipResource = preload("res://data/ability_resources/propulsion.tres")
-const _SCIENCE: StarshipResource = preload("res://data/ability_resources/science.tres")
-const _SHIELDS: StarshipResource = preload("res://data/ability_resources/shields.tres")
+const _COMBAT: AbilityResource = preload("res://data/ability_resources/combat.tres")
+const _PROPULSION: AbilityResource = preload("res://data/ability_resources/propulsion.tres")
+const _SCIENCE: AbilityResource = preload("res://data/ability_resources/science.tres")
+const _SHIELDS: AbilityResource = preload("res://data/ability_resources/shields.tres")
 #endregion
 
 #region Properties

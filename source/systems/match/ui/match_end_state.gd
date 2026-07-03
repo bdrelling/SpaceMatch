@@ -106,7 +106,7 @@ func split_board_resources() -> void:
 			_DAMAGE_KIND, _WARP_KIND:
 				pass  # neither damage nor warp is a banked resource
 			_:
-				var resource: StarshipResource = Catalogs.ability_resources.for_tile(kind)
+				var resource: AbilityResource = TileMatchRule.reward_for_kind(_ctx.ruleset, kind)
 				if resource == null:
 					continue
 				var player_starship: Combatant = _ctx.encounter.player

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="Tile" format=3]
+
+[ext_resource type="Script" path="res://systems/match/tile.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+name = &"damage"
+kind = 6
+label = "Damage"
+color = Color(0.96, 0.5, 0.18, 1)

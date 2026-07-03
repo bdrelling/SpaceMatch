@@ -55,7 +55,7 @@ func configure_ability_button(button: Button, ability: Ability) -> void:
 	button.text = ""
 	button.focus_mode = Control.FOCUS_NONE
 	button.clip_contents = true
-	button.tooltip_text = "%s — %s (%s)" % [str(ability.name), ability.describe(), cost_text(ability)]
+	button.tooltip_text = ("%s — %s (%s)" % [str(ability.name), ability.describe(), cost_text(ability)])
 
 	# A full-width padded column, so a long ability name can wrap to the button width rather than clip.
 	var pad := MarginContainer.new()
@@ -93,7 +93,8 @@ func configure_ability_button(button: Button, ability: Ability) -> void:
 				plus.add_theme_font_size_override("font_size", 22)
 				cost_row.add_child(plus)
 			var icon := MatchTileIcon.new()
-			icon.kind = (cost.resource as StarshipResource).id if cost.resource != null else 0
+			var cost_kind: int = tile_kind_of(cost.resource)
+			icon.kind = cost_kind if cost_kind >= 0 else 0
 			icon.custom_minimum_size = Vector2(30, 30)
 			icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 			cost_row.add_child(icon)
@@ -153,8 +154,8 @@ func refresh_abilities(can_act: bool) -> void:
 		var usable: bool = can_act and affordable(_ctx.encounter, _ctx.encounter.player if _ctx.encounter != null else null, ability)
 		var button: Button = _ability_buttons[i]
 		button.disabled = not usable
-		var primary: StarshipResource = primary_cost_resource(ability)
-		var tile_kind: int = primary.id if primary != null else -1
+		var primary: EntityResource = primary_cost_resource(ability)
+		var tile_kind: int = tile_kind_of(primary)
 		style_ability_button(button, tile_kind, usable)
 
 
@@ -224,8 +225,17 @@ static func total_cost(ability: Ability) -> int:
 
 
 # The resource of [param ability]'s first cost (for the button's accent color), or null when the ability is free.
-static func primary_cost_resource(ability: Ability) -> StarshipResource:
-	return ability.costs[0].resource as StarshipResource if not ability.costs.is_empty() else null
+static func primary_cost_resource(ability: Ability) -> EntityResource:
+	return ability.costs[0].resource if not ability.costs.is_empty() else null
+
+
+# The board tile kind whose glyph represents [param resource] — matched by the shared name (the combat tile and
+# the combat resource share a name), so a cost draws its tile icon. -1 when the resource maps to no tile.
+static func tile_kind_of(resource: EntityResource) -> int:
+	if resource == null:
+		return -1
+	var tile: Tile = Catalogs.tiles.for_name(resource.name)
+	return tile.kind if tile != null else -1
 
 
 # A one-line price for the tooltip — "10 combat + 12 science", or "Free" when the ability has no costs.
@@ -242,7 +252,7 @@ static func cost_text(ability: Ability) -> String:
 static func cost_name(cost: ResourceCost) -> String:
 	if cost == null or cost.resource == null:
 		return ""
-	return MatchTile.name_of((cost.resource as StarshipResource).id)
+	return MatchTile.name_of(tile_kind_of(cost.resource))
 
 
 # The popup text for an attack: "Dodged!" when the target evaded it (result < 0), else the damage dealt.

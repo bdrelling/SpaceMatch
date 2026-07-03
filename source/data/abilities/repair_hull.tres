@@ -7,7 +7,7 @@
 [ext_resource type="Script" path="res://systems/effect/core/data/actions/modify_stat_action.gd" id="5_action"]
 [ext_resource type="Script" path="res://systems/effect/core/data/amounts/constant_amount.gd" id="6_amount"]
 [ext_resource type="Resource" path="res://data/stats/health.tres" id="7_health"]
-[ext_resource type="Resource" path="res://data/ability_resources/scrap.tres" id="8_scrap"]
+[ext_resource type="Resource" uid="uid://dhitpgn63v7tc" path="res://data/currencies/scrap.tres" id="8_scrap"]
 
 [sub_resource type="Resource" id="Amount"]
 script = ExtResource("6_amount")

@@ -13,8 +13,10 @@ var module_grids: ModuleGridCatalog
 var starships: StarshipCatalog
 var rules: RuleCatalog
 var ability_resources: AbilityResourceCatalog
+var tiles: TileCatalog
 var statuses: StatusCatalog
 var stats: StatCatalog
+
 
 func _ready() -> void:
 	modules = _load(_DIR + "module_catalog_all.tres", ModuleCatalog.default) as ModuleCatalog
@@ -22,8 +24,10 @@ func _ready() -> void:
 	starships = _load(_DIR + "starship_catalog_all.tres", StarshipCatalog.default) as StarshipCatalog
 	rules = _load(_DIR + "rule_catalog_all.tres", RuleCatalog.default) as RuleCatalog
 	ability_resources = _load(_DIR + "ability_resource_catalog_all.tres", AbilityResourceCatalog.default) as AbilityResourceCatalog
+	tiles = _load(_DIR + "tile_catalog_all.tres", TileCatalog.default) as TileCatalog
 	statuses = _load(_DIR + "status_catalog_all.tres", StatusCatalog.default) as StatusCatalog
 	stats = _load(_DIR + "stat_catalog_all.tres", StatCatalog.default) as StatCatalog
+
 
 # The catalog at [param path] if it exists, else the code-built default from [param fallback].
 func _load(path: String, fallback: Callable) -> Catalog:

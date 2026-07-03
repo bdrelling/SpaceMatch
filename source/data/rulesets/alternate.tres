@@ -1,106 +1,127 @@
 [gd_resource type="Resource" script_class="Ruleset" format=3]
 
 [ext_resource type="Script" path="res://addons/grid_system/rules/rule.gd" id="1_rule"]
-[ext_resource type="Script" path="res://systems/match/rules/resource_grant_rule.gd" id="2_resgrant"]
-[ext_resource type="Script" path="res://systems/match/rules/scrap_grant_rule.gd" id="3_scrap"]
-[ext_resource type="Script" path="res://systems/match/rules/damage_rule.gd" id="4_damage"]
-[ext_resource type="Script" path="res://systems/match/rules/warp_rule.gd" id="5_warp"]
-[ext_resource type="Script" path="res://systems/match/rules/action_budget_rule.gd" id="6_action"]
-[ext_resource type="Script" path="res://systems/match/rules/resource_capacity_rule.gd" id="7_cap"]
-[ext_resource type="Script" path="res://systems/match/rules/offset_scoring_rule.gd" id="8_offset"]
-[ext_resource type="Script" path="res://systems/match/rules/board_fill_rule.gd" id="9_fill"]
-[ext_resource type="Script" path="res://systems/match/rules/scoring_rule.gd" id="10_scoring"]
-[ext_resource type="Script" path="res://systems/match/rules/reload_split_rule.gd" id="11_reload"]
-[ext_resource type="Script" path="res://addons/grid_system/rules/ruleset.gd" id="12_ruleset"]
-[ext_resource type="Script" path="res://systems/match/scoring_formula.gd" id="13_formula"]
-[ext_resource type="Script" path="res://systems/match/rules/spawn_resource_rule.gd" id="14_spawn"]
-[ext_resource type="Resource" uid="uid://b2kqyh4632a1r" path="res://data/ability_resources/combat.tres" id="15_combat"]
-[ext_resource type="Resource" uid="uid://cyhafv6x2udqt" path="res://data/ability_resources/propulsion.tres" id="16_prop"]
-[ext_resource type="Resource" uid="uid://b63jse3fv7g7k" path="res://data/ability_resources/science.tres" id="17_sci"]
-[ext_resource type="Resource" uid="uid://dx8npskqws2tb" path="res://data/ability_resources/shields.tres" id="18_def"]
-[ext_resource type="Resource" uid="uid://dhitpgn63v7tc" path="res://data/ability_resources/scrap.tres" id="19_scrap"]
-[ext_resource type="Resource" uid="uid://u2s7rrhiurg8" path="res://data/ability_resources/warp.tres" id="20_warp"]
-[ext_resource type="Resource" uid="uid://dwymbod6coevg" path="res://data/ability_resources/damage.tres" id="21_damage"]
-
-[sub_resource type="Resource" id="Res_resgrant"]
-script = ExtResource("2_resgrant")
-
-[sub_resource type="Resource" id="Res_scrap"]
-script = ExtResource("3_scrap")
-
-[sub_resource type="Resource" id="Res_damage"]
-script = ExtResource("4_damage")
-
-[sub_resource type="Resource" id="Res_warp"]
-script = ExtResource("5_warp")
-
-[sub_resource type="Resource" id="Res_action"]
-script = ExtResource("6_action")
-actions_per_turn = 4
-
-[sub_resource type="Resource" id="Res_cap"]
-script = ExtResource("7_cap")
-maximums = PackedInt32Array(30, 30, 30, 30, 0, 0, 0)
-
-[sub_resource type="Resource" id="Res_offset"]
-script = ExtResource("8_offset")
-offset = 2
-
-[sub_resource type="Resource" id="Res_fill"]
-script = ExtResource("9_fill")
-
-[sub_resource type="Resource" id="Res_formula"]
-script = ExtResource("13_formula")
-
-[sub_resource type="Resource" id="Res_scoring"]
-script = ExtResource("10_scoring")
-formula = SubResource("Res_formula")
-
-[sub_resource type="Resource" id="Res_reload"]
-script = ExtResource("11_reload")
+[ext_resource type="Script" path="res://addons/grid_system/rules/ruleset.gd" id="2_ruleset"]
+[ext_resource type="Script" path="res://systems/match/scoring_formula.gd" id="3_formula"]
+[ext_resource type="Script" path="res://systems/match/rules/tile_spawn_rule.gd" id="4_spawn"]
+[ext_resource type="Script" path="res://systems/match/rules/tile_match_rule.gd" id="5_match"]
+[ext_resource type="Script" path="res://systems/match/rules/scrap_grant_rule.gd" id="6_scrap"]
+[ext_resource type="Script" path="res://systems/match/rules/damage_rule.gd" id="7_damage"]
+[ext_resource type="Script" path="res://systems/match/rules/warp_rule.gd" id="8_warp"]
+[ext_resource type="Script" path="res://systems/match/rules/action_budget_rule.gd" id="9_action"]
+[ext_resource type="Script" path="res://systems/match/rules/resource_capacity_rule.gd" id="10_cap"]
+[ext_resource type="Script" path="res://systems/match/rules/offset_scoring_rule.gd" id="11_offset"]
+[ext_resource type="Script" path="res://systems/match/rules/board_fill_rule.gd" id="12_fill"]
+[ext_resource type="Script" path="res://systems/match/rules/scoring_rule.gd" id="13_scoring"]
+[ext_resource type="Script" path="res://systems/match/rules/reload_split_rule.gd" id="14_reload"]
+[ext_resource type="Resource" path="res://data/tiles/combat.tres" id="20_tcombat"]
+[ext_resource type="Resource" path="res://data/tiles/propulsion.tres" id="21_tprop"]
+[ext_resource type="Resource" path="res://data/tiles/science.tres" id="22_tsci"]
+[ext_resource type="Resource" path="res://data/tiles/shields.tres" id="23_tshields"]
+[ext_resource type="Resource" path="res://data/tiles/scrap.tres" id="24_tscrap"]
+[ext_resource type="Resource" path="res://data/tiles/warp.tres" id="25_twarp"]
+[ext_resource type="Resource" path="res://data/tiles/damage.tres" id="26_tdamage"]
+[ext_resource type="Resource" uid="uid://b2kqyh4632a1r" path="res://data/ability_resources/combat.tres" id="30_rcombat"]
+[ext_resource type="Resource" uid="uid://cyhafv6x2udqt" path="res://data/ability_resources/propulsion.tres" id="31_rprop"]
+[ext_resource type="Resource" uid="uid://b63jse3fv7g7k" path="res://data/ability_resources/science.tres" id="32_rsci"]
+[ext_resource type="Resource" uid="uid://dx8npskqws2tb" path="res://data/ability_resources/shields.tres" id="33_rshields"]
 
 [sub_resource type="Resource" id="Spawn_combat"]
-script = ExtResource("14_spawn")
-resource = ExtResource("15_combat")
+script = ExtResource("4_spawn")
+tile = ExtResource("20_tcombat")
 weight = 20
 
 [sub_resource type="Resource" id="Spawn_prop"]
-script = ExtResource("14_spawn")
-resource = ExtResource("16_prop")
+script = ExtResource("4_spawn")
+tile = ExtResource("21_tprop")
 weight = 20
 
 [sub_resource type="Resource" id="Spawn_sci"]
-script = ExtResource("14_spawn")
-resource = ExtResource("17_sci")
+script = ExtResource("4_spawn")
+tile = ExtResource("22_tsci")
 weight = 20
 
-[sub_resource type="Resource" id="Spawn_def"]
-script = ExtResource("14_spawn")
-resource = ExtResource("18_def")
+[sub_resource type="Resource" id="Spawn_shields"]
+script = ExtResource("4_spawn")
+tile = ExtResource("23_tshields")
 weight = 20
 
 [sub_resource type="Resource" id="Spawn_scrap"]
-script = ExtResource("14_spawn")
-resource = ExtResource("19_scrap")
+script = ExtResource("4_spawn")
+tile = ExtResource("24_tscrap")
 weight = 10
 
 [sub_resource type="Resource" id="Spawn_warp"]
-script = ExtResource("14_spawn")
-resource = ExtResource("20_warp")
+script = ExtResource("4_spawn")
+tile = ExtResource("25_twarp")
 weight = 2
 
 [sub_resource type="Resource" id="Spawn_damage"]
-script = ExtResource("14_spawn")
-resource = ExtResource("21_damage")
+script = ExtResource("4_spawn")
+tile = ExtResource("26_tdamage")
 weight = 10
 
 [sub_resource type="Resource" id="Res_spawn_set"]
-script = ExtResource("12_ruleset")
+script = ExtResource("2_ruleset")
 ruleset_name = &"Spawn"
-rulesets = Array[ExtResource("12_ruleset")]([])
-rules = Array[ExtResource("1_rule")]([SubResource("Spawn_combat"), SubResource("Spawn_prop"), SubResource("Spawn_sci"), SubResource("Spawn_def"), SubResource("Spawn_scrap"), SubResource("Spawn_warp"), SubResource("Spawn_damage")])
+rulesets = Array[ExtResource("2_ruleset")]([])
+rules = Array[ExtResource("1_rule")]([SubResource("Spawn_combat"), SubResource("Spawn_prop"), SubResource("Spawn_sci"), SubResource("Spawn_shields"), SubResource("Spawn_scrap"), SubResource("Spawn_warp"), SubResource("Spawn_damage")])
+
+[sub_resource type="Resource" id="Match_combat"]
+script = ExtResource("5_match")
+tile = ExtResource("20_tcombat")
+reward = ExtResource("30_rcombat")
+
+[sub_resource type="Resource" id="Match_prop"]
+script = ExtResource("5_match")
+tile = ExtResource("21_tprop")
+reward = ExtResource("31_rprop")
+
+[sub_resource type="Resource" id="Match_sci"]
+script = ExtResource("5_match")
+tile = ExtResource("22_tsci")
+reward = ExtResource("32_rsci")
+
+[sub_resource type="Resource" id="Match_shields"]
+script = ExtResource("5_match")
+tile = ExtResource("23_tshields")
+reward = ExtResource("33_rshields")
+
+[sub_resource type="Resource" id="Res_scrap"]
+script = ExtResource("6_scrap")
+
+[sub_resource type="Resource" id="Res_damage"]
+script = ExtResource("7_damage")
+
+[sub_resource type="Resource" id="Res_warp"]
+script = ExtResource("8_warp")
+
+[sub_resource type="Resource" id="Res_action"]
+script = ExtResource("9_action")
+actions_per_turn = 4
+
+[sub_resource type="Resource" id="Res_cap"]
+script = ExtResource("10_cap")
+maximums = PackedInt32Array(30, 30, 30, 30, 0)
+
+[sub_resource type="Resource" id="Res_offset"]
+script = ExtResource("11_offset")
+offset = 2
+
+[sub_resource type="Resource" id="Res_fill"]
+script = ExtResource("12_fill")
+
+[sub_resource type="Resource" id="Res_formula"]
+script = ExtResource("3_formula")
+
+[sub_resource type="Resource" id="Res_scoring"]
+script = ExtResource("13_scoring")
+formula = SubResource("Res_formula")
+
+[sub_resource type="Resource" id="Res_reload"]
+script = ExtResource("14_reload")
 
 [resource]
-script = ExtResource("12_ruleset")
-rulesets = Array[ExtResource("12_ruleset")]([SubResource("Res_spawn_set")])
-rules = Array[ExtResource("1_rule")]([SubResource("Res_resgrant"), SubResource("Res_scrap"), SubResource("Res_damage"), SubResource("Res_warp"), SubResource("Res_action"), SubResource("Res_cap"), SubResource("Res_offset"), SubResource("Res_fill"), SubResource("Res_scoring"), SubResource("Res_reload")])
+script = ExtResource("2_ruleset")
+rulesets = Array[ExtResource("2_ruleset")]([SubResource("Res_spawn_set")])
+rules = Array[ExtResource("1_rule")]([SubResource("Match_combat"), SubResource("Match_prop"), SubResource("Match_sci"), SubResource("Match_shields"), SubResource("Res_scrap"), SubResource("Res_damage"), SubResource("Res_warp"), SubResource("Res_action"), SubResource("Res_cap"), SubResource("Res_offset"), SubResource("Res_fill"), SubResource("Res_scoring"), SubResource("Res_reload")])

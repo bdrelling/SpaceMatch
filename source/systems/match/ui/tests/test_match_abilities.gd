@@ -37,7 +37,7 @@ func test_default_starship_defines_the_standard_abilities() -> void:
 	var abilities := GameSession.game_state.starship.abilities
 	assert_int(abilities.size()).is_equal(5)
 	for i: int in 4:
-		assert_int((abilities[i].costs[0].resource as StarshipResource).id).is_equal(i)
+		assert_int(MatchAbilityBar.tile_kind_of(abilities[i].costs[0].resource)).is_equal(i)
 	assert_bool(abilities[0].effects[0].action is DamageBuffAction).is_true()
 	assert_bool(abilities[1].effects[0].action is DodgeAction).is_true()
 	assert_bool(abilities[2].effects[0].action is DrainAction).is_true()
@@ -47,7 +47,7 @@ func test_default_starship_defines_the_standard_abilities() -> void:
 	# Disruptor: disables an opponent module for 3 turns, paid for with green (the science tile).
 	var disruptor := abilities[4]
 	assert_bool(disruptor.effects[0].action is DisableAction).is_true()
-	assert_int((disruptor.costs[0].resource as StarshipResource).id).is_equal(2)
+	assert_int(MatchAbilityBar.tile_kind_of(disruptor.costs[0].resource)).is_equal(2)
 	assert_int((disruptor.effects[0].action as DisableAction).turns).is_equal(3)
 
 
@@ -87,7 +87,7 @@ func test_opponent_picks_an_affordable_ability() -> void:
 	game._encounter.opponent.resources[1].amount = 5  # enough for Evasive Maneuvers (kind 1, the cost-5 ability)
 	var pick: Ability = game._best_affordable_ability(game._encounter.opponent)
 	assert_object(pick).is_not_null()
-	assert_int((pick.costs[0].resource as StarshipResource).id).is_equal(1)
+	assert_int(MatchAbilityBar.tile_kind_of(pick.costs[0].resource)).is_equal(1)
 	game.queue_free()
 
 

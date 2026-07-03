@@ -14,7 +14,7 @@ func test_default_rules_match_the_designed_config() -> void:
 	assert_bool(scoring.formula is FibonacciScoringFormula).is_false()
 	# Reloading a dead board splits it between both sides — the rule is present.
 	assert_object(ruleset.find(&"reload_split")).is_not_null()
-	# Spawn weights live on per-resource SpawnResourceRules (the nested Spawn set), composed into one pool —
+	# Spawn weights live on per-tile TileSpawnRules (the nested Spawn set), composed into one pool —
 	# warp is rarer than any stat tile.
 	var weights := ruleset.aggregate(&"spawn_contribution")
 	var warp_weight: int = weights[_WARP_KIND]

@@ -1,12 +1,7 @@
-[gd_resource type="Resource" script_class="StarshipResource" format=3 uid="uid://b63jse3fv7g7k"]
+[gd_resource type="Resource" script_class="AbilityResource" format=3 uid="uid://b63jse3fv7g7k"]
 
-[ext_resource type="Script" path="res://entities/starship/starship_resource.gd" id="1"]
-[ext_resource type="Texture2D" path="res://assets/tiles/science.png" id="2"]
+[ext_resource type="Script" uid="uid://bqiylpu1go50e" path="res://systems/effect/core/models/ability_resource.gd" id="1"]
 
 [resource]
 script = ExtResource("1")
 name = &"science"
-id = 2
-label = "Science"
-color = Color(0.44, 0.78, 0.5, 1)
-texture = ExtResource("2")

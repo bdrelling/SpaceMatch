@@ -5,7 +5,7 @@ extends Action
 ## counterpart of granting: where [ModifyStatAction] changes a stat, this changes a spendable pool on the target.
 
 ## The resources to drain from the target. The same amount is taken from each.
-@export var resources: Array[AbilityResource] = []
+@export var resources: Array[EntityResource] = []
 ## How much to drain from each resource. Non-positive (or null) drains nothing.
 @export var amount: Amount
 
@@ -17,6 +17,6 @@ func resolve(context: ResolutionContext, target: Entity) -> void:
 	var value: int = amount.evaluate(context) if amount != null else 0
 	if value <= 0:
 		return
-	for resource: AbilityResource in resources:
+	for resource: EntityResource in resources:
 		if resource != null:
 			ResourceEngine.drain(target, resource, value)

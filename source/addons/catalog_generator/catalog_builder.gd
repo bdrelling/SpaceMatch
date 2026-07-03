@@ -12,6 +12,7 @@ const MODULE_GRIDS_DIRECTORY := "res://data/module_grids"
 const STARSHIPS_DIRECTORY := "res://data/starships"
 const RULESETS_DIRECTORY := "res://data/rulesets"
 const ABILITY_RESOURCES_DIRECTORY := "res://data/ability_resources"
+const TILES_DIRECTORY := "res://data/tiles"
 const STATUSES_DIRECTORY := "res://data/statuses"
 const STATS_DIRECTORY := "res://data/stats"
 
@@ -20,6 +21,7 @@ const MODULE_GRIDS_OUTPUT := OUTPUT_DIR + "/module_grid_catalog_all.tres"
 const STARSHIPS_OUTPUT := OUTPUT_DIR + "/starship_catalog_all.tres"
 const RULES_OUTPUT := OUTPUT_DIR + "/rule_catalog_all.tres"
 const ABILITY_RESOURCES_OUTPUT := OUTPUT_DIR + "/ability_resource_catalog_all.tres"
+const TILES_OUTPUT := OUTPUT_DIR + "/tile_catalog_all.tres"
 const STATUSES_OUTPUT := OUTPUT_DIR + "/status_catalog_all.tres"
 const STATS_OUTPUT := OUTPUT_DIR + "/stat_catalog_all.tres"
 
@@ -27,7 +29,7 @@ const STATS_OUTPUT := OUTPUT_DIR + "/stat_catalog_all.tres"
 static func directories() -> PackedStringArray:
 	return PackedStringArray([
 		MODULES_DIRECTORY, MODULE_GRIDS_DIRECTORY, STARSHIPS_DIRECTORY, RULESETS_DIRECTORY,
-		ABILITY_RESOURCES_DIRECTORY, STATUSES_DIRECTORY, STATS_DIRECTORY,
+		ABILITY_RESOURCES_DIRECTORY, TILES_DIRECTORY, STATUSES_DIRECTORY, STATS_DIRECTORY,
 	])
 
 ## Rebuilds every catalog from disk.
@@ -48,6 +50,8 @@ static func build(directory: String) -> void:
 			_save(RuleCatalog.default(), RULES_OUTPUT)
 		ABILITY_RESOURCES_DIRECTORY:
 			_save(AbilityResourceCatalog.default(), ABILITY_RESOURCES_OUTPUT)
+		TILES_DIRECTORY:
+			_save(TileCatalog.default(), TILES_OUTPUT)
 		STATUSES_DIRECTORY:
 			_save(StatusCatalog.default(), STATUSES_OUTPUT)
 		STATS_DIRECTORY:

@@ -1,13 +1,13 @@
 class_name ResourceEngine
 extends RefCounted
-## Reads and changes an [Entity]'s [ResourcePool]s — the spendable [AbilityResource] amounts it holds. Ability costs
-## are paid here: check the entity can afford its [ResourceCost]s, then spend them. Pools and costs match by the
-## resource's name, so they line up even across separate [AbilityResource] instances. The game refills pools with
-## [method grant] as it collects.
+## Reads and changes an [Entity]'s [ResourcePool]s — the [EntityResource] amounts it holds. Ability costs are paid
+## here: check the entity can afford its [ResourceCost]s, then spend them. Pools and costs match by the resource's
+## name, so they line up even across separate [EntityResource] instances. The game refills pools with [method grant]
+## as it collects.
 
 
 ## The entity's pool for [param resource] (matched by name), or null when it holds none.
-static func pool_for(entity: Entity, resource: AbilityResource) -> ResourcePool:
+static func pool_for(entity: Entity, resource: EntityResource) -> ResourcePool:
 	if entity == null or resource == null:
 		return null
 	for pool in entity.resources:
@@ -17,7 +17,7 @@ static func pool_for(entity: Entity, resource: AbilityResource) -> ResourcePool:
 
 
 ## How much of [param resource] [param entity] currently holds.
-static func amount_of(entity: Entity, resource: AbilityResource) -> int:
+static func amount_of(entity: Entity, resource: EntityResource) -> int:
 	var pool := pool_for(entity, resource)
 	return pool.amount if pool != null else 0
 
@@ -45,7 +45,7 @@ static func spend(entity: Entity, costs: Array[ResourceCost]) -> void:
 
 ## Adds [param amount] of [param resource] to [param entity], creating its pool if absent and clamping to the
 ## pool's [member ResourcePool.maximum] (0 = unlimited).
-static func grant(entity: Entity, resource: AbilityResource, amount: int) -> void:
+static func grant(entity: Entity, resource: EntityResource, amount: int) -> void:
 	if entity == null or resource == null:
 		return
 	var pool := pool_for(entity, resource)
@@ -61,7 +61,7 @@ static func grant(entity: Entity, resource: AbilityResource, amount: int) -> voi
 
 ## Subtracts [param amount] of [param resource] from [param entity] (floored at zero). A no-op when the entity
 ## holds no pool for it — the symmetric counterpart of [method grant], used by drain/siphon effects.
-static func drain(entity: Entity, resource: AbilityResource, amount: int) -> void:
+static func drain(entity: Entity, resource: EntityResource, amount: int) -> void:
 	if entity == null or resource == null:
 		return
 	var pool := pool_for(entity, resource)

@@ -49,7 +49,10 @@ func test_offset_scoring_rule_banks_reduced_reward() -> void:
 	var centers: Dictionary[int, Vector2] = {}
 	centers[_COMBAT_KIND] = Vector2.ZERO
 	clear_ctx.centers = centers
-	ResourceGrantRule.new().apply(clear_ctx)
+	var grant := TileMatchRule.new()
+	grant.tile = Catalogs.tiles.for_kind(_COMBAT_KIND)
+	grant.reward = _resource(_COMBAT_KIND)
+	grant.apply(clear_ctx)
 	assert_int(enc.player.resource_of(_resource(_COMBAT_KIND))).is_equal(2)
 
 

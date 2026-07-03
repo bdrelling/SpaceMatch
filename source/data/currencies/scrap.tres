@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="CurrencyResource" format=3 uid="uid://dhitpgn63v7tc"]
+
+[ext_resource type="Script" path="res://systems/currency/currency_resource.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+name = &"scrap"

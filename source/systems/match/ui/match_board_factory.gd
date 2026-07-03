@@ -38,13 +38,13 @@ static func build_session(config: MatchConfig, seed: int, input_mode: MatchBoard
 	return session
 
 
-# Every board tile kind, from the resource catalog (each StarshipResource's id). Reads the live catalog, so
-# adding a resource in-editor adds its kind here automatically.
+# Every board tile kind, from the tile catalog (each Tile's kind). Reads the live catalog, so adding a tile
+# in-editor adds its kind here automatically.
 static func tile_kinds() -> Array[int]:
-	return Catalogs.ability_resources.tile_kinds()
+	return Catalogs.tiles.tile_kinds()
 
 
-# The board's spawn pool: every SpawnResourceRule's weight in [param source], composed, with warp forced off
+# The board's spawn pool: every TileSpawnRule's weight in [param source], composed, with warp forced off
 # unless warp is actually in play — so a starship that can't warp never rolls a warp tile. [param source] is the
 # effective ruleset the caller composed against whoever is filling now.
 static func spawn_table(source: Ruleset, warp_active: bool, warp_kind: int) -> Dictionary:

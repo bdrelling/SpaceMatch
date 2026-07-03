@@ -54,9 +54,9 @@ func test_ruleset_swaps_rules_at_runtime() -> void:
 	assert_bool(ctx2.go_again).is_true()  # now the same 4-run qualifies
 
 
-# A grant rule banks matched tiles straight into the mover's tally — the migrated default "a match of N is
-# worth N" (one-to-one with no scoring formula), now a unit-testable rule with no scene.
-func test_resource_grant_rule_banks_matched_tiles() -> void:
+# A tile-match rule banks matched tiles straight into the mover's tally — the "a match of N is worth N"
+# (one-to-one with no scoring formula), now a unit-testable rule with no scene.
+func test_tile_match_rule_banks_matched_tiles() -> void:
 	var enc := _encounter()
 	var match_context := MatchRuleContext.new()
 	match_context.encounter = enc
@@ -67,7 +67,10 @@ func test_resource_grant_rule_banks_matched_tiles() -> void:
 	var centers: Dictionary[int, Vector2] = {}
 	centers[_COMBAT_KIND] = Vector2.ZERO
 	match_context.centers = centers
-	ResourceGrantRule.new().apply(match_context)
+	var rule := TileMatchRule.new()
+	rule.tile = Catalogs.tiles.for_kind(_COMBAT_KIND)
+	rule.reward = _resource(_COMBAT_KIND)
+	rule.apply(match_context)
 	assert_int(enc.player.resource_of(_resource(_COMBAT_KIND))).is_equal(4)
 	assert_int(match_context.visuals.size()).is_equal(1)
 
@@ -75,7 +78,7 @@ func test_resource_grant_rule_banks_matched_tiles() -> void:
 # The authored default ruleset carries the grant rules, so a default match already banks resources.
 func test_default_rules_include_baseline_grants() -> void:
 	var ruleset := RuleCatalog.default_ruleset()
-	assert_object(ruleset.find(&"resource_grant")).is_not_null()
+	assert_object(ruleset.find(&"tile_match")).is_not_null()
 	assert_object(ruleset.find(&"damage")).is_not_null()
 	assert_object(ruleset.find(&"warp")).is_not_null()
 	assert_object(ruleset.find(&"scrap_grant")).is_not_null()

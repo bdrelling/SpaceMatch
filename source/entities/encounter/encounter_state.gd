@@ -14,12 +14,12 @@ extends Resource
 ## A round is one turn per combatant.
 const TURNS_PER_ROUND: int = 2
 
-## How many tile kinds a combatant can bank as resources — one slot per [MatchTile] kind. Sizes the
-## resource arrays; a fresh encounter starts them all at zero.
-const RESOURCE_KINDS: int = 7
+## How many resources a combatant can bank — one pool per ability resource. Damage is a tile (no resource) and
+## scrap is a wallet currency, so neither has a combatant pool; the count is the ability-resource total.
+const RESOURCE_KINDS: int = 5
 
 ## The four stat resource kinds (combat / propulsion / science / shields) — the leading pools the Siphon effect
-## drains. Kinds 0..3 of a combatant's resource pools; the remaining kinds (scrap, warp, damage) aren't stats.
+## drains. Kinds 0..3 of a combatant's resource pools; the remaining pools (scrap, warp) aren't stats.
 const STAT_RESOURCE_KINDS: int = 4
 
 ## The statuses combat stamps onto a combatant as data — preloaded so the encounter can apply them by reference.
@@ -114,6 +114,9 @@ func use_ability(source: Combatant, ability: Ability) -> MatchResolutionContext:
 	context.chooser = runtime().chooser
 	context.status_catalog = runtime().status_catalog
 	context.encounter = self
+	# The player's wallet, wired in so a game-side [CurrencyAmount] can read a balance off the context — the engine
+	# never sees it. Null outside a running game (the standalone scene builds no game state).
+	context.wallet = GameSession.game_state.wallet if GameSession.game_state != null else null
 	await AbilityRunner.run(ability, context)
 	return context
 

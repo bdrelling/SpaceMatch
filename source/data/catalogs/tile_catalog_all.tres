@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="TileCatalog" format=3 uid="uid://wnlsadpm02rg"]
+
+[ext_resource type="Script" uid="uid://81tjdx3kbqm6" path="res://resources/catalog/tile_catalog.gd" id="1_dtkte"]
+[ext_resource type="Script" uid="uid://c01u07o5mnfb6" path="res://systems/match/tile.gd" id="2_w4i3j"]
+[ext_resource type="Resource" path="res://data/tiles/combat.tres" id="3_5txt3"]
+[ext_resource type="Resource" path="res://data/tiles/damage.tres" id="4_555w3"]
+[ext_resource type="Resource" path="res://data/tiles/propulsion.tres" id="5_kw8pm"]
+[ext_resource type="Resource" path="res://data/tiles/science.tres" id="6_j8bud"]
+[ext_resource type="Resource" path="res://data/tiles/scrap.tres" id="7_36u41"]
+[ext_resource type="Resource" path="res://data/tiles/shields.tres" id="8_pthcn"]
+[ext_resource type="Resource" path="res://data/tiles/warp.tres" id="9_olnce"]
+
+[resource]
+script = ExtResource("1_dtkte")
+tiles = Array[ExtResource("2_w4i3j")]([ExtResource("3_5txt3"), ExtResource("4_555w3"), ExtResource("5_kw8pm"), ExtResource("6_j8bud"), ExtResource("7_36u41"), ExtResource("8_pthcn"), ExtResource("9_olnce")])
+catalog_name = "Tiles"
+directory = "res://data/tiles"

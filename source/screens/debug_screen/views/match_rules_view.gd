@@ -12,14 +12,17 @@ const _SKIP_PROPS: Array[String] = ["rule_name", "phase", "enabled", "combine_mo
 
 var _ruleset: Ruleset
 
+
 ## Builds an editor for [param ruleset] (a mode from the [RuleCatalog]).
 static func create(ruleset: Ruleset) -> MatchRulesView:
 	var view := MatchRulesView.new()
 	view._ruleset = ruleset
 	return view
 
+
 func title() -> String:
 	return "Match Rules"
+
 
 func action() -> Button:
 	var button := Button.new()
@@ -30,10 +33,12 @@ func action() -> Button:
 	button.pressed.connect(func() -> void: _push(AddRuleView.new()))
 	return button
 
+
 func _build() -> void:
 	if _ruleset == null:
 		return
 	_add_ruleset(_ruleset)
+
 
 # Draws a ruleset: each nested child set as a labelled group with its rules under it (recursively), then this
 # set's own rules as cards. Mirrors how [method Ruleset.flattened] folds the tree together.
@@ -50,6 +55,7 @@ func _add_ruleset(ruleset: Ruleset) -> void:
 		add_child(card)
 		_add_rule_rows(card, rule)
 
+
 # A heading for a nested ruleset group, from its [member Ruleset.ruleset_name].
 func _group_header(ruleset: Ruleset) -> Label:
 	var label := Label.new()
@@ -58,22 +64,23 @@ func _group_header(ruleset: Ruleset) -> Label:
 	label.add_theme_font_size_override("font_size", DebugRow.ROW_FONT)
 	return label
 
-# A card title: a spawn rule reads as the resource it drops; every other rule as its name.
+
+# A card title: a spawn rule reads as the tile it drops; every other rule as its name.
 func _rule_title(rule: Rule) -> String:
-	if rule is SpawnResourceRule:
-		var spawn := rule as SpawnResourceRule
-		if spawn.resource != null:
-			return MatchTile.name_of(spawn.resource.id)
+	if rule is TileSpawnRule:
+		var spawn := rule as TileSpawnRule
+		if spawn.tile != null:
+			return MatchTile.name_of(spawn.tile.kind)
 	return RulePresentation.display_name(rule)
+
 
 # Builds a card's rows: an on/off toggle, then a control per configurable field, read off the rule by type.
 func _add_rule_rows(card: DebugRuleCard, rule: Rule) -> void:
-	if rule is SpawnResourceRule:
-		_add_spawn_resource_rows(card, rule as SpawnResourceRule)
+	if rule is TileSpawnRule:
+		_add_tile_spawn_rows(card, rule as TileSpawnRule)
 		return
 
-	card.add_row(DebugRow.toggle("Enabled", rule.enabled,
-		func(value: bool) -> void: rule.enabled = value))
+	card.add_row(DebugRow.toggle("Enabled", rule.enabled, func(value: bool) -> void: rule.enabled = value))
 
 	for prop: Dictionary in rule.get_property_list():
 		var usage: int = prop.usage
@@ -89,24 +96,20 @@ func _add_rule_rows(card: DebugRuleCard, rule: Rule) -> void:
 		match prop_type:
 			TYPE_INT:
 				var current_int: int = r.get(p)
-				card.add_row(DebugRow.slider(label, Color.WHITE, 0, 10, current_int,
-					func(value: float) -> void: r.set(p, int(value))))
+				card.add_row(DebugRow.slider(label, Color.WHITE, 0, 10, current_int, func(value: float) -> void: r.set(p, int(value))))
 			TYPE_OBJECT:
-				# A single-resource rule (scrap / damage / warp) — show which resource it acts on, read-only.
-				if p == "resource":
-					card.add_row(_resource_label(label, r.get(p)))
-			TYPE_ARRAY:
-				# A multi-resource rule (resource grant) — show the resources it banks, read-only.
-				if p == "resources":
-					card.add_row(_resources_label(label, r.get(p)))
+				# The tile a rule acts on (scrap / damage / warp / tile-match), or the resource it rewards —
+				# read-only summaries.
+				if p == "tile":
+					card.add_row(_tile_label(label, r.get(p)))
+				elif p == "reward":
+					card.add_row(_reward_label(label, r.get(p)))
 			TYPE_BOOL:
 				var current_bool: bool = r.get(p)
-				card.add_row(DebugRow.toggle(label, current_bool,
-					func(value: bool) -> void: r.set(p, value)))
+				card.add_row(DebugRow.toggle(label, current_bool, func(value: bool) -> void: r.set(p, value)))
 			TYPE_FLOAT:
 				var current_float: float = r.get(p)
-				card.add_row(DebugRow.slider(label, Color.WHITE, 0, 10, current_float,
-					func(value: float) -> void: r.set(p, value)))
+				card.add_row(DebugRow.slider(label, Color.WHITE, 0, 10, current_float, func(value: float) -> void: r.set(p, value)))
 			TYPE_PACKED_INT32_ARRAY:
 				card.add_row(_kinds_label(label, r.get(p)))
 
@@ -116,24 +119,28 @@ func _add_rule_rows(card: DebugRuleCard, rule: Rule) -> void:
 	# Scoring's formula is a resource, not a scalar field — surface it as a Linear / Fibonacci pick.
 	if rule is ScoringRule:
 		var scoring := rule as ScoringRule
-		card.add_row(DebugRow.option("Match reward", ["Linear (N→N)", "Fibonacci"],
-			1 if scoring.formula is FibonacciScoringFormula else 0,
-			func(index: int) -> void:
-				scoring.formula = FibonacciScoringFormula.new() if index == 1 else ScoringFormula.new()))
+		card.add_row(
+			DebugRow.option(
+				"Match reward",
+				["Linear (N→N)", "Fibonacci"],
+				1 if scoring.formula is FibonacciScoringFormula else 0,
+				func(index: int) -> void: scoring.formula = FibonacciScoringFormula.new() if index == 1 else ScoringFormula.new()
+			)
+		)
 
-# A spawn rule's rows: on/off, its tile-tinted weight, and how it merges with a same-resource rule.
-func _add_spawn_resource_rows(card: DebugRuleCard, rule: SpawnResourceRule) -> void:
-	card.add_row(DebugRow.toggle("Enabled", rule.enabled,
-		func(value: bool) -> void: rule.enabled = value))
-	var color: Color = MatchTile.color_of(rule.resource.id) if rule.resource != null else Color.WHITE
-	card.add_row(DebugRow.slider("Weight", color, 0, 50, rule.weight,
-		func(value: float) -> void: rule.weight = int(value)))
+
+# A spawn rule's rows: on/off, its tile-tinted weight, and how it merges with a same-tile rule.
+func _add_tile_spawn_rows(card: DebugRuleCard, rule: TileSpawnRule) -> void:
+	card.add_row(DebugRow.toggle("Enabled", rule.enabled, func(value: bool) -> void: rule.enabled = value))
+	var color: Color = MatchTile.color_of(rule.tile.kind) if rule.tile != null else Color.WHITE
+	card.add_row(DebugRow.slider("Weight", color, 0, 50, rule.weight, func(value: float) -> void: rule.weight = int(value)))
 	card.add_row(_combine_mode_row(rule))
+
 
 # A Replace / Stack picker for a rule's [member Rule.combine_mode] (REPLACE = 0, STACK = 1).
 func _combine_mode_row(rule: Rule) -> Control:
-	return DebugRow.option("On collision", ["Replace", "Stack"], rule.combine_mode,
-		func(index: int) -> void: rule.combine_mode = index)
+	return DebugRow.option("On collision", ["Replace", "Stack"], rule.combine_mode, func(index: int) -> void: rule.combine_mode = index)
+
 
 # A read-only summary of a per-kind int array (e.g. capacity maximums) as resource names.
 func _kinds_label(label: String, raw: Variant) -> Label:
@@ -148,29 +155,27 @@ func _kinds_label(label: String, raw: Variant) -> Label:
 	node.add_theme_font_size_override("font_size", DebugRow.ROW_FONT)
 	return node
 
-# A read-only summary of a single [StarshipResource] field (the resource a scrap / damage / warp rule acts on).
-func _resource_label(label: String, raw: Variant) -> Label:
+
+# A read-only summary of a single [Tile] field (the tile a scrap / damage / warp / tile-match rule acts on).
+func _tile_label(label: String, raw: Variant) -> Label:
 	var text := ""
-	if raw is StarshipResource:
-		var resource: StarshipResource = raw
-		if resource.id >= 0:
-			text = MatchTile.name_of(resource.id)
+	if raw is Tile:
+		var tile: Tile = raw
+		if tile.kind >= 0:
+			text = MatchTile.name_of(tile.kind)
 	var node := Label.new()
 	node.text = "%s: %s" % [label, text]
 	node.add_theme_font_size_override("font_size", DebugRow.ROW_FONT)
 	return node
 
-# A read-only summary of an [Array][[StarshipResource]] field (the resources the grant rule banks).
-func _resources_label(label: String, raw: Variant) -> Label:
-	var names := PackedStringArray()
-	if raw is Array:
-		var entries: Array = raw
-		for entry: Variant in entries:
-			if entry is StarshipResource:
-				var resource: StarshipResource = entry
-				if resource.id >= 0:
-					names.append(MatchTile.name_of(resource.id))
+
+# A read-only summary of a single reward [AbilityResource] field (the resource a tile-match rule banks).
+func _reward_label(label: String, raw: Variant) -> Label:
+	var text := ""
+	if raw is AbilityResource:
+		var resource: AbilityResource = raw
+		text = str(resource.name).capitalize()
 	var node := Label.new()
-	node.text = "%s: %s" % [label, ", ".join(names)]
+	node.text = "%s: %s" % [label, text]
 	node.add_theme_font_size_override("font_size", DebugRow.ROW_FONT)
 	return node

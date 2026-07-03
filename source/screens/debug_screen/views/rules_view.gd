@@ -6,7 +6,7 @@ extends DebugView
 ## this encounter rather than the shared debug config.
 
 const _SUMMARIES := {
-	"resource_grant": "Matching stat tiles banks their resource to whoever cleared them.",
+	"tile_match": "Matching a stat tile banks its resource to whoever cleared it.",
 	"scrap_grant": "Matching Scrap adds it to your wallet.",
 	"warp": "Matching Warp charges the shared warp meter.",
 	"board_fill": "Fresh tiles refill from one edge of the board.",
@@ -49,9 +49,9 @@ func _build() -> void:
 
 # A plain-language sentence for what a rule does, for the player.
 func _summary(rule: Rule) -> String:
-	if rule is SpawnResourceRule:
-		var spawn := rule as SpawnResourceRule
-		var spawn_name: String = MatchTile.name_of(spawn.resource.id) if spawn.resource != null else "These"
+	if rule is TileSpawnRule:
+		var spawn := rule as TileSpawnRule
+		var spawn_name: String = MatchTile.name_of(spawn.tile.kind) if spawn.tile != null else "These"
 		return "%s tiles drop onto the board." % spawn_name
 	var kind := RulePresentation.kind_of(rule)
 	var kind_name := MatchTile.name_of(kind) if kind >= 0 else ""
