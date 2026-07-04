@@ -179,39 +179,41 @@ playtest: ## Run the game with screenshot capture. Pass extra args after `--`.
 # =============================================================================
 
 test: ## Run tests (gdUnit4). ARGS scopes to dirs/files, else the whole suite.
-	@./scripts/godot.sh test $(ARGS)
+	@./scripts/armory test $(ARGS)
 
 test-debug: ## Run tests with debug output
-	@DEBUG=true ./scripts/godot.sh test $(ARGS)
+	@DEBUG=true ./scripts/armory test $(ARGS)
 
 # =============================================================================
 # VALIDATION
 # =============================================================================
 
 lint: ## Lint GDScript with gdlint (report-only). ARGS scopes to files/dirs, else whole project.
-	@./scripts/gdtoolkit.sh lint $(ARGS)
+	@./scripts/armory lint $(ARGS)
 
 lint-staged: ## Lint only staged GDScript (what you're committing) — the `verify-staged` scope.
-	@./scripts/gdtoolkit.sh lint --staged
+	@./scripts/armory lint --staged
 
 format: ## Preview gdformat changes (dry-run). ARGS scopes it.
-	@./scripts/gdtoolkit.sh format $(ARGS)
+	@./scripts/armory format $(ARGS)
 
 format-write: ## Apply gdformat formatting in place. ARGS scopes it.
-	@./scripts/gdtoolkit.sh format --write $(ARGS)
+	@./scripts/armory format --write $(ARGS)
 
 format-staged: ## Apply gdformat formatting in place for staged GDScript only.
-	@./scripts/gdtoolkit.sh format --write --staged
+	@./scripts/armory format --write --staged
 
 check: ## Parse-check GDScript (no run). ARGS scopes to .gd files, else whole project.
-	@./scripts/godot.sh check $(ARGS)
+	@./scripts/armory check $(ARGS)
 
 import: ## Rebuild the import/UID cache
-	@./scripts/godot.sh import
+	@./scripts/armory import
 
-verify: lint format import check test ## Full gate (whole source): lint + format (dry-run) -> import -> check -> test (stops at first failure)
+verify: ## Full gate (whole source): lint + format (dry-run) -> import -> check -> test (stops at first failure)
+	@./scripts/armory verify
 
-verify-staged: lint-staged format-staged import check test ## Full gate (staged only): lint + format (writes staged) -> import -> check -> test (stops at first failure)
+verify-staged: ## Full gate (staged only): lint + format (writes staged) -> import -> check -> test (stops at first failure)
+	@./scripts/armory verify --staged
 
 # =============================================================================
 # CLEANUP
@@ -231,8 +233,10 @@ setup: ## Provision the checkout: obsidian link, Claude env, gdtoolkit + git hoo
 		tmp=`mktemp`; \
 		jq --arg v "$$target" '.env.OBSIDIAN_VAULT = $$v' "$$settings" > "$$tmp" && mv "$$tmp" "$$settings"; \
 		echo "Synced env.OBSIDIAN_VAULT into $$settings"
-	@./scripts/install_hooks.sh
-	@./scripts/gdtoolkit.sh install
+	@./scripts/armory install-gdtoolkit
+	@./scripts/armory install-git-hooks
+	@./scripts/armory install-skill take-screenshot deploy de-abbreviate review-project-structure
+	@./scripts/armory install-agent godot-runner test-runner
 
 clean: ## Clean build artifacts
 	@rm -rf reports/

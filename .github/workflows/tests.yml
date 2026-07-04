@@ -1,5 +1,9 @@
 name: Tests
 
+# Copy of armory's canonical armory/.github/workflows/godot-test.yml, run through the
+# pinned armory submodule (submodules: recursive → armory/scripts/...) rather than a
+# reusable `uses:` ref, so CI matches the exact armory SHA this repo vendored.
+# push is intentionally disabled for this project — run manually via workflow_dispatch.
 on:
   workflow_dispatch:
   # push:
@@ -24,10 +28,11 @@ jobs:
     steps:
       - name: Check out repo
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Parse check (GDScript)
-        run: bash scripts/godot.sh check
-        continue-on-error: false
+        run: bash armory/scripts/lib/commands/check.sh
 
       - name: Run gdUnit4 tests
         run: |

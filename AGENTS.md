@@ -75,7 +75,7 @@ Git is read-only — read it only when a task needs it. Modified/staged files ar
 
 - **Codebase search/exploration → the `Explore` subagent**, not inline Grep/Glob. Read inline only the files you're about to edit — keeping search noise out of the main context is the single biggest context saver.
 - **Running tests → the `test-runner` subagent** (headless, returns failures only). Don't run gdUnit4 by hand.
-- **Parse-checking Godot → the `godot-checker` subagent** (headless, returns only parse errors). Keeps project-wide check output out of the main context, like `test-runner` does for tests.
+- **Running Godot/gdtoolkit headless (check, import, lint, format, verify) → the `godot-runner` subagent** (returns only errors). Keeps project-wide tool output out of the main context, like `test-runner` does for tests.
 
 ## Testing
 
@@ -87,8 +87,8 @@ Automated testing is critical to keeping the game stable. Test coverage will be 
 
 ## Validating Godot
 
-- Before running `scripts/godot.sh check`, if any files were created or renamed, run `scripts/godot.sh import` first — it rebuilds the UID cache; check without a fresh import can silently misresolve UIDs.
-- **End of every change:** run `make verify-staged` — full, every time. Don't stop at the parse check alone; that lets lint/test breaks through. Run `check` via `godot-checker` and `test` via `test-runner`.
+- Before running `make check` (`./scripts/armory check`), if any files were created or renamed, run `make import` first — it rebuilds the UID cache; check without a fresh import can silently misresolve UIDs.
+- **End of every change:** run `make verify-staged` — full, every time. Don't stop at the parse check alone; that lets lint/test breaks through. Run `check`/`verify` via `godot-runner` and `test` via `test-runner`.
 - Never tell the user to reload/re-import the project themselves.
 
 ## Linting & formatting (gdtoolkit)

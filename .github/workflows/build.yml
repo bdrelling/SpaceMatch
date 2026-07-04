@@ -1,5 +1,8 @@
 name: Build
 
+# Copy of armory's canonical armory/.github/workflows/godot-build.yml, run through the
+# pinned armory submodule (submodules: recursive) rather than a reusable `uses:` ref.
+# push is intentionally disabled for this project — run manually via workflow_dispatch.
 on:
   workflow_dispatch:
   # push:
@@ -20,6 +23,8 @@ jobs:
     steps:
       - name: Check out repo
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
 
       - name: Export (Web)
         run: |
