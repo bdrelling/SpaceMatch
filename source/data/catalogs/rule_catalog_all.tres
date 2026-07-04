@@ -1,12 +1,18 @@
 [gd_resource type="Resource" script_class="RuleCatalog" format=3 uid="uid://os0c38aywdoc"]
 
-[ext_resource type="Script" uid="uid://cboblywqkoy5m" path="res://addons/grid_system/rules/ruleset.gd" id="1_syefe"]
-[ext_resource type="Resource" path="res://data/rulesets/alternate.tres" id="2_inujf"]
-[ext_resource type="Resource" path="res://data/rulesets/default.tres" id="3_2ll4o"]
-[ext_resource type="Script" uid="uid://ctikf4uco2dgx" path="res://resources/catalog/rule_catalog.gd" id="4_akryu"]
+[ext_resource type="Script" uid="uid://cboblywqkoy5m" path="res://addons/grid_system/rules/ruleset.gd" id="1_q5ewy"]
+[ext_resource type="Resource" path="res://data/rulesets/alternate.tres" id="2_uo6mg"]
+[ext_resource type="Resource" path="res://data/rulesets/alternate_turns.tres" id="3_xss5v"]
+[ext_resource type="Resource" path="res://data/rulesets/default.tres" id="4_lrkm0"]
+[ext_resource type="Resource" path="res://data/rulesets/default_ability_resources.tres" id="5_lco1f"]
+[ext_resource type="Resource" path="res://data/rulesets/default_board.tres" id="6_vlk0i"]
+[ext_resource type="Resource" path="res://data/rulesets/default_special_tiles.tres" id="7_ei1ur"]
+[ext_resource type="Resource" path="res://data/rulesets/default_tiles.tres" id="8_ha5sw"]
+[ext_resource type="Resource" path="res://data/rulesets/default_turns.tres" id="9_2irf4"]
+[ext_resource type="Script" uid="uid://ctikf4uco2dgx" path="res://resources/catalog/rule_catalog.gd" id="10_ctave"]
 
 [resource]
-script = ExtResource("4_akryu")
-rulesets = Array[ExtResource("1_syefe")]([ExtResource("2_inujf"), ExtResource("3_2ll4o")])
+script = ExtResource("10_ctave")
+rulesets = Array[ExtResource("1_q5ewy")]([ExtResource("2_uo6mg"), ExtResource("3_xss5v"), ExtResource("4_lrkm0"), ExtResource("5_lco1f"), ExtResource("6_vlk0i"), ExtResource("7_ei1ur"), ExtResource("8_ha5sw"), ExtResource("9_2irf4")])
 catalog_name = "Rules"
 directory = "res://data/rulesets"

@@ -1,124 +1,14 @@
 [gd_resource type="Resource" script_class="Ruleset" format=3]
 
-[ext_resource type="Script" path="res://addons/grid_system/rules/rule.gd" id="1_rule"]
 [ext_resource type="Script" path="res://addons/grid_system/rules/ruleset.gd" id="2_ruleset"]
-[ext_resource type="Script" path="res://systems/match/scoring_formula.gd" id="3_formula"]
-[ext_resource type="Script" path="res://systems/match/rules/tile_spawn_rule.gd" id="4_spawn"]
-[ext_resource type="Script" path="res://systems/match/rules/tile_match_rule.gd" id="5_match"]
-[ext_resource type="Script" path="res://systems/match/rules/scrap_grant_rule.gd" id="6_scrap"]
-[ext_resource type="Script" path="res://systems/match/rules/damage_rule.gd" id="7_damage"]
-[ext_resource type="Script" path="res://systems/match/rules/warp_rule.gd" id="8_warp"]
-[ext_resource type="Script" path="res://systems/match/rules/action_budget_rule.gd" id="9_action"]
-[ext_resource type="Script" path="res://systems/match/rules/resource_capacity_rule.gd" id="10_cap"]
-[ext_resource type="Script" path="res://systems/match/rules/offset_scoring_rule.gd" id="11_offset"]
-[ext_resource type="Script" path="res://systems/match/rules/board_fill_rule.gd" id="12_fill"]
-[ext_resource type="Script" path="res://systems/match/rules/scoring_rule.gd" id="13_scoring"]
-[ext_resource type="Script" path="res://systems/match/rules/reload_split_rule.gd" id="14_reload"]
-[ext_resource type="Resource" path="res://data/tiles/combat.tres" id="20_tcombat"]
-[ext_resource type="Resource" path="res://data/tiles/propulsion.tres" id="21_tprop"]
-[ext_resource type="Resource" path="res://data/tiles/science.tres" id="22_tsci"]
-[ext_resource type="Resource" path="res://data/tiles/shields.tres" id="23_tshields"]
-[ext_resource type="Resource" path="res://data/tiles/scrap.tres" id="24_tscrap"]
-[ext_resource type="Resource" path="res://data/tiles/warp.tres" id="25_twarp"]
-[ext_resource type="Resource" path="res://data/tiles/damage.tres" id="26_tdamage"]
-[ext_resource type="Resource" uid="uid://b2kqyh4632a1r" path="res://data/ability_resources/combat.tres" id="30_rcombat"]
-[ext_resource type="Resource" uid="uid://cyhafv6x2udqt" path="res://data/ability_resources/propulsion.tres" id="31_rprop"]
-[ext_resource type="Resource" uid="uid://b63jse3fv7g7k" path="res://data/ability_resources/science.tres" id="32_rsci"]
-[ext_resource type="Resource" uid="uid://dx8npskqws2tb" path="res://data/ability_resources/shields.tres" id="33_rshields"]
-
-[sub_resource type="Resource" id="Spawn_combat"]
-script = ExtResource("4_spawn")
-tile = ExtResource("20_tcombat")
-weight = 20
-
-[sub_resource type="Resource" id="Spawn_prop"]
-script = ExtResource("4_spawn")
-tile = ExtResource("21_tprop")
-weight = 20
-
-[sub_resource type="Resource" id="Spawn_sci"]
-script = ExtResource("4_spawn")
-tile = ExtResource("22_tsci")
-weight = 20
-
-[sub_resource type="Resource" id="Spawn_shields"]
-script = ExtResource("4_spawn")
-tile = ExtResource("23_tshields")
-weight = 20
-
-[sub_resource type="Resource" id="Spawn_scrap"]
-script = ExtResource("4_spawn")
-tile = ExtResource("24_tscrap")
-weight = 10
-
-[sub_resource type="Resource" id="Spawn_warp"]
-script = ExtResource("4_spawn")
-tile = ExtResource("25_twarp")
-weight = 2
-
-[sub_resource type="Resource" id="Spawn_damage"]
-script = ExtResource("4_spawn")
-tile = ExtResource("26_tdamage")
-weight = 10
-
-[sub_resource type="Resource" id="Res_spawn_set"]
-script = ExtResource("2_ruleset")
-ruleset_name = &"Spawn"
-rulesets = Array[ExtResource("2_ruleset")]([])
-rules = Array[ExtResource("1_rule")]([SubResource("Spawn_combat"), SubResource("Spawn_prop"), SubResource("Spawn_sci"), SubResource("Spawn_shields"), SubResource("Spawn_scrap"), SubResource("Spawn_warp"), SubResource("Spawn_damage")])
-
-[sub_resource type="Resource" id="Match_combat"]
-script = ExtResource("5_match")
-tile = ExtResource("20_tcombat")
-reward = ExtResource("30_rcombat")
-
-[sub_resource type="Resource" id="Match_prop"]
-script = ExtResource("5_match")
-tile = ExtResource("21_tprop")
-reward = ExtResource("31_rprop")
-
-[sub_resource type="Resource" id="Match_sci"]
-script = ExtResource("5_match")
-tile = ExtResource("22_tsci")
-reward = ExtResource("32_rsci")
-
-[sub_resource type="Resource" id="Match_shields"]
-script = ExtResource("5_match")
-tile = ExtResource("23_tshields")
-reward = ExtResource("33_rshields")
-
-[sub_resource type="Resource" id="Res_scrap"]
-script = ExtResource("6_scrap")
-
-[sub_resource type="Resource" id="Res_damage"]
-script = ExtResource("7_damage")
-
-[sub_resource type="Resource" id="Res_warp"]
-script = ExtResource("8_warp")
-
-[sub_resource type="Resource" id="Res_action"]
-script = ExtResource("9_action")
-
-[sub_resource type="Resource" id="Res_cap"]
-script = ExtResource("10_cap")
-
-[sub_resource type="Resource" id="Res_offset"]
-script = ExtResource("11_offset")
-
-[sub_resource type="Resource" id="Res_fill"]
-script = ExtResource("12_fill")
-
-[sub_resource type="Resource" id="Res_formula"]
-script = ExtResource("3_formula")
-
-[sub_resource type="Resource" id="Res_scoring"]
-script = ExtResource("13_scoring")
-formula = SubResource("Res_formula")
-
-[sub_resource type="Resource" id="Res_reload"]
-script = ExtResource("14_reload")
+[ext_resource type="Resource" path="res://data/rulesets/default_tiles.tres" id="10_tiles"]
+[ext_resource type="Resource" path="res://data/rulesets/default_ability_resources.tres" id="11_resources"]
+[ext_resource type="Resource" path="res://data/rulesets/default_special_tiles.tres" id="12_special"]
+[ext_resource type="Resource" path="res://data/rulesets/default_turns.tres" id="13_turns"]
+[ext_resource type="Resource" path="res://data/rulesets/default_board.tres" id="14_board"]
 
 [resource]
 script = ExtResource("2_ruleset")
-rulesets = Array[ExtResource("2_ruleset")]([SubResource("Res_spawn_set")])
-rules = Array[ExtResource("1_rule")]([SubResource("Match_combat"), SubResource("Match_prop"), SubResource("Match_sci"), SubResource("Match_shields"), SubResource("Res_scrap"), SubResource("Res_damage"), SubResource("Res_warp"), SubResource("Res_action"), SubResource("Res_cap"), SubResource("Res_offset"), SubResource("Res_fill"), SubResource("Res_scoring"), SubResource("Res_reload")])
+ruleset_name = &"Standard"
+description = "The standard SpaceMatch match."
+rulesets = Array[ExtResource("2_ruleset")]([ExtResource("10_tiles"), ExtResource("11_resources"), ExtResource("12_special"), ExtResource("13_turns"), ExtResource("14_board")])

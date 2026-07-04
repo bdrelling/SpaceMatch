@@ -12,6 +12,7 @@ var modules: ModuleCatalog
 var module_grids: ModuleGridCatalog
 var starships: StarshipCatalog
 var rules: RuleCatalog
+var match_configs: MatchConfigCatalog
 var ability_resources: AbilityResourceCatalog
 var tiles: TileCatalog
 var statuses: StatusCatalog
@@ -23,6 +24,7 @@ func _ready() -> void:
 	module_grids = _load(_DIR + "module_grid_catalog_all.tres", ModuleGridCatalog.default) as ModuleGridCatalog
 	starships = _load(_DIR + "starship_catalog_all.tres", StarshipCatalog.default) as StarshipCatalog
 	rules = _load(_DIR + "rule_catalog_all.tres", RuleCatalog.default) as RuleCatalog
+	match_configs = _load(_DIR + "match_config_catalog_all.tres", MatchConfigCatalog.default) as MatchConfigCatalog
 	ability_resources = _load(_DIR + "ability_resource_catalog_all.tres", AbilityResourceCatalog.default) as AbilityResourceCatalog
 	tiles = _load(_DIR + "tile_catalog_all.tres", TileCatalog.default) as TileCatalog
 	statuses = _load(_DIR + "status_catalog_all.tres", StatusCatalog.default) as StatusCatalog

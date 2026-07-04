@@ -1,0 +1,31 @@
+[gd_resource type="Resource" script_class="Ruleset" format=3]
+
+[ext_resource type="Script" path="res://addons/grid_system/rules/rule.gd" id="1_rule"]
+[ext_resource type="Script" path="res://addons/grid_system/rules/ruleset.gd" id="2_ruleset"]
+[ext_resource type="Script" path="res://systems/match/scoring_formula.gd" id="3_formula"]
+[ext_resource type="Script" path="res://systems/match/rules/action_budget_rule.gd" id="9_action"]
+[ext_resource type="Script" path="res://systems/match/rules/resource_capacity_rule.gd" id="10_cap"]
+[ext_resource type="Script" path="res://systems/match/rules/offset_scoring_rule.gd" id="11_offset"]
+[ext_resource type="Script" path="res://systems/match/rules/scoring_rule.gd" id="13_scoring"]
+
+[sub_resource type="Resource" id="Res_action"]
+script = ExtResource("9_action")
+
+[sub_resource type="Resource" id="Res_cap"]
+script = ExtResource("10_cap")
+
+[sub_resource type="Resource" id="Res_offset"]
+script = ExtResource("11_offset")
+
+[sub_resource type="Resource" id="Res_formula"]
+script = ExtResource("3_formula")
+
+[sub_resource type="Resource" id="Res_scoring"]
+script = ExtResource("13_scoring")
+formula = SubResource("Res_formula")
+
+[resource]
+script = ExtResource("2_ruleset")
+ruleset_name = &"Turns"
+description = "One action a turn, uncapped resources, standard scoring."
+rules = Array[ExtResource("1_rule")]([SubResource("Res_action"), SubResource("Res_cap"), SubResource("Res_offset"), SubResource("Res_scoring")])

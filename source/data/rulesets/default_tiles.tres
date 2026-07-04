@@ -1,0 +1,53 @@
+[gd_resource type="Resource" script_class="Ruleset" format=3]
+
+[ext_resource type="Script" path="res://addons/grid_system/rules/rule.gd" id="1_rule"]
+[ext_resource type="Script" path="res://addons/grid_system/rules/ruleset.gd" id="2_ruleset"]
+[ext_resource type="Script" path="res://systems/match/rules/tile_spawn_rule.gd" id="4_spawn"]
+[ext_resource type="Resource" path="res://data/tiles/combat.tres" id="20_tcombat"]
+[ext_resource type="Resource" path="res://data/tiles/propulsion.tres" id="21_tprop"]
+[ext_resource type="Resource" path="res://data/tiles/science.tres" id="22_tsci"]
+[ext_resource type="Resource" path="res://data/tiles/shields.tres" id="23_tshields"]
+[ext_resource type="Resource" path="res://data/tiles/scrap.tres" id="24_tscrap"]
+[ext_resource type="Resource" path="res://data/tiles/warp.tres" id="25_twarp"]
+[ext_resource type="Resource" path="res://data/tiles/damage.tres" id="26_tdamage"]
+
+[sub_resource type="Resource" id="Spawn_combat"]
+script = ExtResource("4_spawn")
+tile = ExtResource("20_tcombat")
+weight = 20
+
+[sub_resource type="Resource" id="Spawn_prop"]
+script = ExtResource("4_spawn")
+tile = ExtResource("21_tprop")
+weight = 20
+
+[sub_resource type="Resource" id="Spawn_sci"]
+script = ExtResource("4_spawn")
+tile = ExtResource("22_tsci")
+weight = 20
+
+[sub_resource type="Resource" id="Spawn_shields"]
+script = ExtResource("4_spawn")
+tile = ExtResource("23_tshields")
+weight = 20
+
+[sub_resource type="Resource" id="Spawn_scrap"]
+script = ExtResource("4_spawn")
+tile = ExtResource("24_tscrap")
+weight = 10
+
+[sub_resource type="Resource" id="Spawn_warp"]
+script = ExtResource("4_spawn")
+tile = ExtResource("25_twarp")
+weight = 2
+
+[sub_resource type="Resource" id="Spawn_damage"]
+script = ExtResource("4_spawn")
+tile = ExtResource("26_tdamage")
+weight = 10
+
+[resource]
+script = ExtResource("2_ruleset")
+ruleset_name = &"Tiles"
+description = "The standard 7 tiles drop onto the board."
+rules = Array[ExtResource("1_rule")]([SubResource("Spawn_combat"), SubResource("Spawn_prop"), SubResource("Spawn_sci"), SubResource("Spawn_shields"), SubResource("Spawn_scrap"), SubResource("Spawn_warp"), SubResource("Spawn_damage")])

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="MatchConfig" format=3]
+
+[ext_resource type="Script" path="res://systems/match/match_config.gd" id="1_config"]
+[ext_resource type="Resource" path="res://data/rulesets/default.tres" id="2_ruleset"]
+
+[resource]
+script = ExtResource("1_config")
+config_name = &"Wide"
+ruleset = ExtResource("2_ruleset")
+board_width = 10
+board_height = 10
+min_run = 3
+team_size = 1

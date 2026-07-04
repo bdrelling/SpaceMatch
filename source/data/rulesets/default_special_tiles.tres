@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="Ruleset" format=3]
+
+[ext_resource type="Script" path="res://addons/grid_system/rules/rule.gd" id="1_rule"]
+[ext_resource type="Script" path="res://addons/grid_system/rules/ruleset.gd" id="2_ruleset"]
+[ext_resource type="Script" path="res://systems/match/rules/scrap_grant_rule.gd" id="6_scrap"]
+[ext_resource type="Script" path="res://systems/match/rules/damage_rule.gd" id="7_damage"]
+[ext_resource type="Script" path="res://systems/match/rules/warp_rule.gd" id="8_warp"]
+
+[sub_resource type="Resource" id="Res_scrap"]
+script = ExtResource("6_scrap")
+
+[sub_resource type="Resource" id="Res_damage"]
+script = ExtResource("7_damage")
+
+[sub_resource type="Resource" id="Res_warp"]
+script = ExtResource("8_warp")
+
+[resource]
+script = ExtResource("2_ruleset")
+ruleset_name = &"Special Tiles"
+description = "Scrap banks currency, damage strikes, warp charges the jump."
+rules = Array[ExtResource("1_rule")]([SubResource("Res_scrap"), SubResource("Res_damage"), SubResource("Res_warp")])

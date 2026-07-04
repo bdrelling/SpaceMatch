@@ -60,6 +60,8 @@ var _view: GridView
 var _grid: Grid
 var _match_view: MatchBoardView
 var _gravity: MatchGravity
+# Reflows the portraits + board between the stacked Hud and a side-by-side BattleRow by viewport aspect.
+var _layout: MatchLayout
 var _rng := RandomNumberGenerator.new()
 # Above-the-board overlay floating popups rise into, so they aren't clipped by the board panel.
 var _popup_layer: Node2D
@@ -80,15 +82,20 @@ var _move_max_run: int = 0
 @onready var _round_label: Label = %RoundLabel
 @onready var _turn_label: Label = %TurnLabel
 @onready var _actions: HBoxContainer = %Actions
+@onready var _body: VBoxContainer = %Body
+@onready var _hud: HBoxContainer = %Hud
+@onready var _battle_row: HBoxContainer = %BattleRow
+@onready var _board_panel: PanelContainer = %BoardPanel
 #endregion
 
 
 #region Methods
 func _ready() -> void:
-	if ruleset == null:
-		ruleset = DebugConfig.match_ruleset  # fall back to shared debug rules so the board plays standalone
 	if config == null:
-		config = DebugConfig.match_config
+		config = DebugConfig.match_config  # fall back to the active match config so the board plays standalone
+	if ruleset == null:
+		# The mode is the config's referenced ruleset; fall back to the shared debug rules if it names none.
+		ruleset = config.ruleset if config != null and config.ruleset != null else DebugConfig.match_ruleset
 	_session = MatchBoardFactory.build_session(config, board_seed, input_mode, allow_diagonal, _generate_board)
 	_view = MatchGridView.new()
 	_view.configure(config.board_width, config.board_height, _CELL_SIZE)
@@ -137,6 +144,12 @@ func _ready() -> void:
 	_ctx.end_state.build_move_debug()
 	_ctx.end_state.refresh_move_debug()
 	_ctx.rules.begin_encounter()  # seed SETUP then TURN_START for the first mover
+	# The middle band reflows to flank the board with the portraits in landscape (see [MatchLayout]).
+	_layout = MatchLayout.new()
+	# Configure BEFORE entering the tree: MatchLayout._ready connects + applies at once, so its refs must
+	# already be set when add_child fires _ready.
+	_layout.setup(_body, _hud, _battle_row, _board_panel, _actions, _player_portrait, _opponent_portrait)
+	add_child(_layout)
 
 
 func _sync_context_encounter() -> void:

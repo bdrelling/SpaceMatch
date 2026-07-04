@@ -1,0 +1,39 @@
+[gd_resource type="Resource" script_class="Ruleset" format=3]
+
+[ext_resource type="Script" path="res://addons/grid_system/rules/rule.gd" id="1_rule"]
+[ext_resource type="Script" path="res://addons/grid_system/rules/ruleset.gd" id="2_ruleset"]
+[ext_resource type="Script" path="res://systems/match/rules/tile_match_rule.gd" id="5_match"]
+[ext_resource type="Resource" path="res://data/tiles/combat.tres" id="20_tcombat"]
+[ext_resource type="Resource" path="res://data/tiles/propulsion.tres" id="21_tprop"]
+[ext_resource type="Resource" path="res://data/tiles/science.tres" id="22_tsci"]
+[ext_resource type="Resource" path="res://data/tiles/shields.tres" id="23_tshields"]
+[ext_resource type="Resource" uid="uid://b2kqyh4632a1r" path="res://data/ability_resources/combat.tres" id="30_rcombat"]
+[ext_resource type="Resource" uid="uid://cyhafv6x2udqt" path="res://data/ability_resources/propulsion.tres" id="31_rprop"]
+[ext_resource type="Resource" uid="uid://b63jse3fv7g7k" path="res://data/ability_resources/science.tres" id="32_rsci"]
+[ext_resource type="Resource" uid="uid://dx8npskqws2tb" path="res://data/ability_resources/shields.tres" id="33_rshields"]
+
+[sub_resource type="Resource" id="Match_combat"]
+script = ExtResource("5_match")
+tile = ExtResource("20_tcombat")
+reward = ExtResource("30_rcombat")
+
+[sub_resource type="Resource" id="Match_prop"]
+script = ExtResource("5_match")
+tile = ExtResource("21_tprop")
+reward = ExtResource("31_rprop")
+
+[sub_resource type="Resource" id="Match_sci"]
+script = ExtResource("5_match")
+tile = ExtResource("22_tsci")
+reward = ExtResource("32_rsci")
+
+[sub_resource type="Resource" id="Match_shields"]
+script = ExtResource("5_match")
+tile = ExtResource("23_tshields")
+reward = ExtResource("33_rshields")
+
+[resource]
+script = ExtResource("2_ruleset")
+ruleset_name = &"Ability Resources"
+description = "Matching a stat tile banks its resource."
+rules = Array[ExtResource("1_rule")]([SubResource("Match_combat"), SubResource("Match_prop"), SubResource("Match_sci"), SubResource("Match_shields")])

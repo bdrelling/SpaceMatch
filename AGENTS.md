@@ -3,9 +3,10 @@
 ## Critical
 
 - Read all docs on demand, not up front.
-- This repo uses symlinked directories on purpose — the Obsidian vault (`docs/obsidian/` → external iCloud vault) and code (`source/addons/*`, `scripts/armory`, `.claude/skills`). Their contents are first-class and you're expected to find them. The harness Glob/Grep tools and a plain `find` do NOT cross symlinks, so they silently miss these trees. When a search must reach a symlinked dir, drop to Bash with a symlink-following command: `find -L …`, `rg --follow …`, or `grep -R …`. Never assume a symlinked subfolder's layout from memory — list its root first. The skills tree is reachable as both `.agents/skills/…` and `.claude/skills/…` — these are the **same files** (`.claude/skills` symlinks to the real `.agents/skills`). Editing or `require()`-ing through either path is identical; this is settled, don't re-investigate it.
-- For work with 3+ distinct steps, keep a todo list and update it as you go. Skip it for one-off or trivial edits.
+- This repo uses symlinked directories on purpose — the Obsidian vault (`docs/obsidian/` → external iCloud vault) and code (`source/addons/*`, `scripts/armory`, `.claude/skills`, `.claude/agents`). Their contents are first-class and you're expected to find them. The harness Glob/Grep tools and a plain `find` do NOT cross symlinks, so they silently miss these trees. When a search must reach a symlinked dir, drop to Bash with a symlink-following command: `find -L …`, `rg --follow …`, or `grep -R …`. Never assume a symlinked subfolder's layout from memory — list its root first. The skills tree is reachable as both `.agents/skills/…` and `.claude/skills/…` — these are the **same files** (`.claude/skills` symlinks to the real `.agents/skills`). Editing or `require()`-ing through either path is identical; this is settled, don't re-investigate it.
+- For work with 3+ distinct steps, keep a todo task list and update it as you go. Skip it for one-off or trivial edits.
 - Never edit the GDD (`docs/gdd/`) without explicit permission — it is design documentation, not a place for code, prototype artifacts, or screenshots. Screenshots and playtest output go in `.playtests/`.
+- Sometimes more than one LLM agent may be modifying files at once, but in different areas of the codebase. Don't freak out about this or event mention it. If you notice unrelated issues pop up in files you haven't touched or don't expect to be downstream dependencies, pause your work and try again a minute later. If it still has issues, pause and ask the user to let you know when the other agents have finished their work.
 - **When your work is done, output the result and STOP.** Don't append a trailing flag, caveat, note, question, or next-step suggestion after it. See **Done means done**.
 
 ## Communication
@@ -37,7 +38,7 @@ Banned:
 - Asking permission to research. If you're uncertain enough to offer to look something up, look it up. Reading files, docs, or the web is always safe. "Want me to check?" is banned — hedge-and-act is required.
 - Trailing caveats and footnotes — "one thing to flag", "worth noting", "one wrinkle", or dressing intended behavior up as a caveat. See **Done means done**.
 
-### Done means done
+### Done Means Done
 
 Build it to spec — fully. "Done" means it matches the user's acceptance criteria and is verified; nothing less counts, and you don't get to redefine the bar with a caveat.
 
@@ -56,15 +57,15 @@ A genuine blocker or open issue is the headline, not a footer: raise it first �
 
 If you can't meet the spec, or you're unsure what it is, stop and ask before doing the work — not after, wrapped in a trailing note.
 
-### Linking files
+### Linking Files
 
 When pointing the user at a local file (screenshots, outputs, etc.), emit an absolute `file://` URL — Claude Code only makes `file://`-schemed URLs ⌘-clickable in its terminal output. Bare or absolute paths without a scheme aren't clickable. e.g. `file:///abs/path/to/.playtests/<run>/001s.png`.
 
-_(Verified Claude Code 2.1.158, 2026-05-30 — re-check if Claude Code's link rendering changes.)_
+*(Verified Claude Code 2.1.158, 2026-05-30 — re-check if Claude Code's link rendering changes.)*
 
 ## Worktrees
 
-- Default to a worktree for substantial or multi-file work. Editing `main` directly is fine for small one-off changes the user is watching, or a single focused task — ask when unsure.
+- Default to a worktree only when the user tells you to use one. Editing `main` directly is fine for small one-off changes the user is watching, or a single focused task — ask when unsure.
 - Promote a worktree back only on the user's approval, via `/promote-worktree`. Never run git merge/commit/branch/reset against `main` yourself.
 
 ## Git

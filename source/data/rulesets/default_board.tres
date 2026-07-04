@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="Ruleset" format=3]
+
+[ext_resource type="Script" path="res://addons/grid_system/rules/rule.gd" id="1_rule"]
+[ext_resource type="Script" path="res://addons/grid_system/rules/ruleset.gd" id="2_ruleset"]
+[ext_resource type="Script" path="res://systems/match/rules/board_fill_rule.gd" id="12_fill"]
+[ext_resource type="Script" path="res://systems/match/rules/reload_split_rule.gd" id="14_reload"]
+
+[sub_resource type="Resource" id="Res_fill"]
+script = ExtResource("12_fill")
+
+[sub_resource type="Resource" id="Res_reload"]
+script = ExtResource("14_reload")
+
+[resource]
+script = ExtResource("2_ruleset")
+ruleset_name = &"Board"
+description = "The board refills as tiles clear, and splits its tiles on reload."
+rules = Array[ExtResource("1_rule")]([SubResource("Res_fill"), SubResource("Res_reload")])
