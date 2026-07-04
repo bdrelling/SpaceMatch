@@ -235,8 +235,8 @@ setup: ## Provision the checkout: obsidian link, Claude env, gdtoolkit + git hoo
 		echo "Synced env.OBSIDIAN_VAULT into $$settings"
 	@./scripts/armory install-gdtoolkit
 	@./scripts/armory install-git-hooks
-	@./scripts/armory install-skill take-screenshot deploy de-abbreviate review-project-structure
-	@./scripts/armory install-agent godot-runner test-runner
+	@./scripts/armory install-skills
+	@./scripts/armory install-agents
 
 clean: ## Clean build artifacts
 	@rm -rf reports/
