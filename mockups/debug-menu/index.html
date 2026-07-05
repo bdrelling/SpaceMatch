@@ -382,7 +382,7 @@ home: () => ({ title: '', rows: [
   scroller([
     tile('Resources', { emoji: '🔋', to: 'cat_resources', count: 6 }),
     tile('Tiles', { emoji: '🎨', to: 'cat_tiles', count: 7 }),
-    tile('Stats', { emoji: '📊', to: 'cat_stats', count: 13 }),
+    tile('Stats', { emoji: '📊', to: 'cat_stats', count: 8 }),
     tile('Statuses', { emoji: '✨', to: 'cat_statuses', count: 3, edited: true }),
   ]),
   section('Content'),
@@ -462,28 +462,20 @@ ed_modifier: () => ({ title: 'Modifier', rows: [
 ]}),
 
 pick_stats: () => ({ title: 'Stat', rows: [
-  grid(['tactics', 'life_support', 'science', 'engineering', 'antimatter', 'alloy', 'health', 'power', 'armor', 'defense', 'speed', 'sensors', 'evasion'].map(s => pickTile(titleize(s)))),
+  grid(['health', 'armor', 'shields', 'weapons', 'engines', 'computers', 'sensors', 'energy'].map(s => pickTile(titleize(s)))),
 ]}),
 
 /* --- Stats --- */
 cat_stats: () => ({ title: 'Stats', action: { fn: () => go('ed_stat') }, rows: [
   list([
-    // one stat paired to each resource (collection / match bonuses)
-    nav('Tactics', { to: 'ed_stat' }),
-    nav('Life Support', { to: 'ed_stat' }),
-    nav('Science', { to: 'ed_stat' }),
-    nav('Engineering', { to: 'ed_stat' }),
-    nav('Antimatter', { to: 'ed_stat' }),
-    nav('Alloy', { to: 'ed_stat' }),
-    // core stats
     nav('Health', { to: 'ed_stat' }),
-    nav('Power', { to: 'ed_stat' }),
-    // dimmed: underlying stats not on the authored list yet
-    nav('Armor', { to: 'ed_stat', dim: true }),
-    nav('Defense', { to: 'ed_stat', dim: true }),
-    nav('Speed', { to: 'ed_stat', dim: true }),
-    nav('Sensors', { to: 'ed_stat', dim: true }),
-    nav('Evasion', { to: 'ed_stat', dim: true }),
+    nav('Armor', { to: 'ed_stat' }),
+    nav('Shields', { to: 'ed_stat' }),
+    nav('Weapons', { to: 'ed_stat' }),
+    nav('Engines', { to: 'ed_stat' }),
+    nav('Computers', { to: 'ed_stat' }),
+    nav('Sensors', { to: 'ed_stat' }),
+    nav('Energy', { to: 'ed_stat' }),
   ]),
 ]}),
 
