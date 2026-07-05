@@ -122,6 +122,13 @@
   .sign { flex: none; font-size: 12px; }
   .sign.up { color: var(--good); }
   .sign.down { color: #d06a6a; }
+  /* catalog rows carry the same left-edge edit bar as the menu tiles */
+  .navrow { position: relative; }
+  .navrow::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
+    background: rgba(0,0,0,.2);
+  }
+  .navrow.edited::before { background: #dcb63f; }
 
   /* ---- tile grid (chamfered) ---- */
   .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px; }
@@ -255,9 +262,9 @@ const scroller = tiles => `<div class="scroller">${tiles.join('')}</div>`;
 const chips = items => `<div class="chips">${items.join('')}</div>`;
 
 function nav(label, opts = {}) {
-  const { to, detail = '', count = null, sign = '' } = opts;
+  const { to, detail = '', count = null, sign = '', edited = false } = opts;
   const h = on(() => to ? go(to) : toast('Not mocked'));
-  return `<div class="cell tap" data-h="${h}">
+  return `<div class="cell tap navrow${edited ? ' edited' : ''}" data-h="${h}">
     <div class="label">${label}</div>
     ${sign ? `<div class="sign ${sign}">${sign === 'up' ? '▲' : '▼'}</div>` : ''}
     ${detail ? `<div class="v">${detail}</div>` : ''}
@@ -414,7 +421,7 @@ cat_match_configs: () => ({ title: 'Match Configs', rows: [
 cat_statuses: () => ({ title: 'Statuses', action: { fn: () => go('ed_status') }, rows: [
   list([
     nav('Dodge', { to: 'ed_status', sign: 'up' }),
-    nav('Shield', { to: 'ed_status', sign: 'up' }),
+    nav('Shield', { to: 'ed_status', sign: 'up', edited: true }),
     nav('Target Lock', { to: 'ed_status', sign: 'down' }),
   ]),
 ]}),
@@ -559,7 +566,7 @@ cat_rules: () => ({ title: 'Rules', action: { fn: () => go('menu_rule') }, rows:
 cat_rulesets: () => ({ title: 'Rulesets', rows: [
   section('Game Modes'),
   grid([
-    tile('Default', { to: 'ed_ruleset' }),
+    tile('Default', { to: 'ed_ruleset', edited: true }),
     tile('Alternate', { to: 'ed_ruleset' }),
   ]),
   section('Fragments'),

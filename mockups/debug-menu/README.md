@@ -20,6 +20,7 @@ Reading this README IS the context — you don't need to render anything to unde
 
 ## Code structure
 
+- Three screen archetypes: **menu** (the root `home` screen), **catalog** (`cat_*` — one data type's item list), **editor** (`ed_*` — editing one item from a catalog). Catalogs and editors are hand-built per type (similar but mostly unique), not a shared template. Catalog rows carry the same left-edge edit bar (`.navrow`) as the menu tiles: translucent black normally, yellow when that item has unsaved edits nested inside.
 - `SCREENS` — registry of screen factories; each returns `{ title, action?, rows }`. Navigation is a plain id stack (`go`/`pop`).
 - Row/one-liner builders: `list`, `grid`, `scroller`, `chips`, `flow`, `nav`, `tile`, `scalar` (slider/toggle/dropdown/color/text), `seg`, `stepper`, `ref` (catalog reference), `variant` (polymorphic kind), `pickRow`/`pickTile`, `kindTile`.
 - `MENUS` generates the kind-picker screens (Target/Condition/Amount/Stacking/Decay/Transform); `menu_action` is hand-built (Match + Core groups).
