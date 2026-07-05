@@ -230,6 +230,7 @@ const PARENTS = {
   cat_abilities: 'home', ed_ability: 'cat_abilities', ed_cost: 'ed_ability', pick_resources: 'ed_cost',
   ed_effect: 'ed_ability', ed_attack: 'ed_effect',
   cat_tiles: 'home', ed_tile: 'cat_tiles',
+  cat_rules: 'home',
   cat_rulesets: 'home', ed_ruleset: 'cat_rulesets', menu_rule: 'ed_ruleset', ed_newrule: 'menu_rule',
 };
 function deepLink(id) {
@@ -362,22 +363,23 @@ home: () => ({ title: '', rows: [
       ref('Starship', 'Default', 'pick_starships'),
     ])}
   </div>`,
+  section('Primitives'),
+  scroller([
+    tile('Stats', { emoji: '📊', to: 'cat_stats', count: 13 }),
+    tile('Resources', { emoji: '🔋', to: 'cat_resources', count: 5 }),
+    tile('Tiles', { emoji: '🎨', to: 'cat_tiles', count: 5 }),
+    tile('Statuses', { emoji: '✨', to: 'cat_statuses', count: 3, edited: true }),
+  ]),
   section('Content'),
   scroller([
+    tile('Abilities', { emoji: '⚡', to: 'cat_abilities', count: 5 }),
     tile('Starships', { emoji: '🛸', to: 'cat_starships', count: 2 }),
     tile('Modules', { emoji: '🧱', to: 'cat_modules', count: 7 }),
     tile('Module Grids', { emoji: '🔲', to: 'cat_module_grids', count: 2 }),
-    tile('Tiles', { emoji: '🎨', to: 'cat_tiles', count: 5 }),
   ]),
-  section('Effects'),
+  section('Config'),
   scroller([
-    tile('Abilities', { emoji: '⚡', to: 'cat_abilities', count: 5 }),
-    tile('Statuses', { emoji: '✨', to: 'cat_statuses', count: 3, edited: true }),
-    tile('Stats', { emoji: '📊', to: 'cat_stats', count: 13 }),
-    tile('Resources', { emoji: '🔋', to: 'cat_resources', count: 5 }),
-  ]),
-  section('Rules'),
-  scroller([
+    tile('Rules', { emoji: '📐', to: 'cat_rules', count: 5 }),
     tile('Rulesets', { emoji: '📜', to: 'cat_rulesets', count: 7, edited: true }),
     tile('Match Configs', { emoji: '🚀', to: 'cat_match_configs', count: 2 }),
   ]),
@@ -548,6 +550,11 @@ ed_tile: () => ({ title: 'Shields', rows: [
   ]),
 ]}),
 
+/* --- Rules --- */
+cat_rules: () => ({ title: 'Rules', action: { fn: () => go('menu_rule') }, rows: [
+  list(['Swap', 'Slide', 'Swap Diagonal', 'Teleport', 'Trace'].map(s => nav(s))),
+]}),
+
 /* --- Rulesets --- */
 cat_rulesets: () => ({ title: 'Rulesets', rows: [
   section('Game Modes'),
@@ -627,9 +634,9 @@ function genericKind(kind) {
 
 /* ---------- side nav (viewer aid) ---------- */
 const NAV = [
-  ['Content', [['Starships', 'cat_starships'], ['Modules', 'cat_modules'], ['Module Grids', 'cat_module_grids'], ['Tiles', 'cat_tiles']]],
-  ['Effects', [['Abilities', 'cat_abilities'], ['Statuses', 'cat_statuses'], ['Stats', 'cat_stats'], ['Resources', 'cat_resources']]],
-  ['Rules', [['Rulesets', 'cat_rulesets'], ['Match Configs', 'cat_match_configs']]],
+  ['Primitives', [['Stats', 'cat_stats'], ['Resources', 'cat_resources'], ['Tiles', 'cat_tiles'], ['Statuses', 'cat_statuses']]],
+  ['Content', [['Abilities', 'cat_abilities'], ['Starships', 'cat_starships'], ['Modules', 'cat_modules'], ['Module Grids', 'cat_module_grids']]],
+  ['Config', [['Rules', 'cat_rules'], ['Rulesets', 'cat_rulesets'], ['Match Configs', 'cat_match_configs']]],
 ];
 
 function buildNav() {
