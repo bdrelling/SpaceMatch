@@ -32,7 +32,7 @@ Reading this README IS the context — you don't need to render anything to unde
 These are settled — apply them, don't relitigate or re-explain them.
 
 
-- **Home order is a stated requirement:** settings hero band on top, then sections **Primitives, Content, Config** — grouped by how often each content type changes (Primitives = the world's fixed vocabulary: Stats, Resources, Tiles, Statuses; Content = assembled from primitives: Abilities, Starships, Modules, Module Grids; Config = per-mode tuning: Rules, Rulesets, Match Configs). Never reorder sections Brian has specified.
+- **Home order is a stated requirement:** settings hero band on top, then sections **Primitives, Content, Config** — grouped by how often each content type changes (Primitives = the world's fixed vocabulary: Resources, Tiles, Stats, Statuses; Content = assembled from primitives: Abilities, Starships, Modules, Module Grids; Config = per-mode tuning: Rules, Rulesets, Match Configs). Never reorder sections Brian has specified.
 - **Own design language, not iOS** (game ships on iOS/Android/Steam/PS5): cyan accent (`--accent`), uppercase tracked titles, chamfered top-right tile corners, squared-off toggles/slider thumbs, monospace numerals, `>_` prompt glyph (white) before DEBUG.
 - **Flat over cards:** no borders-and-cards (eats padding); grouped lists with hairline separators. Full-bleed bands — a card inset from the screen edge doubles the edge padding.
 - **Icons:** bare emoji only. Never colored rounded-square icon chips (forces finding a color for everything).

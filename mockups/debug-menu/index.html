@@ -376,9 +376,9 @@ home: () => ({ title: '', rows: [
   </div>`,
   section('Primitives'),
   scroller([
-    tile('Stats', { emoji: '📊', to: 'cat_stats', count: 13 }),
     tile('Resources', { emoji: '🔋', to: 'cat_resources', count: 5 }),
-    tile('Tiles', { emoji: '🎨', to: 'cat_tiles', count: 5 }),
+    tile('Tiles', { emoji: '🎨', to: 'cat_tiles', count: 7 }),
+    tile('Stats', { emoji: '📊', to: 'cat_stats', count: 13 }),
     tile('Statuses', { emoji: '✨', to: 'cat_statuses', count: 3, edited: true }),
   ]),
   section('Content'),
@@ -545,11 +545,13 @@ ed_attack: () => ({ title: 'Attack', rows: [
 /* --- Tiles --- */
 cat_tiles: () => ({ title: 'Tiles', action: { fn: () => go('ed_tile') }, rows: [
   grid([
-    tile('Combat', { swatch: '#c05656', to: 'ed_tile' }),
-    tile('Propulsion', { swatch: '#c08a3e', to: 'ed_tile' }),
-    tile('Science', { swatch: '#4d9e6a', to: 'ed_tile' }),
-    tile('Shields', { swatch: '#4d7fc0', to: 'ed_tile' }),
-    tile('Warp', { swatch: '#8a63c0', to: 'ed_tile' }),
+    tile('Combat', { swatch: '#e05457', to: 'ed_tile' }),
+    tile('Damage', { swatch: '#f5802e', to: 'ed_tile' }),
+    tile('Propulsion', { swatch: '#f7cc4d', to: 'ed_tile' }),
+    tile('Science', { swatch: '#70c780', to: 'ed_tile' }),
+    tile('Scrap', { swatch: '#99a3b3', to: 'ed_tile' }),
+    tile('Shields', { swatch: '#59adeb', to: 'ed_tile' }),
+    tile('Warp', { swatch: '#a878db', to: 'ed_tile' }),
   ]),
 ]}),
 
@@ -557,7 +559,7 @@ ed_tile: () => ({ title: 'Shields', rows: [
   list([
     scalar('text', 'Name', 'Shields'),
     scalar('text', 'Filename', 'shields'),
-    scalar('color', 'Color', '#4d7fc0'),
+    scalar('color', 'Color', '#59adeb'),
   ]),
 ]}),
 
@@ -645,7 +647,7 @@ function genericKind(kind) {
 
 /* ---------- side nav (viewer aid) ---------- */
 const NAV = [
-  ['Primitives', [['Stats', 'cat_stats'], ['Resources', 'cat_resources'], ['Tiles', 'cat_tiles'], ['Statuses', 'cat_statuses']]],
+  ['Primitives', [['Resources', 'cat_resources'], ['Tiles', 'cat_tiles'], ['Stats', 'cat_stats'], ['Statuses', 'cat_statuses']]],
   ['Content', [['Abilities', 'cat_abilities'], ['Starships', 'cat_starships'], ['Modules', 'cat_modules'], ['Module Grids', 'cat_module_grids']]],
   ['Config', [['Rules', 'cat_rules'], ['Rulesets', 'cat_rulesets'], ['Match Configs', 'cat_match_configs']]],
 ];
