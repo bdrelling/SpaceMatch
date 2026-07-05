@@ -682,14 +682,12 @@ function render() {
 
   let html = stack.length > 1 ? '<div class="statusbar"></div>' : '';
   if (stack.length > 1 || screen.action) {
-    // Back returns to the catalog you entered through (the first screen below home),
-    // so it reads "Abilities"/"Statuses"/… — not the immediate sub-editor you came from.
+    // Back goes to the immediate previous screen (standard pop): catalog → editor →
+    // sub-editor/selector each return to the one before, not straight to the catalog.
     let backHtml = '';
     if (stack.length > 1) {
-      const backIdx = stack.length >= 3 ? 1 : 0;
-      const backTitle = screenFor(stack[backIdx]).title || 'Debug';
-      const backTo = () => { stack = stack.slice(0, backIdx + 1); render(); };
-      backHtml = `<div class="back" data-h="${on(backTo)}">‹ ${backTitle}</div>`;
+      const backTitle = screenFor(stack[stack.length - 2]).title || 'Debug';
+      backHtml = `<div class="back" data-h="${on(pop)}">‹ ${backTitle}</div>`;
     }
     const plusHtml = screen.action ? `<div class="plus" data-h="${on(screen.action.fn)}">＋</div>` : '';
     html += `<div class="navline">${backHtml}${plusHtml}</div>`;
