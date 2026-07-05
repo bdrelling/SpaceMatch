@@ -107,6 +107,7 @@
     margin: 18px 4px 8px;
     font-size: 11px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: var(--dim);
   }
+  .divider { height: 1px; background: rgba(255,255,255,.09); margin: 4px 2px 16px; }
   /* group takes the tile silhouette: squared top/left/bottom, chamfered top-right,
      so the left-edge edit bar reads as one clean straight line */
   .list {
@@ -264,6 +265,7 @@ const list = rows => `<div class="list">${rows.join('')}</div>`;
 const grid = tiles => `<div class="grid">${tiles.join('')}</div>`;
 const scroller = tiles => `<div class="scroller">${tiles.join('')}</div>`;
 const chips = items => `<div class="chips">${items.join('')}</div>`;
+const divider = () => `<div class="divider"></div>`;
 
 function nav(label, opts = {}) {
   const { to, detail = '', count = null, sign = '', edited = false } = opts;
@@ -479,11 +481,17 @@ ed_stat: () => ({ title: 'Health', rows: [
 
 /* --- Resources --- */
 cat_resources: () => ({ title: 'Resources', action: { fn: () => go('ed_resource') }, rows: [
-  section('Ability Resources'),
-  list(['tactics', 'life_support', 'engineering', 'science', 'antimatter'].map(s =>
-    nav(titleize(s), { to: 'ed_resource' }))),
-  section('Currency Resources'),
-  list([ nav('Alloy', { to: 'ed_resource' }) ]),
+  grid([
+    tile('Tactics', { swatch: '#e05457', to: 'ed_resource' }),
+    tile('Life Support', { swatch: '#59adeb', to: 'ed_resource' }),
+    tile('Science', { swatch: '#70c780', to: 'ed_resource' }),
+    tile('Engineering', { swatch: '#f7cc4d', to: 'ed_resource' }),
+  ]),
+  divider(),
+  grid([
+    tile('Antimatter', { swatch: '#a878db', to: 'ed_resource' }),
+    tile('Alloy', { swatch: '#99a3b3', to: 'ed_resource' }),
+  ]),
 ]}),
 
 ed_resource: () => ({ title: 'Tactics', rows: [
@@ -527,7 +535,7 @@ ed_cost: () => ({ title: 'Cost', rows: [
 ]}),
 
 pick_resources: () => ({ title: 'Resource', rows: [
-  grid(['tactics', 'life_support', 'engineering', 'science', 'antimatter'].map(s => pickTile(titleize(s)))),
+  grid(['tactics', 'life_support', 'science', 'engineering'].map(s => pickTile(titleize(s)))),
 ]}),
 
 ed_effect: () => ({ title: 'Effect', rows: [
@@ -548,20 +556,23 @@ ed_attack: () => ({ title: 'Attack', rows: [
 /* --- Tiles --- */
 cat_tiles: () => ({ title: 'Tiles', action: { fn: () => go('ed_tile') }, rows: [
   grid([
-    tile('Combat', { swatch: '#e05457', to: 'ed_tile' }),
-    tile('Damage', { swatch: '#f5802e', to: 'ed_tile' }),
-    tile('Propulsion', { swatch: '#f7cc4d', to: 'ed_tile' }),
+    tile('Tactics', { swatch: '#e05457', to: 'ed_tile' }),
+    tile('Life Support', { swatch: '#59adeb', to: 'ed_tile' }),
     tile('Science', { swatch: '#70c780', to: 'ed_tile' }),
-    tile('Scrap', { swatch: '#99a3b3', to: 'ed_tile' }),
-    tile('Shields', { swatch: '#59adeb', to: 'ed_tile' }),
-    tile('Warp', { swatch: '#a878db', to: 'ed_tile' }),
+    tile('Engineering', { swatch: '#f7cc4d', to: 'ed_tile' }),
+  ]),
+  divider(),
+  grid([
+    tile('Antimatter', { swatch: '#a878db', to: 'ed_tile' }),
+    tile('Alloy', { swatch: '#99a3b3', to: 'ed_tile' }),
+    tile('Damage', { swatch: '#f5802e', to: 'ed_tile' }),
   ]),
 ]}),
 
-ed_tile: () => ({ title: 'Shields', rows: [
+ed_tile: () => ({ title: 'Life Support', rows: [
   list([
-    scalar('text', 'Name', 'Shields'),
-    scalar('text', 'Filename', 'shields'),
+    scalar('text', 'Name', 'Life Support'),
+    scalar('text', 'Filename', 'life_support'),
     scalar('color', 'Color', '#59adeb'),
   ]),
 ]}),
