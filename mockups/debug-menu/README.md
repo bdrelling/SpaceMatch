@@ -52,4 +52,4 @@ These are settled — apply them, don't relitigate or re-explain them.
 
 ## Mocked vs. not
 
-Mocked: Statuses (+ status editor with seg/stepper/chips), Abilities (+ ability→effect→action drill with flow tiles), Stats, Resources, Tiles (color swatches), Rulesets (+ ruleset editor, Add Rule kind grid), pickers, all kind menus. Not mocked (tiles show `0`): Starships, Modules, Module Grids, Match Configs.
+Mocked: Statuses (+ status editor with seg/stepper/chips), Abilities (+ ability→effect→action drill with flow tiles), Stats, Resources, Tiles (color swatches), Rulesets (+ ruleset editor, Add Rule kind grid), pickers, all kind menus. Placeholder catalogs (real item names listed, no item editor yet): Starships, Modules, Module Grids, Match Configs — reachable from the tiles and the side nav.

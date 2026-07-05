@@ -223,6 +223,7 @@ const pop = () => { if (stack.length > 1) { stack.pop(); render(); } };
    full stack so the back link reads the real parent catalog, never a bare "Debug". */
 const PARENTS = {
   pick_match_configs: 'home', pick_starships: 'home',
+  cat_starships: 'home', cat_modules: 'home', cat_module_grids: 'home', cat_match_configs: 'home',
   cat_statuses: 'home', ed_status: 'cat_statuses', ed_modifier: 'ed_status', pick_stats: 'ed_modifier',
   cat_stats: 'home', ed_stat: 'cat_stats',
   cat_resources: 'home', ed_resource: 'cat_resources',
@@ -361,9 +362,9 @@ home: () => ({ title: '', rows: [
   </div>`,
   section('Content'),
   scroller([
-    tile('Starships', { emoji: '🛸', count: 0 }),
-    tile('Modules', { emoji: '🧱', count: 0 }),
-    tile('Module Grids', { emoji: '🔲', count: 0 }),
+    tile('Starships', { emoji: '🛸', to: 'cat_starships', count: 2 }),
+    tile('Modules', { emoji: '🧱', to: 'cat_modules', count: 7 }),
+    tile('Module Grids', { emoji: '🔲', to: 'cat_module_grids', count: 2 }),
     tile('Tiles', { emoji: '🎨', to: 'cat_tiles', count: 5 }),
   ]),
   section('Effects'),
@@ -376,7 +377,7 @@ home: () => ({ title: '', rows: [
   section('Rules'),
   scroller([
     tile('Rulesets', { emoji: '📜', to: 'cat_rulesets', count: 7, edited: true }),
-    tile('Match Configs', { emoji: '🚀', count: 0 }),
+    tile('Match Configs', { emoji: '🚀', to: 'cat_match_configs', count: 2 }),
   ]),
 ]}),
 
@@ -386,6 +387,23 @@ pick_match_configs: () => ({ title: 'Quick Match', rows: [
 
 pick_starships: () => ({ title: 'Starship', rows: [
   list([ pickRow('freighter'), pickRow('interceptor') ]),
+]}),
+
+/* --- Content placeholders (catalogs listed, item editors not yet mocked) --- */
+cat_starships: () => ({ title: 'Starships', rows: [
+  list(['default_starship', 'computer_default_starship'].map(s => nav(s))),
+]}),
+
+cat_modules: () => ({ title: 'Modules', rows: [
+  list(['engine', 'laser_cannon', 'life_support', 'reactor', 'sensor_array', 'shield_generator', 'warp_core'].map(s => nav(s))),
+]}),
+
+cat_module_grids: () => ({ title: 'Module Grids', rows: [
+  list(['default_module_grid', 'computer_default_module_grid'].map(s => nav(s))),
+]}),
+
+cat_match_configs: () => ({ title: 'Match Configs', rows: [
+  list(['default', 'wide'].map(s => nav(s))),
 ]}),
 
 /* --- Statuses --- */
@@ -596,9 +614,9 @@ function genericKind(kind) {
 
 /* ---------- side nav (viewer aid) ---------- */
 const NAV = [
-  ['Content', [['Starships', null], ['Modules', null], ['Module Grids', null], ['Tiles', 'cat_tiles']]],
+  ['Content', [['Starships', 'cat_starships'], ['Modules', 'cat_modules'], ['Module Grids', 'cat_module_grids'], ['Tiles', 'cat_tiles']]],
   ['Effects', [['Abilities', 'cat_abilities'], ['Statuses', 'cat_statuses'], ['Stats', 'cat_stats'], ['Resources', 'cat_resources']]],
-  ['Rules', [['Rulesets', 'cat_rulesets'], ['Match Configs', null]]],
+  ['Rules', [['Rulesets', 'cat_rulesets'], ['Match Configs', 'cat_match_configs']]],
 ];
 
 function buildNav() {
