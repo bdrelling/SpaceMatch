@@ -1,0 +1,12 @@
+<!DOCTYPE html><html><body style="margin:0;background:#07090c">
+<iframe id="f" src="index.html" style="width:470px;height:910px;border:0"></iframe>
+<script>
+const q = new URLSearchParams(location.search);
+document.getElementById('f').addEventListener('load', function () {
+  const w = this.contentWindow;
+  const s = q.get('screen');
+  if (s) w.eval("go('" + s + "')");
+  const sc = q.get('scroll');
+  if (sc) w.eval("document.getElementById('body').scrollTop=" + sc);
+});
+</script></body></html>
