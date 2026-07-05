@@ -480,16 +480,16 @@ ed_stat: () => ({ title: 'Health', rows: [
 /* --- Resources --- */
 cat_resources: () => ({ title: 'Resources', action: { fn: () => go('ed_resource') }, rows: [
   section('Ability Resources'),
-  list(['combat', 'propulsion', 'science', 'shields', 'warp'].map(s =>
+  list(['tactics', 'life_support', 'engineering', 'science', 'antimatter'].map(s =>
     nav(titleize(s), { to: 'ed_resource' }))),
   section('Currency Resources'),
-  list([ nav('Scrap', { to: 'ed_resource' }) ]),
+  list([ nav('Alloy', { to: 'ed_resource' }) ]),
 ]}),
 
-ed_resource: () => ({ title: 'Combat', rows: [
+ed_resource: () => ({ title: 'Tactics', rows: [
   list([
-    scalar('text', 'Name', 'Combat'),
-    scalar('text', 'Filename', 'combat'),
+    scalar('text', 'Name', 'Tactics'),
+    scalar('text', 'Filename', 'tactics'),
   ]),
 ]}),
 
@@ -510,7 +510,7 @@ ed_ability: () => ({ title: 'Fire Weapons', rows: [
     scalar('text', 'Filename', 'fire_weapons'),
   ]),
   section('Costs'),
-  chips([ chip('10 × combat', { to: 'ed_cost' }), chip('', { add: true }) ]),
+  chips([ chip('10 × Tactics', { to: 'ed_cost' }), chip('', { add: true }) ]),
   section('Effects'),
   flow([
     flowTile('Target', 'Opponent', 'ed_effect'),
@@ -521,13 +521,13 @@ ed_ability: () => ({ title: 'Fire Weapons', rows: [
 
 ed_cost: () => ({ title: 'Cost', rows: [
   list([
-    ref('Resource', 'Combat', 'pick_resources'),
+    ref('Resource', 'Tactics', 'pick_resources'),
     scalar('slider', 'Amount', '10', { pct: 50 }),
   ]),
 ]}),
 
 pick_resources: () => ({ title: 'Resource', rows: [
-  grid(['combat', 'propulsion', 'science', 'shields', 'warp'].map(s => pickTile(titleize(s)))),
+  grid(['tactics', 'life_support', 'engineering', 'science', 'antimatter'].map(s => pickTile(titleize(s)))),
 ]}),
 
 ed_effect: () => ({ title: 'Effect', rows: [
