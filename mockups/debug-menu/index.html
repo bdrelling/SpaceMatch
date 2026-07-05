@@ -45,11 +45,6 @@
     font-size: 12px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
   }
   .plus { margin-left: auto; color: var(--accent); font-size: 22px; line-height: 1; cursor: pointer; user-select: none; padding: 0 4px; }
-  .eyebrow {
-    font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
-    color: var(--dim); margin: 2px 4px 1px;
-  }
-  .eyebrow + .bigtitle { margin-top: 0; }
   .bigtitle {
     font-size: 19px; font-weight: 800; margin: 2px 4px 16px;
     letter-spacing: 2.5px; text-transform: uppercase;
@@ -371,7 +366,7 @@ cat_statuses: () => ({ title: 'Statuses', action: { fn: () => go('ed_status') },
   ]),
 ]}),
 
-ed_status: () => ({ title: 'shield', kind: 'Status', rows: [
+ed_status: () => ({ title: 'shield', rows: [
   list([
     scalar('text', 'Name', 'shield'),
     seg('Sign', ['Buff', 'Debuff'], 0),
@@ -407,7 +402,7 @@ cat_stats: () => ({ title: 'Stats', action: { fn: () => go('ed_stat') }, rows: [
     nav(s, { to: 'ed_stat' }))),
 ]}),
 
-ed_stat: () => ({ title: 'health', kind: 'Stat', rows: [
+ed_stat: () => ({ title: 'health', rows: [
   list([
     scalar('text', 'Name', 'health'),
     scalar('slider', 'Minimum', '0', { pct: 0 }),
@@ -422,7 +417,7 @@ cat_resources: () => ({ title: 'Resources', action: { fn: () => go('ed_resource'
     nav(s, { to: 'ed_resource' }))),
 ]}),
 
-ed_resource: () => ({ title: 'combat', kind: 'Resource', rows: [
+ed_resource: () => ({ title: 'combat', rows: [
   list([
     scalar('text', 'Name', 'combat'),
   ]),
@@ -439,7 +434,7 @@ cat_abilities: () => ({ title: 'Abilities', action: { fn: () => go('ed_ability')
   ]),
 ]}),
 
-ed_ability: () => ({ title: 'fire_weapons', kind: 'Ability', rows: [
+ed_ability: () => ({ title: 'fire_weapons', rows: [
   list([ scalar('text', 'Name', 'fire_weapons') ]),
   section('Costs'),
   chips([ chip('10 × combat', { to: 'ed_cost' }), chip('', { add: true }) ]),
@@ -488,7 +483,7 @@ cat_tiles: () => ({ title: 'Tiles', action: { fn: () => go('ed_tile') }, rows: [
   ]),
 ]}),
 
-ed_tile: () => ({ title: 'shields', kind: 'Tile', rows: [
+ed_tile: () => ({ title: 'shields', rows: [
   list([
     scalar('text', 'Name', 'shields'),
     scalar('color', 'Color', '#4d7fc0'),
@@ -511,7 +506,7 @@ cat_rulesets: () => ({ title: 'Rulesets', rows: [
   ]),
 ]}),
 
-ed_ruleset: () => ({ title: 'default', kind: 'Ruleset', action: { fn: () => go('menu_rule') }, rows: [
+ed_ruleset: () => ({ title: 'default', action: { fn: () => go('menu_rule') }, rows: [
   list([
     `<div class="cell"><div class="label"><b>Scoring</b></div><div class="v">Linear ▾</div><div class="ctl-toggle"><i></i></div></div>`,
     `<div class="cell"><div class="label"><b>Damage</b></div><div class="v">2</div><div class="ctl-slider"><em style="width:20%"></em><i style="left:20%"></i></div><div class="ctl-toggle"><i></i></div></div>`,
@@ -524,7 +519,7 @@ menu_rule: () => ({ title: 'Add Rule', rows: [
     tile(k, { compact: true, to: 'ed_newrule' }))),
 ]}),
 
-ed_newrule: () => ({ title: 'Damage', kind: 'Rule', rows: [
+ed_newrule: () => ({ title: 'Damage', rows: [
   list([
     scalar('slider', 'Per tile', '2', { pct: 20 }),
     seg('On collision', ['Replace', 'Stack'], 0),
@@ -591,7 +586,6 @@ function render() {
     const plusHtml = screen.action ? `<div class="plus" data-h="${on(screen.action.fn)}">＋</div>` : '';
     html += `<div class="navline">${backHtml}${plusHtml}</div>`;
   }
-  if (screen.kind) html += `<div class="eyebrow">${screen.kind}</div>`;
   if (screen.title) html += `<div class="bigtitle">${screen.title}</div>`;
   html += screen.rows.join('');
 
