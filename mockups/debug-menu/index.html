@@ -246,6 +246,8 @@ let hid = 0;
 function on(fn) { const k = 'h' + (hid++); handlers[k] = fn; return k; }
 
 const section = t => `<div class="sectionlabel">${t}</div>`;
+// filename (unique id) -> display name, e.g. target_lock -> "Target Lock"
+const titleize = s => s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 const list = rows => `<div class="list">${rows.join('')}</div>`;
 const grid = tiles => `<div class="grid">${tiles.join('')}</div>`;
 const scroller = tiles => `<div class="scroller">${tiles.join('')}</div>`;
@@ -356,8 +358,8 @@ home: () => ({ title: '', rows: [
       scalar('toggle', 'Skip Intro', ''),
     ])}
     ${list([
-      ref('Quick Match', 'default', 'pick_match_configs'),
-      ref('Starship', 'freighter', 'pick_starships'),
+      ref('Quick Match', 'Default', 'pick_match_configs'),
+      ref('Starship', 'Default', 'pick_starships'),
     ])}
   </div>`,
   section('Content'),
@@ -382,42 +384,43 @@ home: () => ({ title: '', rows: [
 ]}),
 
 pick_match_configs: () => ({ title: 'Quick Match', rows: [
-  list([ pickRow('default'), pickRow('alternate') ]),
+  list([ pickRow('Default'), pickRow('Wide') ]),
 ]}),
 
 pick_starships: () => ({ title: 'Starship', rows: [
-  list([ pickRow('freighter'), pickRow('interceptor') ]),
+  list([ pickRow('Default'), pickRow('Computer') ]),
 ]}),
 
 /* --- Content placeholders (catalogs listed, item editors not yet mocked) --- */
 cat_starships: () => ({ title: 'Starships', rows: [
-  list(['default_starship', 'computer_default_starship'].map(s => nav(s))),
+  list(['Default', 'Computer'].map(s => nav(s))),
 ]}),
 
 cat_modules: () => ({ title: 'Modules', rows: [
-  list(['engine', 'laser_cannon', 'life_support', 'reactor', 'sensor_array', 'shield_generator', 'warp_core'].map(s => nav(s))),
+  list(['Engine', 'Laser Cannon', 'Life Support', 'Reactor', 'Sensor Array', 'Shield Generator', 'Warp Core'].map(s => nav(s))),
 ]}),
 
 cat_module_grids: () => ({ title: 'Module Grids', rows: [
-  list(['default_module_grid', 'computer_default_module_grid'].map(s => nav(s))),
+  list(['Default', 'Computer'].map(s => nav(s))),
 ]}),
 
 cat_match_configs: () => ({ title: 'Match Configs', rows: [
-  list(['default', 'wide'].map(s => nav(s))),
+  list(['Default', 'Wide'].map(s => nav(s))),
 ]}),
 
 /* --- Statuses --- */
 cat_statuses: () => ({ title: 'Statuses', action: { fn: () => go('ed_status') }, rows: [
   list([
-    nav('dodge', { to: 'ed_status', sign: 'up' }),
-    nav('shield', { to: 'ed_status', sign: 'up' }),
-    nav('target_lock', { to: 'ed_status', sign: 'down' }),
+    nav('Dodge', { to: 'ed_status', sign: 'up' }),
+    nav('Shield', { to: 'ed_status', sign: 'up' }),
+    nav('Target Lock', { to: 'ed_status', sign: 'down' }),
   ]),
 ]}),
 
-ed_status: () => ({ title: 'shield', rows: [
+ed_status: () => ({ title: 'Shield', rows: [
   list([
-    scalar('text', 'Name', 'shield'),
+    scalar('text', 'Name', 'Shield'),
+    scalar('text', 'Filename', 'shield'),
     seg('Sign', ['Buff', 'Debuff'], 0),
     stepper('Cap', 3),
   ]),
@@ -442,18 +445,19 @@ ed_modifier: () => ({ title: 'Modifier', rows: [
 ]}),
 
 pick_stats: () => ({ title: 'Stat', rows: [
-  grid(['armor', 'block', 'defense', 'energy', 'fuel', 'health', 'power', 'sensors', 'speed', 'weapons'].map(s => pickTile(s))),
+  grid(['armor', 'block', 'defense', 'energy', 'fuel', 'health', 'power', 'sensors', 'speed', 'weapons'].map(s => pickTile(titleize(s)))),
 ]}),
 
 /* --- Stats --- */
 cat_stats: () => ({ title: 'Stats', action: { fn: () => go('ed_stat') }, rows: [
   list(['armor', 'block', 'cargo', 'defense', 'energy', 'fuel', 'health', 'life_support', 'power', 'sensors', 'speed', 'warp_capacity', 'weapons'].map(s =>
-    nav(s, { to: 'ed_stat' }))),
+    nav(titleize(s), { to: 'ed_stat' }))),
 ]}),
 
-ed_stat: () => ({ title: 'health', rows: [
+ed_stat: () => ({ title: 'Health', rows: [
   list([
-    scalar('text', 'Name', 'health'),
+    scalar('text', 'Name', 'Health'),
+    scalar('text', 'Filename', 'health'),
     scalar('slider', 'Minimum', '0', { pct: 0 }),
     scalar('slider', 'Maximum', '40', { pct: 40 }),
     scalar('slider', 'Default', '40', { pct: 40 }),
@@ -463,28 +467,32 @@ ed_stat: () => ({ title: 'health', rows: [
 /* --- Resources --- */
 cat_resources: () => ({ title: 'Resources', action: { fn: () => go('ed_resource') }, rows: [
   list(['combat', 'propulsion', 'science', 'shields', 'warp'].map(s =>
-    nav(s, { to: 'ed_resource' }))),
+    nav(titleize(s), { to: 'ed_resource' }))),
 ]}),
 
-ed_resource: () => ({ title: 'combat', rows: [
+ed_resource: () => ({ title: 'Combat', rows: [
   list([
-    scalar('text', 'Name', 'combat'),
+    scalar('text', 'Name', 'Combat'),
+    scalar('text', 'Filename', 'combat'),
   ]),
 ]}),
 
 /* --- Abilities --- */
 cat_abilities: () => ({ title: 'Abilities', action: { fn: () => go('ed_ability') }, rows: [
   list([
-    nav('evasive_maneuvers', { to: 'ed_ability', detail: '8' }),
-    nav('fire_weapons', { to: 'ed_ability', detail: '10' }),
-    nav('raise_shields', { to: 'ed_ability', detail: '12' }),
-    nav('repair_hull', { to: 'ed_ability', detail: '15' }),
-    nav('target_lock', { to: 'ed_ability', detail: '6' }),
+    nav('Evasive Maneuvers', { to: 'ed_ability', detail: '8' }),
+    nav('Fire Weapons', { to: 'ed_ability', detail: '10' }),
+    nav('Raise Shields', { to: 'ed_ability', detail: '12' }),
+    nav('Repair Hull', { to: 'ed_ability', detail: '15' }),
+    nav('Target Lock', { to: 'ed_ability', detail: '6' }),
   ]),
 ]}),
 
-ed_ability: () => ({ title: 'fire_weapons', rows: [
-  list([ scalar('text', 'Name', 'fire_weapons') ]),
+ed_ability: () => ({ title: 'Fire Weapons', rows: [
+  list([
+    scalar('text', 'Name', 'Fire Weapons'),
+    scalar('text', 'Filename', 'fire_weapons'),
+  ]),
   section('Costs'),
   chips([ chip('10 × combat', { to: 'ed_cost' }), chip('', { add: true }) ]),
   section('Effects'),
@@ -503,7 +511,7 @@ ed_cost: () => ({ title: 'Cost', rows: [
 ]}),
 
 pick_resources: () => ({ title: 'Resource', rows: [
-  grid(['combat', 'propulsion', 'science', 'shields', 'warp'].map(s => pickTile(s))),
+  grid(['combat', 'propulsion', 'science', 'shields', 'warp'].map(s => pickTile(titleize(s)))),
 ]}),
 
 ed_effect: () => ({ title: 'Effect', rows: [
@@ -524,17 +532,18 @@ ed_attack: () => ({ title: 'Attack', rows: [
 /* --- Tiles --- */
 cat_tiles: () => ({ title: 'Tiles', action: { fn: () => go('ed_tile') }, rows: [
   grid([
-    tile('combat', { swatch: '#c05656', to: 'ed_tile' }),
-    tile('propulsion', { swatch: '#c08a3e', to: 'ed_tile' }),
-    tile('science', { swatch: '#4d9e6a', to: 'ed_tile' }),
-    tile('shields', { swatch: '#4d7fc0', to: 'ed_tile' }),
-    tile('warp', { swatch: '#8a63c0', to: 'ed_tile' }),
+    tile('Combat', { swatch: '#c05656', to: 'ed_tile' }),
+    tile('Propulsion', { swatch: '#c08a3e', to: 'ed_tile' }),
+    tile('Science', { swatch: '#4d9e6a', to: 'ed_tile' }),
+    tile('Shields', { swatch: '#4d7fc0', to: 'ed_tile' }),
+    tile('Warp', { swatch: '#8a63c0', to: 'ed_tile' }),
   ]),
 ]}),
 
-ed_tile: () => ({ title: 'shields', rows: [
+ed_tile: () => ({ title: 'Shields', rows: [
   list([
-    scalar('text', 'Name', 'shields'),
+    scalar('text', 'Name', 'Shields'),
+    scalar('text', 'Filename', 'shields'),
     scalar('color', 'Color', '#4d7fc0'),
   ]),
 ]}),
@@ -543,19 +552,23 @@ ed_tile: () => ({ title: 'shields', rows: [
 cat_rulesets: () => ({ title: 'Rulesets', rows: [
   section('Game Modes'),
   grid([
-    tile('default', { to: 'ed_ruleset' }),
-    tile('alternate', { to: 'ed_ruleset' }),
+    tile('Default', { to: 'ed_ruleset' }),
+    tile('Alternate', { to: 'ed_ruleset' }),
   ]),
   section('Fragments'),
   list([
-    nav('default_tiles'),
-    nav('default_special_tiles'),
-    nav('default_ability_resources'),
-    nav('default_turns'),
+    nav('Default Tiles'),
+    nav('Default Special Tiles'),
+    nav('Default Ability Resources'),
+    nav('Default Turns'),
   ]),
 ]}),
 
-ed_ruleset: () => ({ title: 'default', action: { fn: () => go('menu_rule') }, rows: [
+ed_ruleset: () => ({ title: 'Default', action: { fn: () => go('menu_rule') }, rows: [
+  list([
+    scalar('text', 'Name', 'Default'),
+    scalar('text', 'Filename', 'default'),
+  ]),
   list([
     `<div class="cell"><div class="label"><b>Scoring</b></div><div class="v">Linear ▾</div><div class="ctl-toggle"><i></i></div></div>`,
     `<div class="cell"><div class="label"><b>Damage</b></div><div class="v">2</div><div class="ctl-slider"><em style="width:20%"></em><i style="left:20%"></i></div><div class="ctl-toggle"><i></i></div></div>`,
