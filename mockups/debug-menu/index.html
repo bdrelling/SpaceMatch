@@ -107,8 +107,13 @@
     margin: 18px 4px 8px;
     font-size: 11px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: var(--dim);
   }
-  .list { background: var(--panel); border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
-  .cell { display: flex; align-items: center; gap: 10px; padding: 11px 14px; min-height: 46px; }
+  /* group takes the tile silhouette: squared top/left/bottom, chamfered top-right,
+     so the left-edge edit bar reads as one clean straight line */
+  .list {
+    background: var(--panel); overflow: hidden; margin-bottom: 10px;
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+  }
+  .cell { display: flex; align-items: center; gap: 10px; padding: 11px 14px; min-height: 46px; position: relative; }
   .cell + .cell { border-top: 1px solid var(--sep); }
   .cell.tap { cursor: pointer; }
   .cell.tap:hover { background: var(--hover); }
@@ -122,13 +127,12 @@
   .sign { flex: none; font-size: 12px; }
   .sign.up { color: var(--good); }
   .sign.down { color: #d06a6a; }
-  /* catalog rows carry the same left-edge edit bar as the menu tiles */
-  .navrow { position: relative; }
-  .navrow::before {
+  /* every row carries the same left-edge edit bar as the menu tiles */
+  .cell::before {
     content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
     background: rgba(0,0,0,.2);
   }
-  .navrow.edited::before { background: #dcb63f; }
+  .cell.edited::before { background: #dcb63f; }
 
   /* ---- tile grid (chamfered) ---- */
   .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px; }
@@ -264,7 +268,7 @@ const chips = items => `<div class="chips">${items.join('')}</div>`;
 function nav(label, opts = {}) {
   const { to, detail = '', count = null, sign = '', edited = false } = opts;
   const h = on(() => to ? go(to) : toast('Not mocked'));
-  return `<div class="cell tap navrow${edited ? ' edited' : ''}" data-h="${h}">
+  return `<div class="cell tap${edited ? ' edited' : ''}" data-h="${h}">
     <div class="label">${label}</div>
     ${sign ? `<div class="sign ${sign}">${sign === 'up' ? '▲' : '▼'}</div>` : ''}
     ${detail ? `<div class="v">${detail}</div>` : ''}
@@ -300,22 +304,22 @@ function flowTile(caption, value, to) {
 const flow = tiles => `<div class="flow">${tiles.join('<div class="arrow">›</div>')}</div>`;
 
 function scalar(kind, label, value, opts = {}) {
-  const { off = false, pct = 55 } = opts;
+  const { off = false, pct = 55, edited = false } = opts;
   let ctl = `<div class="v">${value}</div>`;
   if (kind === 'slider') ctl = `<div class="v">${value}</div><div class="ctl-slider"><em style="width:${pct}%"></em><i style="left:${pct}%"></i></div>`;
   if (kind === 'toggle') ctl = `<div class="ctl-toggle${off ? ' off' : ''}"><i></i></div>`;
   if (kind === 'color') ctl = `<div class="ctl-swatch" style="background:${value}"></div>`;
   if (kind === 'dropdown') ctl = `<div class="v">${value} ▾</div>`;
-  return `<div class="cell"><div class="label">${label}</div>${ctl}</div>`;
+  return `<div class="cell${edited ? ' edited' : ''}"><div class="label">${label}</div>${ctl}</div>`;
 }
 
-function seg(label, options, onIndex) {
+function seg(label, options, onIndex, edited = false) {
   const spans = options.map((o, i) => `<span class="${i === onIndex ? 'on' : ''}">${o}</span>`).join('');
-  return `<div class="cell"><div class="label">${label}</div><div class="seg">${spans}</div></div>`;
+  return `<div class="cell${edited ? ' edited' : ''}"><div class="label">${label}</div><div class="seg">${spans}</div></div>`;
 }
 
-function stepper(label, value) {
-  return `<div class="cell"><div class="label">${label}</div>
+function stepper(label, value, edited = false) {
+  return `<div class="cell${edited ? ' edited' : ''}"><div class="label">${label}</div>
     <div class="stepper"><span data-h="${on(() => toast('−1'))}">−</span><b>${value}</b><span data-h="${on(() => toast('+1'))}">＋</span></div></div>`;
 }
 
@@ -326,9 +330,9 @@ function ref(label, value, pickerId) {
     <div class="v refv">${value}</div><div class="chev">›</div></div>`;
 }
 
-function variant(label, kind, editorId, menuId) {
+function variant(label, kind, editorId, menuId, edited = false) {
   const hRow = on(() => editorId ? go(editorId) : go(menuId));
-  return `<div class="cell tap" data-h="${hRow}">
+  return `<div class="cell tap${edited ? ' edited' : ''}" data-h="${hRow}">
     <div class="label">${label}</div>
     <div class="v varv">${kind}</div>
     <div class="chev">›</div></div>`;
@@ -431,10 +435,10 @@ ed_status: () => ({ title: 'Shield', rows: [
     scalar('text', 'Name', 'Shield'),
     scalar('text', 'Filename', 'shield'),
     seg('Sign', ['Buff', 'Debuff'], 0),
-    stepper('Cap', 3),
+    stepper('Cap', 3, true),
   ]),
   list([
-    variant('Stacking', 'Stack', null, 'menu_stackrule'),
+    variant('Stacking', 'Stack', null, 'menu_stackrule', true),
     variant('Decay', 'Timing', null, 'menu_decayrule'),
   ]),
   section('Modifiers'),
