@@ -1,0 +1,3 @@
+# PNGs rendered by render.sh are throwaway — the README is the source of truth.
+render-*.png
+out.png

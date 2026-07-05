@@ -4,20 +4,19 @@ Click-through mockup of the in-game debug editor (the future state of `source/sc
 
 ## Viewing & rendering
 
+Reading this README IS the context — you don't need to render anything to understand the design. Render only when a human wants to *look* at a screen.
+
 - Open `index.html` in any browser. Click rows/tiles to navigate; the back link pops the stack.
-- PNG renders (Brian sometimes can't view HTML directly):
+- PNG renders (Brian sometimes can't view HTML directly) — use the repo helper, which resolves whatever headless browser exists and exits 3 (not a crash) when there's none, e.g. in a cloud container:
 
   ```sh
-  # Resolve the newest cached chrome-headless-shell (version dir changes on update).
-  HS=$(ls -d "$HOME"/.cache/puppeteer/chrome-headless-shell/*/chrome-headless-shell-*/chrome-headless-shell | sort -V | tail -1)
-  "$HS" --headless --disable-gpu --allow-file-access-from-files --hide-scrollbars \
-    --screenshot=out.png --window-size=470,910 --virtual-time-budget=4000 \
-    "file://$PWD/screenshot.html?screen=ed_status&scroll=0"
+  mockups/render.sh debug-menu             # home screen
+  mockups/render.sh debug-menu ed_status   # any SCREENS id; add a 3rd arg to scroll (px)
   ```
 
-  `screenshot.html` wraps `index.html` in an iframe; `?screen=<id>` opens any id from the `SCREENS` registry, `?scroll=<px>` scrolls the body. No Chrome installed on this machine — use the puppeteer-cache `chrome-headless-shell` above.
+  Don't hand-roll a `chromium`/`chrome-headless-shell` invocation — `render.sh` is the supported path and dodges the "no chrome binary" trap. Under the hood it drives `screenshot.html`, which wraps `index.html` in an iframe and honors `?screen=<id>` / `?scroll=<px>`. Screen ids come from the `SCREENS` registry.
 
-  **Home gotcha:** `?screen=home` calls `go('home')`, which pushes `home` onto a stack that already starts at `['home']` → a stray `‹ DEBUG` back link renders at the top. To capture the real home, open `index.html` directly with no `screen` param (the initial `render()` has no nav line).
+  **Home gotcha (handled by the helper):** routing `home` through `screenshot.html` calls `go('home')`, which pushes onto a stack already at `['home']` → a stray `‹ DEBUG` back link at the top. `render.sh` with no screen (or `home`) renders `index.html` directly instead, so the capture is the true home.
 
 ## Code structure
 
@@ -27,7 +26,10 @@ Click-through mockup of the in-game debug editor (the future state of `source/sc
 - Unmocked kind ids fall through to `genericKind()` — a placeholder editor.
 - Names/counts mirror real project data (statuses, abilities, stats, resources, rulesets, rule kinds, effect-system subclass menus).
 
-## Design decisions (settled — don't relitigate)
+## Design decisions
+
+These are settled — apply them, don't relitigate or re-explain them.
+
 
 - **Home order is a stated requirement:** settings hero band on top, then sections **Content, Effects, Rules**. Never reorder sections Brian has specified.
 - **Own design language, not iOS** (game ships on iOS/Android/Steam/PS5): cyan accent (`--accent`), uppercase tracked titles, chamfered top-right tile corners, squared-off toggles/slider thumbs, monospace numerals, `>_` prompt glyph (white) before DEBUG.
