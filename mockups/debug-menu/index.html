@@ -45,7 +45,9 @@
   .navbrand {
     display: flex; align-items: center; margin: 2px 0 12px 10px;
     font-size: 15px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer; user-select: none;
   }
+  .navbrand:hover { color: var(--accent); }
   .navbrand .prompt { font-family: var(--mono); color: #fff; margin-right: 8px; letter-spacing: 0; }
   .nav-section {
     margin: 16px 0 5px 10px;
@@ -609,6 +611,7 @@ function buildNav() {
   }
   const nav = $('sidenav');
   nav.innerHTML = html;
+  nav.querySelector('.navbrand').addEventListener('click', () => deepLink('home'));
   nav.querySelectorAll('.nav-item').forEach(el =>
     el.addEventListener('click', () => deepLink(el.dataset.target)));
 }
