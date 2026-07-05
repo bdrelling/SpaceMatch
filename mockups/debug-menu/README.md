@@ -8,13 +8,16 @@ Click-through mockup of the in-game debug editor (the future state of `source/sc
 - PNG renders (Brian sometimes can't view HTML directly):
 
   ```sh
-  HS="$HOME/.cache/puppeteer/chrome-headless-shell/mac_arm-148.0.7778.97/chrome-headless-shell-mac-arm64/chrome-headless-shell"
+  # Resolve the newest cached chrome-headless-shell (version dir changes on update).
+  HS=$(ls -d "$HOME"/.cache/puppeteer/chrome-headless-shell/*/chrome-headless-shell-*/chrome-headless-shell | sort -V | tail -1)
   "$HS" --headless --disable-gpu --allow-file-access-from-files --hide-scrollbars \
     --screenshot=out.png --window-size=470,910 --virtual-time-budget=4000 \
     "file://$PWD/screenshot.html?screen=ed_status&scroll=0"
   ```
 
   `screenshot.html` wraps `index.html` in an iframe; `?screen=<id>` opens any id from the `SCREENS` registry, `?scroll=<px>` scrolls the body. No Chrome installed on this machine — use the puppeteer-cache `chrome-headless-shell` above.
+
+  **Home gotcha:** `?screen=home` calls `go('home')`, which pushes `home` onto a stack that already starts at `['home']` → a stray `‹ DEBUG` back link renders at the top. To capture the real home, open `index.html` directly with no `screen` param (the initial `render()` has no nav line).
 
 ## Code structure
 
