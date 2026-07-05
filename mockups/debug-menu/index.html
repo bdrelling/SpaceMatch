@@ -45,6 +45,11 @@
     font-size: 12px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
   }
   .plus { margin-left: auto; color: var(--accent); font-size: 22px; line-height: 1; cursor: pointer; user-select: none; padding: 0 4px; }
+  .eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--dim); margin: 2px 4px 1px;
+  }
+  .eyebrow + .bigtitle { margin-top: 0; }
   .bigtitle {
     font-size: 19px; font-weight: 800; margin: 2px 4px 16px;
     letter-spacing: 2.5px; text-transform: uppercase;
@@ -187,6 +192,26 @@ function toast(msg) {
 
 const go = id => { stack.push(id); render(); };
 const pop = () => { if (stack.length > 1) { stack.pop(); render(); } };
+
+/* Logical parent of each screen — lets a deep link (e.g. screenshots) rebuild the
+   full stack so the back link reads the real parent catalog, never a bare "Debug". */
+const PARENTS = {
+  pick_match_configs: 'home', pick_starships: 'home',
+  cat_statuses: 'home', ed_status: 'cat_statuses', ed_modifier: 'ed_status', pick_stats: 'ed_modifier',
+  cat_stats: 'home', ed_stat: 'cat_stats',
+  cat_resources: 'home', ed_resource: 'cat_resources',
+  cat_abilities: 'home', ed_ability: 'cat_abilities', ed_cost: 'ed_ability', pick_resources: 'ed_cost',
+  ed_effect: 'ed_ability', ed_attack: 'ed_effect',
+  cat_tiles: 'home', ed_tile: 'cat_tiles',
+  cat_rulesets: 'home', ed_ruleset: 'cat_rulesets', menu_rule: 'ed_ruleset', ed_newrule: 'menu_rule',
+};
+function deepLink(id) {
+  const chain = [id];
+  for (let p = PARENTS[id]; p; p = PARENTS[p]) chain.unshift(p);
+  if (chain[0] !== 'home') chain.unshift('home');
+  stack = chain;
+  render();
+}
 
 /* ---------- builders ---------- */
 let handlers = {};
@@ -346,7 +371,7 @@ cat_statuses: () => ({ title: 'Statuses', action: { fn: () => go('ed_status') },
   ]),
 ]}),
 
-ed_status: () => ({ title: 'shield', rows: [
+ed_status: () => ({ title: 'shield', kind: 'Status', rows: [
   list([
     scalar('text', 'Name', 'shield'),
     seg('Sign', ['Buff', 'Debuff'], 0),
@@ -382,7 +407,7 @@ cat_stats: () => ({ title: 'Stats', action: { fn: () => go('ed_stat') }, rows: [
     nav(s, { to: 'ed_stat' }))),
 ]}),
 
-ed_stat: () => ({ title: 'health', rows: [
+ed_stat: () => ({ title: 'health', kind: 'Stat', rows: [
   list([
     scalar('text', 'Name', 'health'),
     scalar('slider', 'Minimum', '0', { pct: 0 }),
@@ -397,7 +422,7 @@ cat_resources: () => ({ title: 'Resources', action: { fn: () => go('ed_resource'
     nav(s, { to: 'ed_resource' }))),
 ]}),
 
-ed_resource: () => ({ title: 'combat', rows: [
+ed_resource: () => ({ title: 'combat', kind: 'Resource', rows: [
   list([
     scalar('text', 'Name', 'combat'),
   ]),
@@ -414,7 +439,7 @@ cat_abilities: () => ({ title: 'Abilities', action: { fn: () => go('ed_ability')
   ]),
 ]}),
 
-ed_ability: () => ({ title: 'fire_weapons', rows: [
+ed_ability: () => ({ title: 'fire_weapons', kind: 'Ability', rows: [
   list([ scalar('text', 'Name', 'fire_weapons') ]),
   section('Costs'),
   chips([ chip('10 × combat', { to: 'ed_cost' }), chip('', { add: true }) ]),
@@ -463,7 +488,7 @@ cat_tiles: () => ({ title: 'Tiles', action: { fn: () => go('ed_tile') }, rows: [
   ]),
 ]}),
 
-ed_tile: () => ({ title: 'shields', rows: [
+ed_tile: () => ({ title: 'shields', kind: 'Tile', rows: [
   list([
     scalar('text', 'Name', 'shields'),
     scalar('color', 'Color', '#4d7fc0'),
@@ -486,7 +511,7 @@ cat_rulesets: () => ({ title: 'Rulesets', rows: [
   ]),
 ]}),
 
-ed_ruleset: () => ({ title: 'default', action: { fn: () => go('menu_rule') }, rows: [
+ed_ruleset: () => ({ title: 'default', kind: 'Ruleset', action: { fn: () => go('menu_rule') }, rows: [
   list([
     `<div class="cell"><div class="label"><b>Scoring</b></div><div class="v">Linear ▾</div><div class="ctl-toggle"><i></i></div></div>`,
     `<div class="cell"><div class="label"><b>Damage</b></div><div class="v">2</div><div class="ctl-slider"><em style="width:20%"></em><i style="left:20%"></i></div><div class="ctl-toggle"><i></i></div></div>`,
@@ -499,7 +524,7 @@ menu_rule: () => ({ title: 'Add Rule', rows: [
     tile(k, { compact: true, to: 'ed_newrule' }))),
 ]}),
 
-ed_newrule: () => ({ title: 'Damage', rows: [
+ed_newrule: () => ({ title: 'Damage', kind: 'Rule', rows: [
   list([
     scalar('slider', 'Per tile', '2', { pct: 20 }),
     seg('On collision', ['Replace', 'Stack'], 0),
@@ -554,11 +579,19 @@ function render() {
 
   let html = stack.length > 1 ? '<div class="statusbar"></div>' : '';
   if (stack.length > 1 || screen.action) {
-    const prevTitle = stack.length > 1 ? (screenFor(stack[stack.length - 2]).title || 'Debug') : '';
-    const backHtml = stack.length > 1 ? `<div class="back" data-h="${on(pop)}">‹ ${prevTitle}</div>` : '';
+    // Back returns to the catalog you entered through (the first screen below home),
+    // so it reads "Abilities"/"Statuses"/… — not the immediate sub-editor you came from.
+    let backHtml = '';
+    if (stack.length > 1) {
+      const backIdx = stack.length >= 3 ? 1 : 0;
+      const backTitle = screenFor(stack[backIdx]).title || 'Debug';
+      const backTo = () => { stack = stack.slice(0, backIdx + 1); render(); };
+      backHtml = `<div class="back" data-h="${on(backTo)}">‹ ${backTitle}</div>`;
+    }
     const plusHtml = screen.action ? `<div class="plus" data-h="${on(screen.action.fn)}">＋</div>` : '';
     html += `<div class="navline">${backHtml}${plusHtml}</div>`;
   }
+  if (screen.kind) html += `<div class="eyebrow">${screen.kind}</div>`;
   if (screen.title) html += `<div class="bigtitle">${screen.title}</div>`;
   html += screen.rows.join('');
 
