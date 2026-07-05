@@ -376,7 +376,7 @@ home: () => ({ title: '', rows: [
   </div>`,
   section('Primitives'),
   scroller([
-    tile('Resources', { emoji: '🔋', to: 'cat_resources', count: 5 }),
+    tile('Resources', { emoji: '🔋', to: 'cat_resources', count: 6 }),
     tile('Tiles', { emoji: '🎨', to: 'cat_tiles', count: 7 }),
     tile('Stats', { emoji: '📊', to: 'cat_stats', count: 13 }),
     tile('Statuses', { emoji: '✨', to: 'cat_statuses', count: 3, edited: true }),
@@ -479,8 +479,11 @@ ed_stat: () => ({ title: 'Health', rows: [
 
 /* --- Resources --- */
 cat_resources: () => ({ title: 'Resources', action: { fn: () => go('ed_resource') }, rows: [
+  section('Ability Resources'),
   list(['combat', 'propulsion', 'science', 'shields', 'warp'].map(s =>
     nav(titleize(s), { to: 'ed_resource' }))),
+  section('Currencies'),
+  list([ nav('Scrap', { to: 'ed_resource' }) ]),
 ]}),
 
 ed_resource: () => ({ title: 'Combat', rows: [
