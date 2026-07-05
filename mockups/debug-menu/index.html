@@ -134,6 +134,8 @@
     background: rgba(0,0,0,.2);
   }
   .cell.edited::before { background: #dcb63f; }
+  /* dimmed row — a stat not on the authored list (underlying / not yet decided) */
+  .cell.dim .label { color: var(--dim); opacity: .7; }
 
   /* ---- tile grid (chamfered) ---- */
   .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px; }
@@ -268,9 +270,9 @@ const chips = items => `<div class="chips">${items.join('')}</div>`;
 const divider = () => `<div class="divider"></div>`;
 
 function nav(label, opts = {}) {
-  const { to, detail = '', count = null, sign = '', edited = false } = opts;
+  const { to, detail = '', count = null, sign = '', edited = false, dim = false } = opts;
   const h = on(() => to ? go(to) : toast('Not mocked'));
-  return `<div class="cell tap${edited ? ' edited' : ''}" data-h="${h}">
+  return `<div class="cell tap${edited ? ' edited' : ''}${dim ? ' dim' : ''}" data-h="${h}">
     <div class="label">${label}</div>
     ${sign ? `<div class="sign ${sign}">${sign === 'up' ? '▲' : '▼'}</div>` : ''}
     ${detail ? `<div class="v">${detail}</div>` : ''}
@@ -460,13 +462,29 @@ ed_modifier: () => ({ title: 'Modifier', rows: [
 ]}),
 
 pick_stats: () => ({ title: 'Stat', rows: [
-  grid(['armor', 'block', 'defense', 'energy', 'fuel', 'health', 'power', 'sensors', 'speed', 'weapons'].map(s => pickTile(titleize(s)))),
+  grid(['tactics', 'life_support', 'science', 'engineering', 'antimatter', 'alloy', 'health', 'power', 'armor', 'defense', 'speed', 'sensors', 'evasion'].map(s => pickTile(titleize(s)))),
 ]}),
 
 /* --- Stats --- */
 cat_stats: () => ({ title: 'Stats', action: { fn: () => go('ed_stat') }, rows: [
-  list(['armor', 'block', 'cargo', 'defense', 'energy', 'fuel', 'health', 'life_support', 'power', 'sensors', 'speed', 'warp_capacity', 'weapons'].map(s =>
-    nav(titleize(s), { to: 'ed_stat' }))),
+  list([
+    // one stat paired to each resource (collection / match bonuses)
+    nav('Tactics', { to: 'ed_stat' }),
+    nav('Life Support', { to: 'ed_stat' }),
+    nav('Science', { to: 'ed_stat' }),
+    nav('Engineering', { to: 'ed_stat' }),
+    nav('Antimatter', { to: 'ed_stat' }),
+    nav('Alloy', { to: 'ed_stat' }),
+    // core stats
+    nav('Health', { to: 'ed_stat' }),
+    nav('Power', { to: 'ed_stat' }),
+    // dimmed: underlying stats not on the authored list yet
+    nav('Armor', { to: 'ed_stat', dim: true }),
+    nav('Defense', { to: 'ed_stat', dim: true }),
+    nav('Speed', { to: 'ed_stat', dim: true }),
+    nav('Sensors', { to: 'ed_stat', dim: true }),
+    nav('Evasion', { to: 'ed_stat', dim: true }),
+  ]),
 ]}),
 
 ed_stat: () => ({ title: 'Health', rows: [
