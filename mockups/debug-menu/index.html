@@ -264,7 +264,7 @@ const pop = () => { if (stack.length > 1) { stack.pop(); render(); } };
 const PARENTS = {
   pick_match_configs: 'home', pick_starships: 'home',
   cat_starships: 'home', cat_modules: 'home', cat_module_grids: 'home', cat_match_configs: 'home',
-  cat_statuses: 'home', ed_status: 'cat_statuses', ed_modifier: 'ed_status', pick_stats: 'ed_modifier',
+  cat_statuses: 'home', ed_status: 'cat_statuses', ed_modifier: 'ed_status', ed_statchange: 'ed_modifier', pick_stats: 'ed_statchange',
   cat_stats: 'home', ed_stat: 'cat_stats',
   cat_resources: 'home', ed_resource: 'cat_resources',
   cat_abilities: 'home', ed_ability: 'cat_abilities', ed_cost: 'ed_ability', pick_resources: 'ed_cost',
@@ -403,10 +403,22 @@ function kindTile(kind, to) {
   return tile(kind, { to: to || 'kind:' + kind, compact: true });
 }
 
-function pickTile(name) {
+function pickTile(name, emoji) {
   const h = on(() => { pop(); toast(`Picked: ${name}`); });
-  return `<div class="tile compact" data-h="${h}"><div class="tname">${name}</div></div>`;
+  return `<div class="tile${emoji ? '' : ' compact'}" data-h="${h}">
+    ${emoji ? `<div class="temoji">${emoji}</div>` : ''}
+    <div class="tname">${name}</div></div>`;
 }
+
+// a picker option that carries an explanatory description
+function optRow(name, desc) {
+  const h = on(() => { pop(); toast(`Picked: ${name}`); });
+  return `<div class="cell tap hasdesc" data-h="${h}">
+    <div class="toprow"><div class="label"><b>${name}</b></div><div class="chev">›</div></div>
+    <div class="sub">${desc}</div></div>`;
+}
+
+const STAT_SYMBOLS = { health: '❤️', armor: '🛡️', shields: '🔷', weapons: '💥', engines: '🚀', computers: '💻', sensors: '📡', energy: '⚡' };
 
 /* ---------- screens ---------- */
 const SCREENS = {
@@ -480,10 +492,15 @@ cat_statuses: () => ({ title: 'Statuses', action: { fn: () => go('ed_status') },
   grid([
     statusTile('Dodge', '💨', '#4fc3d8', 'ed_status'),
     statusTile('Shield', '🛡️', '#59adeb', 'ed_status', true),
+    statusTile('Placeholder', '❔', '#7b8794', 'ed_status'),
+    statusTile('Placeholder', '❔', '#7b8794', 'ed_status'),
   ]),
   `<div class="sectionlabel">Debuffs <span class="sign down">▼</span></div>`,
   grid([
     statusTile('Target Lock', '🎯', '#d06a6a', 'ed_status'),
+    statusTile('Placeholder', '❔', '#7b8794', 'ed_status'),
+    statusTile('Placeholder', '❔', '#7b8794', 'ed_status'),
+    statusTile('Placeholder', '❔', '#7b8794', 'ed_status'),
   ]),
 ]}),
 
@@ -493,34 +510,41 @@ ed_status: () => ({ title: 'Shield', rows: [
   section('Information'),
   list([
     scalar('text', 'Name', 'Shield'),
-    descField('Absorbs incoming damage until the pool is depleted.'),
+    descField('Soaks incoming damage against its stacks; once depleted, the overflow passes through to Health.'),
   ]),
   section('Configuration'),
   list([
-    seg('Sign', ['Buff', 'Debuff'], 0),
+    seg('Polarity', ['Buff', 'Debuff'], 0),
     stepper('Maximum Stacks', 3, true),
     variant('Stacking', 'Stack', null, 'menu_stackrule', true, 'Each application adds a separate instance.'),
     variant('Decay', 'Timing', null, 'menu_decayrule', false, 'Expires after a set number of turns.'),
   ]),
   section('Modifiers'),
-  chips([ chip('Armor +5', { to: 'ed_modifier' }), chip('', { add: true }) ]),
+  chips([ chip('', { add: true, menu: 'ed_modifier' }) ]),
   section('Effects'),
-  chips([ chip('WhenHit › Dodge', { to: 'ed_effect' }), chip('', { add: true }) ]),
+  chips([ chip('', { add: true, menu: 'ed_effect' }) ]),
   section('Transforms'),
-  chips([ chip('', { add: true, menu: 'menu_step' }) ]),
+  chips([ chip('Absorb', { to: 'kind:Absorb' }), chip('', { add: true, menu: 'menu_step' }) ]),
 ]}),
 
 ed_modifier: () => ({ title: 'Modifier', rows: [
   list([
-    ref('Stat', 'Armor', 'pick_stats'),
-    scalar('dropdown', 'Applies To', 'Value'),
-    seg('Operation', ['Add', 'Multiply'], 0),
+    ref('Stat Change', '+Armor', 'ed_statchange'),
     scalar('slider', 'Amount', '5', { pct: 25 }),
   ]),
 ]}),
 
+// reusable stat-change type: Stat + Applies To + Operation, e.g. "+Armor"
+ed_statchange: () => ({ title: '+Armor', rows: [
+  list([
+    ref('Stat', 'Armor', 'pick_stats'),
+    scalar('dropdown', 'Applies To', 'Current Value'),
+    scalar('dropdown', 'Operation', 'Add'),
+  ]),
+]}),
+
 pick_stats: () => ({ title: 'Stat', rows: [
-  grid(['health', 'armor', 'shields', 'weapons', 'engines', 'computers', 'sensors', 'energy'].map(s => pickTile(titleize(s)))),
+  grid(['health', 'armor', 'shields', 'weapons', 'engines', 'computers', 'sensors', 'energy'].map(s => pickTile(titleize(s), STAT_SYMBOLS[s]))),
 ]}),
 
 /* --- Stats --- */
@@ -534,6 +558,11 @@ cat_stats: () => ({ title: 'Stats', action: { fn: () => go('ed_stat') }, rows: [
     nav('Computers', { to: 'ed_stat' }),
     nav('Sensors', { to: 'ed_stat' }),
     nav('Energy', { to: 'ed_stat' }),
+  ]),
+  `<div class="sectionlabel">Hidden · <span style="text-transform:none;letter-spacing:0;font-weight:400">not shown to players</span></div>`,
+  list([
+    nav('Placeholder', { to: 'ed_stat', dim: true }),
+    nav('Placeholder', { to: 'ed_stat', dim: true }),
   ]),
 ]}),
 
@@ -551,6 +580,7 @@ ed_stat: () => ({ title: 'Health', rows: [
     scalar('slider', 'Minimum', '0', { pct: 0, toggle: true }),
     scalar('slider', 'Maximum', 'None', { none: true, toggle: false }),
     scalar('slider', 'Default', '20', { pct: 20 }),
+    scalar('toggle', 'Hidden', '', { off: true }),
   ]),
 ]}),
 
@@ -727,9 +757,25 @@ const MENUS = {
 };
 const MENU_TITLES = { menu_target: 'Target', menu_condition: 'Condition', menu_amount: 'Amount', menu_stackrule: 'Stacking', menu_decayrule: 'Decay', menu_step: 'Transform' };
 
+// picker options that need explaining render as a described list instead of a name grid
+const MENU_DESCS = {
+  menu_stackrule: {
+    'Stack': 'Each application adds a separate instance that expires on its own.',
+    'Replace': 'A new application replaces the existing one, resetting its timer.',
+    'Keep Highest': 'Only the strongest application is kept; weaker ones are discarded.',
+  },
+  menu_decayrule: {
+    'Timing': 'Expires automatically after a set number of turns.',
+    'Threshold': 'Expires when a tracked value crosses a limit.',
+    'Trigger': 'Expires when a specific event occurs.',
+  },
+};
+
 for (const [id, kinds] of Object.entries(MENUS)) {
   SCREENS[id] = () => ({ title: MENU_TITLES[id], rows: [
-    grid(kinds.map(k => kindTile(k))),
+    MENU_DESCS[id]
+      ? list(kinds.map(k => optRow(k, MENU_DESCS[id][k])))
+      : grid(kinds.map(k => kindTile(k))),
   ]});
 }
 
@@ -737,7 +783,7 @@ SCREENS.menu_action = () => ({ title: 'Action', rows: [
   section('Match'),
   grid(['Attack', 'Shield', 'Dodge', 'Drain', 'Damage Buff', 'Disable'].map(k => kindTile(k, k === 'Attack' ? 'ed_attack' : undefined))),
   section('Core'),
-  grid(['Apply Status', 'Remove Status', 'Remove By Sign', 'Modify Stat', 'Set Stat', 'Drain Resource'].map(k => kindTile(k))),
+  grid(['Apply Status', 'Remove Status', 'Remove By Polarity', 'Modify Stat', 'Set Stat', 'Drain Resource'].map(k => kindTile(k))),
 ]});
 
 /* fallback editor for any kind not mocked in detail */
