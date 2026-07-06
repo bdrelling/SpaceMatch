@@ -104,9 +104,10 @@
 
   /* ---- sections + lists ---- */
   .sectionlabel {
-    margin: 18px 4px 8px;
+    margin: 15px 4px 6px;
     font-size: 11px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: var(--dim);
   }
+  .bigtitle + .sectionlabel { margin-top: 4px; }
   .divider { height: 1px; background: rgba(255,255,255,.09); margin: 4px 2px 16px; }
   /* group takes the tile silhouette: squared top/left/bottom, chamfered top-right,
      so the left-edge edit bar reads as one clean straight line */
@@ -487,14 +488,17 @@ cat_statuses: () => ({ title: 'Statuses', action: { fn: () => go('ed_status') },
 ]}),
 
 ed_status: () => ({ title: 'Shield', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '4001'), scalar('text', 'Filename', 'shield') ]),
+  section('Information'),
   list([
     scalar('text', 'Name', 'Shield'),
-    scalar('text', 'Filename', 'shield'),
     descField('Absorbs incoming damage until the pool is depleted.'),
+  ]),
+  section('Configuration'),
+  list([
     seg('Sign', ['Buff', 'Debuff'], 0),
     stepper('Maximum Stacks', 3, true),
-  ]),
-  list([
     variant('Stacking', 'Stack', null, 'menu_stackrule', true, 'Each application adds a separate instance.'),
     variant('Decay', 'Timing', null, 'menu_decayrule', false, 'Expires after a set number of turns.'),
   ]),
@@ -534,10 +538,15 @@ cat_stats: () => ({ title: 'Stats', action: { fn: () => go('ed_stat') }, rows: [
 ]}),
 
 ed_stat: () => ({ title: 'Health', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '1001'), scalar('text', 'Filename', 'health') ]),
+  section('Information'),
   list([
     scalar('text', 'Name', 'Health'),
-    scalar('text', 'Filename', 'health'),
     descField('Hull integrity — the ship is destroyed when it reaches the minimum.'),
+  ]),
+  section('Configuration'),
+  list([
     // toggle off a bound to make it unbounded ("None")
     scalar('slider', 'Minimum', '0', { pct: 0, toggle: true }),
     scalar('slider', 'Maximum', 'None', { none: true, toggle: false }),
@@ -561,12 +570,15 @@ cat_resources: () => ({ title: 'Resources', action: { fn: () => go('ed_resource'
 ]}),
 
 ed_resource: () => ({ title: 'Tactics', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '2001'), scalar('text', 'Filename', 'tactics') ]),
+  section('Information'),
   list([
     scalar('text', 'Name', 'Tactics'),
-    scalar('text', 'Filename', 'tactics'),
-    scalar('color', 'Color', '#e05457'),
     descField('Powers offensive abilities — collected from Tactics tiles.'),
   ]),
+  section('Visuals'),
+  list([ scalar('color', 'Color', '#e05457') ]),
 ]}),
 
 /* --- Abilities --- */
@@ -581,9 +593,12 @@ cat_abilities: () => ({ title: 'Abilities', action: { fn: () => go('ed_ability')
 ]}),
 
 ed_ability: () => ({ title: 'Fire Weapons', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '5001'), scalar('text', 'Filename', 'fire_weapons') ]),
+  section('Information'),
   list([
     scalar('text', 'Name', 'Fire Weapons'),
-    scalar('text', 'Filename', 'fire_weapons'),
+    descField('Fires the primary weapons at a chosen target.'),
   ]),
   section('Costs'),
   chips([ chip('10 × Tactics', { to: 'ed_cost' }), chip('', { add: true }) ]),
@@ -638,12 +653,15 @@ cat_tiles: () => ({ title: 'Tiles', action: { fn: () => go('ed_tile') }, rows: [
 ]}),
 
 ed_tile: () => ({ title: 'Security', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '3001'), scalar('text', 'Filename', 'security') ]),
+  section('Information'),
   list([
     scalar('text', 'Name', 'Security'),
-    scalar('text', 'Filename', 'security'),
-    textureField('security.png'),
     descField('Board tile matched to collect the Security resource.'),
   ]),
+  section('Visuals'),
+  list([ textureField('security.png') ]),
 ]}),
 
 /* --- Rules --- */
@@ -668,14 +686,18 @@ cat_rulesets: () => ({ title: 'Rulesets', rows: [
 ]}),
 
 ed_ruleset: () => ({ title: 'Default', action: { fn: () => go('menu_rule') }, rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '6001'), scalar('text', 'Filename', 'default') ]),
+  section('Information'),
   list([
     scalar('text', 'Name', 'Default'),
-    scalar('text', 'Filename', 'default'),
+    descField('The standard ruleset used for most matches.'),
   ]),
+  section('Rules'),
   list([
     `<div class="cell"><div class="label"><b>Scoring</b></div><div class="v">Linear ▾</div><div class="ctl-toggle"><i></i></div></div>`,
     `<div class="cell"><div class="label"><b>Damage</b></div><div class="v">2</div><div class="ctl-slider"><em style="width:20%"></em><i style="left:20%"></i></div><div class="ctl-toggle"><i></i></div></div>`,
-    `<div class="cell"><div class="label"><b>Spawn — Combat</b></div><div class="v">3</div><div class="ctl-slider"><em style="width:30%"></em><i style="left:30%"></i></div><div class="ctl-toggle"><i></i></div></div>`,
+    `<div class="cell"><div class="label"><b>Spawn — Tactics</b></div><div class="v">3</div><div class="ctl-slider"><em style="width:30%"></em><i style="left:30%"></i></div><div class="ctl-toggle"><i></i></div></div>`,
   ]),
 ]}),
 
