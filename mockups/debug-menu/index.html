@@ -184,7 +184,7 @@
   .stepper { display: flex; align-items: center; gap: 10px; flex: none; }
   .stepper span { width: 24px; height: 24px; border-radius: 6px; background: #2a3745; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; }
   .stepper b { min-width: 16px; text-align: center; font-family: var(--mono); }
-  .ctl-slider { flex: none; width: 90px; height: 3px; background: #2e3945; border-radius: 2px; position: relative; }
+  .ctl-slider { flex: none; width: 72px; height: 3px; background: #2e3945; border-radius: 2px; position: relative; }
   .ctl-slider em { position: absolute; left: 0; height: 100%; background: var(--accent); border-radius: 2px; }
   .ctl-slider i { position: absolute; top: -5px; width: 13px; height: 13px; border-radius: 4px; background: #b6c2cc; margin-left: -6px; }
   .ctl-toggle { flex: none; width: 36px; height: 20px; border-radius: 5px; background: var(--accent); position: relative; }
@@ -192,6 +192,31 @@
   .ctl-toggle i { position: absolute; right: 2px; top: 2px; width: 16px; height: 16px; border-radius: 4px; background: #fff; }
   .ctl-toggle.off i { right: auto; left: 2px; }
   .ctl-swatch { flex: none; width: 26px; height: 18px; border-radius: 4px; }
+  /* editable number box beside a slider — slide or type for precision */
+  .numbox {
+    flex: none; width: 44px; background: #0f151c; border: 1px solid #2e3945; border-radius: 5px;
+    color: var(--text); font-family: var(--mono); font-size: 12px; text-align: center; padding: 3px 2px;
+  }
+  /* 2D texture preview placeholder (checkerboard = no art yet) */
+  .ctl-texture {
+    flex: none; width: 26px; height: 22px; border-radius: 4px;
+    background:
+      linear-gradient(45deg, #2a3745 25%, transparent 25%, transparent 75%, #2a3745 75%),
+      linear-gradient(45deg, #2a3745 25%, #10161d 25%, #10161d 75%, #2a3745 75%);
+    background-size: 10px 10px; background-position: 0 0, 5px 5px;
+  }
+  /* description field — label on top, wrapped copy below */
+  .field-desc { flex-direction: column; align-items: stretch; gap: 4px; }
+  .field-desc .desc { color: var(--dim); font-size: 13px; line-height: 1.4; }
+  /* a row that carries an explanatory subtitle (e.g. Stacking / Decay) */
+  .cell.hasdesc { flex-direction: column; align-items: stretch; gap: 4px; }
+  .cell.hasdesc .toprow { display: flex; align-items: center; gap: 10px; }
+  .sub { color: var(--dim); font-size: 12px; line-height: 1.35; }
+  /* status tile symbol on a tinted chip (statuses carry a symbol + color) */
+  .tile.status .ssym {
+    width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-size: 20px; margin-bottom: 9px;
+  }
 
   .toast {
     position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%);
@@ -308,13 +333,35 @@ function flowTile(caption, value, to) {
 const flow = tiles => `<div class="flow">${tiles.join('<div class="arrow">›</div>')}</div>`;
 
 function scalar(kind, label, value, opts = {}) {
-  const { off = false, pct = 55, edited = false } = opts;
+  const { off = false, pct = 55, edited = false, toggle = null, none = false } = opts;
   let ctl = `<div class="v">${value}</div>`;
-  if (kind === 'slider') ctl = `<div class="v">${value}</div><div class="ctl-slider"><em style="width:${pct}%"></em><i style="left:${pct}%"></i></div>`;
+  if (kind === 'slider') {
+    // `none` = unbounded (no min / no max); toggle turns the bound on/off
+    ctl = none
+      ? `<div class="v">None</div>`
+      : `<div class="ctl-slider"><em style="width:${pct}%"></em><i style="left:${pct}%"></i></div><input class="numbox" value="${value}">`;
+    if (toggle !== null) ctl += `<div class="ctl-toggle${toggle ? '' : ' off'}"><i></i></div>`;
+  }
   if (kind === 'toggle') ctl = `<div class="ctl-toggle${off ? ' off' : ''}"><i></i></div>`;
   if (kind === 'color') ctl = `<div class="ctl-swatch" style="background:${value}"></div>`;
   if (kind === 'dropdown') ctl = `<div class="v">${value} ▾</div>`;
   return `<div class="cell${edited ? ' edited' : ''}"><div class="label">${label}</div>${ctl}</div>`;
+}
+
+function descField(text) {
+  return `<div class="cell field-desc"><div class="label">Description</div><div class="desc">${text}</div></div>`;
+}
+
+function textureField(name) {
+  const h = on(() => toast('Pick texture'));
+  return `<div class="cell tap" data-h="${h}"><div class="label">Texture</div><div class="ctl-texture"></div><div class="v">${name}</div><div class="chev">›</div></div>`;
+}
+
+function statusTile(name, emoji, color, to, edited = false) {
+  const h = on(() => go(to));
+  return `<div class="tile status${edited ? ' edited' : ''}" data-h="${h}">
+    <div class="ssym" style="background:${color}22;box-shadow:inset 0 0 0 1px ${color}88">${emoji}</div>
+    <div class="tname">${name}</div></div>`;
 }
 
 function seg(label, options, onIndex, edited = false) {
@@ -334,12 +381,13 @@ function ref(label, value, pickerId) {
     <div class="v refv">${value}</div><div class="chev">›</div></div>`;
 }
 
-function variant(label, kind, editorId, menuId, edited = false) {
+function variant(label, kind, editorId, menuId, edited = false, desc = '') {
   const hRow = on(() => editorId ? go(editorId) : go(menuId));
-  return `<div class="cell tap${edited ? ' edited' : ''}" data-h="${hRow}">
-    <div class="label">${label}</div>
-    <div class="v varv">${kind}</div>
-    <div class="chev">›</div></div>`;
+  const head = `<div class="label"><b>${label}</b></div><div class="v varv">${kind}</div><div class="chev">›</div>`;
+  if (!desc) return `<div class="cell tap${edited ? ' edited' : ''}" data-h="${hRow}">${head}</div>`;
+  return `<div class="cell tap hasdesc${edited ? ' edited' : ''}" data-h="${hRow}">
+    <div class="toprow">${head}</div>
+    <div class="sub">${desc}</div></div>`;
 }
 
 function pickRow(label, opts = {}) {
@@ -427,10 +475,14 @@ cat_match_configs: () => ({ title: 'Match Configs', rows: [
 
 /* --- Statuses --- */
 cat_statuses: () => ({ title: 'Statuses', action: { fn: () => go('ed_status') }, rows: [
-  list([
-    nav('Dodge', { to: 'ed_status', sign: 'up' }),
-    nav('Shield', { to: 'ed_status', sign: 'up', edited: true }),
-    nav('Target Lock', { to: 'ed_status', sign: 'down' }),
+  `<div class="sectionlabel">Buffs <span class="sign up">▲</span></div>`,
+  grid([
+    statusTile('Dodge', '💨', '#4fc3d8', 'ed_status'),
+    statusTile('Shield', '🛡️', '#59adeb', 'ed_status', true),
+  ]),
+  `<div class="sectionlabel">Debuffs <span class="sign down">▼</span></div>`,
+  grid([
+    statusTile('Target Lock', '🎯', '#d06a6a', 'ed_status'),
   ]),
 ]}),
 
@@ -438,17 +490,18 @@ ed_status: () => ({ title: 'Shield', rows: [
   list([
     scalar('text', 'Name', 'Shield'),
     scalar('text', 'Filename', 'shield'),
+    descField('Absorbs incoming damage until the pool is depleted.'),
     seg('Sign', ['Buff', 'Debuff'], 0),
-    stepper('Cap', 3, true),
+    stepper('Maximum Stacks', 3, true),
   ]),
   list([
-    variant('Stacking', 'Stack', null, 'menu_stackrule', true),
-    variant('Decay', 'Timing', null, 'menu_decayrule'),
+    variant('Stacking', 'Stack', null, 'menu_stackrule', true, 'Each application adds a separate instance.'),
+    variant('Decay', 'Timing', null, 'menu_decayrule', false, 'Expires after a set number of turns.'),
   ]),
   section('Modifiers'),
   chips([ chip('Armor +5', { to: 'ed_modifier' }), chip('', { add: true }) ]),
   section('Effects'),
-  chips([ chip('WhenHit › Dodge', { to: 'kind:TriggeredEffect' }), chip('', { add: true }) ]),
+  chips([ chip('WhenHit › Dodge', { to: 'ed_effect' }), chip('', { add: true }) ]),
   section('Transforms'),
   chips([ chip('', { add: true, menu: 'menu_step' }) ]),
 ]}),
@@ -456,6 +509,7 @@ ed_status: () => ({ title: 'Shield', rows: [
 ed_modifier: () => ({ title: 'Modifier', rows: [
   list([
     ref('Stat', 'Armor', 'pick_stats'),
+    scalar('dropdown', 'Applies To', 'Value'),
     seg('Operation', ['Add', 'Multiply'], 0),
     scalar('slider', 'Amount', '5', { pct: 25 }),
   ]),
@@ -483,9 +537,11 @@ ed_stat: () => ({ title: 'Health', rows: [
   list([
     scalar('text', 'Name', 'Health'),
     scalar('text', 'Filename', 'health'),
-    scalar('slider', 'Minimum', '0', { pct: 0 }),
-    scalar('slider', 'Maximum', '40', { pct: 40 }),
-    scalar('slider', 'Default', '40', { pct: 40 }),
+    descField('Hull integrity — the ship is destroyed when it reaches the minimum.'),
+    // toggle off a bound to make it unbounded ("None")
+    scalar('slider', 'Minimum', '0', { pct: 0, toggle: true }),
+    scalar('slider', 'Maximum', 'None', { none: true, toggle: false }),
+    scalar('slider', 'Default', '20', { pct: 20 }),
   ]),
 ]}),
 
@@ -508,6 +564,8 @@ ed_resource: () => ({ title: 'Tactics', rows: [
   list([
     scalar('text', 'Name', 'Tactics'),
     scalar('text', 'Filename', 'tactics'),
+    scalar('color', 'Color', '#e05457'),
+    descField('Powers offensive abilities — collected from Tactics tiles.'),
   ]),
 ]}),
 
@@ -583,7 +641,8 @@ ed_tile: () => ({ title: 'Security', rows: [
   list([
     scalar('text', 'Name', 'Security'),
     scalar('text', 'Filename', 'security'),
-    scalar('color', 'Color', '#59adeb'),
+    textureField('security.png'),
+    descField('Board tile matched to collect the Security resource.'),
   ]),
 ]}),
 
