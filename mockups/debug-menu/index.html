@@ -141,7 +141,7 @@
   /* ---- tile grid (chamfered) ---- */
   .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px; }
   .tile {
-    background: var(--panel); border-radius: 4px; padding: 13px 13px 11px;
+    background: var(--panel); padding: 13px 13px 11px;
     cursor: pointer; position: relative;
     clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
   }
@@ -171,9 +171,16 @@
   .flow { display: flex; align-items: stretch; gap: 8px; margin-bottom: 10px; }
   .flow .arrow { color: var(--dim); align-self: center; flex: none; }
   .flowtile {
-    flex: 1; background: var(--panel); border-radius: 4px; padding: 10px 12px; cursor: pointer;
+    flex: 1; background: var(--panel); padding: 10px 12px; cursor: pointer;
     clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
   }
+  /* clear button — small, right by the close-button style, in its own footer section */
+  .clearsec { margin: 24px 2px 4px; }
+  .clearbtn {
+    display: inline-flex; align-items: center; padding: 7px 18px; border-radius: 8px;
+    background: rgba(255,255,255,.08); color: var(--dim); font-size: 13px; cursor: pointer; user-select: none;
+  }
+  .clearbtn:hover { background: rgba(208,106,106,.18); color: #e6a5a5; }
   .flowtile:hover { background: var(--hover); }
   .flowtile .fcap { font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--dim); margin-bottom: 2px; }
   .flowtile .fval { font-weight: 600; color: var(--good); }
@@ -264,7 +271,8 @@ const pop = () => { if (stack.length > 1) { stack.pop(); render(); } };
 const PARENTS = {
   pick_match_configs: 'home', pick_starships: 'home',
   cat_starships: 'home', cat_modules: 'home', cat_module_grids: 'home', cat_match_configs: 'home',
-  cat_statuses: 'home', ed_status: 'cat_statuses', ed_modifier: 'ed_status', ed_statchange: 'ed_modifier', pick_stats: 'ed_statchange',
+  cat_statuses: 'home', ed_status: 'cat_statuses', ed_modifier: 'ed_status', pick_adjustment: 'ed_modifier',
+  cat_adjustments: 'home', ed_adjustment: 'cat_adjustments', pick_stats: 'ed_adjustment',
   cat_stats: 'home', ed_stat: 'cat_stats',
   cat_resources: 'home', ed_resource: 'cat_resources',
   cat_abilities: 'home', ed_ability: 'cat_abilities', ed_cost: 'ed_ability', pick_resources: 'ed_cost',
@@ -353,6 +361,30 @@ function descField(text) {
   return `<div class="cell field-desc"><div class="label">Description</div><div class="desc">${text}</div></div>`;
 }
 
+function clearBtn() {
+  return `<div class="clearsec"><div class="clearbtn" data-h="${on(() => toast('Cleared'))}">Clear</div></div>`;
+}
+
+// descriptions for effect-system kinds — shown in the picker AND on the kind's page
+const KIND_DESCS = {
+  Absorb: 'Spends the status’s stacks to soak an incoming value; the overflow passes through.',
+  Clamp: 'Holds the value within a minimum and/or maximum range.',
+  'Flat Mitigation': 'Subtracts a fixed amount from the value.',
+  Multiplier: 'Scales the value by a percentage.',
+  Attack: 'Deals damage to the target.',
+  Shield: 'Grants Shield stacks to the target.',
+  Dodge: 'Grants a chance to avoid the next hit.',
+  Drain: 'Removes stacks or resource from the target.',
+  'Damage Buff': 'Increases the target’s outgoing damage.',
+  Disable: 'Prevents the target from acting.',
+  'Apply Status': 'Applies a status to the target.',
+  'Remove Status': 'Removes a specific status from the target.',
+  'Remove By Type': 'Removes all buffs, or all debuffs, from the target.',
+  'Modify Stat': 'Changes a stat by an amount.',
+  'Set Stat': 'Sets a stat to a specific value.',
+  'Drain Resource': 'Removes an ability resource from the target.',
+};
+
 function textureField(name) {
   const h = on(() => toast('Pick texture'));
   return `<div class="cell tap" data-h="${h}"><div class="label">Texture</div><div class="ctl-texture"></div><div class="v">${name}</div><div class="chev">›</div></div>`;
@@ -410,12 +442,20 @@ function pickTile(name, emoji) {
     <div class="tname">${name}</div></div>`;
 }
 
-// a picker option that carries an explanatory description
+// a picker option that carries an explanatory description (selects + returns)
 function optRow(name, desc) {
   const h = on(() => { pop(); toast(`Picked: ${name}`); });
   return `<div class="cell tap hasdesc" data-h="${h}">
     <div class="toprow"><div class="label"><b>${name}</b></div><div class="chev">›</div></div>
     <div class="sub">${desc}</div></div>`;
+}
+
+// a described option that opens the kind's own editor
+function optNav(name, desc, to) {
+  const h = on(() => go(to));
+  return `<div class="cell tap hasdesc" data-h="${h}">
+    <div class="toprow"><div class="label"><b>${name}</b></div><div class="chev">›</div></div>
+    <div class="sub">${desc || ''}</div></div>`;
 }
 
 const STAT_SYMBOLS = { health: '❤️', armor: '🛡️', shields: '🔷', weapons: '💥', engines: '🚀', computers: '💻', sensors: '📡', energy: '⚡' };
@@ -446,6 +486,12 @@ home: () => ({ title: '', rows: [
     tile('Stats', { emoji: '📊', to: 'cat_stats', count: 8 }),
     tile('Statuses', { emoji: '✨', to: 'cat_statuses', count: 3, edited: true }),
   ]),
+  section('Building Blocks'),
+  scroller([
+    tile('Adjustments', { emoji: '🎚️', to: 'cat_adjustments', count: 3 }),
+    tile('Effects', { emoji: '💫', to: 'menu_action', count: 12 }),
+    tile('Transforms', { emoji: '🔻', to: 'menu_step', count: 4 }),
+  ]),
   section('Content'),
   scroller([
     tile('Abilities', { emoji: '⚡', to: 'cat_abilities', count: 5 }),
@@ -471,15 +517,29 @@ pick_starships: () => ({ title: 'Starship', rows: [
 
 /* --- Content placeholders (catalogs listed, item editors not yet mocked) --- */
 cat_starships: () => ({ title: 'Starships', rows: [
-  list(['Default', 'Computer'].map(s => nav(s))),
+  grid([
+    tile('Default', { emoji: '🛸' }),
+    tile('Computer', { emoji: '🤖' }),
+  ]),
 ]}),
 
 cat_modules: () => ({ title: 'Modules', rows: [
-  list(['Engine', 'Laser Cannon', 'Life Support', 'Reactor', 'Sensor Array', 'Shield Generator', 'Warp Core'].map(s => nav(s))),
+  grid([
+    tile('Engine', { emoji: '🚀' }),
+    tile('Laser Cannon', { emoji: '🔫' }),
+    tile('Life Support', { emoji: '🌿' }),
+    tile('Reactor', { emoji: '☢️' }),
+    tile('Sensor Array', { emoji: '📡' }),
+    tile('Shield Generator', { emoji: '🛡️' }),
+    tile('Warp Core', { emoji: '🌀' }),
+  ]),
 ]}),
 
 cat_module_grids: () => ({ title: 'Module Grids', rows: [
-  list(['Default', 'Computer'].map(s => nav(s))),
+  grid([
+    tile('Default', { emoji: '🔲' }),
+    tile('Computer', { emoji: '🔲' }),
+  ]),
 ]}),
 
 cat_match_configs: () => ({ title: 'Match Configs', rows: [
@@ -514,7 +574,7 @@ ed_status: () => ({ title: 'Shield', rows: [
   ]),
   section('Configuration'),
   list([
-    seg('Polarity', ['Buff', 'Debuff'], 0),
+    seg('Type', ['Buff', 'Debuff'], 0),
     stepper('Maximum Stacks', 3, true),
     variant('Stacking', 'Stack', null, 'menu_stackrule', true, 'Each application adds a separate instance.'),
     variant('Decay', 'Timing', null, 'menu_decayrule', false, 'Expires after a set number of turns.'),
@@ -527,15 +587,41 @@ ed_status: () => ({ title: 'Shield', rows: [
   chips([ chip('Absorb', { to: 'kind:Absorb' }), chip('', { add: true, menu: 'menu_step' }) ]),
 ]}),
 
+// a Modifier attaches a reusable Adjustment (picked, not edited here) and sets its amount
 ed_modifier: () => ({ title: 'Modifier', rows: [
   list([
-    ref('Stat Change', '+Armor', 'ed_statchange'),
+    ref('Adjustment', '+Armor', 'pick_adjustment'),
     scalar('slider', 'Amount', '5', { pct: 25 }),
+  ]),
+  clearBtn(),
+]}),
+
+pick_adjustment: () => ({ title: 'Adjustment', rows: [
+  list([
+    optRow('+Armor', 'Adds to a ship’s Armor value.'),
+    optRow('×Shields', 'Scales a ship’s Shields.'),
+    optRow('Set Health', 'Sets Health to a fixed value.'),
   ]),
 ]}),
 
-// reusable stat-change type: Stat + Applies To + Operation, e.g. "+Armor"
-ed_statchange: () => ({ title: '+Armor', rows: [
+/* --- Adjustments (reusable building block: Stat + Applies To + Operation) --- */
+cat_adjustments: () => ({ title: 'Adjustments', action: { fn: () => go('ed_adjustment') }, rows: [
+  list([
+    nav('+Armor', { to: 'ed_adjustment' }),
+    nav('×Shields', { to: 'ed_adjustment' }),
+    nav('Set Health', { to: 'ed_adjustment' }),
+  ]),
+]}),
+
+ed_adjustment: () => ({ title: '+Armor', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '7001'), scalar('text', 'Filename', 'armor_add') ]),
+  section('Information'),
+  list([
+    scalar('text', 'Name', '+Armor'),
+    descField('Adds to a ship’s Armor value.'),
+  ]),
+  section('Configuration'),
   list([
     ref('Stat', 'Armor', 'pick_stats'),
     scalar('dropdown', 'Applies To', 'Current Value'),
@@ -580,8 +666,9 @@ ed_stat: () => ({ title: 'Health', rows: [
     scalar('slider', 'Minimum', '0', { pct: 0, toggle: true }),
     scalar('slider', 'Maximum', 'None', { none: true, toggle: false }),
     scalar('slider', 'Default', '20', { pct: 20 }),
-    scalar('toggle', 'Hidden', '', { off: true }),
   ]),
+  section('Display'),
+  list([ scalar('toggle', 'Hidden', '', { off: true }) ]),
 ]}),
 
 /* --- Resources --- */
@@ -607,18 +694,18 @@ ed_resource: () => ({ title: 'Tactics', rows: [
     scalar('text', 'Name', 'Tactics'),
     descField('Powers offensive abilities — collected from Tactics tiles.'),
   ]),
-  section('Visuals'),
+  section('Display'),
   list([ scalar('color', 'Color', '#e05457') ]),
 ]}),
 
 /* --- Abilities --- */
 cat_abilities: () => ({ title: 'Abilities', action: { fn: () => go('ed_ability') }, rows: [
-  list([
-    nav('Evasive Maneuvers', { to: 'ed_ability', detail: '8' }),
-    nav('Fire Weapons', { to: 'ed_ability', detail: '10' }),
-    nav('Raise Shields', { to: 'ed_ability', detail: '12' }),
-    nav('Repair Hull', { to: 'ed_ability', detail: '15' }),
-    nav('Target Lock', { to: 'ed_ability', detail: '6' }),
+  grid([
+    tile('Evasive Maneuvers', { emoji: '💨', to: 'ed_ability' }),
+    tile('Fire Weapons', { emoji: '💥', to: 'ed_ability' }),
+    tile('Raise Shields', { emoji: '🛡️', to: 'ed_ability' }),
+    tile('Repair Hull', { emoji: '🔧', to: 'ed_ability' }),
+    tile('Target Lock', { emoji: '🎯', to: 'ed_ability' }),
   ]),
 ]}),
 
@@ -645,6 +732,7 @@ ed_cost: () => ({ title: 'Cost', rows: [
     ref('Resource', 'Tactics', 'pick_resources'),
     scalar('slider', 'Amount', '10', { pct: 50 }),
   ]),
+  clearBtn(),
 ]}),
 
 pick_resources: () => ({ title: 'Resource', rows: [
@@ -658,12 +746,14 @@ ed_effect: () => ({ title: 'Effect', rows: [
   ]),
   section('Conditions'),
   chips([ chip('', { add: true, menu: 'menu_condition' }) ]),
+  clearBtn(),
 ]}),
 
 ed_attack: () => ({ title: 'Attack', rows: [
   list([
     variant('Amount', 'max(weapons)', null, 'menu_amount'),
   ]),
+  clearBtn(),
 ]}),
 
 /* --- Tiles --- */
@@ -690,7 +780,7 @@ ed_tile: () => ({ title: 'Security', rows: [
     scalar('text', 'Name', 'Security'),
     descField('Board tile matched to collect the Security resource.'),
   ]),
-  section('Visuals'),
+  section('Display'),
   list([ textureField('security.png') ]),
 ]}),
 
@@ -779,26 +869,30 @@ for (const [id, kinds] of Object.entries(MENUS)) {
   ]});
 }
 
-SCREENS.menu_action = () => ({ title: 'Action', rows: [
-  section('Match'),
-  grid(['Attack', 'Shield', 'Dodge', 'Drain', 'Damage Buff', 'Disable'].map(k => kindTile(k, k === 'Attack' ? 'ed_attack' : undefined))),
-  section('Core'),
-  grid(['Apply Status', 'Remove Status', 'Remove By Polarity', 'Modify Stat', 'Set Stat', 'Drain Resource'].map(k => kindTile(k))),
+SCREENS.menu_step = () => ({ title: 'Transform', rows: [
+  list(MENUS.menu_step.map(k => optNav(k, KIND_DESCS[k], 'kind:' + k))),
 ]});
 
-/* fallback editor for any kind not mocked in detail */
+SCREENS.menu_action = () => ({ title: 'Action', rows: [
+  section('Match'),
+  list(['Attack', 'Shield', 'Dodge', 'Drain', 'Damage Buff', 'Disable'].map(k => optNav(k, KIND_DESCS[k], k === 'Attack' ? 'ed_attack' : 'kind:' + k))),
+  section('Core'),
+  list(['Apply Status', 'Remove Status', 'Remove By Type', 'Modify Stat', 'Set Stat', 'Drain Resource'].map(k => optNav(k, KIND_DESCS[k], 'kind:' + k))),
+]});
+
+/* editor for a kind not mocked in detail — shows its description + a clear action */
 function genericKind(kind) {
   return { title: kind, rows: [
-    list([
-      scalar('slider', 'Value', '…', { pct: 40 }),
-      scalar('dropdown', 'Mode', '…'),
-    ]),
+    section('Information'),
+    list([ descField(KIND_DESCS[kind] || 'Not yet configured.') ]),
+    clearBtn(),
   ]};
 }
 
 /* ---------- side nav (viewer aid) ---------- */
 const NAV = [
   ['Primitives', [['Resources', 'cat_resources'], ['Tiles', 'cat_tiles'], ['Stats', 'cat_stats'], ['Statuses', 'cat_statuses']]],
+  ['Building Blocks', [['Adjustments', 'cat_adjustments'], ['Effects', 'menu_action'], ['Transforms', 'menu_step']]],
   ['Content', [['Abilities', 'cat_abilities'], ['Starships', 'cat_starships'], ['Modules', 'cat_modules'], ['Module Grids', 'cat_module_grids']]],
   ['Config', [['Rules', 'cat_rules'], ['Rulesets', 'cat_rulesets'], ['Match Configs', 'cat_match_configs']]],
 ];
