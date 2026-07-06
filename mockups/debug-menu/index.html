@@ -493,7 +493,7 @@ ed_stat: () => ({ title: 'Health', rows: [
 cat_resources: () => ({ title: 'Resources', action: { fn: () => go('ed_resource') }, rows: [
   grid([
     tile('Tactics', { swatch: '#e05457', to: 'ed_resource' }),
-    tile('Life Support', { swatch: '#59adeb', to: 'ed_resource' }),
+    tile('Security', { swatch: '#59adeb', to: 'ed_resource' }),
     tile('Science', { swatch: '#70c780', to: 'ed_resource' }),
     tile('Engineering', { swatch: '#f7cc4d', to: 'ed_resource' }),
   ]),
@@ -545,7 +545,7 @@ ed_cost: () => ({ title: 'Cost', rows: [
 ]}),
 
 pick_resources: () => ({ title: 'Resource', rows: [
-  grid(['tactics', 'life_support', 'science', 'engineering'].map(s => pickTile(titleize(s)))),
+  grid(['tactics', 'security', 'science', 'engineering'].map(s => pickTile(titleize(s)))),
 ]}),
 
 ed_effect: () => ({ title: 'Effect', rows: [
@@ -567,7 +567,7 @@ ed_attack: () => ({ title: 'Attack', rows: [
 cat_tiles: () => ({ title: 'Tiles', action: { fn: () => go('ed_tile') }, rows: [
   grid([
     tile('Tactics', { swatch: '#e05457', to: 'ed_tile' }),
-    tile('Life Support', { swatch: '#59adeb', to: 'ed_tile' }),
+    tile('Security', { swatch: '#59adeb', to: 'ed_tile' }),
     tile('Science', { swatch: '#70c780', to: 'ed_tile' }),
     tile('Engineering', { swatch: '#f7cc4d', to: 'ed_tile' }),
   ]),
@@ -575,14 +575,14 @@ cat_tiles: () => ({ title: 'Tiles', action: { fn: () => go('ed_tile') }, rows: [
   grid([
     tile('Antimatter', { swatch: '#a878db', to: 'ed_tile' }),
     tile('Alloy', { swatch: '#99a3b3', to: 'ed_tile' }),
-    tile('Damage', { swatch: '#f5802e', to: 'ed_tile' }),
+    tile('Attack', { swatch: '#f5802e', to: 'ed_tile' }),
   ]),
 ]}),
 
-ed_tile: () => ({ title: 'Life Support', rows: [
+ed_tile: () => ({ title: 'Security', rows: [
   list([
-    scalar('text', 'Name', 'Life Support'),
-    scalar('text', 'Filename', 'life_support'),
+    scalar('text', 'Name', 'Security'),
+    scalar('text', 'Filename', 'security'),
     scalar('color', 'Color', '#59adeb'),
   ]),
 ]}),
