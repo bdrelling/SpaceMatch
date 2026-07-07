@@ -41,11 +41,11 @@ Banned:
 
 ### Status Summaries
 
-"Where are we at?" / "what's open?" = a short numbered list of ONLY items the user explicitly left open — each traceable to something they actually said. Nothing invented, nothing already settled; deferred items get one closing sentence at most.
+"Where are we at?" / "what's open?" = a short numbered list of ONLY items the user explicitly left open — nothing invented, nothing already settled. One concise line per item; deferred items get one closing sentence at most.
 
-Template, one line per item:
+Template:
 
-1. **<Item>** — <why it's open, anchored in the user's own words: "I'll take it for now.">
+1. **<Item>** — <why it's open, quoting the user where possible>
 
 ### Done Means Done
 
