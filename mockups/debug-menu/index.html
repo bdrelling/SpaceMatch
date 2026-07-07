@@ -276,7 +276,8 @@ const PARENTS = {
   cat_stats: 'home', ed_stat: 'cat_stats',
   cat_resources: 'home', ed_resource: 'cat_resources',
   cat_abilities: 'home', ed_ability: 'cat_abilities', ed_cost: 'ed_ability', pick_resources: 'ed_cost',
-  ed_effect: 'ed_ability', ed_attack: 'ed_effect',
+  cat_effects: 'home', ed_effect: 'cat_effects', ed_attack: 'ed_effect',
+  cat_transforms: 'home', ed_transform: 'cat_transforms',
   cat_tiles: 'home', ed_tile: 'cat_tiles',
   cat_rules: 'home',
   cat_rulesets: 'home', ed_ruleset: 'cat_rulesets', menu_rule: 'ed_ruleset', ed_newrule: 'menu_rule',
@@ -489,8 +490,8 @@ home: () => ({ title: '', rows: [
   section('Building Blocks'),
   scroller([
     tile('Adjustments', { emoji: '🎚️', to: 'cat_adjustments', count: 3 }),
-    tile('Effects', { emoji: '💫', to: 'menu_action', count: 12 }),
-    tile('Transforms', { emoji: '🔻', to: 'menu_step', count: 4 }),
+    tile('Effects', { emoji: '💫', to: 'cat_effects', count: 3 }),
+    tile('Transforms', { emoji: '🔻', to: 'cat_transforms', count: 3 }),
   ]),
   section('Content'),
   scroller([
@@ -625,8 +626,38 @@ ed_adjustment: () => ({ title: '+Armor', rows: [
   list([
     ref('Stat', 'Armor', 'pick_stats'),
     scalar('dropdown', 'Applies To', 'Current Value'),
-    scalar('dropdown', 'Operation', 'Add'),
+    seg('Operation', ['Add', 'Multiply'], 0),
   ]),
+]}),
+
+/* --- Effects (reusable building block; + creates one via the kind picker) --- */
+cat_effects: () => ({ title: 'Effects', action: { fn: () => go('menu_action') }, rows: [
+  list([
+    nav('Placeholder', { to: 'ed_effect' }),
+    nav('Placeholder', { to: 'ed_effect' }),
+    nav('Placeholder', { to: 'ed_effect' }),
+  ]),
+]}),
+
+/* --- Transforms (reusable building block; + creates one via the kind picker) --- */
+cat_transforms: () => ({ title: 'Transforms', action: { fn: () => go('menu_step') }, rows: [
+  list([
+    nav('Placeholder', { to: 'ed_transform' }),
+    nav('Placeholder', { to: 'ed_transform' }),
+    nav('Placeholder', { to: 'ed_transform' }),
+  ]),
+]}),
+
+ed_transform: () => ({ title: 'Absorb', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '9001'), scalar('text', 'Filename', 'shield_absorb') ]),
+  section('Information'),
+  list([
+    scalar('text', 'Name', 'Absorb'),
+    descField('Spends the status’s stacks to soak an incoming value; the overflow passes through.'),
+  ]),
+  section('Configuration'),
+  list([ variant('Kind', 'Absorb', null, 'menu_step', false, 'How the value is reshaped.') ]),
 ]}),
 
 pick_stats: () => ({ title: 'Stat', rows: [
@@ -740,6 +771,14 @@ pick_resources: () => ({ title: 'Resource', rows: [
 ]}),
 
 ed_effect: () => ({ title: 'Effect', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '8001'), scalar('text', 'Filename', 'effect') ]),
+  section('Information'),
+  list([
+    scalar('text', 'Name', 'Effect'),
+    descField('Runs an action on a target when its trigger fires.'),
+  ]),
+  section('Behavior'),
   flow([
     flowTile('Target', 'Opponent', 'menu_target'),
     flowTile('Action', 'Attack', 'ed_attack'),
@@ -892,7 +931,7 @@ function genericKind(kind) {
 /* ---------- side nav (viewer aid) ---------- */
 const NAV = [
   ['Primitives', [['Resources', 'cat_resources'], ['Tiles', 'cat_tiles'], ['Stats', 'cat_stats'], ['Statuses', 'cat_statuses']]],
-  ['Building Blocks', [['Adjustments', 'cat_adjustments'], ['Effects', 'menu_action'], ['Transforms', 'menu_step']]],
+  ['Building Blocks', [['Adjustments', 'cat_adjustments'], ['Effects', 'cat_effects'], ['Transforms', 'cat_transforms']]],
   ['Content', [['Abilities', 'cat_abilities'], ['Starships', 'cat_starships'], ['Modules', 'cat_modules'], ['Module Grids', 'cat_module_grids']]],
   ['Config', [['Rules', 'cat_rules'], ['Rulesets', 'cat_rulesets'], ['Match Configs', 'cat_match_configs']]],
 ];
