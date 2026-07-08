@@ -16,7 +16,7 @@ Reading this README IS the context — you don't need to render anything to unde
 
   Don't hand-roll a `chromium`/`chrome-headless-shell` invocation — `render.sh` is the supported path and dodges the "no chrome binary" trap. Under the hood it drives `screenshot.html`, which wraps `index.html` in an iframe and honors `?screen=<id>` / `?scroll=<px>`. Screen ids come from the `SCREENS` registry.
 
-  **Home gotcha (handled by the helper):** routing `home` through `screenshot.html` calls `go('home')`, which pushes onto a stack already at `['home']` → a stray `‹ DEBUG` back link at the top. `render.sh` with no screen (or `home`) renders `index.html` directly instead, so the capture is the true home.
+  Captures are the **device screen only** (390×844): `screenshot.html` strips the page chrome (side nav, body padding, shadow) so the PNG is exactly the phone — that's all Brian wants from a screenshot. It also handles the home gotcha (calling `deepLink('home')` on a stack already at `['home']` would push a stray `‹ DEBUG` back link, so `home` skips the eval).
 
 ## Code structure
 

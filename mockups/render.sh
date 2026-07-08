@@ -11,8 +11,12 @@
 #   mockups/render.sh debug-menu ed_status 240 # ...scrolled 240px
 #
 # Screen ids come from the `SCREENS` registry in that dir's index.html.
-# Omit the screen (or pass `home`) to capture the true initial state — routing
-# `home` through screenshot.html pushes a stray back link (see the README).
+# Omit the screen (or pass `home`) for the initial state.
+#
+# Captures are the DEVICE SCREEN ONLY (390x844) when the mockup has a
+# screenshot.html — it strips the page chrome (side nav, padding) and handles
+# the home stray-back-link gotcha. Mockups without one fall back to a plain
+# full-page capture of index.html.
 #
 # Exit 3 = no headless browser (normal in cloud/CI containers). That is NOT a
 # failure to fix: the mockup's README fully describes the design, so reading it
@@ -48,15 +52,17 @@ browser="$(resolve_browser)" || {
   exit 3
 }
 
-if [ -z "$screen" ] || [ "$screen" = home ]; then
-  url="file://$here/$dir/index.html"                       # true initial state
-  out="${4:-$here/$dir/render-home.png}"
-else
+screen="${screen:-home}"
+out="${4:-$here/$dir/render-$screen.png}"
+if [ -f "$here/$dir/screenshot.html" ]; then
   url="file://$here/$dir/screenshot.html?screen=$screen&scroll=$scroll"
-  out="${4:-$here/$dir/render-$screen.png}"
+  size="${WINDOW:-390,844}"                                # device screen only
+else
+  url="file://$here/$dir/index.html"                       # plain full page
+  size="${WINDOW:-470,910}"
 fi
 
 "$browser" --headless --disable-gpu --allow-file-access-from-files --hide-scrollbars \
-  --screenshot="$out" --window-size="${WINDOW:-470,910}" --virtual-time-budget=4000 \
+  --screenshot="$out" --window-size="$size" --virtual-time-budget=4000 \
   "$url"
 printf '%s\n' "$out"

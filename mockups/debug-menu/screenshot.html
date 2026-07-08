@@ -1,11 +1,16 @@
 <!DOCTYPE html><html><body style="margin:0;background:#07090c">
-<iframe id="f" src="index.html" style="width:470px;height:910px;border:0"></iframe>
+<iframe id="f" src="index.html" style="width:390px;height:844px;border:0"></iframe>
 <script>
 const q = new URLSearchParams(location.search);
 document.getElementById('f').addEventListener('load', function () {
-  const w = this.contentWindow;
+  const w = this.contentWindow, d = this.contentDocument;
+  // Capture the device only: strip the page chrome (side nav, body padding,
+  // shadow ring) so a 390x844 window is exactly the phone.
+  const st = d.createElement('style');
+  st.textContent = 'body{padding:0;gap:0} .sidenav{display:none} .phone{box-shadow:none}';
+  d.head.appendChild(st);
   const s = q.get('screen');
-  if (s) w.eval("deepLink('" + s + "')");
+  if (s && s !== 'home') w.eval("deepLink('" + s + "')"); // home: iframe is already there; go('home') would push a stray back link
   const sc = q.get('scroll');
   if (sc) w.eval("document.getElementById('body').scrollTop=" + sc);
 });
