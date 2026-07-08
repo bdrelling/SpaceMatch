@@ -5,7 +5,7 @@ const q = new URLSearchParams(location.search);
 document.getElementById('f').addEventListener('load', function () {
   const w = this.contentWindow;
   const s = q.get('screen');
-  if (s) w.eval("go('" + s + "')");
+  if (s) w.eval("deepLink('" + s + "')");
   const sc = q.get('scroll');
   if (sc) w.eval("document.getElementById('body').scrollTop=" + sc);
 });

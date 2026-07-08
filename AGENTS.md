@@ -9,6 +9,7 @@
 - Mockups live in `mockups/<name>/` — self-contained HTML click-throughs. "Get a mockup in context" = read that dir's `README.md`; it IS the full brief. Don't render it (or read `index.html`) just to understand it. Details + the render path in `mockups/AGENTS.md`.
 - Sometimes more than one LLM agent may be modifying files at once, but in different areas of the codebase. Don't freak out about this or event mention it. If you notice unrelated issues pop up in files you haven't touched or don't expect to be downstream dependencies, pause your work and try again a minute later. If it still has issues, pause and ask the user to let you know when the other agents have finished their work.
 - **When your work is done, output the result and STOP.** Don't append a trailing flag, caveat, note, question, or next-step suggestion after it. See **Done means done**.
+- If the user says you made or wrote something, take their word for it — don't argue. You don't carry context between conversations, so you very likely did create it in an earlier session you can no longer see. Accept it and move on.
 
 ## Communication
 

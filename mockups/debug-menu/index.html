@@ -14,7 +14,7 @@
   body {
     background: #07090c; color: var(--text);
     font: 14px/1.45 -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-    display: flex; justify-content: center; align-items: flex-start; padding: 24px;
+    display: flex; justify-content: center; align-items: flex-start; padding: 24px; gap: 28px;
   }
 
   /* ---- device frame ---- */
@@ -34,6 +34,33 @@
   .homebar {
     position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
     width: 130px; height: 5px; border-radius: 3px; background: #333d47; z-index: 5;
+  }
+
+  /* ---- side nav (viewer aid — outside the phone, jumps to any catalog) ---- */
+  .stage { flex: 1; display: flex; justify-content: center; }
+  .sidenav {
+    flex: none; width: 208px; position: sticky; top: 24px; align-self: flex-start;
+    color: var(--text);
+  }
+  .navbrand {
+    display: flex; align-items: center; margin: 2px 0 12px 10px;
+    font-size: 15px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+    cursor: pointer; user-select: none;
+  }
+  .navbrand:hover { color: var(--accent); }
+  .navbrand .prompt { font-family: var(--mono); color: #fff; margin-right: 8px; letter-spacing: 0; }
+  .nav-section {
+    margin: 16px 0 5px 10px;
+    font-size: 11px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: var(--dim);
+  }
+  .nav-item {
+    padding: 7px 12px 7px 22px; border-left: 2px solid transparent; border-radius: 0 6px 6px 0;
+    cursor: pointer; user-select: none; color: var(--text);
+  }
+  .nav-item:hover { background: var(--hover); }
+  .nav-item.active {
+    color: var(--accent); font-weight: 600;
+    background: rgba(86, 200, 216, 0.09); border-left-color: var(--accent);
   }
   .body { flex: 1; overflow-y: auto; padding: 2px 16px 48px; }
   .body::-webkit-scrollbar { display: none; }
@@ -77,11 +104,18 @@
 
   /* ---- sections + lists ---- */
   .sectionlabel {
-    margin: 18px 4px 8px;
+    margin: 15px 4px 6px;
     font-size: 11px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: var(--dim);
   }
-  .list { background: var(--panel); border-radius: 10px; overflow: hidden; margin-bottom: 10px; }
-  .cell { display: flex; align-items: center; gap: 10px; padding: 11px 14px; min-height: 46px; }
+  .bigtitle + .sectionlabel { margin-top: 4px; }
+  .divider { height: 1px; background: rgba(255,255,255,.09); margin: 4px 2px 16px; }
+  /* group takes the tile silhouette: squared top/left/bottom, chamfered top-right,
+     so the left-edge edit bar reads as one clean straight line */
+  .list {
+    background: var(--panel); overflow: hidden; margin-bottom: 10px;
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+  }
+  .cell { display: flex; align-items: center; gap: 10px; padding: 11px 14px; min-height: 46px; position: relative; }
   .cell + .cell { border-top: 1px solid var(--sep); }
   .cell.tap { cursor: pointer; }
   .cell.tap:hover { background: var(--hover); }
@@ -95,11 +129,19 @@
   .sign { flex: none; font-size: 12px; }
   .sign.up { color: var(--good); }
   .sign.down { color: #d06a6a; }
+  /* every row carries the same left-edge edit bar as the menu tiles */
+  .cell::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 5px;
+    background: rgba(0,0,0,.2);
+  }
+  .cell.edited::before { background: #dcb63f; }
+  /* dimmed row — a stat not on the authored list (underlying / not yet decided) */
+  .cell.dim .label { color: var(--dim); opacity: .7; }
 
   /* ---- tile grid (chamfered) ---- */
   .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px; }
   .tile {
-    background: var(--panel); border-radius: 4px; padding: 13px 13px 11px;
+    background: var(--panel); padding: 13px 13px 11px;
     cursor: pointer; position: relative;
     clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
   }
@@ -129,9 +171,16 @@
   .flow { display: flex; align-items: stretch; gap: 8px; margin-bottom: 10px; }
   .flow .arrow { color: var(--dim); align-self: center; flex: none; }
   .flowtile {
-    flex: 1; background: var(--panel); border-radius: 4px; padding: 10px 12px; cursor: pointer;
+    flex: 1; background: var(--panel); padding: 10px 12px; cursor: pointer;
     clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
   }
+  /* clear button — small, right by the close-button style, in its own footer section */
+  .clearsec { margin: 24px 2px 4px; }
+  .clearbtn {
+    display: inline-flex; align-items: center; padding: 7px 18px; border-radius: 8px;
+    background: rgba(255,255,255,.08); color: var(--dim); font-size: 13px; cursor: pointer; user-select: none;
+  }
+  .clearbtn:hover { background: rgba(208,106,106,.18); color: #e6a5a5; }
   .flowtile:hover { background: var(--hover); }
   .flowtile .fcap { font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--dim); margin-bottom: 2px; }
   .flowtile .fval { font-weight: 600; color: var(--good); }
@@ -143,7 +192,7 @@
   .stepper { display: flex; align-items: center; gap: 10px; flex: none; }
   .stepper span { width: 24px; height: 24px; border-radius: 6px; background: #2a3745; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; }
   .stepper b { min-width: 16px; text-align: center; font-family: var(--mono); }
-  .ctl-slider { flex: none; width: 90px; height: 3px; background: #2e3945; border-radius: 2px; position: relative; }
+  .ctl-slider { flex: none; width: 72px; height: 3px; background: #2e3945; border-radius: 2px; position: relative; }
   .ctl-slider em { position: absolute; left: 0; height: 100%; background: var(--accent); border-radius: 2px; }
   .ctl-slider i { position: absolute; top: -5px; width: 13px; height: 13px; border-radius: 4px; background: #b6c2cc; margin-left: -6px; }
   .ctl-toggle { flex: none; width: 36px; height: 20px; border-radius: 5px; background: var(--accent); position: relative; }
@@ -151,6 +200,31 @@
   .ctl-toggle i { position: absolute; right: 2px; top: 2px; width: 16px; height: 16px; border-radius: 4px; background: #fff; }
   .ctl-toggle.off i { right: auto; left: 2px; }
   .ctl-swatch { flex: none; width: 26px; height: 18px; border-radius: 4px; }
+  /* editable number box beside a slider — slide or type for precision */
+  .numbox {
+    flex: none; width: 44px; background: #0f151c; border: 1px solid #2e3945; border-radius: 5px;
+    color: var(--text); font-family: var(--mono); font-size: 12px; text-align: center; padding: 3px 2px;
+  }
+  /* 2D texture preview placeholder (checkerboard = no art yet) */
+  .ctl-texture {
+    flex: none; width: 26px; height: 22px; border-radius: 4px;
+    background:
+      linear-gradient(45deg, #2a3745 25%, transparent 25%, transparent 75%, #2a3745 75%),
+      linear-gradient(45deg, #2a3745 25%, #10161d 25%, #10161d 75%, #2a3745 75%);
+    background-size: 10px 10px; background-position: 0 0, 5px 5px;
+  }
+  /* description field — label on top, wrapped copy below */
+  .field-desc { flex-direction: column; align-items: stretch; gap: 4px; }
+  .field-desc .desc { color: var(--dim); font-size: 13px; line-height: 1.4; }
+  /* a row that carries an explanatory subtitle (e.g. Stacking / Decay) */
+  .cell.hasdesc { flex-direction: column; align-items: stretch; gap: 4px; }
+  .cell.hasdesc .toprow { display: flex; align-items: center; gap: 10px; }
+  .sub { color: var(--dim); font-size: 12px; line-height: 1.35; }
+  /* status tile symbol on a tinted chip (statuses carry a symbol + color) */
+  .tile.status .ssym {
+    width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-size: 20px; margin-bottom: 9px;
+  }
 
   .toast {
     position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%);
@@ -163,11 +237,15 @@
 </head>
 <body>
 
-<div class="phone">
-  <div class="screen">
-    <div class="notch"></div>
-    <div class="body" id="body"></div>
-    <div class="homebar"></div>
+<nav class="sidenav" id="sidenav"></nav>
+
+<div class="stage">
+  <div class="phone">
+    <div class="screen">
+      <div class="notch"></div>
+      <div class="body" id="body"></div>
+      <div class="homebar"></div>
+    </div>
   </div>
 </div>
 
@@ -188,21 +266,48 @@ function toast(msg) {
 const go = id => { stack.push(id); render(); };
 const pop = () => { if (stack.length > 1) { stack.pop(); render(); } };
 
+/* Logical parent of each screen — lets a deep link (e.g. screenshots) rebuild the
+   full stack so the back link reads the real parent catalog, never a bare "Debug". */
+const PARENTS = {
+  pick_match_configs: 'home', pick_starships: 'home',
+  cat_starships: 'home', cat_modules: 'home', cat_module_grids: 'home', cat_match_configs: 'home',
+  cat_statuses: 'home', ed_status: 'cat_statuses', ed_modifier: 'ed_status', pick_adjustment: 'ed_modifier',
+  cat_adjustments: 'home', ed_adjustment: 'cat_adjustments', pick_stats: 'ed_adjustment',
+  cat_stats: 'home', ed_stat: 'cat_stats',
+  cat_resources: 'home', ed_resource: 'cat_resources',
+  cat_abilities: 'home', ed_ability: 'cat_abilities', ed_cost: 'ed_ability', pick_resources: 'ed_cost',
+  cat_effects: 'home', ed_effect: 'cat_effects', ed_attack: 'ed_effect',
+  cat_transforms: 'home', ed_transform: 'cat_transforms',
+  cat_tiles: 'home', ed_tile: 'cat_tiles',
+  cat_rules: 'home',
+  cat_rulesets: 'home', ed_ruleset: 'cat_rulesets', menu_rule: 'ed_ruleset', ed_newrule: 'menu_rule',
+};
+function deepLink(id) {
+  const chain = [id];
+  for (let p = PARENTS[id]; p; p = PARENTS[p]) chain.unshift(p);
+  if (chain[0] !== 'home') chain.unshift('home');
+  stack = chain;
+  render();
+}
+
 /* ---------- builders ---------- */
 let handlers = {};
 let hid = 0;
 function on(fn) { const k = 'h' + (hid++); handlers[k] = fn; return k; }
 
 const section = t => `<div class="sectionlabel">${t}</div>`;
+// filename (unique id) -> display name, e.g. target_lock -> "Target Lock"
+const titleize = s => s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 const list = rows => `<div class="list">${rows.join('')}</div>`;
 const grid = tiles => `<div class="grid">${tiles.join('')}</div>`;
 const scroller = tiles => `<div class="scroller">${tiles.join('')}</div>`;
 const chips = items => `<div class="chips">${items.join('')}</div>`;
+const divider = () => `<div class="divider"></div>`;
 
 function nav(label, opts = {}) {
-  const { to, detail = '', count = null, sign = '' } = opts;
+  const { to, detail = '', count = null, sign = '', edited = false, dim = false } = opts;
   const h = on(() => to ? go(to) : toast('Not mocked'));
-  return `<div class="cell tap" data-h="${h}">
+  return `<div class="cell tap${edited ? ' edited' : ''}${dim ? ' dim' : ''}" data-h="${h}">
     <div class="label">${label}</div>
     ${sign ? `<div class="sign ${sign}">${sign === 'up' ? '▲' : '▼'}</div>` : ''}
     ${detail ? `<div class="v">${detail}</div>` : ''}
@@ -238,22 +343,68 @@ function flowTile(caption, value, to) {
 const flow = tiles => `<div class="flow">${tiles.join('<div class="arrow">›</div>')}</div>`;
 
 function scalar(kind, label, value, opts = {}) {
-  const { off = false, pct = 55 } = opts;
+  const { off = false, pct = 55, edited = false, toggle = null, none = false } = opts;
   let ctl = `<div class="v">${value}</div>`;
-  if (kind === 'slider') ctl = `<div class="v">${value}</div><div class="ctl-slider"><em style="width:${pct}%"></em><i style="left:${pct}%"></i></div>`;
+  if (kind === 'slider') {
+    // `none` = unbounded (no min / no max); toggle turns the bound on/off
+    ctl = none
+      ? `<div class="v">None</div>`
+      : `<div class="ctl-slider"><em style="width:${pct}%"></em><i style="left:${pct}%"></i></div><input class="numbox" value="${value}">`;
+    if (toggle !== null) ctl += `<div class="ctl-toggle${toggle ? '' : ' off'}"><i></i></div>`;
+  }
   if (kind === 'toggle') ctl = `<div class="ctl-toggle${off ? ' off' : ''}"><i></i></div>`;
   if (kind === 'color') ctl = `<div class="ctl-swatch" style="background:${value}"></div>`;
   if (kind === 'dropdown') ctl = `<div class="v">${value} ▾</div>`;
-  return `<div class="cell"><div class="label">${label}</div>${ctl}</div>`;
+  return `<div class="cell${edited ? ' edited' : ''}"><div class="label">${label}</div>${ctl}</div>`;
 }
 
-function seg(label, options, onIndex) {
+function descField(text) {
+  return `<div class="cell field-desc"><div class="label">Description</div><div class="desc">${text}</div></div>`;
+}
+
+function clearBtn() {
+  return `<div class="clearsec"><div class="clearbtn" data-h="${on(() => toast('Cleared'))}">Clear</div></div>`;
+}
+
+// descriptions for effect-system kinds — shown in the picker AND on the kind's page
+const KIND_DESCS = {
+  Absorb: 'Spends the status’s stacks to soak an incoming value; the overflow passes through.',
+  Clamp: 'Holds the value within a minimum and/or maximum range.',
+  'Flat Mitigation': 'Subtracts a fixed amount from the value.',
+  Multiplier: 'Scales the value by a percentage.',
+  Attack: 'Deals damage to the target.',
+  Shield: 'Grants Shield stacks to the target.',
+  Dodge: 'Grants a chance to avoid the next hit.',
+  Drain: 'Removes stacks or resource from the target.',
+  'Damage Buff': 'Increases the target’s outgoing damage.',
+  Disable: 'Prevents the target from acting.',
+  'Apply Status': 'Applies a status to the target.',
+  'Remove Status': 'Removes a specific status from the target.',
+  'Remove By Type': 'Removes all buffs, or all debuffs, from the target.',
+  'Modify Stat': 'Changes a stat by an amount.',
+  'Set Stat': 'Sets a stat to a specific value.',
+  'Drain Resource': 'Removes an ability resource from the target.',
+};
+
+function textureField(name) {
+  const h = on(() => toast('Pick texture'));
+  return `<div class="cell tap" data-h="${h}"><div class="label">Texture</div><div class="ctl-texture"></div><div class="v">${name}</div><div class="chev">›</div></div>`;
+}
+
+function statusTile(name, emoji, color, to, edited = false) {
+  const h = on(() => go(to));
+  return `<div class="tile status${edited ? ' edited' : ''}" data-h="${h}">
+    <div class="ssym" style="background:${color}22;box-shadow:inset 0 0 0 1px ${color}88">${emoji}</div>
+    <div class="tname">${name}</div></div>`;
+}
+
+function seg(label, options, onIndex, edited = false) {
   const spans = options.map((o, i) => `<span class="${i === onIndex ? 'on' : ''}">${o}</span>`).join('');
-  return `<div class="cell"><div class="label">${label}</div><div class="seg">${spans}</div></div>`;
+  return `<div class="cell${edited ? ' edited' : ''}"><div class="label">${label}</div><div class="seg">${spans}</div></div>`;
 }
 
-function stepper(label, value) {
-  return `<div class="cell"><div class="label">${label}</div>
+function stepper(label, value, edited = false) {
+  return `<div class="cell${edited ? ' edited' : ''}"><div class="label">${label}</div>
     <div class="stepper"><span data-h="${on(() => toast('−1'))}">−</span><b>${value}</b><span data-h="${on(() => toast('+1'))}">＋</span></div></div>`;
 }
 
@@ -264,12 +415,13 @@ function ref(label, value, pickerId) {
     <div class="v refv">${value}</div><div class="chev">›</div></div>`;
 }
 
-function variant(label, kind, editorId, menuId) {
+function variant(label, kind, editorId, menuId, edited = false, desc = '') {
   const hRow = on(() => editorId ? go(editorId) : go(menuId));
-  return `<div class="cell tap" data-h="${hRow}">
-    <div class="label">${label}</div>
-    <div class="v varv">${kind}</div>
-    <div class="chev">›</div></div>`;
+  const head = `<div class="label"><b>${label}</b></div><div class="v varv">${kind}</div><div class="chev">›</div>`;
+  if (!desc) return `<div class="cell tap${edited ? ' edited' : ''}" data-h="${hRow}">${head}</div>`;
+  return `<div class="cell tap hasdesc${edited ? ' edited' : ''}" data-h="${hRow}">
+    <div class="toprow">${head}</div>
+    <div class="sub">${desc}</div></div>`;
 }
 
 function pickRow(label, opts = {}) {
@@ -284,10 +436,30 @@ function kindTile(kind, to) {
   return tile(kind, { to: to || 'kind:' + kind, compact: true });
 }
 
-function pickTile(name) {
+function pickTile(name, emoji) {
   const h = on(() => { pop(); toast(`Picked: ${name}`); });
-  return `<div class="tile compact" data-h="${h}"><div class="tname">${name}</div></div>`;
+  return `<div class="tile${emoji ? '' : ' compact'}" data-h="${h}">
+    ${emoji ? `<div class="temoji">${emoji}</div>` : ''}
+    <div class="tname">${name}</div></div>`;
 }
+
+// a picker option that carries an explanatory description (selects + returns)
+function optRow(name, desc) {
+  const h = on(() => { pop(); toast(`Picked: ${name}`); });
+  return `<div class="cell tap hasdesc" data-h="${h}">
+    <div class="toprow"><div class="label"><b>${name}</b></div><div class="chev">›</div></div>
+    <div class="sub">${desc}</div></div>`;
+}
+
+// a described option that opens the kind's own editor
+function optNav(name, desc, to) {
+  const h = on(() => go(to));
+  return `<div class="cell tap hasdesc" data-h="${h}">
+    <div class="toprow"><div class="label"><b>${name}</b></div><div class="chev">›</div></div>
+    <div class="sub">${desc || ''}</div></div>`;
+}
+
+const STAT_SYMBOLS = { health: '❤️', armor: '🛡️', shields: '🔷', weapons: '💥', engines: '🚀', computers: '💻', sensors: '📡', energy: '⚡' };
 
 /* ---------- screens ---------- */
 const SCREENS = {
@@ -304,120 +476,280 @@ home: () => ({ title: '', rows: [
       scalar('toggle', 'Skip Intro', ''),
     ])}
     ${list([
-      ref('Quick Match', 'default', 'pick_match_configs'),
-      ref('Starship', 'freighter', 'pick_starships'),
+      ref('Quick Match', 'Default', 'pick_match_configs'),
+      ref('Starship', 'Default', 'pick_starships'),
     ])}
   </div>`,
+  section('Primitives'),
+  scroller([
+    tile('Resources', { emoji: '🔋', to: 'cat_resources', count: 6 }),
+    tile('Tiles', { emoji: '🎨', to: 'cat_tiles', count: 7 }),
+    tile('Stats', { emoji: '📊', to: 'cat_stats', count: 8 }),
+    tile('Statuses', { emoji: '✨', to: 'cat_statuses', count: 3, edited: true }),
+  ]),
+  section('Building Blocks'),
+  scroller([
+    tile('Adjustments', { emoji: '🎚️', to: 'cat_adjustments', count: 3 }),
+    tile('Effects', { emoji: '💫', to: 'cat_effects', count: 3 }),
+    tile('Transforms', { emoji: '🔻', to: 'cat_transforms', count: 3 }),
+  ]),
   section('Content'),
   scroller([
-    tile('Starships', { emoji: '🛸', count: 0 }),
-    tile('Modules', { emoji: '🧱', count: 0 }),
-    tile('Module Grids', { emoji: '🔲', count: 0 }),
-    tile('Tiles', { emoji: '🎨', to: 'cat_tiles', count: 5 }),
-  ]),
-  section('Effects'),
-  scroller([
     tile('Abilities', { emoji: '⚡', to: 'cat_abilities', count: 5 }),
-    tile('Statuses', { emoji: '✨', to: 'cat_statuses', count: 3, edited: true }),
-    tile('Stats', { emoji: '📊', to: 'cat_stats', count: 13 }),
-    tile('Resources', { emoji: '🔋', to: 'cat_resources', count: 5 }),
+    tile('Starships', { emoji: '🛸', to: 'cat_starships', count: 2 }),
+    tile('Modules', { emoji: '🧱', to: 'cat_modules', count: 7 }),
+    tile('Module Grids', { emoji: '🔲', to: 'cat_module_grids', count: 2 }),
   ]),
-  section('Rules'),
+  section('Config'),
   scroller([
+    tile('Rules', { emoji: '📐', to: 'cat_rules', count: 5 }),
     tile('Rulesets', { emoji: '📜', to: 'cat_rulesets', count: 7, edited: true }),
-    tile('Match Configs', { emoji: '🚀', count: 0 }),
+    tile('Match Configs', { emoji: '🚀', to: 'cat_match_configs', count: 2 }),
   ]),
 ]}),
 
 pick_match_configs: () => ({ title: 'Quick Match', rows: [
-  list([ pickRow('default'), pickRow('alternate') ]),
+  list([ pickRow('Default'), pickRow('Wide') ]),
 ]}),
 
 pick_starships: () => ({ title: 'Starship', rows: [
-  list([ pickRow('freighter'), pickRow('interceptor') ]),
+  list([ pickRow('Default'), pickRow('Computer') ]),
+]}),
+
+/* --- Content placeholders (catalogs listed, item editors not yet mocked) --- */
+cat_starships: () => ({ title: 'Starships', rows: [
+  grid([
+    tile('Default', { emoji: '🛸' }),
+    tile('Computer', { emoji: '🤖' }),
+  ]),
+]}),
+
+cat_modules: () => ({ title: 'Modules', rows: [
+  grid([
+    tile('Engine', { emoji: '🚀' }),
+    tile('Laser Cannon', { emoji: '🔫' }),
+    tile('Life Support', { emoji: '🌿' }),
+    tile('Reactor', { emoji: '☢️' }),
+    tile('Sensor Array', { emoji: '📡' }),
+    tile('Shield Generator', { emoji: '🛡️' }),
+    tile('Warp Core', { emoji: '🌀' }),
+  ]),
+]}),
+
+cat_module_grids: () => ({ title: 'Module Grids', rows: [
+  grid([
+    tile('Default', { emoji: '🔲' }),
+    tile('Computer', { emoji: '🔲' }),
+  ]),
+]}),
+
+cat_match_configs: () => ({ title: 'Match Configs', rows: [
+  list(['Default', 'Wide'].map(s => nav(s))),
 ]}),
 
 /* --- Statuses --- */
 cat_statuses: () => ({ title: 'Statuses', action: { fn: () => go('ed_status') }, rows: [
-  list([
-    nav('dodge', { to: 'ed_status', sign: 'up' }),
-    nav('shield', { to: 'ed_status', sign: 'up' }),
-    nav('target_lock', { to: 'ed_status', sign: 'down' }),
+  `<div class="sectionlabel">Buffs <span class="sign up">▲</span></div>`,
+  grid([
+    statusTile('Dodge', '💨', '#4fc3d8', 'ed_status'),
+    statusTile('Shield', '🛡️', '#59adeb', 'ed_status', true),
+    statusTile('Placeholder', '❔', '#7b8794', 'ed_status'),
+    statusTile('Placeholder', '❔', '#7b8794', 'ed_status'),
+  ]),
+  `<div class="sectionlabel">Debuffs <span class="sign down">▼</span></div>`,
+  grid([
+    statusTile('Target Lock', '🎯', '#d06a6a', 'ed_status'),
+    statusTile('Placeholder', '❔', '#7b8794', 'ed_status'),
+    statusTile('Placeholder', '❔', '#7b8794', 'ed_status'),
+    statusTile('Placeholder', '❔', '#7b8794', 'ed_status'),
   ]),
 ]}),
 
-ed_status: () => ({ title: 'shield', rows: [
+ed_status: () => ({ title: 'Shield', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '4001'), scalar('text', 'Filename', 'shield') ]),
+  section('Information'),
   list([
-    scalar('text', 'Name', 'shield'),
-    seg('Sign', ['Buff', 'Debuff'], 0),
-    stepper('Cap', 3),
+    scalar('text', 'Name', 'Shield'),
+    descField('Soaks incoming damage against its stacks; once depleted, the overflow passes through to Health.'),
   ]),
+  section('Configuration'),
   list([
-    variant('Stacking', 'Stack', null, 'menu_stackrule'),
-    variant('Decay', 'Timing', null, 'menu_decayrule'),
+    seg('Type', ['Buff', 'Debuff'], 0),
+    stepper('Maximum Stacks', 3, true),
+    variant('Stacking', 'Stack', null, 'menu_stackrule', true, 'Each application adds a separate instance.'),
+    variant('Decay', 'Timing', null, 'menu_decayrule', false, 'Expires after a set number of turns.'),
   ]),
   section('Modifiers'),
-  chips([ chip('Armor +5', { to: 'ed_modifier' }), chip('', { add: true }) ]),
+  chips([ chip('', { add: true, menu: 'ed_modifier' }) ]),
   section('Effects'),
-  chips([ chip('WhenHit › Dodge', { to: 'kind:TriggeredEffect' }), chip('', { add: true }) ]),
+  chips([ chip('', { add: true, menu: 'ed_effect' }) ]),
   section('Transforms'),
-  chips([ chip('', { add: true, menu: 'menu_step' }) ]),
+  chips([ chip('Absorb', { to: 'kind:Absorb' }), chip('', { add: true, menu: 'menu_step' }) ]),
 ]}),
 
+// a Modifier attaches a reusable Adjustment (picked, not edited here) and sets its amount
 ed_modifier: () => ({ title: 'Modifier', rows: [
   list([
-    ref('Stat', 'Armor', 'pick_stats'),
-    seg('Operation', ['Add', 'Multiply'], 0),
+    ref('Adjustment', '+Armor', 'pick_adjustment'),
     scalar('slider', 'Amount', '5', { pct: 25 }),
   ]),
+  clearBtn(),
+]}),
+
+pick_adjustment: () => ({ title: 'Adjustment', rows: [
+  list([
+    optRow('+Armor', 'Adds to a ship’s Armor value.'),
+    optRow('×Shields', 'Scales a ship’s Shields.'),
+    optRow('Set Health', 'Sets Health to a fixed value.'),
+  ]),
+]}),
+
+/* --- Adjustments (reusable building block: Stat + Applies To + Operation) --- */
+cat_adjustments: () => ({ title: 'Adjustments', action: { fn: () => go('ed_adjustment') }, rows: [
+  list([
+    nav('+Armor', { to: 'ed_adjustment' }),
+    nav('×Shields', { to: 'ed_adjustment' }),
+    nav('Set Health', { to: 'ed_adjustment' }),
+  ]),
+]}),
+
+ed_adjustment: () => ({ title: '+Armor', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '7001'), scalar('text', 'Filename', 'armor_add') ]),
+  section('Information'),
+  list([
+    scalar('text', 'Name', '+Armor'),
+    descField('Adds to a ship’s Armor value.'),
+  ]),
+  section('Configuration'),
+  list([
+    ref('Stat', 'Armor', 'pick_stats'),
+    scalar('dropdown', 'Applies To', 'Current Value'),
+    seg('Operation', ['Add', 'Multiply'], 0),
+  ]),
+]}),
+
+/* --- Effects (reusable building block; + creates one via the kind picker) --- */
+cat_effects: () => ({ title: 'Effects', action: { fn: () => go('menu_action') }, rows: [
+  list([
+    nav('Placeholder', { to: 'ed_effect' }),
+    nav('Placeholder', { to: 'ed_effect' }),
+    nav('Placeholder', { to: 'ed_effect' }),
+  ]),
+]}),
+
+/* --- Transforms (reusable building block; + creates one via the kind picker) --- */
+cat_transforms: () => ({ title: 'Transforms', action: { fn: () => go('menu_step') }, rows: [
+  list([
+    nav('Placeholder', { to: 'ed_transform' }),
+    nav('Placeholder', { to: 'ed_transform' }),
+    nav('Placeholder', { to: 'ed_transform' }),
+  ]),
+]}),
+
+ed_transform: () => ({ title: 'Absorb', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '9001'), scalar('text', 'Filename', 'shield_absorb') ]),
+  section('Information'),
+  list([
+    scalar('text', 'Name', 'Absorb'),
+    descField('Spends the status’s stacks to soak an incoming value; the overflow passes through.'),
+  ]),
+  section('Configuration'),
+  list([ variant('Kind', 'Absorb', null, 'menu_step', false, 'How the value is reshaped.') ]),
 ]}),
 
 pick_stats: () => ({ title: 'Stat', rows: [
-  grid(['armor', 'block', 'defense', 'energy', 'fuel', 'health', 'power', 'sensors', 'speed', 'weapons'].map(s => pickTile(s))),
+  grid(['health', 'armor', 'shields', 'weapons', 'engines', 'computers', 'sensors', 'energy'].map(s => pickTile(titleize(s), STAT_SYMBOLS[s]))),
 ]}),
 
 /* --- Stats --- */
 cat_stats: () => ({ title: 'Stats', action: { fn: () => go('ed_stat') }, rows: [
-  list(['armor', 'block', 'cargo', 'defense', 'energy', 'fuel', 'health', 'life_support', 'power', 'sensors', 'speed', 'warp_capacity', 'weapons'].map(s =>
-    nav(s, { to: 'ed_stat' }))),
+  list([
+    nav('Health', { to: 'ed_stat' }),
+    nav('Armor', { to: 'ed_stat' }),
+    nav('Shields', { to: 'ed_stat' }),
+    nav('Weapons', { to: 'ed_stat' }),
+    nav('Engines', { to: 'ed_stat' }),
+    nav('Computers', { to: 'ed_stat' }),
+    nav('Sensors', { to: 'ed_stat' }),
+    nav('Energy', { to: 'ed_stat' }),
+  ]),
+  `<div class="sectionlabel">Hidden · <span style="text-transform:none;letter-spacing:0;font-weight:400">not shown to players</span></div>`,
+  list([
+    nav('Placeholder', { to: 'ed_stat', dim: true }),
+    nav('Placeholder', { to: 'ed_stat', dim: true }),
+  ]),
 ]}),
 
-ed_stat: () => ({ title: 'health', rows: [
+ed_stat: () => ({ title: 'Health', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '1001'), scalar('text', 'Filename', 'health') ]),
+  section('Information'),
   list([
-    scalar('text', 'Name', 'health'),
-    scalar('slider', 'Minimum', '0', { pct: 0 }),
-    scalar('slider', 'Maximum', '40', { pct: 40 }),
-    scalar('slider', 'Default', '40', { pct: 40 }),
+    scalar('text', 'Name', 'Health'),
+    descField('Hull integrity — the ship is destroyed when it reaches the minimum.'),
   ]),
+  section('Configuration'),
+  list([
+    // toggle off a bound to make it unbounded ("None")
+    scalar('slider', 'Minimum', '0', { pct: 0, toggle: true }),
+    scalar('slider', 'Maximum', 'None', { none: true, toggle: false }),
+    scalar('slider', 'Default', '20', { pct: 20 }),
+  ]),
+  section('Display'),
+  list([ scalar('toggle', 'Hidden', '', { off: true }) ]),
 ]}),
 
 /* --- Resources --- */
 cat_resources: () => ({ title: 'Resources', action: { fn: () => go('ed_resource') }, rows: [
-  list(['combat', 'propulsion', 'science', 'shields', 'warp'].map(s =>
-    nav(s, { to: 'ed_resource' }))),
+  grid([
+    tile('Tactics', { swatch: '#e05457', to: 'ed_resource' }),
+    tile('Security', { swatch: '#59adeb', to: 'ed_resource' }),
+    tile('Science', { swatch: '#70c780', to: 'ed_resource' }),
+    tile('Engineering', { swatch: '#f7cc4d', to: 'ed_resource' }),
+  ]),
+  divider(),
+  grid([
+    tile('Antimatter', { swatch: '#a878db', to: 'ed_resource' }),
+    tile('Alloy', { swatch: '#99a3b3', to: 'ed_resource' }),
+  ]),
 ]}),
 
-ed_resource: () => ({ title: 'combat', rows: [
+ed_resource: () => ({ title: 'Tactics', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '2001'), scalar('text', 'Filename', 'tactics') ]),
+  section('Information'),
   list([
-    scalar('text', 'Name', 'combat'),
+    scalar('text', 'Name', 'Tactics'),
+    descField('Powers offensive abilities — collected from Tactics tiles.'),
   ]),
+  section('Display'),
+  list([ scalar('color', 'Color', '#e05457') ]),
 ]}),
 
 /* --- Abilities --- */
 cat_abilities: () => ({ title: 'Abilities', action: { fn: () => go('ed_ability') }, rows: [
-  list([
-    nav('evasive_maneuvers', { to: 'ed_ability', detail: '8' }),
-    nav('fire_weapons', { to: 'ed_ability', detail: '10' }),
-    nav('raise_shields', { to: 'ed_ability', detail: '12' }),
-    nav('repair_hull', { to: 'ed_ability', detail: '15' }),
-    nav('target_lock', { to: 'ed_ability', detail: '6' }),
+  grid([
+    tile('Evasive Maneuvers', { emoji: '💨', to: 'ed_ability' }),
+    tile('Fire Weapons', { emoji: '💥', to: 'ed_ability' }),
+    tile('Raise Shields', { emoji: '🛡️', to: 'ed_ability' }),
+    tile('Repair Hull', { emoji: '🔧', to: 'ed_ability' }),
+    tile('Target Lock', { emoji: '🎯', to: 'ed_ability' }),
   ]),
 ]}),
 
-ed_ability: () => ({ title: 'fire_weapons', rows: [
-  list([ scalar('text', 'Name', 'fire_weapons') ]),
+ed_ability: () => ({ title: 'Fire Weapons', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '5001'), scalar('text', 'Filename', 'fire_weapons') ]),
+  section('Information'),
+  list([
+    scalar('text', 'Name', 'Fire Weapons'),
+    descField('Fires the primary weapons at a chosen target.'),
+  ]),
   section('Costs'),
-  chips([ chip('10 × combat', { to: 'ed_cost' }), chip('', { add: true }) ]),
+  chips([ chip('10 × Tactics', { to: 'ed_cost' }), chip('', { add: true }) ]),
   section('Effects'),
   flow([
     flowTile('Target', 'Opponent', 'ed_effect'),
@@ -428,69 +760,103 @@ ed_ability: () => ({ title: 'fire_weapons', rows: [
 
 ed_cost: () => ({ title: 'Cost', rows: [
   list([
-    ref('Resource', 'Combat', 'pick_resources'),
+    ref('Resource', 'Tactics', 'pick_resources'),
     scalar('slider', 'Amount', '10', { pct: 50 }),
   ]),
+  clearBtn(),
 ]}),
 
 pick_resources: () => ({ title: 'Resource', rows: [
-  grid(['combat', 'propulsion', 'science', 'shields', 'warp'].map(s => pickTile(s))),
+  grid(['tactics', 'security', 'science', 'engineering'].map(s => pickTile(titleize(s)))),
 ]}),
 
 ed_effect: () => ({ title: 'Effect', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '8001'), scalar('text', 'Filename', 'effect') ]),
+  section('Information'),
+  list([
+    scalar('text', 'Name', 'Effect'),
+    descField('Runs an action on a target when its trigger fires.'),
+  ]),
+  section('Behavior'),
   flow([
     flowTile('Target', 'Opponent', 'menu_target'),
     flowTile('Action', 'Attack', 'ed_attack'),
   ]),
   section('Conditions'),
   chips([ chip('', { add: true, menu: 'menu_condition' }) ]),
+  clearBtn(),
 ]}),
 
 ed_attack: () => ({ title: 'Attack', rows: [
   list([
     variant('Amount', 'max(weapons)', null, 'menu_amount'),
   ]),
+  clearBtn(),
 ]}),
 
 /* --- Tiles --- */
 cat_tiles: () => ({ title: 'Tiles', action: { fn: () => go('ed_tile') }, rows: [
   grid([
-    tile('combat', { swatch: '#c05656', to: 'ed_tile' }),
-    tile('propulsion', { swatch: '#c08a3e', to: 'ed_tile' }),
-    tile('science', { swatch: '#4d9e6a', to: 'ed_tile' }),
-    tile('shields', { swatch: '#4d7fc0', to: 'ed_tile' }),
-    tile('warp', { swatch: '#8a63c0', to: 'ed_tile' }),
+    tile('Tactics', { swatch: '#e05457', to: 'ed_tile' }),
+    tile('Security', { swatch: '#59adeb', to: 'ed_tile' }),
+    tile('Science', { swatch: '#70c780', to: 'ed_tile' }),
+    tile('Engineering', { swatch: '#f7cc4d', to: 'ed_tile' }),
+  ]),
+  divider(),
+  grid([
+    tile('Antimatter', { swatch: '#a878db', to: 'ed_tile' }),
+    tile('Alloy', { swatch: '#99a3b3', to: 'ed_tile' }),
+    tile('Attack', { swatch: '#f5802e', to: 'ed_tile' }),
   ]),
 ]}),
 
-ed_tile: () => ({ title: 'shields', rows: [
+ed_tile: () => ({ title: 'Security', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '3001'), scalar('text', 'Filename', 'security') ]),
+  section('Information'),
   list([
-    scalar('text', 'Name', 'shields'),
-    scalar('color', 'Color', '#4d7fc0'),
+    scalar('text', 'Name', 'Security'),
+    descField('Board tile matched to collect the Security resource.'),
   ]),
+  section('Display'),
+  list([ textureField('security.png') ]),
+]}),
+
+/* --- Rules --- */
+cat_rules: () => ({ title: 'Rules', action: { fn: () => go('menu_rule') }, rows: [
+  list(['Swap', 'Slide', 'Swap Diagonal', 'Teleport', 'Trace'].map(s => nav(s))),
 ]}),
 
 /* --- Rulesets --- */
 cat_rulesets: () => ({ title: 'Rulesets', rows: [
   section('Game Modes'),
   grid([
-    tile('default', { to: 'ed_ruleset' }),
-    tile('alternate', { to: 'ed_ruleset' }),
+    tile('Default', { to: 'ed_ruleset', edited: true }),
+    tile('Alternate', { to: 'ed_ruleset' }),
   ]),
   section('Fragments'),
   list([
-    nav('default_tiles'),
-    nav('default_special_tiles'),
-    nav('default_ability_resources'),
-    nav('default_turns'),
+    nav('Default Tiles'),
+    nav('Default Special Tiles'),
+    nav('Default Ability Resources'),
+    nav('Default Turns'),
   ]),
 ]}),
 
-ed_ruleset: () => ({ title: 'default', action: { fn: () => go('menu_rule') }, rows: [
+ed_ruleset: () => ({ title: 'Default', action: { fn: () => go('menu_rule') }, rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '6001'), scalar('text', 'Filename', 'default') ]),
+  section('Information'),
+  list([
+    scalar('text', 'Name', 'Default'),
+    descField('The standard ruleset used for most matches.'),
+  ]),
+  section('Rules'),
   list([
     `<div class="cell"><div class="label"><b>Scoring</b></div><div class="v">Linear ▾</div><div class="ctl-toggle"><i></i></div></div>`,
     `<div class="cell"><div class="label"><b>Damage</b></div><div class="v">2</div><div class="ctl-slider"><em style="width:20%"></em><i style="left:20%"></i></div><div class="ctl-toggle"><i></i></div></div>`,
-    `<div class="cell"><div class="label"><b>Spawn — Combat</b></div><div class="v">3</div><div class="ctl-slider"><em style="width:30%"></em><i style="left:30%"></i></div><div class="ctl-toggle"><i></i></div></div>`,
+    `<div class="cell"><div class="label"><b>Spawn — Tactics</b></div><div class="v">3</div><div class="ctl-slider"><em style="width:30%"></em><i style="left:30%"></i></div><div class="ctl-toggle"><i></i></div></div>`,
   ]),
 ]}),
 
@@ -520,27 +886,75 @@ const MENUS = {
 };
 const MENU_TITLES = { menu_target: 'Target', menu_condition: 'Condition', menu_amount: 'Amount', menu_stackrule: 'Stacking', menu_decayrule: 'Decay', menu_step: 'Transform' };
 
+// picker options that need explaining render as a described list instead of a name grid
+const MENU_DESCS = {
+  menu_stackrule: {
+    'Stack': 'Each application adds a separate instance that expires on its own.',
+    'Replace': 'A new application replaces the existing one, resetting its timer.',
+    'Keep Highest': 'Only the strongest application is kept; weaker ones are discarded.',
+  },
+  menu_decayrule: {
+    'Timing': 'Expires automatically after a set number of turns.',
+    'Threshold': 'Expires when a tracked value crosses a limit.',
+    'Trigger': 'Expires when a specific event occurs.',
+  },
+};
+
 for (const [id, kinds] of Object.entries(MENUS)) {
   SCREENS[id] = () => ({ title: MENU_TITLES[id], rows: [
-    grid(kinds.map(k => kindTile(k))),
+    MENU_DESCS[id]
+      ? list(kinds.map(k => optRow(k, MENU_DESCS[id][k])))
+      : grid(kinds.map(k => kindTile(k))),
   ]});
 }
 
-SCREENS.menu_action = () => ({ title: 'Action', rows: [
-  section('Match'),
-  grid(['Attack', 'Shield', 'Dodge', 'Drain', 'Damage Buff', 'Disable'].map(k => kindTile(k, k === 'Attack' ? 'ed_attack' : undefined))),
-  section('Core'),
-  grid(['Apply Status', 'Remove Status', 'Remove By Sign', 'Modify Stat', 'Set Stat', 'Drain Resource'].map(k => kindTile(k))),
+SCREENS.menu_step = () => ({ title: 'Transform', rows: [
+  list(MENUS.menu_step.map(k => optNav(k, KIND_DESCS[k], 'kind:' + k))),
 ]});
 
-/* fallback editor for any kind not mocked in detail */
+SCREENS.menu_action = () => ({ title: 'Action', rows: [
+  section('Match'),
+  list(['Attack', 'Shield', 'Dodge', 'Drain', 'Damage Buff', 'Disable'].map(k => optNav(k, KIND_DESCS[k], k === 'Attack' ? 'ed_attack' : 'kind:' + k))),
+  section('Core'),
+  list(['Apply Status', 'Remove Status', 'Remove By Type', 'Modify Stat', 'Set Stat', 'Drain Resource'].map(k => optNav(k, KIND_DESCS[k], 'kind:' + k))),
+]});
+
+/* editor for a kind not mocked in detail — shows its description + a clear action */
 function genericKind(kind) {
   return { title: kind, rows: [
-    list([
-      scalar('slider', 'Value', '…', { pct: 40 }),
-      scalar('dropdown', 'Mode', '…'),
-    ]),
+    section('Information'),
+    list([ descField(KIND_DESCS[kind] || 'Not yet configured.') ]),
+    clearBtn(),
   ]};
+}
+
+/* ---------- side nav (viewer aid) ---------- */
+const NAV = [
+  ['Primitives', [['Resources', 'cat_resources'], ['Tiles', 'cat_tiles'], ['Stats', 'cat_stats'], ['Statuses', 'cat_statuses']]],
+  ['Building Blocks', [['Adjustments', 'cat_adjustments'], ['Effects', 'cat_effects'], ['Transforms', 'cat_transforms']]],
+  ['Content', [['Abilities', 'cat_abilities'], ['Starships', 'cat_starships'], ['Modules', 'cat_modules'], ['Module Grids', 'cat_module_grids']]],
+  ['Config', [['Rules', 'cat_rules'], ['Rulesets', 'cat_rulesets'], ['Match Configs', 'cat_match_configs']]],
+];
+
+function buildNav() {
+  let html = `<div class="navbrand"><span class="prompt">&gt;_</span>Debug</div>`;
+  for (const [section, items] of NAV) {
+    html += `<div class="nav-section">${section}</div>`;
+    for (const [label, target] of items) {
+      html += `<div class="nav-item" data-target="${target || label}">${label}</div>`;
+    }
+  }
+  const nav = $('sidenav');
+  nav.innerHTML = html;
+  nav.querySelector('.navbrand').addEventListener('click', () => deepLink('home'));
+  nav.querySelectorAll('.nav-item').forEach(el =>
+    el.addEventListener('click', () => deepLink(el.dataset.target)));
+}
+
+function updateNavActive() {
+  const active = stack.length > 1 ? stack[1] : null;   // catalog you entered through
+  document.querySelectorAll('#sidenav .nav-item').forEach(el =>
+    el.classList.toggle('active', el.dataset.target === active));
 }
 
 /* ---------- render ---------- */
@@ -554,8 +968,13 @@ function render() {
 
   let html = stack.length > 1 ? '<div class="statusbar"></div>' : '';
   if (stack.length > 1 || screen.action) {
-    const prevTitle = stack.length > 1 ? (screenFor(stack[stack.length - 2]).title || 'Debug') : '';
-    const backHtml = stack.length > 1 ? `<div class="back" data-h="${on(pop)}">‹ ${prevTitle}</div>` : '';
+    // Back goes to the immediate previous screen (standard pop): catalog → editor →
+    // sub-editor/selector each return to the one before, not straight to the catalog.
+    let backHtml = '';
+    if (stack.length > 1) {
+      const backTitle = screenFor(stack[stack.length - 2]).title || 'Debug';
+      backHtml = `<div class="back" data-h="${on(pop)}">‹ ${backTitle}</div>`;
+    }
     const plusHtml = screen.action ? `<div class="plus" data-h="${on(screen.action.fn)}">＋</div>` : '';
     html += `<div class="navline">${backHtml}${plusHtml}</div>`;
   }
@@ -571,8 +990,10 @@ function render() {
     });
   });
   body.scrollTop = 0;
+  updateNavActive();
 }
 
+buildNav();
 render();
 </script>
 </body>

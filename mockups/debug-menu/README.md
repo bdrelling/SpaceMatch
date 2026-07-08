@@ -20,25 +20,32 @@ Reading this README IS the context — you don't need to render anything to unde
 
 ## Code structure
 
-- `SCREENS` — registry of screen factories; each returns `{ title, action?, rows }`. Navigation is a plain id stack (`go`/`pop`).
-- Row/one-liner builders: `list`, `grid`, `scroller`, `chips`, `flow`, `nav`, `tile`, `scalar` (slider/toggle/dropdown/color/text), `seg`, `stepper`, `ref` (catalog reference), `variant` (polymorphic kind), `pickRow`/`pickTile`, `kindTile`.
-- `MENUS` generates the kind-picker screens (Target/Condition/Amount/Stacking/Decay/Transform); `menu_action` is hand-built (Match + Core groups).
-- Unmocked kind ids fall through to `genericKind()` — a placeholder editor.
-- Names/counts mirror real project data (statuses, abilities, stats, resources, rulesets, rule kinds, effect-system subclass menus).
+- Three screen archetypes: **menu** (root `home`), **catalog** (`cat_*` — a data type's list of authored items), **editor** (`ed_*` — one item from a catalog). Kept distinct from **pickers** (`pick_*` and the `menu_*` kind menus): those are the transient selection UIs opened *inside* an editor to choose a value or kind — never catalogs. Catalogs/editors are hand-built per type (mostly unique), not a shared template.
+- Editors follow a fixed section order: **Identity** (ID, Filename) → **Information** (Name, Description) → **Display** (Color / Texture / Hidden) → a type-specific **Configuration**, then any sub-sections (Modifiers / Effects / Transforms, Costs, Rules). Lightweight `section()` headers over grouped `list()`s.
+- Every row (`.cell`) and tile carries the left-edge edit bar: translucent black normally, yellow (`.edited`) when its nested content has unsaved edits. Group boxes (`.list`, `.tile`) use the tile silhouette — three square corners, top-right slope — so the bar reads as one straight line.
+- `SCREENS` — registry of screen factories returning `{ title, action?, rows }`. Navigation is a plain id stack (`go`/`pop`); back returns to the immediate previous screen. `deepLink(id)` rebuilds the full parent chain via `PARENTS` so a deep-linked screen's back label is correct.
+- Left **side nav** (`.sidenav`, `NAV`) is a viewer aid outside the phone — jumps to any catalog, mirrors the home sections, highlights the active one; `>_ DEBUG` returns home. Not part of the shipped phone UI.
+- Row/one-liner builders: `list`, `grid`, `scroller`, `chips`, `flow`, `divider`, `nav`, `tile`, `statusTile` (symbol + tinted color), `scalar` (slider/toggle/dropdown/color/text — sliders carry a number box; min/max can toggle to "None"/unbounded), `seg`, `stepper`, `ref`, `variant` (polymorphic kind, optional subtitle), `descField`, `textureField`, `clearBtn`, `pickRow`/`pickTile` (pickTile takes an emoji), `optRow`/`optNav` (described picker options), `kindTile`.
+- `MENUS` generates the kind pickers; `MENU_DESCS` + `KIND_DESCS` add per-option descriptions shown both in the picker and on the kind's page. `menu_action` (effect actions) is hand-built. `genericKind()` renders an unmocked kind as its description + a Clear button.
+- Names reflect the **planned** design, not all of current `source/data/`: resources are Tactics / Security / Science / Engineering / Antimatter / Alloy; stats are ship systems (Health, Armor, Shields, Weapons, Engines, Computers, Sensors, Energy); tiles pair 1:1 with resources plus an Attack tile. Real values are used where they exist (tile colors, module names, selection rules, `Modifier.Operation` = Add/Multiply).
 
 ## Design decisions
 
 These are settled — apply them, don't relitigate or re-explain them.
 
 
-- **Home order is a stated requirement:** settings hero band on top, then sections **Content, Effects, Rules**. Never reorder sections Brian has specified.
+- **Home order is a stated requirement:** settings hero band on top, then sections **Primitives, Building Blocks, Content, Config**. Primitives = the world's fixed vocabulary (Resources, Tiles, Stats, Statuses). Building Blocks = reusable effect-system pieces referenced when authoring other content (Adjustments, Effects, Transforms) — each a real instance catalog, **not** a kind picker. Content = assembled entities (Abilities, Starships, Modules, Module Grids). Config = per-mode tuning (Rules, Rulesets, Match Configs). Never reorder sections Brian has specified.
+- **Catalog ≠ picker:** a catalog browses authored instances (each opens an editor); a picker is an in-editor selection of a value or kind. Never point a catalog tile at a kind picker.
+- **Editor section order** is settled: Identity → Information → Display → Configuration. `Hidden` lives under Display, never Configuration.
+- **A Modifier is a picked reusable Adjustment + Amount** — the Stat/Applies-To/Operation triple lives in the Adjustment (a Building Block), not inline in the modifier.
 - **Own design language, not iOS** (game ships on iOS/Android/Steam/PS5): cyan accent (`--accent`), uppercase tracked titles, chamfered top-right tile corners, squared-off toggles/slider thumbs, monospace numerals, `>_` prompt glyph (white) before DEBUG.
 - **Flat over cards:** no borders-and-cards (eats padding); grouped lists with hairline separators. Full-bleed bands — a card inset from the screen edge doubles the edge padding.
-- **Icons:** bare emoji only. Never colored rounded-square icon chips (forces finding a color for everything).
+- **Icons:** bare emoji only, never colored rounded-square icon chips — **except statuses**, whose symbol sits on a chip tinted with the status's own color (that color is meaningful). Visual catalogs (Tiles, Abilities, Starships, Modules, Module Grids, Statuses) use emoji/color tiles; abstract building-block catalogs stay lists.
 - **No status bar content** — the space is reserved but empty (it's a game, not the OS shell).
-- **Edited-state indicator:** every tile has a 5px left-edge overlay bar — `rgba(0,0,0,.2)` normally, yellow `#dcb63f` when the tile's nested content (all the way down) has unsaved edits vs. what was distributed. This replaced the cyan accent bars on section labels (text-only now).
-- **Horizontal scrollers** for the catalog sections — tiles bleed off the right edge so the next one peeks.
-- **Naming:** plain names — "Rules" not "Active Rules", "Resources" not "Ability Resources"; "Time Scale" not "Animation Speed" (it's the time factor, cf. Godot `Engine.time_scale`). Counts sit top-right on tiles; unmocked catalogs show `0`.
+- **Edited-state indicator:** every row and tile has a 5px left-edge bar — `rgba(0,0,0,.2)` normally, yellow `#dcb63f` when its nested content (all the way down) has unsaved edits vs. what was distributed. No rounded boxes anywhere (three corners, one slope).
+- **Controls:** sliders pair with an editable number box (slide or type for precision); a stat's Minimum/Maximum can toggle to **None** (unbounded). Sub-editors reached from a Modifier/Effect/Transform/Cost end with a small **Clear** button in its own footer section (close-button style, not full width).
+- **Horizontal scrollers** for the home catalog sections — tiles bleed off the right edge so the next one peeks.
+- **Naming:** plain, spelled-out words, no abbreviations ("Maximum Stacks" not "Cap"); "Rules" not "Active Rules"; "Time Scale" not "Animation Speed" (cf. Godot `Engine.time_scale`). The status Buff/Debuff field is **Type**. Catalogs show display Names; the `Filename` (unique id) shows in the editor's Identity section. Counts sit top-right on tiles.
 - **No plan/milestone labels or commentary text inside the artifact** (no "M3", no "NEW", no legends or instructional text). The design is only the design.
 - **Match editing happens in the match itself**, not this menu — a Match page was built and deliberately dropped.
 
@@ -52,4 +59,15 @@ These are settled — apply them, don't relitigate or re-explain them.
 
 ## Mocked vs. not
 
-Mocked: Statuses (+ status editor with seg/stepper/chips), Abilities (+ ability→effect→action drill with flow tiles), Stats, Resources, Tiles (color swatches), Rulesets (+ ruleset editor, Add Rule kind grid), pickers, all kind menus. Not mocked (tiles show `0`): Starships, Modules, Module Grids, Match Configs.
+Fully mocked with editors:
+
+- **Statuses** — Buffs/Debuffs symbol grid; editor has Type / Maximum Stacks / Stacking / Decay plus Modifiers / Effects / Transforms. Shield is set up as the worked example (no modifier; damage soak is an Absorb transform).
+- **Abilities** — visual grid; editor drills ability → cost, and effect → target/action → attack (flow tiles).
+- **Stats** — ship systems, with a Hidden (not shown to players) group and Minimum/Maximum "None".
+- **Resources** — 2×2 ability resources + a divider + Antimatter (special) / Alloy (currency); color lives on the resource editor.
+- **Tiles** — color grid; a 2D texture field on the tile editor.
+- **Rulesets** — editor + Add Rule kind grid.
+- **Building Blocks** — Adjustments (reusable Stat + Applies To + Operation, e.g. `+Armor`), Effects and Transforms (instance catalogs + editors; instances are `Placeholder`s, created via each catalog's `+` → kind picker).
+- **All pickers and kind menus** — Stacking / Decay / Transform / Action options carry descriptions.
+
+Visual placeholder catalogs (icon grids, no item editor yet): Starships, Modules, Module Grids. List placeholder: Match Configs.
