@@ -1,0 +1,959 @@
+<title>SpaceMatch · Resource Naming</title>
+<style>
+  :root {
+    --bg: #f2f4f8;
+    --panel: #ffffff;
+    --panel-2: #eef0f6;
+    --ink: #1a2130;
+    --muted: #5b6478;
+    --line: #d9deea;
+    --log-bg: #f7f8fc;
+
+    --plasma: #e0338a;
+    --graviton: #0092c4;
+    --tachyon: #33a03f;
+    --ion: #f0a500;
+    --plasma-ink: #c2186c;
+    --graviton-ink: #00789c;
+    --tachyon-ink: #2c7d31;
+    --ion-ink: #8a6400;
+    --damage: #e0421c;
+    --scrap: #57534c;
+    --warp: #6c4ef0;
+    --energy: #0b5bb5;
+
+    --sans: "Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0b0f1a;
+      --panel: #121828;
+      --panel-2: #0f1421;
+      --ink: #e8ebf4;
+      --muted: #97a0b6;
+      --line: #242d44;
+      --log-bg: #0d1220;
+
+      --plasma: #f43b92;
+      --graviton: #33cbe2;
+      --tachyon: #6fd97e;
+      --ion: #ffd24d;
+      --plasma-ink: #f43b92;
+      --graviton-ink: #33cbe2;
+      --tachyon-ink: #6fd97e;
+      --ion-ink: #ffd24d;
+      --damage: #ff7052;
+      --scrap: #cfc9be;
+      --warp: #a294ff;
+      --energy: #4d7cfe;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b0f1a;
+    --panel: #121828;
+    --panel-2: #0f1421;
+    --ink: #e8ebf4;
+    --muted: #97a0b6;
+    --line: #242d44;
+    --log-bg: #0d1220;
+
+    --plasma: #f43b92;
+    --graviton: #33cbe2;
+    --tachyon: #6fd97e;
+    --ion: #ffd24d;
+    --plasma-ink: #f43b92;
+    --graviton-ink: #33cbe2;
+    --tachyon-ink: #6fd97e;
+    --ion-ink: #ffd24d;
+    --damage: #ff7052;
+    --scrap: #cfc9be;
+    --warp: #a294ff;
+    --energy: #4d7cfe;
+  }
+  :root[data-theme="light"] {
+    --bg: #f2f4f8;
+    --panel: #ffffff;
+    --panel-2: #eef0f6;
+    --ink: #1a2130;
+    --muted: #5b6478;
+    --line: #d9deea;
+    --log-bg: #f7f8fc;
+
+    --plasma: #e0338a;
+    --graviton: #0092c4;
+    --tachyon: #33a03f;
+    --ion: #f0a500;
+    --plasma-ink: #c2186c;
+    --graviton-ink: #00789c;
+    --tachyon-ink: #2c7d31;
+    --ion-ink: #8a6400;
+    --damage: #e0421c;
+    --scrap: #57534c;
+    --warp: #6c4ef0;
+    --energy: #0b5bb5;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font: 400 15.5px/1.6 var(--sans);
+    margin: 0;
+  }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 40px 24px 110px; }
+
+  h2 { font-size: 20px; margin: 0 0 4px; letter-spacing: -.005em; text-wrap: balance; }
+  h3 { font-size: 16px; margin: 0; }
+  p { margin: 0; }
+  .sub { color: var(--muted); max-width: 70ch; font-size: 14px; }
+  a { color: var(--tachyon-ink); }
+  a:focus-visible { outline: 2px solid var(--tachyon); outline-offset: 2px; }
+
+  /* ---- navigation ---- */
+  .nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 14px;
+  }
+  .nav .navtab {
+    appearance: none;
+    font: 600 12px/1 var(--mono);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 9px 12px;
+    cursor: pointer;
+  }
+  .nav .navtab:hover { color: var(--ink); }
+  .nav .navtab:focus-visible { outline: 2px solid var(--tachyon); outline-offset: 2px; }
+  .nav .navtab[aria-selected="true"] {
+    color: var(--ink);
+    background: var(--panel);
+    border-color: var(--line);
+  }
+  .nav .navtab.research {
+    color: color-mix(in oklab, var(--muted), transparent 30%);
+    border-left: 1px solid var(--line);
+    border-radius: 0 4px 4px 0;
+    margin-left: 10px;
+    padding-left: 16px;
+  }
+  .nav .navtab.research:hover { color: var(--muted); }
+  .nav .navtab.research[aria-selected="true"] {
+    color: var(--muted);
+    background: var(--panel-2);
+    border-color: var(--line);
+    border-radius: 4px;
+  }
+
+  .panel { margin-top: 26px; }
+  .relmap { display: block; width: 100%; max-width: 720px; height: auto; margin-top: 10px; font-family: var(--sans); }
+  .statlist { display: grid; gap: 10px; margin-top: 14px; }
+  .statgrid { display: grid; grid-template-columns: 170px 170px; gap: 10px 24px; margin-top: 14px; }
+  .tilegrid { display: grid; grid-template-columns: repeat(4, 88px); gap: 18px 20px; margin-top: 14px; }
+  .tile { display: grid; gap: 8px; justify-items: center; align-content: start; }
+  .tile .tswatch { width: 64px; height: 64px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+  .tile .tswatch svg { width: 34px; height: 34px; }
+  .tile .tname { font-size: 13px; font-weight: 650; line-height: 1.2; }
+  .tile .tsub { font: 400 10.5px/1 var(--mono); color: var(--muted); }
+  .sline { display: flex; align-items: center; gap: 12px; }
+  .sline .name { font-weight: 650; }
+  .sline .gems { display: flex; gap: 7px; }
+  .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: 14px; }
+  @media (max-width: 560px) { .grid2 { grid-template-columns: 1fr; } }
+  .set .res { font-size: 18px; margin: 0; }
+  .panel[hidden] { display: none !important; }
+  .rblock + .rblock { margin-top: 56px; }
+  .rblock h2 { margin-bottom: 4px; }
+
+  .chip {
+    font-size: 13px;
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 3px 9px;
+    background: var(--panel-2);
+    white-space: nowrap;
+  }
+  .chip .gem { margin-right: 7px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+
+  /* ---- lane color marks ---- */
+  .gem {
+    display: inline-block;
+    width: 9px; height: 9px;
+    transform: rotate(45deg);
+    border-radius: 1.5px;
+    flex: none;
+  }
+  .gem.plasma   { background: var(--plasma); }
+  .gem.graviton { background: var(--graviton); }
+  .gem.tachyon  { background: var(--tachyon); }
+  .gem.ion      { background: var(--ion); }
+
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex: none; }
+  .dot.damage { background: var(--damage); }
+  .dot.scrap  { background: var(--scrap); }
+  .dot.warp   { background: var(--warp); }
+
+  .exlbl {
+    font: 600 10px/1.6 var(--mono);
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .t-damage { color: var(--damage); font-weight: 600; }
+  .t-scrap  { color: var(--scrap); font-weight: 600; }
+  .t-warp   { color: var(--warp); font-weight: 600; }
+  .t-plasma   { color: var(--plasma-ink); font-weight: 600; }
+  .t-graviton { color: var(--graviton-ink); font-weight: 600; }
+  .t-tachyon  { color: var(--tachyon-ink); font-weight: 600; }
+  .t-ion      { color: var(--ion-ink); font-weight: 600; }
+
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; margin-bottom: 4px; }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--muted); }
+
+  /* ---- horizontal rails ---- */
+  .rail {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    padding: 14px 2px;
+    scroll-snap-type: x proximity;
+  }
+  .rail::-webkit-scrollbar { height: 8px; }
+  .rail::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+  .rail::-webkit-scrollbar-track { background: transparent; }
+
+  /* ---- resource set cards ---- */
+  .set {
+    flex: 0 0 302px;
+    scroll-snap-align: start;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 18px 18px 16px;
+    display: grid;
+    gap: 13px;
+    align-content: start;
+  }
+  .set-head { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .set-head .k { font: 700 12px/1 var(--mono); color: var(--muted); letter-spacing: .1em; }
+  .lanes { display: grid; gap: 9px; }
+  .lane { display: flex; gap: 10px; }
+  .lane .gem { margin-top: 7px; }
+  .lane .lb { display: grid; }
+  .lane .name { font-weight: 650; line-height: 1.35; }
+  .lane .theme { color: var(--muted); font-size: 12.5px; line-height: 1.45; }
+  .set.demoted { background: var(--panel-2); }
+  .set.demoted .lane .name, .set.demoted .set-head h3 { color: var(--muted); }
+
+  .log {
+    background: var(--log-bg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 10px 12px;
+    display: grid;
+    gap: 6px;
+  }
+  .log .ln { font: 400 12.5px/1.5 var(--mono); }
+  .log .ln::before { content: "› "; color: var(--muted); }
+  .set.demoted .log { background: transparent; }
+  .set.demoted .log .ln { color: var(--muted); }
+
+  /* ---- palette cards ---- */
+  .palopt {
+    appearance: none;
+    font: inherit;
+    color: inherit;
+    cursor: pointer;
+    text-align: left;
+    flex: 0 0 302px;
+    scroll-snap-align: start;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 14px;
+    display: grid;
+    gap: 8px;
+    align-content: start;
+  }
+  .palopt:focus-visible { outline: 2px solid var(--tachyon); outline-offset: 2px; }
+  .palopt[aria-pressed="false"] { background: var(--panel-2); }
+  .palopt[aria-pressed="false"] .palname, .palopt[aria-pressed="false"] .palmeta { color: var(--muted); }
+  .palopt .palname { font: 700 12px/1.4 var(--mono); color: var(--ink); letter-spacing: .1em; }
+  .palopt .palmeta { margin-top: auto; }
+  .set .log { align-self: end; }
+  .set { grid-template-rows: auto auto 1fr; }
+  .grid2 .set { grid-template-rows: auto auto 1fr; }
+  .palcols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .palcol {
+    border-radius: 4px;
+    padding: 10px;
+    display: grid;
+    gap: 7px;
+    align-content: start;
+  }
+  .palcol-light { background: #ffffff; border: 1px solid #d9deea; }
+  .palcol-dark { background: #121828; border: 1px solid #242d44; }
+  .swrow { display: flex; align-items: center; gap: 7px; font: 400 11px/1 var(--mono); }
+  .palcol-light .swrow { color: #40485c; }
+  .palcol-dark .swrow { color: #97a0b6; }
+  .sw { width: 14px; height: 14px; border-radius: 3px; flex: none; }
+  .paldiv { border-top: 1px solid transparent; margin: 2px 0; }
+  .palcol-light .paldiv { border-color: #d9deea; }
+  .palcol-dark .paldiv { border-color: #2c364f; }
+  .palmeta { font: 400 11px/1.5 var(--mono); color: var(--muted); }
+
+  /* ---- shields map ---- */
+  .defmap {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .defrow {
+    display: grid;
+    grid-template-columns: 120px 180px 1fr;
+    gap: 16px;
+    padding: 13px 20px;
+    align-items: baseline;
+  }
+  .defrow + .defrow { border-top: 1px solid var(--line); }
+  .defrow .slot {
+    font: 600 11px/1.6 var(--mono);
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .defrow .word { font-weight: 650; }
+  .defrow .word.open { color: var(--muted); font-style: italic; font-weight: 500; }
+  .defrow .why { color: var(--muted); font-size: 13.5px; }
+  .punch { margin-top: 14px; font-weight: 600; font-size: 15px; }
+
+  /* ---- stats / bench rows ---- */
+  .stats { display: grid; gap: 8px; }
+  .stat {
+    display: grid;
+    grid-template-columns: 18px 116px 1fr;
+    gap: 10px;
+    align-items: baseline;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 11px 16px;
+  }
+  .stat .gem { position: relative; top: -1px; justify-self: center; }
+  .stat .dash { justify-self: center; color: var(--line); }
+  .stat .name { font-weight: 650; }
+  .stat .desc { color: var(--muted); font-size: 13.5px; }
+  .stat-later { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; align-items: baseline; }
+  .stat-later .lbl { font: 600 11px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+
+  /* ---- modules ---- */
+  .modgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .modcol {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 16px 16px 14px;
+  }
+  .modcol .head {
+    display: flex; align-items: center; gap: 8px;
+    padding-bottom: 10px; margin-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+    font-weight: 650;
+  }
+  .modcol ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+  .modcol li { font-size: 13.5px; color: var(--muted); }
+
+  /* ---- pairs ---- */
+  .pairs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .pair {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 15px 16px 13px;
+    display: grid;
+    gap: 6px;
+  }
+  .pair .gems { display: flex; gap: 7px; margin-bottom: 2px; }
+  .pair .pairline { font-size: 13px; }
+  .pair .who { font-weight: 650; font-size: 14px; }
+  .pair .arch { color: var(--muted); font-size: 13.5px; }
+
+  .footnote {
+    margin-top: 60px;
+    border-top: 1px solid var(--line);
+    padding-top: 20px;
+    color: var(--muted);
+    font-size: 14px;
+    max-width: 70ch;
+  }
+  .footnote b { color: var(--ink); font-weight: 600; }
+
+  @media (max-width: 720px) {
+    .modgrid { grid-template-columns: repeat(2, 1fr); }
+    .pairs { grid-template-columns: repeat(2, 1fr); }
+    .defrow { grid-template-columns: 100px 1fr; }
+    .defrow .why { grid-column: 2; }
+    .set, .palopt { flex-basis: 280px; }
+  }
+  @media (max-width: 460px) {
+    .modgrid, .pairs { grid-template-columns: 1fr; }
+    .stat { grid-template-columns: 18px 1fr; }
+    .stat .desc { grid-column: 2; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+
+<div class="wrap">
+
+  <nav class="nav" role="tablist" aria-label="Sections">
+    <button class="navtab" role="tab" data-panel="p-home" aria-selected="true" aria-label="Home" style="font-size:15px; line-height:.8">⌂</button>
+    <button class="navtab" role="tab" data-panel="p-resources" aria-selected="false">Resources</button>
+    <button class="navtab" role="tab" data-panel="p-modules" aria-selected="false">Modules</button>
+    <button class="navtab" role="tab" data-panel="p-palette" aria-selected="false">Palette</button>
+    <button class="navtab research" role="tab" data-panel="p-research" aria-selected="false">Research</button>
+  </nav>
+
+  <section class="panel" id="p-home" role="tabpanel">
+    <h2>Disciplines</h2>
+    <p class="sub">Schools of play.</p>
+    <div class="grid2" style="margin-top:14px">
+
+      <div class="set">
+        <div class="set-head"><span class="gem plasma"></span><h3>Command</h3><span class="k" style="margin-left:auto">offense</span></div>
+        <p class="res t-plasma">Combat · Propulsion · Tactics</p>
+        <div class="log">
+          <span class="exlbl">Examples</span>
+          <span class="ln">You collected 3 <span class="t-plasma">Command</span>!</span>
+          <span class="ln">All power to the <span class="t-plasma">command</span> systems!</span>
+          <span class="ln">You spent 4 <span class="t-plasma">Command</span> to...</span>
+        </div>
+      </div>
+
+      <div class="set">
+        <div class="set-head"><span class="gem graviton"></span><h3>Security</h3><span class="k" style="margin-left:auto">defense / sustain</span></div>
+        <p class="res t-graviton">Combat · Countermeasures · Damage Control</p>
+        <div class="log">
+          <span class="exlbl">Examples</span>
+          <span class="ln">You collected 3 <span class="t-graviton">Security</span>!</span>
+          <span class="ln">All power to the <span class="t-graviton">security</span> systems!</span>
+          <span class="ln">You spent 4 <span class="t-graviton">Security</span> to...</span>
+        </div>
+      </div>
+
+      <div class="set">
+        <div class="set-head"><span class="gem ion"></span><h3>Engineering</h3><span class="k" style="margin-left:auto">speed / growth</span></div>
+        <p class="res t-ion">Propulsion · Damage Control · Logic</p>
+        <div class="log">
+          <span class="exlbl">Examples</span>
+          <span class="ln">You collected 3 <span class="t-ion">Engineering</span>!</span>
+          <span class="ln">All power to the <span class="t-ion">engineering</span> systems!</span>
+          <span class="ln">You spent 4 <span class="t-ion">Engineering</span> to...</span>
+        </div>
+      </div>
+
+      <div class="set">
+        <div class="set-head"><span class="gem tachyon"></span><h3>Science</h3><span class="k" style="margin-left:auto">intel / control</span></div>
+        <p class="res t-tachyon">Command · Countermeasures · Logic</p>
+        <div class="log">
+          <span class="exlbl">Examples</span>
+          <span class="ln">You collected 3 <span class="t-tachyon">Science</span>!</span>
+          <span class="ln">All power to the <span class="t-tachyon">science</span> systems!</span>
+          <span class="ln">You spent 4 <span class="t-tachyon">Science</span> to...</span>
+        </div>
+      </div>
+
+    </div>
+
+    <h2 style="margin-top:48px">Resources</h2>
+    <p class="sub">Collected via matching and spent on abilities.</p>
+    <div class="statlist">
+      <div class="sline"><span class="name">Command</span><span class="gems"><span class="gem plasma"></span></span></div>
+      <div class="sline"><span class="name">Security</span><span class="gems"><span class="gem graviton"></span></span></div>
+      <div class="sline"><span class="name">Engineering</span><span class="gems"><span class="gem ion"></span></span></div>
+      <div class="sline"><span class="name">Science</span><span class="gems"><span class="gem tachyon"></span></span></div>
+    </div>
+
+    <h2 style="margin-top:48px">Tiles</h2>
+    <p class="sub">What gets matched on the board.</p>
+    <div class="tilegrid">
+      <div class="tile"><span class="tswatch" style="background:var(--plasma)"></span><span class="tname">Command</span></div>
+      <div class="tile"><span class="tswatch" style="background:var(--graviton)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2" stroke-linejoin="round"><path d="M12 3 L19 6 V11 C19 16 16 19.5 12 21 C8 19.5 5 16 5 11 V6 Z"/></svg></span><span class="tname">Security</span></div>
+      <div class="tile"><span class="tswatch" style="background:var(--ion)"></span><span class="tname">Engineering</span></div>
+      <div class="tile"><span class="tswatch" style="background:var(--tachyon)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="1.6"><circle cx="12" cy="12" r="1.7" fill="var(--bg)" stroke="none"/><ellipse cx="12" cy="12" rx="9" ry="3.6"/><ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(120 12 12)"/></svg></span><span class="tname">Science</span></div>
+      <div class="tile"><span class="tswatch" style="background:var(--scrap)"></span><span class="tname">Alloy</span><span class="tsub">currency</span></div>
+      <div class="tile"><span class="tswatch" style="background:var(--warp)"></span><span class="tname">Antimatter</span><span class="tsub">warp</span></div>
+      <div class="tile"><span class="tswatch" style="background:var(--damage)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5.5"/><line x1="12" y1="1.5" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22.5" y2="12"/></svg></span><span class="tname">Damage</span><span class="tsub">direct</span></div>
+    </div>
+
+    <h2 style="margin-top:48px">Styles of Play</h2>
+    <p class="sub">How styles of play emerge from combining disciplines.</p>
+    <svg class="relmap" viewBox="0 0 720 560" role="img" aria-label="Relationship map: four resources as nodes, six playstyles as their pairwise overlaps">
+      <line x1="310.9" y1="117.8" x2="149.1" y2="242.2" stroke="var(--line)" stroke-width="1.5"/>
+      <line x1="409.1" y1="117.8" x2="570.9" y2="242.2" stroke="var(--line)" stroke-width="1.5"/>
+      <line x1="149.1" y1="317.8" x2="310.9" y2="442.2" stroke="var(--line)" stroke-width="1.5"/>
+      <line x1="570.9" y1="317.8" x2="409.1" y2="442.2" stroke="var(--line)" stroke-width="1.5"/>
+      <line x1="360" y1="142" x2="360" y2="418" stroke="var(--line)" stroke-width="1.5"/>
+      <line x1="162" y1="280" x2="558" y2="280" stroke="var(--line)" stroke-width="1.5"/>
+
+      <g style="paint-order:stroke" stroke="var(--bg)" stroke-width="6" stroke-linejoin="round">
+        <text x="230" y="177" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Combat</text>
+        <text x="490" y="177" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Damage Control</text>
+        <text x="230" y="377" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Tactics</text>
+        <text x="490" y="377" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Logic</text>
+        <text x="360" y="203" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Countermeasures</text>
+        <text x="252" y="276" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Propulsion</text>
+      </g>
+      <g style="paint-order:stroke" stroke="var(--bg)" stroke-width="5" stroke-linejoin="round" font-family="ui-monospace, Menlo, monospace">
+        <text x="230" y="192" text-anchor="middle" font-size="10.5" fill="var(--muted)">brawler · bruiser</text>
+        <text x="490" y="192" text-anchor="middle" font-size="10.5" fill="var(--muted)">fortress · outlast</text>
+        <text x="230" y="392" text-anchor="middle" font-size="10.5" fill="var(--muted)">tempo · precision</text>
+        <text x="490" y="392" text-anchor="middle" font-size="10.5" fill="var(--muted)">snowball · efficiency</text>
+        <text x="360" y="218" text-anchor="middle" font-size="10.5" fill="var(--muted)">lockdown · attrition</text>
+        <text x="252" y="291" text-anchor="middle" font-size="10.5" fill="var(--muted)">aggro · rush</text>
+      </g>
+
+      <circle cx="360" cy="80" r="58" fill="var(--graviton)" fill-opacity="0.10" stroke="var(--graviton)" stroke-width="1.5"/>
+      <text x="360" y="78" text-anchor="middle" font-size="15" font-weight="650" fill="var(--ink)">Security</text>
+      <text x="360" y="96" text-anchor="middle" font-size="11" font-family="ui-monospace, Menlo, monospace" fill="var(--graviton-ink)">defense</text>
+
+      <circle cx="100" cy="280" r="58" fill="var(--plasma)" fill-opacity="0.10" stroke="var(--plasma)" stroke-width="1.5"/>
+      <text x="100" y="278" text-anchor="middle" font-size="15" font-weight="650" fill="var(--ink)">Command</text>
+      <text x="100" y="296" text-anchor="middle" font-size="11" font-family="ui-monospace, Menlo, monospace" fill="var(--plasma-ink)">offense</text>
+
+      <circle cx="620" cy="280" r="58" fill="var(--ion)" fill-opacity="0.10" stroke="var(--ion)" stroke-width="1.5"/>
+      <text x="620" y="278" text-anchor="middle" font-size="15" font-weight="650" fill="var(--ink)">Engineering</text>
+      <text x="620" y="296" text-anchor="middle" font-size="11" font-family="ui-monospace, Menlo, monospace" fill="var(--ion-ink)">growth</text>
+
+      <circle cx="360" cy="480" r="58" fill="var(--tachyon)" fill-opacity="0.10" stroke="var(--tachyon)" stroke-width="1.5"/>
+      <text x="360" y="478" text-anchor="middle" font-size="15" font-weight="650" fill="var(--ink)">Science</text>
+      <text x="360" y="496" text-anchor="middle" font-size="11" font-family="ui-monospace, Menlo, monospace" fill="var(--tachyon-ink)">control</text>
+    </svg>
+
+    <div class="pairs" style="margin-top:20px">
+      <div class="pair"><span class="gems"><span class="gem plasma"></span><span class="gem graviton"></span></span><span class="pairline"><span class="t-plasma">Command</span> + <span class="t-graviton">Security</span></span><span class="who">Combat</span><span class="arch">brawler / bruiser</span></div>
+      <div class="pair"><span class="gems"><span class="gem ion"></span><span class="gem plasma"></span></span><span class="pairline"><span class="t-ion">Engineering</span> + <span class="t-plasma">Command</span></span><span class="who">Propulsion</span><span class="arch">aggro / rush</span></div>
+      <div class="pair"><span class="gems"><span class="gem plasma"></span><span class="gem tachyon"></span></span><span class="pairline"><span class="t-plasma">Command</span> + <span class="t-tachyon">Science</span></span><span class="who">Tactics</span><span class="arch">tempo / precision</span></div>
+      <div class="pair"><span class="gems"><span class="gem graviton"></span><span class="gem ion"></span></span><span class="pairline"><span class="t-graviton">Security</span> + <span class="t-ion">Engineering</span></span><span class="who">Damage Control</span><span class="arch">fortress / outlast</span></div>
+      <div class="pair"><span class="gems"><span class="gem graviton"></span><span class="gem tachyon"></span></span><span class="pairline"><span class="t-graviton">Security</span> + <span class="t-tachyon">Science</span></span><span class="who">Countermeasures</span><span class="arch">lockdown / attrition</span></div>
+      <div class="pair"><span class="gems"><span class="gem tachyon"></span><span class="gem ion"></span></span><span class="pairline"><span class="t-tachyon">Science</span> + <span class="t-ion">Engineering</span></span><span class="who">Logic</span><span class="arch">snowball / efficiency</span></div>
+    </div>
+
+    <h2 style="margin-top:48px">Stats</h2>
+    <p class="sub">Starship modifiers that improve abilities.</p>
+    <div class="statgrid">
+      <div class="sline"><span class="name">Threat</span><span class="gems"><span class="gem plasma"></span></span></div>
+      <div class="sline"><span class="name">Firepower</span><span class="gems"><span class="dot damage"></span></span></div>
+      <div class="sline"><span class="name">Protection</span><span class="gems"><span class="gem graviton"></span></span></div>
+      <div class="sline"><span class="name">Armor</span><span class="gems"><span class="dot scrap"></span></span></div>
+      <div class="sline"><span class="name">Mobility</span><span class="gems"><span class="gem ion"></span></span></div>
+      <div class="sline"><span class="name">Warp</span><span class="gems"><span class="dot warp"></span></span></div>
+      <div class="sline"><span class="name">Processing</span><span class="gems"><span class="gem tachyon"></span></span></div>
+      <div class="sline"><span class="name">Energy</span><span class="gems">—</span></div>
+    </div>
+    <div class="log" style="margin-top:14px; max-width:440px">
+      <span class="exlbl">Examples</span>
+      <span class="ln">Plasma Cannon — <span class="t-damage">Firepower +2</span></span>
+      <span class="ln">Missile Battery — <span class="t-plasma">Threat +2</span> · <span class="t-damage">Firepower +1</span></span>
+      <span class="ln">Shield Generator — <span class="t-graviton">Protection +2</span></span>
+      <span class="ln">Hull Plating — <span class="t-scrap">Armor +2</span> · <span class="t-ion">Mobility −1</span></span>
+      <span class="ln">Afterburner — <span class="t-ion">Mobility +2</span> · <span class="t-graviton">Protection −1</span></span>
+      <span class="ln">ECM Jammer — <span class="t-tachyon">Processing +2</span></span>
+      <span class="ln">Warp Coil — <span class="t-warp">Warp +1</span></span>
+    </div>
+  </section>
+
+  <section class="panel" id="p-resources" role="tabpanel" hidden>
+    <div class="legend">
+      <span><span class="gem plasma"></span>offense</span>
+      <span><span class="gem graviton"></span>defense / sustain</span>
+      <span><span class="gem ion"></span>speed / growth</span>
+      <span><span class="gem tachyon"></span>intel / control</span>
+    </div>
+
+    <div class="rail">
+
+      <div class="set">
+        <div class="set-head"><span class="k">A</span><h3>Domain</h3></div>
+        <div class="lanes">
+          <div class="lane"><span class="gem plasma"></span><span class="name t-plasma">Command</span></div>
+          <div class="lane"><span class="gem graviton"></span><span class="name t-graviton">Security</span></div>
+          <div class="lane"><span class="gem ion"></span><span class="name t-ion">Engineering</span></div>
+          <div class="lane"><span class="gem tachyon"></span><span class="name t-tachyon">Science</span></div>
+        </div>
+        <div class="log">
+          <span class="ln">You collected 3 <span class="t-tachyon">Science</span>!</span>
+          <span class="ln">You consumed 5 <span class="t-ion">Engineering</span> to power your Thrusters!</span>
+          <span class="ln">All power to the <span class="t-plasma">command</span> systems!</span>
+        </div>
+      </div>
+
+      <div class="set demoted">
+        <div class="set-head"><span class="k">B</span><h3>Particle</h3></div>
+        <div class="lanes">
+          <div class="lane"><span class="gem plasma"></span><span class="name">Plasma</span></div>
+          <div class="lane"><span class="gem graviton"></span><span class="name">Graviton</span></div>
+          <div class="lane"><span class="gem ion"></span><span class="name">Ion</span></div>
+          <div class="lane"><span class="gem tachyon"></span><span class="name">Tachyon</span></div>
+        </div>
+        <div class="log">
+          <span class="ln">You collected 3 Plasma!</span>
+          <span class="ln">You consumed 5 Tachyon to power your Sensor Array!</span>
+        </div>
+      </div>
+
+      <div class="set demoted">
+        <div class="set-head"><span class="k">C</span><h3>Substance</h3></div>
+        <div class="lanes">
+          <div class="lane"><span class="gem plasma"></span><span class="name">Plasma</span></div>
+          <div class="lane"><span class="gem graviton"></span><span class="name">Coolant</span></div>
+          <div class="lane"><span class="gem ion"></span><span class="name">Xenon</span></div>
+          <div class="lane"><span class="gem tachyon"></span><span class="name">Data</span></div>
+        </div>
+        <div class="log">
+          <span class="ln">You collected 3 Coolant!</span>
+          <span class="ln">You spent 4 Data to jam their targeting.</span>
+        </div>
+      </div>
+
+      <div class="set demoted">
+        <div class="set-head"><span class="k">D</span><h3>System</h3></div>
+        <div class="lanes">
+          <div class="lane"><span class="gem plasma"></span><span class="name">Weapons</span></div>
+          <div class="lane"><span class="gem graviton"></span><span class="name">Shields</span></div>
+          <div class="lane"><span class="gem ion"></span><span class="name">Engines</span></div>
+          <div class="lane"><span class="gem tachyon"></span><span class="name">Sensors</span></div>
+        </div>
+        <div class="log">
+          <span class="ln">You collected 3 Weapons!</span>
+          <span class="ln">All power to the weapons systems!</span>
+        </div>
+      </div>
+
+      <div class="set demoted">
+        <div class="set-head"><span class="k">E</span><h3>Logistics</h3></div>
+        <div class="lanes">
+          <div class="lane"><span class="gem plasma"></span><span class="name">Munitions</span></div>
+          <div class="lane"><span class="gem graviton"></span><span class="name">Countermeasures</span></div>
+          <div class="lane"><span class="gem ion"></span><span class="name">Delta-V</span></div>
+          <div class="lane"><span class="gem tachyon"></span><span class="name">Intel</span></div>
+        </div>
+        <div class="log">
+          <span class="ln">You collected 3 Munitions!</span>
+          <span class="ln">You consumed 5 Delta-V to power your Thrusters!</span>
+        </div>
+      </div>
+
+      <div class="set demoted">
+        <div class="set-head"><span class="k">F</span><h3>Capability</h3></div>
+        <div class="lanes">
+          <div class="lane"><span class="gem plasma"></span><span class="name">Firepower</span></div>
+          <div class="lane"><span class="gem graviton"></span><span class="name">Shielding</span></div>
+          <div class="lane"><span class="gem ion"></span><span class="name">Thrust</span></div>
+          <div class="lane"><span class="gem tachyon"></span><span class="name">Bandwidth</span></div>
+        </div>
+        <div class="log">
+          <span class="ln">You collected 3 Firepower!</span>
+          <span class="ln">You consumed 4 Bandwidth to jam their targeting.</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="panel" id="p-modules" role="tabpanel" hidden>
+    <p class="sub" style="margin-bottom:14px">Representative, not exhaustive — module types don't map one-to-one onto the four categories.</p>
+    <div class="modgrid">
+      <div class="modcol">
+        <div class="head"><span class="gem plasma"></span><span class="t-plasma">Offense</span></div>
+        <ul><li>Plasma Cannon</li><li>Missile Battery</li><li>Point-Defense Turret</li></ul>
+      </div>
+      <div class="modcol">
+        <div class="head"><span class="gem graviton"></span><span class="t-graviton">Defense</span></div>
+        <ul><li>Shield Generator</li><li>Deflector Array</li><li>Repair Bay</li></ul>
+      </div>
+      <div class="modcol">
+        <div class="head"><span class="gem ion"></span><span class="t-ion">Speed</span></div>
+        <ul><li>Ion Thrusters</li><li>Afterburner</li><li>Tractor Beam</li><li>Cargo Hold</li></ul>
+      </div>
+      <div class="modcol">
+        <div class="head"><span class="gem tachyon"></span><span class="t-tachyon">Intel</span></div>
+        <ul><li>Sensor Array</li><li>Targeting Computer</li><li>ECM Jammer</li><li>Cloaking Device</li></ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="p-palette" role="tabpanel" hidden>
+    <p class="sub">Colorblind-validated — Machado CVD simulation across all pairs, ≥3:1 as marks on both surfaces; colored words use a darker AA text tint of the same hue. Click to restyle this page.</p>
+    <div class="rail">
+      <button class="palopt" data-pal="0" aria-pressed="true">
+        <span class="palname">A · PINK / BLUE / GOLD / GREEN</span>
+        <span class="palcols">
+          <span class="palcol palcol-light">
+            <span class="swrow"><span class="sw" style="background:#e0338a"></span>#e0338a</span>
+            <span class="swrow"><span class="sw" style="background:#0092c4"></span>#0092c4</span>
+            <span class="swrow"><span class="sw" style="background:#f0a500"></span>#f0a500</span>
+            <span class="swrow"><span class="sw" style="background:#33a03f"></span>#33a03f</span>
+            <span class="paldiv"></span>
+            <span class="swrow"><span class="sw" style="background:#e0421c"></span>#e0421c</span>
+            <span class="swrow"><span class="sw" style="background:#57534c"></span>#57534c</span>
+            <span class="swrow"><span class="sw" style="background:#6c4ef0"></span>#6c4ef0</span>
+          </span>
+          <span class="palcol palcol-dark">
+            <span class="swrow"><span class="sw" style="background:#f43b92"></span>#f43b92</span>
+            <span class="swrow"><span class="sw" style="background:#33cbe2"></span>#33cbe2</span>
+            <span class="swrow"><span class="sw" style="background:#ffd24d"></span>#ffd24d</span>
+            <span class="swrow"><span class="sw" style="background:#6fd97e"></span>#6fd97e</span>
+            <span class="paldiv"></span>
+            <span class="swrow"><span class="sw" style="background:#ff7052"></span>#ff7052</span>
+            <span class="swrow"><span class="sw" style="background:#cfc9be"></span>#cfc9be</span>
+            <span class="swrow"><span class="sw" style="background:#a294ff"></span>#a294ff</span>
+          </span>
+        </span>
+        <span class="palmeta">min CVD ΔE 12.2 light · 10.9 dark</span>
+      </button>
+      <button class="palopt" data-pal="1" aria-pressed="false">
+        <span class="palname">B · SIGNAL / ROYAL</span>
+        <span class="palcols">
+          <span class="palcol palcol-light">
+            <span class="swrow"><span class="sw" style="background:#e63312"></span>#e63312</span>
+            <span class="swrow"><span class="sw" style="background:#3b78f0"></span>#3b78f0</span>
+            <span class="swrow"><span class="sw" style="background:#43a81e"></span>#43a81e</span>
+            <span class="swrow"><span class="sw" style="background:#00a1cf"></span>#00a1cf</span>
+            <span class="paldiv"></span>
+            <span class="swrow"><span class="sw" style="background:#d61a80"></span>#d61a80</span>
+            <span class="swrow"><span class="sw" style="background:#57534c"></span>#57534c</span>
+            <span class="swrow"><span class="sw" style="background:#f0a500"></span>#f0a500</span>
+          </span>
+          <span class="palcol palcol-dark">
+            <span class="swrow"><span class="sw" style="background:#ff5f3a"></span>#ff5f3a</span>
+            <span class="swrow"><span class="sw" style="background:#7da5ff"></span>#7da5ff</span>
+            <span class="swrow"><span class="sw" style="background:#5fc44a"></span>#5fc44a</span>
+            <span class="swrow"><span class="sw" style="background:#22c3dd"></span>#22c3dd</span>
+            <span class="paldiv"></span>
+            <span class="swrow"><span class="sw" style="background:#f43b92"></span>#f43b92</span>
+            <span class="swrow"><span class="sw" style="background:#cfc9be"></span>#cfc9be</span>
+            <span class="swrow"><span class="sw" style="background:#ffd24d"></span>#ffd24d</span>
+          </span>
+        </span>
+        <span class="palmeta">min CVD ΔE 8.2 light · 9.5 dark — floor band</span>
+      </button>
+      <button class="palopt" data-pal="2" aria-pressed="false">
+        <span class="palname">C · MAGENTA / VIOLET</span>
+        <span class="palcols">
+          <span class="palcol palcol-light">
+            <span class="swrow"><span class="sw" style="background:#e02277"></span>#e02277</span>
+            <span class="swrow"><span class="sw" style="background:#5b55f0"></span>#5b55f0</span>
+            <span class="swrow"><span class="sw" style="background:#36a34a"></span>#36a34a</span>
+            <span class="swrow"><span class="sw" style="background:#009fd0"></span>#009fd0</span>
+            <span class="paldiv"></span>
+            <span class="swrow"><span class="sw" style="background:#a32812"></span>#a32812</span>
+            <span class="swrow"><span class="sw" style="background:#57534c"></span>#57534c</span>
+            <span class="swrow"><span class="sw" style="background:#f0a500"></span>#f0a500</span>
+          </span>
+          <span class="palcol palcol-dark">
+            <span class="swrow"><span class="sw" style="background:#ff64a8"></span>#ff64a8</span>
+            <span class="swrow"><span class="sw" style="background:#a49aff"></span>#a49aff</span>
+            <span class="swrow"><span class="sw" style="background:#57cf65"></span>#57cf65</span>
+            <span class="swrow"><span class="sw" style="background:#25c1d9"></span>#25c1d9</span>
+            <span class="paldiv"></span>
+            <span class="swrow"><span class="sw" style="background:#ff6a3d"></span>#ff6a3d</span>
+            <span class="swrow"><span class="sw" style="background:#cfc9be"></span>#cfc9be</span>
+            <span class="swrow"><span class="sw" style="background:#ffd24d"></span>#ffd24d</span>
+          </span>
+        </span>
+        <span class="palmeta">min CVD ΔE 12.3 light · 9.6 dark</span>
+      </button>
+      <button class="palopt" data-pal="3" aria-pressed="false">
+        <span class="palname">D · OKABE-ITO (CANONICAL)</span>
+        <span class="palcols">
+          <span class="palcol palcol-light">
+            <span class="swrow"><span class="sw" style="background:#D55E00"></span>#D55E00</span>
+            <span class="swrow"><span class="sw" style="background:#0072B2"></span>#0072B2</span>
+            <span class="swrow"><span class="sw" style="background:#009E73"></span>#009E73</span>
+            <span class="swrow"><span class="sw" style="background:#56B4E9"></span>#56B4E9</span>
+            <span class="paldiv"></span>
+            <span class="swrow"><span class="sw" style="background:#CC79A7"></span>#CC79A7</span>
+            <span class="swrow"><span class="sw" style="background:#E69F00"></span>#E69F00</span>
+            <span class="swrow"><span class="sw" style="background:#F0E442"></span>#F0E442</span>
+          </span>
+          <span class="palcol palcol-dark">
+            <span class="swrow"><span class="sw" style="background:#D55E00"></span>#D55E00</span>
+            <span class="swrow"><span class="sw" style="background:#0072B2"></span>#0072B2</span>
+            <span class="swrow"><span class="sw" style="background:#009E73"></span>#009E73</span>
+            <span class="swrow"><span class="sw" style="background:#56B4E9"></span>#56B4E9</span>
+            <span class="paldiv"></span>
+            <span class="swrow"><span class="sw" style="background:#CC79A7"></span>#CC79A7</span>
+            <span class="swrow"><span class="sw" style="background:#E69F00"></span>#E69F00</span>
+            <span class="swrow"><span class="sw" style="background:#F0E442"></span>#F0E442</span>
+          </span>
+        </span>
+        <span class="palmeta">Color Universal Design, Okabe &amp; Ito 2008 — all 7 from the canonical 8-set, verbatim</span>
+      </button>
+      <button class="palopt" data-pal="4" aria-pressed="false">
+        <span class="palname">E · IBM (CANONICAL)</span>
+        <span class="palcols">
+          <span class="palcol palcol-light">
+            <span class="swrow"><span class="sw" style="background:#FE6100"></span>#FE6100</span>
+            <span class="swrow"><span class="sw" style="background:#648FFF"></span>#648FFF</span>
+            <span class="swrow"><span class="sw" style="background:#FFB000"></span>#FFB000</span>
+            <span class="swrow"><span class="sw" style="background:#DC267F"></span>#DC267F</span>
+            <span class="paldiv"></span>
+            <span class="swrow"><span class="sw" style="background:#da1e28"></span>#da1e28</span>
+            <span class="swrow"><span class="sw" style="background:#6e6759"></span>#6e6759</span>
+            <span class="swrow"><span class="sw" style="background:#785EF0"></span>#785EF0</span>
+          </span>
+          <span class="palcol palcol-dark">
+            <span class="swrow"><span class="sw" style="background:#FE6100"></span>#FE6100</span>
+            <span class="swrow"><span class="sw" style="background:#648FFF"></span>#648FFF</span>
+            <span class="swrow"><span class="sw" style="background:#FFB000"></span>#FFB000</span>
+            <span class="swrow"><span class="sw" style="background:#DC267F"></span>#DC267F</span>
+            <span class="paldiv"></span>
+            <span class="swrow"><span class="sw" style="background:#fa4d56"></span>#fa4d56</span>
+            <span class="swrow"><span class="sw" style="background:#c6c6c6"></span>#c6c6c6</span>
+            <span class="swrow"><span class="sw" style="background:#785EF0"></span>#785EF0</span>
+          </span>
+        </span>
+        <span class="palmeta">IBM CVD set + Carbon red/gray</span>
+      </button>
+      <button class="palopt" data-pal="5" aria-pressed="false">
+        <span class="palname">F · VERMILION / VIOLET / GOLD / CYAN</span>
+        <span class="palcols">
+          <span class="palcol palcol-light">
+            <span class="swrow"><span class="sw" style="background:#b53000"></span>#b53000</span>
+            <span class="swrow"><span class="sw" style="background:#6a4be0"></span>#6a4be0</span>
+            <span class="swrow"><span class="sw" style="background:#bd8800"></span>#bd8800</span>
+            <span class="swrow"><span class="sw" style="background:#0090bc"></span>#0090bc</span>
+            <span class="paldiv"></span>
+            <span class="swrow"><span class="sw" style="background:#e0338a"></span>#e0338a</span>
+            <span class="swrow"><span class="sw" style="background:#57534c"></span>#57534c</span>
+            <span class="swrow"><span class="sw" style="background:#2f9440"></span>#2f9440</span>
+          </span>
+          <span class="palcol palcol-dark">
+            <span class="swrow"><span class="sw" style="background:#ff5533"></span>#ff5533</span>
+            <span class="swrow"><span class="sw" style="background:#9b7dff"></span>#9b7dff</span>
+            <span class="swrow"><span class="sw" style="background:#ffc233"></span>#ffc233</span>
+            <span class="swrow"><span class="sw" style="background:#2ec8e6"></span>#2ec8e6</span>
+            <span class="paldiv"></span>
+            <span class="swrow"><span class="sw" style="background:#f43b92"></span>#f43b92</span>
+            <span class="swrow"><span class="sw" style="background:#cfc9be"></span>#cfc9be</span>
+            <span class="swrow"><span class="sw" style="background:#4fd35c"></span>#4fd35c</span>
+          </span>
+        </span>
+        <span class="palmeta">all 21 pairs validated — min CVD ΔE 16.1 light · 18.1 dark</span>
+      </button>
+    </div>
+    <p class="sub" style="margin-top:14px">References:
+      <a href="https://davidmathlogic.com/colorblind/" target="_blank" rel="noopener">Coloring for Colorblindness</a> (interactive CVD simulator with the canonical sets) ·
+      <a href="https://jfly.uni-koeln.de/color/" target="_blank" rel="noopener">Okabe-Ito original</a> ·
+      <a href="https://personal.sron.nl/~pault/" target="_blank" rel="noopener">Paul Tol's schemes</a>
+    </p>
+  </section>
+
+  <section class="panel" id="p-research" role="tabpanel" hidden>
+
+    <div class="rblock">
+    <h2>Shields</h2>
+    <p class="sub" style="margin-bottom:14px">One word, four jobs — the layer split hands each job to a different word.</p>
+    <div class="defmap">
+      <div class="defrow"><span class="slot">Module</span><span class="word">Shield Generator</span><span class="why">card word, stays.</span></div>
+      <div class="defrow"><span class="slot">Buff</span><span class="word">Shields</span><span class="why">where the word shines. "Shields up." "Shields: 12." It <em>is</em> the block, flavored right.</span></div>
+      <div class="defrow"><span class="slot">Stat</span><span class="word">Shielding</span><span class="why">strength / efficiency modifier.</span></div>
+      <div class="defrow"><span class="slot">Resource</span><span class="word">Security</span><span class="why">per set A.</span></div>
+    </div>
+    <p class="punch">"Block" dies; Shields is the block.</p>
+    </div>
+
+    <div class="rblock">
+    <h2>Stats</h2>
+    <p class="sub" style="margin-bottom:14px">One stat paired to every resource, plus health and power underneath.</p>
+    <div class="stats">
+      <div class="stat"><span class="dash">—</span><span class="name">Hull</span><span class="desc">health. "Your Hull has dropped to 0." Untouchable.</span></div>
+      <div class="stat"><span class="dash">—</span><span class="name">Reactor</span><span class="desc">power capacity for running modules.</span></div>
+      <div class="stat"><span class="gem plasma"></span><span class="name">Firepower</span><span class="desc">boosts offense-lane matches, collection, and ability potency.</span></div>
+      <div class="stat"><span class="gem graviton"></span><span class="name">Shielding</span><span class="desc">boosts defense lane; Shields strength.</span></div>
+      <div class="stat"><span class="gem ion"></span><span class="name">Thrust</span><span class="desc">boosts speed lane; evasion potency.</span></div>
+      <div class="stat"><span class="gem tachyon"></span><span class="name">Bandwidth</span><span class="desc">boosts intel lane; control potency.</span></div>
+    </div>
+    <div class="stat-later">
+      <span class="lbl">Later / hidden pool</span>
+      <span class="chip">Targeting — crit</span>
+      <span class="chip">Evasion</span>
+      <span class="chip">Salvage — currency gain</span>
+    </div>
+    </div>
+
+    <div class="rblock">
+    <h2>Particles</h2>
+    <p class="sub" style="margin-bottom:14px">The full audit — every candidate benched, with where it lands instead.</p>
+    <div class="stats">
+      <div class="stat"><span class="dash">—</span><span class="name">Photon</span><span class="desc">real, observed — torpedoes, lasers, sails. Job too ambiguous: weapon <em>and</em> light <em>and</em> comms.</span></div>
+      <div class="stat"><span class="dash">—</span><span class="name">Proton</span><span class="desc">real, observed — offense but ammo-coded; loses to Plasma.</span></div>
+      <div class="stat"><span class="dash">—</span><span class="name">Electron</span><span class="desc">real, observed — mundane; this is "power," which Reactor owns.</span></div>
+      <div class="stat"><span class="dash">—</span><span class="name">Positron</span><span class="desc">real, observed — AI/computer-coded. Module word, not a resource.</span></div>
+      <div class="stat"><span class="dash">—</span><span class="name">Neutron</span><span class="desc">real, observed — warhead/star flavor word, no lane.</span></div>
+      <div class="stat"><span class="dash">—</span><span class="name">Neutrino</span><span class="desc">real, observed — through-matter detection; sensor-coded but faint.</span></div>
+      <div class="stat"><span class="dash">—</span><span class="name">Muon</span><span class="desc">real, observed — scanning (real tomography); too obscure, no genre job.</span></div>
+      <div class="stat"><span class="dash">—</span><span class="name">Antimatter</span><span class="desc">real, lab-produced — cores and warheads; Reactor vocabulary, not a lane.</span></div>
+      <div class="stat"><span class="dash">—</span><span class="name">Deuterium / He-3</span><span class="desc">real isotopes — fusion fuel, moon mining; Fuel is a dead lane.</span></div>
+      <div class="stat"><span class="dash">—</span><span class="name">Dark Matter</span><span class="desc">real hypothesis, undetected — mystery-box; special/warp shelf.</span></div>
+      <div class="stat"><span class="dash">—</span><span class="name">Exotic Matter</span><span class="desc">real hypothesis, negative mass — required by real Alcubierre warp math; strongest special/warp candidate.</span></div>
+      <div class="stat"><span class="dash">—</span><span class="name">Chronon</span><span class="desc">real physics term, hypothetical quantum of time (Lévi 1927, Caldirola) — special/warp shelf if warp goes temporal.</span></div>
+    </div>
+    </div>
+
+  </section>
+
+</div>
+
+<script>
+  const tabs = document.querySelectorAll('.navtab');
+  function show(id) {
+    document.querySelectorAll('.panel').forEach(p => { p.hidden = p.id !== id; });
+    tabs.forEach(t => t.setAttribute('aria-selected', String(t.dataset.panel === id)));
+  }
+  tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.panel)));
+  show('p-home');
+
+  const PALS = [
+    { ml: ['#e0338a', '#0092c4', '#f0a500', '#33a03f'], md: ['#f43b92', '#33cbe2', '#ffd24d', '#6fd97e'],
+      il: ['#c2186c', '#00789c', '#8a6400', '#2c7d31'], id: ['#f43b92', '#33cbe2', '#ffd24d', '#6fd97e'] },
+    { ml: ['#e63312', '#3b78f0', '#43a81e', '#00a1cf'], md: ['#ff5f3a', '#7da5ff', '#5fc44a', '#22c3dd'],
+      il: ['#a02a0d', '#1d5dc9', '#3a851b', '#007ba1'], id: ['#e64f2e', '#5c8cf2', '#48a838', '#00a7bf'] },
+    { ml: ['#e02277', '#5b55f0', '#36a34a', '#009fd0'], md: ['#ff64a8', '#a49aff', '#57cf65', '#25c1d9'],
+      il: ['#ab1155', '#3f3fc9', '#2e7d3b', '#007aa2'], id: ['#ee4f92', '#8579ef', '#45a43c', '#00a4b8'] },
+    { ml: ['#D55E00', '#0072B2', '#009E73', '#56B4E9'], md: ['#D55E00', '#0072B2', '#009E73', '#56B4E9'],
+      il: ['#b34f00', '#0072B2', '#007a59', '#2f7fb8'], id: ['#e57b2e', '#4d9fd6', '#1fb389', '#56B4E9'] },
+    { ml: ['#FE6100', '#648FFF', '#FFB000', '#DC267F'], md: ['#FE6100', '#648FFF', '#FFB000', '#DC267F'],
+      il: ['#c24a00', '#3c66d6', '#996a00', '#b81b66'], id: ['#FE6100', '#84a5ff', '#FFB000', '#e8559b'] },
+    { ml: ['#b53000', '#6a4be0', '#bd8800', '#0090bc'], md: ['#ff5533', '#9b7dff', '#ffc233', '#2ec8e6'],
+      il: ['#b53000', '#6a4be0', '#8a6400', '#00789c'], id: ['#ff5533', '#9b7dff', '#ffc233', '#2ec8e6'] },
+  ];
+  const VARS = ['--plasma', '--graviton', '--ion', '--tachyon'];
+  const decl = (marks, inks) =>
+    VARS.map((v, i) => `${v}:${marks[i]};${v}-ink:${inks[i]}`).join(';');
+  function applyPal(i) {
+    let el = document.getElementById('palstyle');
+    if (!el) { el = document.createElement('style'); el.id = 'palstyle'; document.head.appendChild(el); }
+    const p = PALS[i];
+    el.textContent =
+      `:root{${decl(p.ml, p.il)}}` +
+      `@media (prefers-color-scheme: dark){:root{${decl(p.md, p.id)}}}` +
+      `:root[data-theme="dark"]{${decl(p.md, p.id)}}` +
+      `:root[data-theme="light"]{${decl(p.ml, p.il)}}`;
+    document.querySelectorAll('.palopt').forEach((b, j) => b.setAttribute('aria-pressed', String(j === i)));
+  }
+  document.querySelectorAll('.palopt').forEach(b => b.addEventListener('click', () => applyPal(Number(b.dataset.pal))));
+</script>
