@@ -23,7 +23,7 @@ Working document for the resource/discipline/system/stat/tile naming pass — a 
 
 ## Open
 
-1. **Stats** — the fourth lane stat is unfilled: Mobility was dropped by order and every replacement pitched was rejected; naming stats after the resources is the if-all-else-fails option, not the plan. The doc still shows the old Threat / Protection / Mobility / Processing grid with Firepower / Armor / Warp / Energy sub-stats. A Stat Names exploration now lives on the Research tab — candidate lane-stat sets, per-lane word benches, and how the bench beneath pairs with each. (The old Shields and Stats research blocks were removed; the Shields word budget above is the record.)
+1. **Stats** — the fourth lane stat is unfilled: Mobility was dropped by order and every replacement pitched was rejected; naming stats after the resources is the if-all-else-fails option, not the plan. The doc still shows the old Threat / Protection / Mobility / Processing grid with Firepower / Armor / Warp / Energy sub-stats. A Stat Names exploration lives on the Research tab — an iterations table (rows = candidate rosters, columns = lanes), per-lane word benches, and the bench beneath. Ruling: the Engineering-lane stat reads engineering (engine-room capability), not movement — the movement words died with Mobility. (The old Shields and Stats research blocks were removed; the Shields word budget above is the record.)
 2. **Threat** — accepted "for now"; stands on its own regardless of what happens with the lanes.
 
 Modules are explicitly deferred.

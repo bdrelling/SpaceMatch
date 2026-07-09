@@ -357,6 +357,16 @@
   .stat-later { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; align-items: baseline; }
   .stat-later .lbl { font: 600 11px/1 var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
 
+  /* ---- stat iterations table ---- */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); margin-top: 14px; }
+  .stattable { width: 100%; border-collapse: collapse; }
+  .stattable th, .stattable td { text-align: left; padding: 10px 16px; white-space: nowrap; }
+  .stattable tbody td { border-top: 1px solid var(--line); font-weight: 650; }
+  .stattable thead th { font: 600 11px/1.6 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .stattable th .gem { margin-right: 8px; }
+  .stattable td.n { font: 600 11px/1.6 var(--mono); color: var(--muted); width: 1%; }
+  .stattable .fn { color: var(--muted); font-weight: 400; }
+
   /* ---- modules ---- */
   .modgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
   .modcol {
@@ -866,145 +876,57 @@
 
     <div class="rblock">
     <h2>Stat Names</h2>
-    <p class="sub" style="margin-bottom:14px">Starship modifiers that improve abilities ("Missile Battery — Threat +2"). One stat per lane; Firepower, Armor, Warp, and Energy sit beneath the lanes — the bench — and hold unless a set says otherwise. Mobility is dead by order, so the ion chair is empty; Threat is accepted for now. Sets reuse words freely — they're competing readings of the same slots, not rivals for different ones.</p>
-    <div class="legend">
-      <span><span class="gem plasma"></span>offense</span>
-      <span><span class="gem graviton"></span>defense / sustain</span>
-      <span><span class="gem ion"></span>speed / growth</span>
-      <span><span class="gem tachyon"></span>intel / control</span>
+    <p class="sub" style="margin-bottom:14px">Starship modifiers that improve abilities ("Missile Battery — Threat +2"). One stat per lane; Firepower, Armor, Warp, and Energy sit beneath the lanes — the bench — and hold unless a row says otherwise. The ion stat reads <em>engineering</em> — the state of your engine room — not movement; the movement pool died with Mobility. Threat is accepted for now. Rows reuse words freely — they're competing readings of the same slots, not rivals for different ones.</p>
+    <div class="tablewrap">
+      <table class="stattable">
+        <thead>
+          <tr>
+            <th></th>
+            <th><span class="gem plasma"></span>Command</th>
+            <th><span class="gem graviton"></span>Security</th>
+            <th><span class="gem ion"></span>Engineering</th>
+            <th><span class="gem tachyon"></span>Science</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="n">0</td><td><span class="t-plasma">Threat</span></td><td><span class="t-graviton">Protection</span></td><td><s style="color:var(--muted); font-weight:400">Mobility</s></td><td><span class="t-tachyon">Processing</span></td></tr>
+          <tr><td class="n">1</td><td><span class="t-plasma">Threat</span></td><td><span class="t-graviton">Protection</span></td><td><span class="t-ion">Output</span></td><td><span class="t-tachyon">Processing</span></td></tr>
+          <tr><td class="n">2</td><td><span class="t-plasma">Threat</span></td><td><span class="t-graviton">Protection</span></td><td><span class="t-ion">Power</span><span class="fn"> †</span></td><td><span class="t-tachyon">Processing</span></td></tr>
+          <tr><td class="n">3</td><td><span class="t-plasma">Threat</span></td><td><span class="t-graviton">Protection</span></td><td><span class="t-ion">Efficiency</span><span class="fn"> ‡</span></td><td><span class="t-tachyon">Processing</span></td></tr>
+          <tr><td class="n">4</td><td><span class="t-plasma">Threat</span></td><td><span class="t-graviton">Protection</span></td><td><span class="t-ion">Yield</span></td><td><span class="t-tachyon">Processing</span></td></tr>
+          <tr><td class="n">5</td><td><span class="t-plasma">Threat</span></td><td><span class="t-graviton">Protection</span></td><td><span class="t-ion">Torque</span></td><td><span class="t-tachyon">Processing</span></td></tr>
+          <tr><td class="n">6</td><td><span class="t-plasma">Threat</span></td><td><span class="t-graviton">Protection</span></td><td><span class="t-ion">Throughput</span></td><td><span class="t-tachyon">Processing</span></td></tr>
+          <tr><td class="n">7</td><td><span class="t-plasma">Threat</span></td><td><span class="t-graviton">Resilience</span></td><td><span class="t-ion">Output</span></td><td><span class="t-tachyon">Analysis</span></td></tr>
+          <tr><td class="n">8</td><td><span class="t-plasma">Attack</span><span class="fn"> ◊</span></td><td><span class="t-graviton">Defense</span></td><td><span class="t-ion">Power</span><span class="fn"> †</span></td><td><span class="t-tachyon">Sensors</span></td></tr>
+          <tr><td class="n">9</td><td><span class="t-plasma">Firepower</span><span class="fn"> ◊</span></td><td><span class="t-graviton">Shielding</span></td><td><span class="t-ion">Output</span></td><td><span class="t-tachyon">Bandwidth</span></td></tr>
+        </tbody>
+      </table>
     </div>
-    <div class="rail">
-
-      <div class="set">
-        <div class="set-head"><span class="k">1</span><h3>Velocity</h3><span class="k" style="margin-left:auto">bench holds</span></div>
-        <div class="lanes">
-          <div class="lane"><span class="gem plasma"></span><span class="name t-plasma">Threat</span></div>
-          <div class="lane"><span class="gem graviton"></span><span class="name t-graviton">Protection</span></div>
-          <div class="lane"><span class="gem ion"></span><span class="name t-ion">Velocity</span></div>
-          <div class="lane"><span class="gem tachyon"></span><span class="name t-tachyon">Processing</span></div>
-        </div>
-        <p class="sub" style="font-size:12.5px">Velocity takes the empty chair; nothing else moves. Same abstract register as the incumbents, no ownership conflicts.</p>
-        <div class="log">
-          <span class="ln">Afterburner — <span class="t-ion">Velocity +2</span> · <span class="t-graviton">Protection −1</span></span>
-          <span class="ln">Hull Plating — <span class="t-scrap">Armor +2</span> · <span class="t-ion">Velocity −1</span></span>
-          <span class="ln">Missile Battery — <span class="t-plasma">Threat +2</span> · <span class="t-damage">Firepower +1</span></span>
-        </div>
-      </div>
-
-      <div class="set">
-        <div class="set-head"><span class="k">2</span><h3>Thrust</h3><span class="k" style="margin-left:auto">bench holds</span></div>
-        <div class="lanes">
-          <div class="lane"><span class="gem plasma"></span><span class="name t-plasma">Threat</span></div>
-          <div class="lane"><span class="gem graviton"></span><span class="name t-graviton">Protection</span></div>
-          <div class="lane"><span class="gem ion"></span><span class="name t-ion">Thrust</span></div>
-          <div class="lane"><span class="gem tachyon"></span><span class="name t-tachyon">Processing</span></div>
-        </div>
-        <p class="sub" style="font-size:12.5px">The most <em>ship</em> word in the pool. Also the one concrete noun among abstracts, and Ion Thrusters granting Thrust doubles the word.</p>
-        <div class="log">
-          <span class="ln">Afterburner — <span class="t-ion">Thrust +2</span> · <span class="t-graviton">Protection −1</span></span>
-          <span class="ln">Hull Plating — <span class="t-scrap">Armor +2</span> · <span class="t-ion">Thrust −1</span></span>
-          <span class="ln">Warp Coil — <span class="t-warp">Warp +1</span></span>
-        </div>
-      </div>
-
-      <div class="set">
-        <div class="set-head"><span class="k">3</span><h3>Agility</h3><span class="k" style="margin-left:auto">bench holds</span></div>
-        <div class="lanes">
-          <div class="lane"><span class="gem plasma"></span><span class="name t-plasma">Threat</span></div>
-          <div class="lane"><span class="gem graviton"></span><span class="name t-graviton">Protection</span></div>
-          <div class="lane"><span class="gem ion"></span><span class="name t-ion">Agility</span></div>
-          <div class="lane"><span class="gem tachyon"></span><span class="name t-tachyon">Processing</span></div>
-        </div>
-        <p class="sub" style="font-size:12.5px">Dodge-coded — the evasion reading of the lane. Instantly legible; reads pilot-skill more than ship-mass.</p>
-        <div class="log">
-          <span class="ln">Afterburner — <span class="t-ion">Agility +2</span></span>
-          <span class="ln">Hull Plating — <span class="t-scrap">Armor +2</span> · <span class="t-ion">Agility −1</span></span>
-          <span class="ln">ECM Jammer — <span class="t-tachyon">Processing +2</span></span>
-        </div>
-      </div>
-
-      <div class="set">
-        <div class="set-head"><span class="k">4</span><h3>Momentum</h3><span class="k" style="margin-left:auto">bench holds</span></div>
-        <div class="lanes">
-          <div class="lane"><span class="gem plasma"></span><span class="name t-plasma">Threat</span></div>
-          <div class="lane"><span class="gem graviton"></span><span class="name t-graviton">Protection</span></div>
-          <div class="lane"><span class="gem ion"></span><span class="name t-ion">Momentum</span></div>
-          <div class="lane"><span class="gem tachyon"></span><span class="name t-tachyon">Processing</span></div>
-        </div>
-        <p class="sub" style="font-size:12.5px">The only word covering the lane's whole brief — speed <em>and</em> growth. Reads snowball; the heaviest word here.</p>
-        <div class="log">
-          <span class="ln">Ion Thrusters — <span class="t-ion">Momentum +2</span></span>
-          <span class="ln">Hull Plating — <span class="t-scrap">Armor +2</span> · <span class="t-ion">Momentum −1</span></span>
-          <span class="ln">Missile Battery — <span class="t-plasma">Threat +2</span> · <span class="t-damage">Firepower +1</span></span>
-        </div>
-      </div>
-
-      <div class="set">
-        <div class="set-head"><span class="k">5</span><h3>Doctrine</h3><span class="k" style="margin-left:auto">bench holds</span></div>
-        <div class="lanes">
-          <div class="lane"><span class="gem plasma"></span><span class="name t-plasma">Threat</span></div>
-          <div class="lane"><span class="gem graviton"></span><span class="name t-graviton">Resilience</span></div>
-          <div class="lane"><span class="gem ion"></span><span class="name t-ion">Momentum</span></div>
-          <div class="lane"><span class="gem tachyon"></span><span class="name t-tachyon">Analysis</span></div>
-        </div>
-        <p class="sub" style="font-size:12.5px">Leans into the lane themes — sustain, growth, denial — while keeping Threat. Most flavor, longest words, furthest from the incumbents.</p>
-        <div class="log">
-          <span class="ln">Shield Generator — <span class="t-graviton">Resilience +2</span></span>
-          <span class="ln">ECM Jammer — <span class="t-tachyon">Analysis +2</span></span>
-          <span class="ln">Afterburner — <span class="t-ion">Momentum +2</span> · <span class="t-graviton">Resilience −1</span></span>
-        </div>
-      </div>
-
-      <div class="set">
-        <div class="set-head"><span class="k">6</span><h3>Plain-speak</h3><span class="k" style="margin-left:auto">swaps Threat</span></div>
-        <div class="lanes">
-          <div class="lane"><span class="gem plasma"></span><span class="name t-plasma">Attack</span></div>
-          <div class="lane"><span class="gem graviton"></span><span class="name t-graviton">Defense</span></div>
-          <div class="lane"><span class="gem ion"></span><span class="name t-ion">Speed</span></div>
-          <div class="lane"><span class="gem tachyon"></span><span class="name t-tachyon">Sensors</span></div>
-        </div>
-        <p class="sub" style="font-size:12.5px">Hearthstone-plain; the bench already speaks this register, so the full roster reads like a spec sheet. Costs Threat and most of the tone. Wart: "Sensor Array — Sensors +2."</p>
-        <div class="log">
-          <span class="ln">Missile Battery — <span class="t-plasma">Attack +2</span> · <span class="t-damage">Firepower +1</span></span>
-          <span class="ln">Afterburner — <span class="t-ion">Speed +2</span> · <span class="t-graviton">Defense −1</span></span>
-          <span class="ln">Targeting Computer — <span class="t-tachyon">Sensors +2</span></span>
-        </div>
-      </div>
-
-      <div class="set">
-        <div class="set-head"><span class="k">7</span><h3>Output</h3><span class="k" style="margin-left:auto">renames the bench</span></div>
-        <div class="lanes">
-          <div class="lane"><span class="gem plasma"></span><span class="name t-plasma">Firepower</span></div>
-          <div class="lane"><span class="gem graviton"></span><span class="name t-graviton">Shielding</span></div>
-          <div class="lane"><span class="gem ion"></span><span class="name t-ion">Thrust</span></div>
-          <div class="lane"><span class="gem tachyon"></span><span class="name t-tachyon">Bandwidth</span></div>
-        </div>
-        <p class="sub" style="font-size:12.5px">The hardware register fully committed — the most coherent roster in the pool. Price: Threat dies, Firepower promotes off the bench (Ordnance replaces it), and Shields takes a third job.</p>
-        <div class="log">
-          <span class="ln">Missile Battery — <span class="t-plasma">Firepower +2</span> · <span class="t-damage">Ordnance +1</span></span>
-          <span class="ln">ECM Jammer — <span class="t-tachyon">Bandwidth +2</span></span>
-          <span class="ln">Afterburner — <span class="t-ion">Thrust +2</span> · <span class="t-graviton">Shielding −1</span></span>
-        </div>
-      </div>
-
+    <p class="sub" style="font-size:12.5px; margin-top:10px">0 — the old grid, for reference. Rows 1–6 fill the chair and move nothing else; 7 leans into the lane themes (sustain, growth, denial); 8 is Hearthstone-plain; 9 is the hardware register fully committed. † Power brushes Energy's settled territory (module slots) — one concept, two words if both live. ‡ Efficiency is an archetype word (Logic — snowball · efficiency). ◊ swaps Threat; row 9 also renames the bench — Firepower promotes to the lane, Ordnance replaces it under damage, and Shields takes a third job (Shielding).</p>
+    <div class="log" style="margin-top:14px; max-width:440px">
+      <span class="exlbl">Row 1 aloud</span>
+      <span class="ln">Missile Battery — <span class="t-plasma">Threat +2</span> · <span class="t-damage">Firepower +1</span></span>
+      <span class="ln">Afterburner — <span class="t-ion">Output +2</span> · <span class="t-graviton">Protection −1</span></span>
+      <span class="ln">Hull Plating — <span class="t-scrap">Armor +2</span> · <span class="t-ion">Output −1</span></span>
+      <span class="ln">ECM Jammer — <span class="t-tachyon">Processing +2</span></span>
     </div>
 
     <p class="exlbl" style="margin-top:24px">Lane benches — the wider pool</p>
     <div class="lanes" style="margin-top:10px; gap:12px">
       <div class="lane"><span class="gem plasma"></span><span class="chips"><span class="chip">Threat — incumbent, accepted</span><span class="chip">Attack</span><span class="chip">Aggression</span><span class="chip">Lethality</span><span class="chip">Assault</span><span class="chip">Offense — theme word promoted</span></span></div>
       <div class="lane"><span class="gem graviton"></span><span class="chips"><span class="chip">Protection — incumbent</span><span class="chip">Resilience</span><span class="chip">Durability</span><span class="chip">Fortitude</span><span class="chip">Hardening</span><span class="chip">Defense — theme word promoted</span><span class="chip">Shielding — Shields' third job</span></span></div>
-      <div class="lane"><span class="gem ion"></span><span class="chips"><span class="chip">Velocity</span><span class="chip">Thrust</span><span class="chip">Agility</span><span class="chip">Momentum</span><span class="chip">Speed — theme word promoted</span><span class="chip">Throttle — sounds like a module</span><span class="chip">Handling — car-coded</span><span class="chip">Acceleration — too long in a log line</span><span class="chip">Impulse — Trek-owned</span><span class="chip">Tempo — archetype word</span><span class="chip">Evasion — an effect, not a capability</span><span class="chip">Mobility — dead by order</span></span></div>
+      <div class="lane"><span class="gem ion"></span><span class="chips"><span class="chip">Output</span><span class="chip">Power — brushes Energy</span><span class="chip">Efficiency — archetype word</span><span class="chip">Yield</span><span class="chip">Torque — engine-room, car-adjacent</span><span class="chip">Throughput</span><span class="chip">Capacity — reads cargo</span><span class="chip">Industry — 4X-coded</span><span class="chip">Fabrication — a mouthful</span><span class="chip">Overdrive — sounds like a buff</span><span class="chip">Mobility — dead by order</span><span class="chip" style="white-space:normal">Velocity · Thrust · Agility · Momentum · Speed · Throttle · Acceleration · Handling — movement words, dead with Mobility</span><span class="chip">Impulse — Trek-owned</span><span class="chip">Tempo — archetype word</span><span class="chip">Evasion — an effect, not a capability</span></span></div>
       <div class="lane"><span class="gem tachyon"></span><span class="chips"><span class="chip">Processing — incumbent</span><span class="chip">Sensors</span><span class="chip">Bandwidth</span><span class="chip">Analysis</span><span class="chip">Computing</span><span class="chip">Signal</span><span class="chip">Awareness</span><span class="chip">Calibration</span><span class="chip">Precision — archetype word</span><span class="chip">Targeting — crit word</span></span></div>
     </div>
 
     <p class="exlbl" style="margin-top:24px">The bench beneath the lanes</p>
     <div class="stats" style="margin-top:10px">
-      <div class="stat"><span class="dot damage" style="justify-self:center; position:relative; top:1px"></span><span class="name">Firepower</span><span class="desc">holds wherever Threat holds; promoted to a lane (set 7), the damage slot renames — Ordnance leads, Payload and Munitions benched.</span></div>
+      <div class="stat"><span class="dot damage" style="justify-self:center; position:relative; top:1px"></span><span class="name">Firepower</span><span class="desc">holds wherever Threat holds; promoted to a lane (row 9), the damage slot renames — Ordnance leads, Payload and Munitions benched.</span></div>
       <div class="stat"><span class="dot scrap" style="justify-self:center; position:relative; top:1px"></span><span class="name">Armor</span><span class="desc">holds everywhere. Plating benched as the fallback.</span></div>
       <div class="stat"><span class="dot warp" style="justify-self:center; position:relative; top:1px"></span><span class="name">Warp</span><span class="desc">holds everywhere.</span></div>
       <div class="stat"><span class="dash">—</span><span class="name">Energy</span><span class="desc">settled — module slots, colorless. Not in play here.</span></div>
     </div>
-    <p class="punch">The decision is the ion chair; front-runners on sound: Velocity for register, Thrust for flavor.</p>
+    <p class="punch">The chair wants an engine-room word; front-runners on sound: Output, then Power if Energy cedes the concept.</p>
     </div>
 
     <div class="rblock">
