@@ -24,4 +24,4 @@ Working document for the resource/discipline/system/stat/tile naming pass — a 
 
 ## Open
 
-Nothing open — modules are explicitly deferred and are the next naming pass.
+Nothing open — the vocabulary set is complete. Modules are content, not vocabulary.
