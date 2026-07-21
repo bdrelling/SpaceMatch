@@ -1,6 +1,9 @@
 # resource-naming
 
-Working document for the resource/discipline/system/stat/tile naming pass — a tabbed HTML doc (JS tabs, no SCREENS registry; open `index.html` in a browser), not a click-through UI mockup. Also published as a Claude artifact: https://claude.ai/code/artifact/63f2c823-2805-4ad2-b7ac-3564f475d264
+The game's vocabulary — disciplines, resources, tiles, styles of play, stats.
+
+- `terminology.html` — the settled vocabulary on one page; the copy that moves into the project. Artifact: https://claude.ai/code/artifact/e4f8f409-b6b1-4077-a554-0d18d971e1b8
+- `index.html` — the research behind it (candidate sets, word benches, palette validation; a tabbed HTML doc with JS tabs, no SCREENS registry). Reference only; will be deleted eventually. Artifact: https://claude.ai/code/artifact/63f2c823-2805-4ad2-b7ac-3564f475d264
 
 ## Settled
 
@@ -13,7 +16,7 @@ Working document for the resource/discipline/system/stat/tile naming pass — a 
 - **Shields word budget:** module = Shield Generator, buff = Shields. No "Block".
 - **Palette:** option A on the Palette tab — core pink/blue/gold/green + damage orange, alloy tan, warp purple. CVD-validated (Machado simulation), light and dark themes.
 - **Energy** = module slots ("0/3 energy used"), colorless.
-- **Stats** (ship properties that echo their discipline): Targeting (Command), Protection (Security), Computing (Engineering), Diagnostics (Science); plus Firepower (damage), Armor (alloy), Warp (antimatter), Energy (slots). Engineering's stat reads engine-room, not movement — Mobility and the movement words are dead. The Stat Names exploration on the Research tab is the record of the pass.
+- **Stats** (ship properties that echo their discipline): Targeting (Command), Protection (Security), Computing (Engineering), Diagnostics (Science); plus Firepower (damage), Armor (alloy), Warp (antimatter), Energy (slots). Engineering's stat reads engine-room, not movement — Mobility and the movement words are dead.
 
 ## Naming tests used (reuse when resuming)
 
@@ -21,7 +24,3 @@ Working document for the resource/discipline/system/stat/tile naming pass — a 
 - Closed set, no leftovers; a word can only mean one thing in the game.
 - No franchise-owned words (Trek technobabble banned); no MTG jargon — Hearthstone/StS/Across-the-Obelisk vocabulary only.
 - Doc prose stays count-free (no "the four schools…") so it can't go stale.
-
-## Open
-
-Nothing open — the vocabulary set is complete. Modules are content, not vocabulary.
