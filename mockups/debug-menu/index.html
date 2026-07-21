@@ -282,17 +282,18 @@ const PARENTS = {
   cat_match_configs: 'home',
   cat_statuses: 'home', ed_status: 'cat_statuses', ed_newstatus: 'cat_statuses', ed_modifier: 'ed_status', pick_adjustment: 'ed_modifier',
   cat_adjustments: 'home', ed_adjustment: 'cat_adjustments', pick_stats: 'ed_adjustment', ed_newadjustment: 'cat_adjustments',
-  cat_stats: 'home', ed_stat: 'cat_stats',
-  cat_resources: 'home', ed_resource: 'cat_resources',
-  cat_abilities: 'home', ed_ability: 'cat_abilities', ed_cost: 'ed_ability', pick_resources: 'ed_cost',
+  cat_stats: 'home', ed_stat: 'cat_stats', ed_newstat: 'cat_stats',
+  cat_resources: 'home', ed_resource: 'cat_resources', ed_newresource: 'cat_resources',
+  cat_abilities: 'home', ed_ability: 'cat_abilities', ed_newability: 'cat_abilities', ed_cost: 'ed_ability', pick_resources: 'ed_cost',
   pick_effects: 'ed_ability', pick_transforms: 'ed_status',
   cat_actions: 'home', ed_action: 'cat_actions', ed_newaction: 'cat_actions', pick_actions: 'ed_effect',
   cat_effects: 'home', ed_effect: 'cat_effects', ed_neweffect: 'cat_effects',
   ed_condition: 'ed_effect', pick_statuses: 'ed_condition',
   cat_transforms: 'home', ed_transform: 'cat_transforms', ed_newtransform: 'cat_transforms',
-  cat_tiles: 'home', ed_tile: 'cat_tiles',
-  cat_rules: 'home',
-  cat_rulesets: 'home', ed_ruleset: 'cat_rulesets', menu_rule: 'ed_ruleset', ed_newrule: 'menu_rule',
+  cat_tiles: 'home', ed_tile: 'cat_tiles', ed_newtile: 'cat_tiles',
+  cat_rules: 'home', ed_selrule: 'cat_rules', ed_newselrule: 'cat_rules',
+  cat_rulesets: 'home', ed_ruleset: 'cat_rulesets', menu_rule: 'ed_ruleset', ed_newrule: 'menu_rule', ed_newruleset: 'cat_rulesets',
+  ed_matchconfig: 'cat_match_configs', ed_newmatchconfig: 'cat_match_configs', pick_rulesets: 'ed_matchconfig',
 };
 function deepLink(id) {
   const chain = [id];
@@ -503,7 +504,7 @@ home: () => ({ title: '', rows: [
   scroller([
     tile('Resources', { emoji: '🔋', to: 'cat_resources', count: 6 }),
     tile('Tiles', { emoji: '🎨', to: 'cat_tiles', count: 7 }),
-    tile('Stats', { emoji: '📊', to: 'cat_stats', count: 8 }),
+    tile('Stats', { emoji: '📊', to: 'cat_stats', count: 9 }),
     tile('Statuses', { emoji: '✨', to: 'cat_statuses', count: 6, edited: true }),
   ]),
   section('Building Blocks'),
@@ -530,10 +531,12 @@ home: () => ({ title: '', rows: [
 
 pick_match_configs: () => ({ title: 'Quick Match', rows: [
   list([ pickRow('Default'), pickRow('Wide') ]),
+  list([ newRow('New Match Config', 'ed_newmatchconfig') ]),
 ]}),
 
 pick_starships: () => ({ title: 'Starship', rows: [
   list([ pickRow('Player Default'), pickRow('Opponent Default') ]),
+  list([ newRow('New Starship', 'ed_newstarship') ]),
 ]}),
 
 /* --- Starships (a starship references a picked Loadout) --- */
@@ -682,8 +685,60 @@ pick_loadouts: () => ({ title: 'Loadout', rows: [
   list([ newRow('New Loadout', 'ed_newloadout') ]),
 ]}),
 
-cat_match_configs: () => ({ title: 'Match Configs', rows: [
-  list(['Default', 'Wide'].map(s => nav(s))),
+cat_match_configs: () => ({ title: 'Match Configs', action: { fn: () => go('ed_newmatchconfig') }, rows: [
+  list([
+    nav('Default', { to: 'ed_matchconfig' }),
+    nav('Wide', { to: 'ed_matchconfig' }),
+  ]),
+]}),
+
+ed_matchconfig: () => ({ title: 'Default', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '15001'), scalar('text', 'Filename', 'default') ]),
+  section('Information'),
+  list([
+    scalar('text', 'Name', 'Default'),
+    descField('The standard match setup.'),
+  ]),
+  section('Configuration'),
+  list([
+    ref('Ruleset', 'Default', 'pick_rulesets'),
+    stepper('Columns', 8),
+    stepper('Rows', 8),
+  ]),
+]}),
+
+ed_newmatchconfig: () => ({ title: 'New Match Config', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '15003'), scalar('text', 'Filename', 'new_match_config') ]),
+  section('Information'),
+  list([ scalar('text', 'Name', 'New Match Config'), descField('—') ]),
+  section('Configuration'),
+  list([
+    ref('Ruleset', 'None', 'pick_rulesets'),
+    stepper('Columns', 8),
+    stepper('Rows', 8),
+  ]),
+  addBtn('New Match Config'),
+]}),
+
+// picker over the Rulesets catalog
+pick_rulesets: () => ({ title: 'Ruleset', rows: [
+  list([
+    optRow('Default', 'The standard ruleset used for most matches.'),
+    optRow('Alternate', 'An alternate ruleset for testing rule changes.'),
+  ]),
+  list([ newRow('New Ruleset', 'ed_newruleset') ]),
+]}),
+
+ed_newruleset: () => ({ title: 'New Ruleset', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '6008'), scalar('text', 'Filename', 'new_ruleset') ]),
+  section('Information'),
+  list([ scalar('text', 'Name', 'New Ruleset'), descField('—') ]),
+  section('Rules'),
+  chips([ chip('', { add: true, menu: 'menu_rule' }) ]),
+  addBtn('New Ruleset'),
 ]}),
 
 /* --- Statuses --- */
@@ -823,7 +878,7 @@ ed_action: () => ({ title: 'Weapon Attack', rows: [
   section('Configuration'),
   list([
     variant('Kind', 'Attack', null, 'menu_action', false, 'Deals damage to the target.'),
-    variant('Amount', 'max(weapons)', null, 'menu_amount', false, 'How much damage is dealt.'),
+    variant('Amount', 'Maximum Weapons', null, 'menu_amount', false, 'How much damage is dealt.'),
   ]),
 ]}),
 
@@ -881,7 +936,7 @@ ed_neweffect: () => ({ title: 'New Effect', rows: [
     ref('Action', 'None', 'pick_actions'),
   ]),
   section('Conditions'),
-  chips([ chip('', { add: true, menu: 'ed_condition' }) ]),
+  chips([ chip('', { add: true, menu: 'menu_condition' }) ]),
   addBtn('New Effect'),
 ]}),
 
@@ -928,10 +983,11 @@ ed_transform: () => ({ title: 'Shield Absorb', rows: [
 
 pick_stats: () => ({ title: 'Stat', rows: [
   grid(['health', 'armor', 'shields', 'weapons', 'engines', 'computers', 'sensors', 'energy'].map(s => pickTile(titleize(s), STAT_SYMBOLS[s]))),
+  list([ newRow('New Stat', 'ed_newstat') ]),
 ]}),
 
 /* --- Stats --- */
-cat_stats: () => ({ title: 'Stats', action: { fn: () => go('ed_stat') }, rows: [
+cat_stats: () => ({ title: 'Stats', action: { fn: () => go('ed_newstat') }, rows: [
   list([
     nav('Health', { to: 'ed_stat' }),
     nav('Armor', { to: 'ed_stat' }),
@@ -967,8 +1023,24 @@ ed_stat: () => ({ title: 'Health', rows: [
   list([ scalar('toggle', 'Hidden', '', { off: true }) ]),
 ]}),
 
+ed_newstat: () => ({ title: 'New Stat', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '1010'), scalar('text', 'Filename', 'new_stat') ]),
+  section('Information'),
+  list([ scalar('text', 'Name', 'New Stat'), descField('—') ]),
+  section('Configuration'),
+  list([
+    scalar('slider', 'Minimum', '0', { pct: 0, toggle: true }),
+    scalar('slider', 'Maximum', 'None', { none: true, toggle: false }),
+    scalar('slider', 'Default', '0', { pct: 0 }),
+  ]),
+  section('Display'),
+  list([ scalar('toggle', 'Hidden', '', { off: true }) ]),
+  addBtn('New Stat'),
+]}),
+
 /* --- Resources --- */
-cat_resources: () => ({ title: 'Resources', action: { fn: () => go('ed_resource') }, rows: [
+cat_resources: () => ({ title: 'Resources', action: { fn: () => go('ed_newresource') }, rows: [
   grid([
     tile('Tactics', { swatch: '#e05457', to: 'ed_resource' }),
     tile('Security', { swatch: '#59adeb', to: 'ed_resource' }),
@@ -994,8 +1066,18 @@ ed_resource: () => ({ title: 'Tactics', rows: [
   list([ scalar('color', 'Color', '#e05457') ]),
 ]}),
 
+ed_newresource: () => ({ title: 'New Resource', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '2007'), scalar('text', 'Filename', 'new_resource') ]),
+  section('Information'),
+  list([ scalar('text', 'Name', 'New Resource'), descField('—') ]),
+  section('Display'),
+  list([ scalar('color', 'Color', '#7b8794') ]),
+  addBtn('New Resource'),
+]}),
+
 /* --- Abilities --- */
-cat_abilities: () => ({ title: 'Abilities', action: { fn: () => go('ed_ability') }, rows: [
+cat_abilities: () => ({ title: 'Abilities', action: { fn: () => go('ed_newability') }, rows: [
   grid([
     tile('Evasive Maneuvers', { emoji: '💨', to: 'ed_ability' }),
     tile('Fire Weapons', { emoji: '💥', to: 'ed_ability' }),
@@ -1014,9 +1096,21 @@ ed_ability: () => ({ title: 'Fire Weapons', rows: [
     descField('Fires the primary weapons at a chosen target.'),
   ]),
   section('Costs'),
-  chips([ chip('10 × Tactics', { to: 'ed_cost' }), chip('', { add: true }) ]),
+  chips([ chip('10 × Tactics', { to: 'ed_cost' }), chip('', { add: true, menu: 'ed_cost' }) ]),
   section('Effects'),
   chips([ chip('Attack Opponent', { to: 'pick_effects' }), chip('', { add: true, menu: 'pick_effects' }) ]),
+]}),
+
+ed_newability: () => ({ title: 'New Ability', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '5006'), scalar('text', 'Filename', 'new_ability') ]),
+  section('Information'),
+  list([ scalar('text', 'Name', 'New Ability'), descField('—') ]),
+  section('Costs'),
+  chips([ chip('', { add: true, menu: 'ed_cost' }) ]),
+  section('Effects'),
+  chips([ chip('', { add: true, menu: 'pick_effects' }) ]),
+  addBtn('New Ability'),
 ]}),
 
 ed_cost: () => ({ title: 'Cost', rows: [
@@ -1029,6 +1123,7 @@ ed_cost: () => ({ title: 'Cost', rows: [
 
 pick_resources: () => ({ title: 'Resource', rows: [
   grid(['tactics', 'security', 'science', 'engineering'].map(s => pickTile(titleize(s)))),
+  list([ newRow('New Resource', 'ed_newresource') ]),
 ]}),
 
 ed_effect: () => ({ title: 'Attack Opponent', rows: [
@@ -1045,7 +1140,7 @@ ed_effect: () => ({ title: 'Attack Opponent', rows: [
     ref('Action', 'Weapon Attack', 'pick_actions'),
   ]),
   section('Conditions'),
-  chips([ chip('Has Target Lock', { to: 'ed_condition' }), chip('', { add: true, menu: 'ed_condition' }) ]),
+  chips([ chip('Has Target Lock', { to: 'ed_condition' }), chip('', { add: true, menu: 'menu_condition' }) ]),
 ]}),
 
 // a Condition is owned by its effect (inline sub-editor, like Modifier/Cost)
@@ -1098,9 +1193,41 @@ ed_tile: () => ({ title: 'Security', rows: [
   list([ textureField('security.png') ]),
 ]}),
 
-/* --- Rules --- */
-cat_rules: () => ({ title: 'Rules', action: { fn: () => go('menu_rule') }, rows: [
-  list(['Swap', 'Slide', 'Swap Diagonal', 'Teleport', 'Trace'].map(s => nav(s))),
+ed_newtile: () => ({ title: 'New Tile', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '3008'), scalar('text', 'Filename', 'new_tile') ]),
+  section('Information'),
+  list([ scalar('text', 'Name', 'New Tile'), descField('—') ]),
+  section('Display'),
+  list([ textureField('None') ]),
+  addBtn('New Tile'),
+]}),
+
+/* --- Rules (selection rules — how tiles are selected on the board) --- */
+cat_rules: () => ({ title: 'Rules', action: { fn: () => go('ed_newselrule') }, rows: [
+  list(['Swap', 'Slide', 'Swap Diagonal', 'Teleport', 'Trace'].map(s => nav(s, { to: 'ed_selrule' }))),
+]}),
+
+ed_selrule: () => ({ title: 'Swap', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '14001'), scalar('text', 'Filename', 'swap') ]),
+  section('Information'),
+  list([
+    scalar('text', 'Name', 'Swap'),
+    descField('Select two adjacent tiles to swap them.'),
+  ]),
+  section('Configuration'),
+  list([ stepper('Tiles Required', 2) ]),
+]}),
+
+ed_newselrule: () => ({ title: 'New Rule', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '14006'), scalar('text', 'Filename', 'new_rule') ]),
+  section('Information'),
+  list([ scalar('text', 'Name', 'New Rule'), descField('—') ]),
+  section('Configuration'),
+  list([ stepper('Tiles Required', 2) ]),
+  addBtn('New Rule'),
 ]}),
 
 /* --- Rulesets --- */
@@ -1112,10 +1239,10 @@ cat_rulesets: () => ({ title: 'Rulesets', rows: [
   ]),
   section('Fragments'),
   list([
-    nav('Default Tiles'),
-    nav('Default Special Tiles'),
-    nav('Default Ability Resources'),
-    nav('Default Turns'),
+    nav('Default Tiles', { to: 'ed_ruleset' }),
+    nav('Default Special Tiles', { to: 'ed_ruleset' }),
+    nav('Default Ability Resources', { to: 'ed_ruleset' }),
+    nav('Default Turns', { to: 'ed_ruleset' }),
   ]),
 ]}),
 
@@ -1172,6 +1299,40 @@ const MENU_DESCS = {
     'Timing': 'Expires automatically after a set number of turns.',
     'Threshold': 'Expires when a tracked value crosses a limit.',
     'Trigger': 'Expires when a specific event occurs.',
+  },
+  menu_target: {
+    'Self': 'The ship that owns the effect.',
+    'Opponent': 'The enemy ship.',
+    'Instigator': 'Whoever caused the triggering event.',
+    'Chosen': 'A target chosen when the ability is used.',
+    'Chosen Ally': 'An allied ship chosen when the ability is used.',
+    'All Entities': 'Every ship in the match.',
+    'All Allies': 'Every allied ship.',
+    'All Opponents': 'Every enemy ship.',
+    'Random Ally': 'A random allied ship.',
+    'Random Opponent': 'A random enemy ship.',
+    'Highest Stat': 'The ship with the highest value of a chosen stat.',
+    'Lowest Stat': 'The ship with the lowest value of a chosen stat.',
+    'Sides': 'Each side of the match as a whole.',
+  },
+  menu_condition: {
+    'Stat Threshold': 'Passes when a stat is above or below a limit.',
+    'Compare Stats': 'Passes when one stat compares against another.',
+    'Has Status': 'Passes when the target carries a specific status.',
+    'Chance': 'Passes a percentage roll.',
+    'And': 'Passes when all of its child conditions pass.',
+    'Or': 'Passes when any of its child conditions passes.',
+    'Not': 'Inverts its child condition.',
+  },
+  menu_amount: {
+    'Constant': 'A fixed number.',
+    'Current Stat': 'The current value of a stat.',
+    'Maximum Stat': 'The maximum value of a stat.',
+    'Missing Stat': 'How far a stat is below its maximum.',
+    'Random': 'A random number within a range.',
+    'Math': 'Combines other amounts with an operation.',
+    'Modification': 'The value being modified by the current event.',
+    'Status Count': 'The number of stacks of a status.',
   },
 };
 
