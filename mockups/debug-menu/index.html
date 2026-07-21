@@ -181,6 +181,11 @@
     background: rgba(255,255,255,.08); color: var(--dim); font-size: 13px; cursor: pointer; user-select: none;
   }
   .clearbtn:hover { background: rgba(208,106,106,.18); color: #e6a5a5; }
+  /* add button — same footer style as clear, accent-tinted (create mode submit) */
+  .addbtn { background: rgba(86,200,216,.16); color: var(--accent); }
+  .addbtn:hover { background: rgba(86,200,216,.3); color: var(--accent); }
+  /* picker footer row — create a new instance without leaving the pick flow */
+  .cell.new .label { color: var(--accent); font-weight: 600; }
   .flowtile:hover { background: var(--hover); }
   .flowtile .fcap { font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--dim); margin-bottom: 2px; }
   .flowtile .fval { font-weight: 600; color: var(--good); }
@@ -265,19 +270,26 @@ function toast(msg) {
 
 const go = id => { stack.push(id); render(); };
 const pop = () => { if (stack.length > 1) { stack.pop(); render(); } };
+const popN = n => { while (n-- > 0 && stack.length > 1) stack.pop(); render(); };
 
 /* Logical parent of each screen — lets a deep link (e.g. screenshots) rebuild the
    full stack so the back link reads the real parent catalog, never a bare "Debug". */
 const PARENTS = {
   pick_match_configs: 'home', pick_starships: 'home',
-  cat_starships: 'home', cat_modules: 'home', cat_module_grids: 'home', cat_match_configs: 'home',
-  cat_statuses: 'home', ed_status: 'cat_statuses', ed_modifier: 'ed_status', pick_adjustment: 'ed_modifier',
-  cat_adjustments: 'home', ed_adjustment: 'cat_adjustments', pick_stats: 'ed_adjustment',
+  cat_starships: 'home', ed_starship: 'cat_starships', ed_newstarship: 'cat_starships', pick_loadouts: 'ed_starship',
+  cat_modules: 'home', ed_module: 'cat_modules', ed_newmodule: 'cat_modules',
+  cat_loadouts: 'home', ed_loadout: 'cat_loadouts', ed_newloadout: 'cat_loadouts', pick_modules: 'ed_loadout',
+  cat_match_configs: 'home',
+  cat_statuses: 'home', ed_status: 'cat_statuses', ed_newstatus: 'cat_statuses', ed_modifier: 'ed_status', pick_adjustment: 'ed_modifier',
+  cat_adjustments: 'home', ed_adjustment: 'cat_adjustments', pick_stats: 'ed_adjustment', ed_newadjustment: 'cat_adjustments',
   cat_stats: 'home', ed_stat: 'cat_stats',
   cat_resources: 'home', ed_resource: 'cat_resources',
   cat_abilities: 'home', ed_ability: 'cat_abilities', ed_cost: 'ed_ability', pick_resources: 'ed_cost',
-  cat_effects: 'home', ed_effect: 'cat_effects', ed_attack: 'ed_effect',
-  cat_transforms: 'home', ed_transform: 'cat_transforms',
+  pick_effects: 'ed_ability', pick_transforms: 'ed_status',
+  cat_actions: 'home', ed_action: 'cat_actions', ed_newaction: 'cat_actions', pick_actions: 'ed_effect',
+  cat_effects: 'home', ed_effect: 'cat_effects', ed_neweffect: 'cat_effects',
+  ed_condition: 'ed_effect', pick_statuses: 'ed_condition',
+  cat_transforms: 'home', ed_transform: 'cat_transforms', ed_newtransform: 'cat_transforms',
   cat_tiles: 'home', ed_tile: 'cat_tiles',
   cat_rules: 'home',
   cat_rulesets: 'home', ed_ruleset: 'cat_rulesets', menu_rule: 'ed_ruleset', ed_newrule: 'menu_rule',
@@ -336,12 +348,6 @@ function chip(label, opts = {}) {
   return `<div class="chip${add ? ' add' : ''}" data-h="${h}">${add ? '＋' : label}</div>`;
 }
 
-function flowTile(caption, value, to) {
-  const h = on(() => go(to));
-  return `<div class="flowtile" data-h="${h}"><div class="fcap">${caption}</div><div class="fval">${value}</div></div>`;
-}
-const flow = tiles => `<div class="flow">${tiles.join('<div class="arrow">›</div>')}</div>`;
-
 function scalar(kind, label, value, opts = {}) {
   const { off = false, pct = 55, edited = false, toggle = null, none = false } = opts;
   let ctl = `<div class="v">${value}</div>`;
@@ -364,6 +370,23 @@ function descField(text) {
 
 function clearBtn() {
   return `<div class="clearsec"><div class="clearbtn" data-h="${on(() => toast('Cleared'))}">Clear</div></div>`;
+}
+
+// picker footer row: create a new instance mid-pick
+function newRow(label, to) {
+  const h = on(() => go(to));
+  return `<div class="cell tap new" data-h="${h}"><div class="label">＋ ${label}</div><div class="chev">›</div></div>`;
+}
+
+// create-mode submit: adds to the catalog, and — when reached through a picker —
+// selects the new instance and returns to wherever the picker was opened
+function addBtn(name) {
+  const h = on(() => {
+    const viaPicker = String(stack[stack.length - 2]).startsWith('pick_');
+    popN(viaPicker ? 2 : 1);
+    toast(viaPicker ? `Added & picked: ${name}` : `Added: ${name}`);
+  });
+  return `<div class="clearsec"><div class="clearbtn addbtn" data-h="${h}">Add</div></div>`;
 }
 
 // descriptions for effect-system kinds — shown in the picker AND on the kind's page
@@ -432,10 +455,6 @@ function pickRow(label, opts = {}) {
     <div class="label">${label}</div><div class="chev">›</div></div>`;
 }
 
-function kindTile(kind, to) {
-  return tile(kind, { to: to || 'kind:' + kind, compact: true });
-}
-
 function pickTile(name, emoji) {
   const h = on(() => { pop(); toast(`Picked: ${name}`); });
   return `<div class="tile${emoji ? '' : ' compact'}" data-h="${h}">
@@ -477,7 +496,7 @@ home: () => ({ title: '', rows: [
     ])}
     ${list([
       ref('Quick Match', 'Default', 'pick_match_configs'),
-      ref('Starship', 'Default', 'pick_starships'),
+      ref('Starship', 'Player Default', 'pick_starships'),
     ])}
   </div>`,
   section('Primitives'),
@@ -485,12 +504,13 @@ home: () => ({ title: '', rows: [
     tile('Resources', { emoji: '🔋', to: 'cat_resources', count: 6 }),
     tile('Tiles', { emoji: '🎨', to: 'cat_tiles', count: 7 }),
     tile('Stats', { emoji: '📊', to: 'cat_stats', count: 8 }),
-    tile('Statuses', { emoji: '✨', to: 'cat_statuses', count: 3, edited: true }),
+    tile('Statuses', { emoji: '✨', to: 'cat_statuses', count: 6, edited: true }),
   ]),
   section('Building Blocks'),
   scroller([
     tile('Adjustments', { emoji: '🎚️', to: 'cat_adjustments', count: 3 }),
-    tile('Effects', { emoji: '💫', to: 'cat_effects', count: 3 }),
+    tile('Actions', { emoji: '🎬', to: 'cat_actions', count: 3 }),
+    tile('Effects', { emoji: '💫', to: 'cat_effects', count: 5 }),
     tile('Transforms', { emoji: '🔻', to: 'cat_transforms', count: 3 }),
   ]),
   section('Content'),
@@ -498,7 +518,7 @@ home: () => ({ title: '', rows: [
     tile('Abilities', { emoji: '⚡', to: 'cat_abilities', count: 5 }),
     tile('Starships', { emoji: '🛸', to: 'cat_starships', count: 2 }),
     tile('Modules', { emoji: '🧱', to: 'cat_modules', count: 7 }),
-    tile('Module Grids', { emoji: '🔲', to: 'cat_module_grids', count: 2 }),
+    tile('Loadouts', { emoji: '🔲', to: 'cat_loadouts', count: 2 }),
   ]),
   section('Config'),
   scroller([
@@ -513,34 +533,153 @@ pick_match_configs: () => ({ title: 'Quick Match', rows: [
 ]}),
 
 pick_starships: () => ({ title: 'Starship', rows: [
-  list([ pickRow('Default'), pickRow('Computer') ]),
+  list([ pickRow('Player Default'), pickRow('Opponent Default') ]),
 ]}),
 
-/* --- Content placeholders (catalogs listed, item editors not yet mocked) --- */
-cat_starships: () => ({ title: 'Starships', rows: [
+/* --- Starships (a starship references a picked Loadout) --- */
+cat_starships: () => ({ title: 'Starships', action: { fn: () => go('ed_newstarship') }, rows: [
   grid([
-    tile('Default', { emoji: '🛸' }),
-    tile('Computer', { emoji: '🤖' }),
+    tile('Player Default', { emoji: '🛸', to: 'ed_starship' }),
+    tile('Opponent Default', { emoji: '🤖', to: 'ed_starship' }),
   ]),
 ]}),
 
-cat_modules: () => ({ title: 'Modules', rows: [
+ed_starship: () => ({ title: 'Player Default', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '10001'), scalar('text', 'Filename', 'player_default') ]),
+  section('Information'),
+  list([
+    scalar('text', 'Name', 'Player Default'),
+    descField('The starting player starship.'),
+  ]),
+  section('Display'),
+  list([ textureField('player_default.png') ]),
+  section('Configuration'),
+  list([ ref('Loadout', 'Player Default', 'pick_loadouts') ]),
+]}),
+
+ed_newstarship: () => ({ title: 'New Starship', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '10003'), scalar('text', 'Filename', 'new_starship') ]),
+  section('Information'),
+  list([ scalar('text', 'Name', 'New Starship'), descField('—') ]),
+  section('Display'),
+  list([ textureField('None') ]),
+  section('Configuration'),
+  list([ ref('Loadout', 'None', 'pick_loadouts') ]),
+  addBtn('New Starship'),
+]}),
+
+/* --- Modules (grouped by temporary equipment sections — final grouping TBD) --- */
+cat_modules: () => ({ title: 'Modules', action: { fn: () => go('ed_newmodule') }, rows: [
+  section('Weapons'),
   grid([
-    tile('Engine', { emoji: '🚀' }),
-    tile('Laser Cannon', { emoji: '🔫' }),
-    tile('Life Support', { emoji: '🌿' }),
-    tile('Reactor', { emoji: '☢️' }),
-    tile('Sensor Array', { emoji: '📡' }),
-    tile('Shield Generator', { emoji: '🛡️' }),
-    tile('Warp Core', { emoji: '🌀' }),
+    tile('Laser Cannon', { emoji: '🔫', to: 'ed_module' }),
+  ]),
+  section('Defenses'),
+  grid([
+    tile('Shield Generator', { emoji: '🛡️', to: 'ed_module' }),
+  ]),
+  section('Systems'),
+  grid([
+    tile('Engine', { emoji: '🚀', to: 'ed_module' }),
+    tile('Life Support', { emoji: '🌿', to: 'ed_module' }),
+    tile('Reactor', { emoji: '☢️', to: 'ed_module' }),
+    tile('Sensor Array', { emoji: '📡', to: 'ed_module' }),
+    tile('Warp Core', { emoji: '🌀', to: 'ed_module' }),
   ]),
 ]}),
 
-cat_module_grids: () => ({ title: 'Module Grids', rows: [
-  grid([
-    tile('Default', { emoji: '🔲' }),
-    tile('Computer', { emoji: '🔲' }),
+ed_module: () => ({ title: 'Laser Cannon', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '11002'), scalar('text', 'Filename', 'laser_cannon') ]),
+  section('Information'),
+  list([
+    scalar('text', 'Name', 'Laser Cannon'),
+    descField('Primary energy weapon; raises the ship’s Weapons while equipped.'),
   ]),
+  section('Display'),
+  list([ textureField('laser_cannon.png') ]),
+  section('Configuration'),
+  list([ scalar('dropdown', 'Section', 'Weapons') ]),
+  section('Modifiers'),
+  chips([ chip('+Weapons', { to: 'ed_modifier' }), chip('', { add: true, menu: 'ed_modifier' }) ]),
+]}),
+
+ed_newmodule: () => ({ title: 'New Module', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '11008'), scalar('text', 'Filename', 'new_module') ]),
+  section('Information'),
+  list([ scalar('text', 'Name', 'New Module'), descField('—') ]),
+  section('Display'),
+  list([ textureField('None') ]),
+  section('Configuration'),
+  list([ scalar('dropdown', 'Section', 'None') ]),
+  section('Modifiers'),
+  chips([ chip('', { add: true, menu: 'ed_modifier' }) ]),
+  addBtn('New Module'),
+]}),
+
+// picker over the Modules catalog
+pick_modules: () => ({ title: 'Module', rows: [
+  grid([
+    pickTile('Laser Cannon', '🔫'),
+    pickTile('Shield Generator', '🛡️'),
+    pickTile('Engine', '🚀'),
+    pickTile('Life Support', '🌿'),
+    pickTile('Reactor', '☢️'),
+    pickTile('Sensor Array', '📡'),
+    pickTile('Warp Core', '🌀'),
+  ]),
+  list([ newRow('New Module', 'ed_newmodule') ]),
+]}),
+
+/* --- Loadouts (the modules equipped on a starship; starships pick one) --- */
+cat_loadouts: () => ({ title: 'Loadouts', action: { fn: () => go('ed_newloadout') }, rows: [
+  grid([
+    tile('Player Default', { emoji: '🔲', to: 'ed_loadout' }),
+    tile('Opponent Default', { emoji: '🔲', to: 'ed_loadout' }),
+  ]),
+]}),
+
+ed_loadout: () => ({ title: 'Player Default', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '12001'), scalar('text', 'Filename', 'player_default') ]),
+  section('Information'),
+  list([
+    scalar('text', 'Name', 'Player Default'),
+    descField('Modules equipped on the starting player starship.'),
+  ]),
+  section('Configuration'),
+  list([ stepper('Columns', 4), stepper('Rows', 3) ]),
+  section('Modules'),
+  chips([
+    chip('Laser Cannon', { to: 'pick_modules' }),
+    chip('Shield Generator', { to: 'pick_modules' }),
+    chip('Engine', { to: 'pick_modules' }),
+    chip('', { add: true, menu: 'pick_modules' }),
+  ]),
+]}),
+
+ed_newloadout: () => ({ title: 'New Loadout', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '12003'), scalar('text', 'Filename', 'new_loadout') ]),
+  section('Information'),
+  list([ scalar('text', 'Name', 'New Loadout'), descField('—') ]),
+  section('Configuration'),
+  list([ stepper('Columns', 4), stepper('Rows', 3) ]),
+  section('Modules'),
+  chips([ chip('', { add: true, menu: 'pick_modules' }) ]),
+  addBtn('New Loadout'),
+]}),
+
+// picker over the Loadouts catalog
+pick_loadouts: () => ({ title: 'Loadout', rows: [
+  list([
+    optRow('Player Default', 'Modules equipped on the starting player starship.'),
+    optRow('Opponent Default', 'Modules equipped on the starting opponent starship.'),
+  ]),
+  list([ newRow('New Loadout', 'ed_newloadout') ]),
 ]}),
 
 cat_match_configs: () => ({ title: 'Match Configs', rows: [
@@ -548,20 +687,18 @@ cat_match_configs: () => ({ title: 'Match Configs', rows: [
 ]}),
 
 /* --- Statuses --- */
-cat_statuses: () => ({ title: 'Statuses', action: { fn: () => go('ed_status') }, rows: [
+cat_statuses: () => ({ title: 'Statuses', action: { fn: () => go('ed_newstatus') }, rows: [
   `<div class="sectionlabel">Buffs <span class="sign up">▲</span></div>`,
   grid([
     statusTile('Dodge', '💨', '#4fc3d8', 'ed_status'),
     statusTile('Shield', '🛡️', '#59adeb', 'ed_status', true),
-    statusTile('Placeholder', '❔', '#7b8794', 'ed_status'),
-    statusTile('Placeholder', '❔', '#7b8794', 'ed_status'),
+    statusTile('Overcharge', '⚡', '#f7cc4d', 'ed_status'),
   ]),
   `<div class="sectionlabel">Debuffs <span class="sign down">▼</span></div>`,
   grid([
     statusTile('Target Lock', '🎯', '#d06a6a', 'ed_status'),
-    statusTile('Placeholder', '❔', '#7b8794', 'ed_status'),
-    statusTile('Placeholder', '❔', '#7b8794', 'ed_status'),
-    statusTile('Placeholder', '❔', '#7b8794', 'ed_status'),
+    statusTile('Disabled', '🚫', '#99a3b3', 'ed_status'),
+    statusTile('Burning', '🔥', '#f5802e', 'ed_status'),
   ]),
 ]}),
 
@@ -583,9 +720,30 @@ ed_status: () => ({ title: 'Shield', rows: [
   section('Modifiers'),
   chips([ chip('', { add: true, menu: 'ed_modifier' }) ]),
   section('Effects'),
-  chips([ chip('', { add: true, menu: 'ed_effect' }) ]),
+  chips([ chip('', { add: true, menu: 'pick_effects' }) ]),
   section('Transforms'),
-  chips([ chip('Absorb', { to: 'kind:Absorb' }), chip('', { add: true, menu: 'menu_step' }) ]),
+  chips([ chip('Shield Absorb', { to: 'pick_transforms' }), chip('', { add: true, menu: 'pick_transforms' }) ]),
+]}),
+
+ed_newstatus: () => ({ title: 'New Status', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '4007'), scalar('text', 'Filename', 'new_status') ]),
+  section('Information'),
+  list([ scalar('text', 'Name', 'New Status'), descField('—') ]),
+  section('Configuration'),
+  list([
+    seg('Type', ['Buff', 'Debuff'], 0),
+    stepper('Maximum Stacks', 1),
+    variant('Stacking', 'None', null, 'menu_stackrule'),
+    variant('Decay', 'None', null, 'menu_decayrule'),
+  ]),
+  section('Modifiers'),
+  chips([ chip('', { add: true, menu: 'ed_modifier' }) ]),
+  section('Effects'),
+  chips([ chip('', { add: true, menu: 'pick_effects' }) ]),
+  section('Transforms'),
+  chips([ chip('', { add: true, menu: 'pick_transforms' }) ]),
+  addBtn('New Status'),
 ]}),
 
 // a Modifier attaches a reusable Adjustment (picked, not edited here) and sets its amount
@@ -603,10 +761,25 @@ pick_adjustment: () => ({ title: 'Adjustment', rows: [
     optRow('×Shields', 'Scales a ship’s Shields.'),
     optRow('Set Health', 'Sets Health to a fixed value.'),
   ]),
+  list([ newRow('New Adjustment', 'ed_newadjustment') ]),
+]}),
+
+ed_newadjustment: () => ({ title: 'New Adjustment', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '7004'), scalar('text', 'Filename', 'new_adjustment') ]),
+  section('Information'),
+  list([ scalar('text', 'Name', 'New Adjustment'), descField('—') ]),
+  section('Configuration'),
+  list([
+    ref('Stat', 'None', 'pick_stats'),
+    scalar('dropdown', 'Applies To', 'Current Value'),
+    seg('Operation', ['Add', 'Multiply'], 0),
+  ]),
+  addBtn('New Adjustment'),
 ]}),
 
 /* --- Adjustments (reusable building block: Stat + Applies To + Operation) --- */
-cat_adjustments: () => ({ title: 'Adjustments', action: { fn: () => go('ed_adjustment') }, rows: [
+cat_adjustments: () => ({ title: 'Adjustments', action: { fn: () => go('ed_newadjustment') }, rows: [
   list([
     nav('+Armor', { to: 'ed_adjustment' }),
     nav('×Shields', { to: 'ed_adjustment' }),
@@ -630,31 +803,124 @@ ed_adjustment: () => ({ title: '+Armor', rows: [
   ]),
 ]}),
 
-/* --- Effects (reusable building block; + creates one via the kind picker) --- */
-cat_effects: () => ({ title: 'Effects', action: { fn: () => go('menu_action') }, rows: [
+/* --- Actions (reusable building block: a configured action kind) --- */
+cat_actions: () => ({ title: 'Actions', action: { fn: () => go('ed_newaction') }, rows: [
   list([
-    nav('Placeholder', { to: 'ed_effect' }),
-    nav('Placeholder', { to: 'ed_effect' }),
-    nav('Placeholder', { to: 'ed_effect' }),
+    nav('Weapon Attack', { to: 'ed_action' }),
+    nav('Hull Repair', { to: 'ed_action' }),
+    nav('Grant Shield', { to: 'ed_action' }),
   ]),
 ]}),
 
-/* --- Transforms (reusable building block; + creates one via the kind picker) --- */
-cat_transforms: () => ({ title: 'Transforms', action: { fn: () => go('menu_step') }, rows: [
+ed_action: () => ({ title: 'Weapon Attack', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '13001'), scalar('text', 'Filename', 'weapon_attack') ]),
+  section('Information'),
   list([
-    nav('Placeholder', { to: 'ed_transform' }),
-    nav('Placeholder', { to: 'ed_transform' }),
-    nav('Placeholder', { to: 'ed_transform' }),
+    scalar('text', 'Name', 'Weapon Attack'),
+    descField('Deals damage equal to the ship’s maximum Weapons.'),
+  ]),
+  section('Configuration'),
+  list([
+    variant('Kind', 'Attack', null, 'menu_action', false, 'Deals damage to the target.'),
+    variant('Amount', 'max(weapons)', null, 'menu_amount', false, 'How much damage is dealt.'),
   ]),
 ]}),
 
-ed_transform: () => ({ title: 'Absorb', rows: [
+ed_newaction: () => ({ title: 'New Action', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '13004'), scalar('text', 'Filename', 'new_action') ]),
+  section('Information'),
+  list([ scalar('text', 'Name', 'New Action'), descField('—') ]),
+  section('Configuration'),
+  list([ variant('Kind', 'None', null, 'menu_action', false, 'What the action does; picking a kind reveals its options.') ]),
+  addBtn('New Action'),
+]}),
+
+// picker over the Actions catalog
+pick_actions: () => ({ title: 'Action', rows: [
+  list([
+    optRow('Weapon Attack', 'Deals damage equal to the ship’s maximum Weapons.'),
+    optRow('Hull Repair', 'Restores the ship’s Health.'),
+    optRow('Grant Shield', 'Applies the Shield status to the ship.'),
+  ]),
+  list([ newRow('New Action', 'ed_newaction') ]),
+]}),
+
+/* --- Effects (reusable building block; instances referenced from content via pickers) --- */
+cat_effects: () => ({ title: 'Effects', action: { fn: () => go('ed_neweffect') }, rows: [
+  list([
+    nav('Attack Opponent', { to: 'ed_effect' }),
+    nav('Restore Health', { to: 'ed_effect' }),
+    nav('Apply Shield', { to: 'ed_effect' }),
+    nav('Apply Dodge', { to: 'ed_effect' }),
+    nav('Apply Target Lock', { to: 'ed_effect' }),
+  ]),
+]}),
+
+// picker over the Effects catalog — used anywhere content references an effect
+pick_effects: () => ({ title: 'Effect', rows: [
+  list([
+    optRow('Attack Opponent', 'Attacks the chosen opponent with the ship’s weapons.'),
+    optRow('Restore Health', 'Restores the ship’s Health.'),
+    optRow('Apply Shield', 'Grants Shield stacks to the ship.'),
+    optRow('Apply Dodge', 'Grants Dodge to the ship.'),
+    optRow('Apply Target Lock', 'Applies Target Lock to the opponent.'),
+  ]),
+  list([ newRow('New Effect', 'ed_neweffect') ]),
+]}),
+
+ed_neweffect: () => ({ title: 'New Effect', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '8006'), scalar('text', 'Filename', 'new_effect') ]),
+  section('Information'),
+  list([ scalar('text', 'Name', 'New Effect'), descField('—') ]),
+  section('Behavior'),
+  list([
+    variant('Target', 'None', null, 'menu_target', false, 'Who the action is applied to.'),
+    ref('Action', 'None', 'pick_actions'),
+  ]),
+  section('Conditions'),
+  chips([ chip('', { add: true, menu: 'ed_condition' }) ]),
+  addBtn('New Effect'),
+]}),
+
+/* --- Transforms (reusable building block; instances referenced from statuses via pickers) --- */
+cat_transforms: () => ({ title: 'Transforms', action: { fn: () => go('ed_newtransform') }, rows: [
+  list([
+    nav('Shield Absorb', { to: 'ed_transform' }),
+    nav('Armor Plating', { to: 'ed_transform' }),
+    nav('Lock Amplify', { to: 'ed_transform' }),
+  ]),
+]}),
+
+// picker over the Transforms catalog
+pick_transforms: () => ({ title: 'Transform', rows: [
+  list([
+    optRow('Shield Absorb', 'Spends Shield stacks to soak incoming damage.'),
+    optRow('Armor Plating', 'Subtracts a flat amount from incoming damage.'),
+    optRow('Lock Amplify', 'Scales incoming damage up while Target Locked.'),
+  ]),
+  list([ newRow('New Transform', 'ed_newtransform') ]),
+]}),
+
+ed_newtransform: () => ({ title: 'New Transform', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', '9004'), scalar('text', 'Filename', 'new_transform') ]),
+  section('Information'),
+  list([ scalar('text', 'Name', 'New Transform'), descField('—') ]),
+  section('Configuration'),
+  list([ variant('Kind', 'None', null, 'menu_step', false, 'How the value is reshaped.') ]),
+  addBtn('New Transform'),
+]}),
+
+ed_transform: () => ({ title: 'Shield Absorb', rows: [
   section('Identity'),
   list([ scalar('text', 'ID', '9001'), scalar('text', 'Filename', 'shield_absorb') ]),
   section('Information'),
   list([
-    scalar('text', 'Name', 'Absorb'),
-    descField('Spends the status’s stacks to soak an incoming value; the overflow passes through.'),
+    scalar('text', 'Name', 'Shield Absorb'),
+    descField('Spends Shield stacks to soak incoming damage; the overflow passes through.'),
   ]),
   section('Configuration'),
   list([ variant('Kind', 'Absorb', null, 'menu_step', false, 'How the value is reshaped.') ]),
@@ -678,8 +944,7 @@ cat_stats: () => ({ title: 'Stats', action: { fn: () => go('ed_stat') }, rows: [
   ]),
   `<div class="sectionlabel">Hidden · <span style="text-transform:none;letter-spacing:0;font-weight:400">not shown to players</span></div>`,
   list([
-    nav('Placeholder', { to: 'ed_stat', dim: true }),
-    nav('Placeholder', { to: 'ed_stat', dim: true }),
+    nav('Luck', { to: 'ed_stat', dim: true }),
   ]),
 ]}),
 
@@ -751,11 +1016,7 @@ ed_ability: () => ({ title: 'Fire Weapons', rows: [
   section('Costs'),
   chips([ chip('10 × Tactics', { to: 'ed_cost' }), chip('', { add: true }) ]),
   section('Effects'),
-  flow([
-    flowTile('Target', 'Opponent', 'ed_effect'),
-    flowTile('Action', 'Attack', 'ed_effect'),
-  ]),
-  chips([ chip('', { add: true }) ]),
+  chips([ chip('Attack Opponent', { to: 'pick_effects' }), chip('', { add: true, menu: 'pick_effects' }) ]),
 ]}),
 
 ed_cost: () => ({ title: 'Cost', rows: [
@@ -770,29 +1031,43 @@ pick_resources: () => ({ title: 'Resource', rows: [
   grid(['tactics', 'security', 'science', 'engineering'].map(s => pickTile(titleize(s)))),
 ]}),
 
-ed_effect: () => ({ title: 'Effect', rows: [
+ed_effect: () => ({ title: 'Attack Opponent', rows: [
   section('Identity'),
-  list([ scalar('text', 'ID', '8001'), scalar('text', 'Filename', 'effect') ]),
+  list([ scalar('text', 'ID', '8001'), scalar('text', 'Filename', 'attack_opponent') ]),
   section('Information'),
   list([
-    scalar('text', 'Name', 'Effect'),
-    descField('Runs an action on a target when its trigger fires.'),
+    scalar('text', 'Name', 'Attack Opponent'),
+    descField('Attacks the chosen opponent with the ship’s weapons.'),
   ]),
   section('Behavior'),
-  flow([
-    flowTile('Target', 'Opponent', 'menu_target'),
-    flowTile('Action', 'Attack', 'ed_attack'),
+  list([
+    variant('Target', 'Opponent', null, 'menu_target', false, 'Who the action is applied to.'),
+    ref('Action', 'Weapon Attack', 'pick_actions'),
   ]),
   section('Conditions'),
-  chips([ chip('', { add: true, menu: 'menu_condition' }) ]),
+  chips([ chip('Has Target Lock', { to: 'ed_condition' }), chip('', { add: true, menu: 'ed_condition' }) ]),
+]}),
+
+// a Condition is owned by its effect (inline sub-editor, like Modifier/Cost)
+ed_condition: () => ({ title: 'Condition', rows: [
+  list([
+    variant('Kind', 'Has Status', null, 'menu_condition', false, 'Passes when the target carries a specific status.'),
+    ref('Status', 'Target Lock', 'pick_statuses'),
+  ]),
   clearBtn(),
 ]}),
 
-ed_attack: () => ({ title: 'Attack', rows: [
-  list([
-    variant('Amount', 'max(weapons)', null, 'menu_amount'),
+// picker over the Statuses catalog
+pick_statuses: () => ({ title: 'Status', rows: [
+  grid([
+    pickTile('Dodge', '💨'),
+    pickTile('Shield', '🛡️'),
+    pickTile('Overcharge', '⚡'),
+    pickTile('Target Lock', '🎯'),
+    pickTile('Disabled', '🚫'),
+    pickTile('Burning', '🔥'),
   ]),
-  clearBtn(),
+  list([ newRow('New Status', 'ed_newstatus') ]),
 ]}),
 
 /* --- Tiles --- */
@@ -900,23 +1175,24 @@ const MENU_DESCS = {
   },
 };
 
+// every kind menu PICKS (select + return) — never a navigation to a dead-end page
 for (const [id, kinds] of Object.entries(MENUS)) {
   SCREENS[id] = () => ({ title: MENU_TITLES[id], rows: [
     MENU_DESCS[id]
       ? list(kinds.map(k => optRow(k, MENU_DESCS[id][k])))
-      : grid(kinds.map(k => kindTile(k))),
+      : grid(kinds.map(k => pickTile(k))),
   ]});
 }
 
 SCREENS.menu_step = () => ({ title: 'Transform', rows: [
-  list(MENUS.menu_step.map(k => optNav(k, KIND_DESCS[k], 'kind:' + k))),
+  list(MENUS.menu_step.map(k => optRow(k, KIND_DESCS[k]))),
 ]});
 
 SCREENS.menu_action = () => ({ title: 'Action', rows: [
   section('Match'),
-  list(['Attack', 'Shield', 'Dodge', 'Drain', 'Damage Buff', 'Disable'].map(k => optNav(k, KIND_DESCS[k], k === 'Attack' ? 'ed_attack' : 'kind:' + k))),
+  list(['Attack', 'Shield', 'Dodge', 'Drain', 'Damage Buff', 'Disable'].map(k => optRow(k, KIND_DESCS[k]))),
   section('Core'),
-  list(['Apply Status', 'Remove Status', 'Remove By Type', 'Modify Stat', 'Set Stat', 'Drain Resource'].map(k => optNav(k, KIND_DESCS[k], 'kind:' + k))),
+  list(['Apply Status', 'Remove Status', 'Remove By Type', 'Modify Stat', 'Set Stat', 'Drain Resource'].map(k => optRow(k, KIND_DESCS[k]))),
 ]});
 
 /* editor for a kind not mocked in detail — shows its description + a clear action */
@@ -931,8 +1207,8 @@ function genericKind(kind) {
 /* ---------- side nav (viewer aid) ---------- */
 const NAV = [
   ['Primitives', [['Resources', 'cat_resources'], ['Tiles', 'cat_tiles'], ['Stats', 'cat_stats'], ['Statuses', 'cat_statuses']]],
-  ['Building Blocks', [['Adjustments', 'cat_adjustments'], ['Effects', 'cat_effects'], ['Transforms', 'cat_transforms']]],
-  ['Content', [['Abilities', 'cat_abilities'], ['Starships', 'cat_starships'], ['Modules', 'cat_modules'], ['Module Grids', 'cat_module_grids']]],
+  ['Building Blocks', [['Adjustments', 'cat_adjustments'], ['Actions', 'cat_actions'], ['Effects', 'cat_effects'], ['Transforms', 'cat_transforms']]],
+  ['Content', [['Abilities', 'cat_abilities'], ['Starships', 'cat_starships'], ['Modules', 'cat_modules'], ['Loadouts', 'cat_loadouts']]],
   ['Config', [['Rules', 'cat_rules'], ['Rulesets', 'cat_rulesets'], ['Match Configs', 'cat_match_configs']]],
 ];
 
