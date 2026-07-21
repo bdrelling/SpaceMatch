@@ -108,6 +108,37 @@
   p { margin: 0; }
   .sub { color: var(--muted); max-width: 70ch; font-size: 14px; }
 
+  /* ---- navigation ---- */
+  .nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 14px;
+  }
+  .nav .navtab {
+    appearance: none;
+    font: 600 12px/1 var(--mono);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    padding: 9px 12px;
+    cursor: pointer;
+  }
+  .nav .navtab:hover { color: var(--ink); }
+  .nav .navtab:focus-visible { outline: 2px solid var(--tachyon); outline-offset: 2px; }
+  .nav .navtab[aria-selected="true"] {
+    color: var(--ink);
+    background: var(--panel);
+    border-color: var(--line);
+  }
+  .panel { margin-top: 26px; }
+  .panel[hidden] { display: none !important; }
+
   .statlist { display: grid; gap: 10px; margin-top: 14px; }
   .statgrid { display: grid; grid-template-columns: 170px 170px; gap: 10px 24px; margin-top: 14px; }
   .tilegrid { display: grid; grid-template-columns: repeat(4, 88px); gap: 18px 20px; margin-top: 14px; }
@@ -168,6 +199,7 @@
   .set-head .k { font: 700 12px/1 var(--mono); color: var(--muted); letter-spacing: .1em; }
   .set .res { font-size: 18px; margin: 0; }
   .set .log { align-self: end; }
+  .set.free { grid-template-rows: none; }
 
   .log {
     background: var(--log-bg);
@@ -194,6 +226,49 @@
   .pair .who { font-weight: 650; font-size: 14px; }
   .pair .arch { color: var(--muted); font-size: 13.5px; }
 
+  /* ---- v2 lane columns ---- */
+  .lanecols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 14px; }
+  @media (max-width: 920px) { .lanecols { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 560px) { .lanecols { grid-template-columns: 1fr; } }
+  .kv { display: flex; gap: 10px; align-items: center; font-size: 13.5px; }
+  .kv .kk { font: 600 10px/1.6 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); min-width: 42px; }
+  .kv .name { font-weight: 650; }
+  .sw24 { width: 26px; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; flex: none; }
+  .sw24 svg { width: 15px; height: 15px; }
+  .stylelist { display: grid; gap: 7px; font-size: 13.5px; }
+  .stylelist .srow { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+  .stylelist .who { font-weight: 650; }
+  .stylelist .arch { color: var(--muted); font-size: 12.5px; }
+
+  /* ---- v3 matrix ---- */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); margin-top: 14px; }
+  .matrix { width: 100%; border-collapse: collapse; }
+  .matrix th, .matrix td { text-align: left; padding: 11px 14px; vertical-align: top; }
+  .matrix thead th { font: 600 11px/1.6 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+  .matrix thead th .gem, .matrix thead th .dot { margin-right: 7px; }
+  .matrix tbody th { font: 600 10px/1.8 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+  .matrix tbody th, .matrix tbody td { border-top: 1px solid var(--line); }
+  .matrix td .name { font-weight: 650; }
+  .matrix td .cellsub { color: var(--muted); font-size: 12.5px; }
+
+  /* ---- v4 band ---- */
+  .band { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; margin-top: 34px; }
+  @media (max-width: 720px) { .band { grid-template-columns: 1fr; } }
+  .band .tilegrid { grid-template-columns: repeat(2, 88px); }
+
+  /* ---- v5 glossary ---- */
+  .gloss { border: 1px solid var(--line); border-radius: 6px; background: var(--panel); overflow: hidden; margin-top: 14px; }
+  .gloss .g { display: grid; grid-template-columns: 18px 160px 1fr; gap: 12px; padding: 9px 16px; align-items: baseline; }
+  .gloss .g + .g { border-top: 1px solid var(--line); }
+  .gloss .g .mark { justify-self: center; position: relative; top: -1px; }
+  .gloss .g .dash { justify-self: center; color: var(--line); }
+  .gloss .g .term { font-weight: 650; }
+  .gloss .g .role { color: var(--muted); font-size: 13.5px; }
+  @media (max-width: 460px) {
+    .gloss .g { grid-template-columns: 18px 1fr; }
+    .gloss .g .role { grid-column: 2; }
+  }
+
   @media (max-width: 720px) {
     .pairs { grid-template-columns: repeat(2, 1fr); }
   }
@@ -207,151 +282,519 @@
 
 <div class="wrap">
 
-  <h2>Disciplines</h2>
-  <p class="sub">Schools of play.</p>
-  <div class="grid2" style="margin-top:14px">
+  <nav class="nav" role="tablist" aria-label="Layout versions">
+    <button class="navtab" role="tab" data-panel="v1" aria-selected="true">V1 · Sections</button>
+    <button class="navtab" role="tab" data-panel="v2" aria-selected="false">V2 · Lanes</button>
+    <button class="navtab" role="tab" data-panel="v3" aria-selected="false">V3 · Matrix</button>
+    <button class="navtab" role="tab" data-panel="v4" aria-selected="false">V4 · Map</button>
+    <button class="navtab" role="tab" data-panel="v5" aria-selected="false">V5 · Glossary</button>
+  </nav>
 
-    <div class="set">
-      <div class="set-head"><span class="gem plasma"></span><h3>Command</h3><span class="k" style="margin-left:auto">offense</span></div>
-      <p class="res t-plasma">Combat · Propulsion · Tactics</p>
-      <div class="log">
-        <span class="exlbl">Examples</span>
-        <span class="ln">You collected 3 <span class="t-plasma">Command</span>!</span>
-        <span class="ln">All power to the <span class="t-plasma">command</span> systems!</span>
-        <span class="ln">You spent 4 <span class="t-plasma">Command</span> to...</span>
+  <!-- ================= V1 · SECTIONS ================= -->
+  <section class="panel" id="v1" role="tabpanel">
+
+    <h2>Disciplines</h2>
+    <p class="sub">Schools of play.</p>
+    <div class="grid2" style="margin-top:14px">
+
+      <div class="set">
+        <div class="set-head"><span class="gem plasma"></span><h3>Command</h3><span class="k" style="margin-left:auto">offense</span></div>
+        <p class="res t-plasma">Combat · Propulsion · Tactics</p>
+        <div class="log">
+          <span class="exlbl">Examples</span>
+          <span class="ln">You collected 3 <span class="t-plasma">Command</span>!</span>
+          <span class="ln">All power to the <span class="t-plasma">command</span> systems!</span>
+          <span class="ln">You spent 4 <span class="t-plasma">Command</span> to...</span>
+        </div>
+      </div>
+
+      <div class="set">
+        <div class="set-head"><span class="gem graviton"></span><h3>Security</h3><span class="k" style="margin-left:auto">defense / sustain</span></div>
+        <p class="res t-graviton">Combat · Damage Control · Countermeasures</p>
+        <div class="log">
+          <span class="exlbl">Examples</span>
+          <span class="ln">You collected 3 <span class="t-graviton">Security</span>!</span>
+          <span class="ln">All power to the <span class="t-graviton">security</span> systems!</span>
+          <span class="ln">You spent 4 <span class="t-graviton">Security</span> to...</span>
+        </div>
+      </div>
+
+      <div class="set">
+        <div class="set-head"><span class="gem ion"></span><h3>Engineering</h3><span class="k" style="margin-left:auto">speed / growth</span></div>
+        <p class="res t-ion">Propulsion · Damage Control · Logic</p>
+        <div class="log">
+          <span class="exlbl">Examples</span>
+          <span class="ln">You collected 3 <span class="t-ion">Engineering</span>!</span>
+          <span class="ln">All power to the <span class="t-ion">engineering</span> systems!</span>
+          <span class="ln">You spent 4 <span class="t-ion">Engineering</span> to...</span>
+        </div>
+      </div>
+
+      <div class="set">
+        <div class="set-head"><span class="gem tachyon"></span><h3>Science</h3><span class="k" style="margin-left:auto">intel / control</span></div>
+        <p class="res t-tachyon">Tactics · Countermeasures · Logic</p>
+        <div class="log">
+          <span class="exlbl">Examples</span>
+          <span class="ln">You collected 3 <span class="t-tachyon">Science</span>!</span>
+          <span class="ln">All power to the <span class="t-tachyon">science</span> systems!</span>
+          <span class="ln">You spent 4 <span class="t-tachyon">Science</span> to...</span>
+        </div>
+      </div>
+
+    </div>
+
+    <h2 style="margin-top:48px">Resources</h2>
+    <p class="sub">Collected via matching and spent on abilities.</p>
+    <div class="statlist">
+      <div class="sline"><span class="name">Command</span><span class="gems"><span class="gem plasma"></span></span></div>
+      <div class="sline"><span class="name">Security</span><span class="gems"><span class="gem graviton"></span></span></div>
+      <div class="sline"><span class="name">Engineering</span><span class="gems"><span class="gem ion"></span></span></div>
+      <div class="sline"><span class="name">Science</span><span class="gems"><span class="gem tachyon"></span></span></div>
+    </div>
+
+    <h2 style="margin-top:48px">Tiles</h2>
+    <p class="sub">What gets matched on the board.</p>
+    <div class="tilegrid">
+      <div class="tile"><span class="tswatch" style="background:var(--plasma)"></span><span class="tname">Command</span></div>
+      <div class="tile"><span class="tswatch" style="background:var(--graviton)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2" stroke-linejoin="round"><path d="M12 3 L19 6 V11 C19 16 16 19.5 12 21 C8 19.5 5 16 5 11 V6 Z"/></svg></span><span class="tname">Security</span></div>
+      <div class="tile"><span class="tswatch" style="background:var(--ion)"></span><span class="tname">Engineering</span></div>
+      <div class="tile"><span class="tswatch" style="background:var(--tachyon)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="1.6"><circle cx="12" cy="12" r="1.7" fill="var(--bg)" stroke="none"/><ellipse cx="12" cy="12" rx="9" ry="3.6"/><ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(120 12 12)"/></svg></span><span class="tname">Science</span></div>
+      <div class="tile"><span class="tswatch" style="background:var(--scrap)"></span><span class="tname">Alloy</span><span class="tsub">currency</span></div>
+      <div class="tile"><span class="tswatch" style="background:var(--warp)"></span><span class="tname">Antimatter</span><span class="tsub">warp</span></div>
+      <div class="tile"><span class="tswatch" style="background:var(--damage)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5.5"/><line x1="12" y1="1.5" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22.5" y2="12"/></svg></span><span class="tname">Damage</span><span class="tsub">direct</span></div>
+    </div>
+
+    <h2 style="margin-top:48px">Styles of Play</h2>
+    <p class="sub">How styles of play emerge from combining disciplines.</p>
+    <svg class="relmap" viewBox="0 0 720 560" role="img" aria-label="Relationship map: four resources as nodes, six playstyles as their pairwise overlaps">
+      <line x1="310.9" y1="117.8" x2="149.1" y2="242.2" stroke="var(--line)" stroke-width="1.5"/>
+      <line x1="409.1" y1="117.8" x2="570.9" y2="242.2" stroke="var(--line)" stroke-width="1.5"/>
+      <line x1="149.1" y1="317.8" x2="310.9" y2="442.2" stroke="var(--line)" stroke-width="1.5"/>
+      <line x1="570.9" y1="317.8" x2="409.1" y2="442.2" stroke="var(--line)" stroke-width="1.5"/>
+      <line x1="360" y1="142" x2="360" y2="418" stroke="var(--line)" stroke-width="1.5"/>
+      <line x1="162" y1="280" x2="558" y2="280" stroke="var(--line)" stroke-width="1.5"/>
+
+      <g style="paint-order:stroke" stroke="var(--bg)" stroke-width="6" stroke-linejoin="round">
+        <text x="230" y="177" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Combat</text>
+        <text x="490" y="177" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Damage Control</text>
+        <text x="230" y="377" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Tactics</text>
+        <text x="490" y="377" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Logic</text>
+        <text x="360" y="203" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Countermeasures</text>
+        <text x="252" y="276" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Propulsion</text>
+      </g>
+      <g style="paint-order:stroke" stroke="var(--bg)" stroke-width="5" stroke-linejoin="round" font-family="ui-monospace, Menlo, monospace">
+        <text x="230" y="192" text-anchor="middle" font-size="10.5" fill="var(--muted)">brawler · bruiser</text>
+        <text x="490" y="192" text-anchor="middle" font-size="10.5" fill="var(--muted)">fortress · outlast</text>
+        <text x="230" y="392" text-anchor="middle" font-size="10.5" fill="var(--muted)">tempo · precision</text>
+        <text x="490" y="392" text-anchor="middle" font-size="10.5" fill="var(--muted)">snowball · efficiency</text>
+        <text x="360" y="218" text-anchor="middle" font-size="10.5" fill="var(--muted)">lockdown · attrition</text>
+        <text x="252" y="291" text-anchor="middle" font-size="10.5" fill="var(--muted)">aggro · rush</text>
+      </g>
+
+      <circle cx="360" cy="80" r="58" fill="var(--graviton)" fill-opacity="0.10" stroke="var(--graviton)" stroke-width="1.5"/>
+      <text x="360" y="78" text-anchor="middle" font-size="15" font-weight="650" fill="var(--ink)">Security</text>
+      <text x="360" y="96" text-anchor="middle" font-size="11" font-family="ui-monospace, Menlo, monospace" fill="var(--graviton-ink)">defense</text>
+
+      <circle cx="100" cy="280" r="58" fill="var(--plasma)" fill-opacity="0.10" stroke="var(--plasma)" stroke-width="1.5"/>
+      <text x="100" y="278" text-anchor="middle" font-size="15" font-weight="650" fill="var(--ink)">Command</text>
+      <text x="100" y="296" text-anchor="middle" font-size="11" font-family="ui-monospace, Menlo, monospace" fill="var(--plasma-ink)">offense</text>
+
+      <circle cx="620" cy="280" r="58" fill="var(--ion)" fill-opacity="0.10" stroke="var(--ion)" stroke-width="1.5"/>
+      <text x="620" y="278" text-anchor="middle" font-size="15" font-weight="650" fill="var(--ink)">Engineering</text>
+      <text x="620" y="296" text-anchor="middle" font-size="11" font-family="ui-monospace, Menlo, monospace" fill="var(--ion-ink)">growth</text>
+
+      <circle cx="360" cy="480" r="58" fill="var(--tachyon)" fill-opacity="0.10" stroke="var(--tachyon)" stroke-width="1.5"/>
+      <text x="360" y="478" text-anchor="middle" font-size="15" font-weight="650" fill="var(--ink)">Science</text>
+      <text x="360" y="496" text-anchor="middle" font-size="11" font-family="ui-monospace, Menlo, monospace" fill="var(--tachyon-ink)">control</text>
+    </svg>
+
+    <div class="pairs" style="margin-top:20px">
+      <div class="pair"><span class="gems"><span class="gem plasma"></span><span class="gem graviton"></span></span><span class="pairline"><span class="t-plasma">Command</span> + <span class="t-graviton">Security</span></span><span class="who">Combat</span><span class="arch">brawler / bruiser</span></div>
+      <div class="pair"><span class="gems"><span class="gem ion"></span><span class="gem plasma"></span></span><span class="pairline"><span class="t-ion">Engineering</span> + <span class="t-plasma">Command</span></span><span class="who">Propulsion</span><span class="arch">aggro / rush</span></div>
+      <div class="pair"><span class="gems"><span class="gem plasma"></span><span class="gem tachyon"></span></span><span class="pairline"><span class="t-plasma">Command</span> + <span class="t-tachyon">Science</span></span><span class="who">Tactics</span><span class="arch">tempo / precision</span></div>
+      <div class="pair"><span class="gems"><span class="gem graviton"></span><span class="gem ion"></span></span><span class="pairline"><span class="t-graviton">Security</span> + <span class="t-ion">Engineering</span></span><span class="who">Damage Control</span><span class="arch">fortress / outlast</span></div>
+      <div class="pair"><span class="gems"><span class="gem graviton"></span><span class="gem tachyon"></span></span><span class="pairline"><span class="t-graviton">Security</span> + <span class="t-tachyon">Science</span></span><span class="who">Countermeasures</span><span class="arch">lockdown / attrition</span></div>
+      <div class="pair"><span class="gems"><span class="gem tachyon"></span><span class="gem ion"></span></span><span class="pairline"><span class="t-tachyon">Science</span> + <span class="t-ion">Engineering</span></span><span class="who">Logic</span><span class="arch">snowball / efficiency</span></div>
+    </div>
+
+    <h2 style="margin-top:48px">Stats</h2>
+    <p class="sub">Starship modifiers that improve abilities.</p>
+    <div class="statgrid">
+      <div class="sline"><span class="name">Targeting</span><span class="gems"><span class="gem plasma"></span></span></div>
+      <div class="sline"><span class="name">Firepower</span><span class="gems"><span class="dot damage"></span></span></div>
+      <div class="sline"><span class="name">Protection</span><span class="gems"><span class="gem graviton"></span></span></div>
+      <div class="sline"><span class="name">Armor</span><span class="gems"><span class="dot scrap"></span></span></div>
+      <div class="sline"><span class="name">Computing</span><span class="gems"><span class="gem ion"></span></span></div>
+      <div class="sline"><span class="name">Warp</span><span class="gems"><span class="dot warp"></span></span></div>
+      <div class="sline"><span class="name">Diagnostics</span><span class="gems"><span class="gem tachyon"></span></span></div>
+      <div class="sline"><span class="name">Energy</span><span class="gems">—</span></div>
+    </div>
+    <div class="log" style="margin-top:14px; max-width:440px">
+      <span class="exlbl">Examples</span>
+      <span class="ln">Plasma Cannon — <span class="t-damage">Firepower +2</span></span>
+      <span class="ln">Missile Battery — <span class="t-plasma">Targeting +2</span> · <span class="t-damage">Firepower +1</span></span>
+      <span class="ln">Shield Generator — <span class="t-graviton">Protection +2</span></span>
+      <span class="ln">Hull Plating — <span class="t-scrap">Armor +2</span> · <span class="t-ion">Computing −1</span></span>
+      <span class="ln">Afterburner — <span class="t-ion">Computing +2</span> · <span class="t-graviton">Protection −1</span></span>
+      <span class="ln">ECM Jammer — <span class="t-tachyon">Diagnostics +2</span></span>
+      <span class="ln">Warp Coil — <span class="t-warp">Warp +1</span></span>
+    </div>
+
+  </section>
+
+  <!-- ================= V2 · LANES ================= -->
+  <section class="panel" id="v2" role="tabpanel" hidden>
+
+    <h2>Disciplines</h2>
+    <p class="sub">Everything about a lane in one column — discipline, resource, tile, stat, styles of play.</p>
+    <div class="lanecols">
+
+      <div class="set free">
+        <div class="set-head"><span class="gem plasma"></span><h3>Command</h3><span class="k" style="margin-left:auto">offense</span></div>
+        <div class="kv"><span class="kk">Tile</span><span class="sw24" style="background:var(--plasma)"></span></div>
+        <div class="kv"><span class="kk">Stat</span><span class="name t-plasma">Targeting</span></div>
+        <div class="stylelist">
+          <span class="exlbl">Styles of play</span>
+          <span class="srow"><span class="who">Combat</span><span class="gem graviton"></span><span class="arch">brawler / bruiser</span></span>
+          <span class="srow"><span class="who">Propulsion</span><span class="gem ion"></span><span class="arch">aggro / rush</span></span>
+          <span class="srow"><span class="who">Tactics</span><span class="gem tachyon"></span><span class="arch">tempo / precision</span></span>
+        </div>
+        <div class="log">
+          <span class="ln">You collected 3 <span class="t-plasma">Command</span>!</span>
+          <span class="ln">All power to the <span class="t-plasma">command</span> systems!</span>
+          <span class="ln">You spent 4 <span class="t-plasma">Command</span> to...</span>
+        </div>
+      </div>
+
+      <div class="set free">
+        <div class="set-head"><span class="gem graviton"></span><h3>Security</h3><span class="k" style="margin-left:auto">defense / sustain</span></div>
+        <div class="kv"><span class="kk">Tile</span><span class="sw24" style="background:var(--graviton)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2" stroke-linejoin="round"><path d="M12 3 L19 6 V11 C19 16 16 19.5 12 21 C8 19.5 5 16 5 11 V6 Z"/></svg></span></div>
+        <div class="kv"><span class="kk">Stat</span><span class="name t-graviton">Protection</span></div>
+        <div class="stylelist">
+          <span class="exlbl">Styles of play</span>
+          <span class="srow"><span class="who">Combat</span><span class="gem plasma"></span><span class="arch">brawler / bruiser</span></span>
+          <span class="srow"><span class="who">Damage Control</span><span class="gem ion"></span><span class="arch">fortress / outlast</span></span>
+          <span class="srow"><span class="who">Countermeasures</span><span class="gem tachyon"></span><span class="arch">lockdown / attrition</span></span>
+        </div>
+        <div class="log">
+          <span class="ln">You collected 3 <span class="t-graviton">Security</span>!</span>
+          <span class="ln">All power to the <span class="t-graviton">security</span> systems!</span>
+          <span class="ln">You spent 4 <span class="t-graviton">Security</span> to...</span>
+        </div>
+      </div>
+
+      <div class="set free">
+        <div class="set-head"><span class="gem ion"></span><h3>Engineering</h3><span class="k" style="margin-left:auto">speed / growth</span></div>
+        <div class="kv"><span class="kk">Tile</span><span class="sw24" style="background:var(--ion)"></span></div>
+        <div class="kv"><span class="kk">Stat</span><span class="name t-ion">Computing</span></div>
+        <div class="stylelist">
+          <span class="exlbl">Styles of play</span>
+          <span class="srow"><span class="who">Propulsion</span><span class="gem plasma"></span><span class="arch">aggro / rush</span></span>
+          <span class="srow"><span class="who">Damage Control</span><span class="gem graviton"></span><span class="arch">fortress / outlast</span></span>
+          <span class="srow"><span class="who">Logic</span><span class="gem tachyon"></span><span class="arch">snowball / efficiency</span></span>
+        </div>
+        <div class="log">
+          <span class="ln">You collected 3 <span class="t-ion">Engineering</span>!</span>
+          <span class="ln">All power to the <span class="t-ion">engineering</span> systems!</span>
+          <span class="ln">You spent 4 <span class="t-ion">Engineering</span> to...</span>
+        </div>
+      </div>
+
+      <div class="set free">
+        <div class="set-head"><span class="gem tachyon"></span><h3>Science</h3><span class="k" style="margin-left:auto">intel / control</span></div>
+        <div class="kv"><span class="kk">Tile</span><span class="sw24" style="background:var(--tachyon)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="1.6"><circle cx="12" cy="12" r="1.7" fill="var(--bg)" stroke="none"/><ellipse cx="12" cy="12" rx="9" ry="3.6"/><ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(120 12 12)"/></svg></span></div>
+        <div class="kv"><span class="kk">Stat</span><span class="name t-tachyon">Diagnostics</span></div>
+        <div class="stylelist">
+          <span class="exlbl">Styles of play</span>
+          <span class="srow"><span class="who">Tactics</span><span class="gem plasma"></span><span class="arch">tempo / precision</span></span>
+          <span class="srow"><span class="who">Countermeasures</span><span class="gem graviton"></span><span class="arch">lockdown / attrition</span></span>
+          <span class="srow"><span class="who">Logic</span><span class="gem ion"></span><span class="arch">snowball / efficiency</span></span>
+        </div>
+        <div class="log">
+          <span class="ln">You collected 3 <span class="t-tachyon">Science</span>!</span>
+          <span class="ln">All power to the <span class="t-tachyon">science</span> systems!</span>
+          <span class="ln">You spent 4 <span class="t-tachyon">Science</span> to...</span>
+        </div>
+      </div>
+
+    </div>
+
+    <h2 style="margin-top:48px">Tiles</h2>
+    <p class="sub">What gets matched on the board, beyond the lanes.</p>
+    <div class="tilegrid" style="grid-template-columns: repeat(3, 88px)">
+      <div class="tile"><span class="tswatch" style="background:var(--scrap)"></span><span class="tname">Alloy</span><span class="tsub">currency</span></div>
+      <div class="tile"><span class="tswatch" style="background:var(--warp)"></span><span class="tname">Antimatter</span><span class="tsub">warp</span></div>
+      <div class="tile"><span class="tswatch" style="background:var(--damage)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5.5"/><line x1="12" y1="1.5" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22.5" y2="12"/></svg></span><span class="tname">Damage</span><span class="tsub">direct</span></div>
+    </div>
+
+    <h2 style="margin-top:48px">Stats</h2>
+    <p class="sub">Starship modifiers that improve abilities, beyond the lane stats above.</p>
+    <div class="statgrid">
+      <div class="sline"><span class="name">Firepower</span><span class="gems"><span class="dot damage"></span></span></div>
+      <div class="sline"><span class="name">Armor</span><span class="gems"><span class="dot scrap"></span></span></div>
+      <div class="sline"><span class="name">Warp</span><span class="gems"><span class="dot warp"></span></span></div>
+      <div class="sline"><span class="name">Energy</span><span class="gems">—</span></div>
+    </div>
+    <div class="log" style="margin-top:14px; max-width:440px">
+      <span class="exlbl">Examples</span>
+      <span class="ln">Plasma Cannon — <span class="t-damage">Firepower +2</span></span>
+      <span class="ln">Missile Battery — <span class="t-plasma">Targeting +2</span> · <span class="t-damage">Firepower +1</span></span>
+      <span class="ln">Shield Generator — <span class="t-graviton">Protection +2</span></span>
+      <span class="ln">Hull Plating — <span class="t-scrap">Armor +2</span> · <span class="t-ion">Computing −1</span></span>
+      <span class="ln">Afterburner — <span class="t-ion">Computing +2</span> · <span class="t-graviton">Protection −1</span></span>
+      <span class="ln">ECM Jammer — <span class="t-tachyon">Diagnostics +2</span></span>
+      <span class="ln">Warp Coil — <span class="t-warp">Warp +1</span></span>
+    </div>
+
+  </section>
+
+  <!-- ================= V3 · MATRIX ================= -->
+  <section class="panel" id="v3" role="tabpanel" hidden>
+
+    <h2>Lanes</h2>
+    <p class="sub">The whole system as one spec sheet.</p>
+    <div class="tablewrap">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th></th>
+            <th><span class="gem plasma"></span>Command</th>
+            <th><span class="gem graviton"></span>Security</th>
+            <th><span class="gem ion"></span>Engineering</th>
+            <th><span class="gem tachyon"></span>Science</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>Theme</th>
+            <td><span class="cellsub">offense</span></td>
+            <td><span class="cellsub">defense / sustain</span></td>
+            <td><span class="cellsub">speed / growth</span></td>
+            <td><span class="cellsub">intel / control</span></td>
+          </tr>
+          <tr>
+            <th>Resource</th>
+            <td><span class="name t-plasma">Command</span></td>
+            <td><span class="name t-graviton">Security</span></td>
+            <td><span class="name t-ion">Engineering</span></td>
+            <td><span class="name t-tachyon">Science</span></td>
+          </tr>
+          <tr>
+            <th>Tile</th>
+            <td><span class="sw24" style="background:var(--plasma)"></span></td>
+            <td><span class="sw24" style="background:var(--graviton)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2" stroke-linejoin="round"><path d="M12 3 L19 6 V11 C19 16 16 19.5 12 21 C8 19.5 5 16 5 11 V6 Z"/></svg></span></td>
+            <td><span class="sw24" style="background:var(--ion)"></span></td>
+            <td><span class="sw24" style="background:var(--tachyon)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="1.6"><circle cx="12" cy="12" r="1.7" fill="var(--bg)" stroke="none"/><ellipse cx="12" cy="12" rx="9" ry="3.6"/><ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(120 12 12)"/></svg></span></td>
+          </tr>
+          <tr>
+            <th>Stat</th>
+            <td><span class="name t-plasma">Targeting</span></td>
+            <td><span class="name t-graviton">Protection</span></td>
+            <td><span class="name t-ion">Computing</span></td>
+            <td><span class="name t-tachyon">Diagnostics</span></td>
+          </tr>
+          <tr>
+            <th>Styles</th>
+            <td><span class="cellsub">Combat · Propulsion · Tactics</span></td>
+            <td><span class="cellsub">Combat · Damage Control · Countermeasures</span></td>
+            <td><span class="cellsub">Propulsion · Damage Control · Logic</span></td>
+            <td><span class="cellsub">Tactics · Countermeasures · Logic</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tablewrap">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th></th>
+            <th><span class="dot scrap"></span>Alloy</th>
+            <th><span class="dot warp"></span>Antimatter</th>
+            <th><span class="dot damage"></span>Damage</th>
+            <th>—</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>Tile</th>
+            <td><span class="sw24" style="background:var(--scrap)"></span> <span class="cellsub">currency</span></td>
+            <td><span class="sw24" style="background:var(--warp)"></span> <span class="cellsub">warp</span></td>
+            <td><span class="sw24" style="background:var(--damage)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5.5"/><line x1="12" y1="1.5" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22.5" y2="12"/></svg></span> <span class="cellsub">direct</span></td>
+            <td><span class="cellsub">—</span></td>
+          </tr>
+          <tr>
+            <th>Stat</th>
+            <td><span class="name t-scrap">Armor</span></td>
+            <td><span class="name t-warp">Warp</span></td>
+            <td><span class="name t-damage">Firepower</span></td>
+            <td><span class="name">Energy</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 style="margin-top:48px">Styles of Play</h2>
+    <p class="sub">How styles of play emerge from combining disciplines.</p>
+    <div class="pairs" style="margin-top:14px">
+      <div class="pair"><span class="gems"><span class="gem plasma"></span><span class="gem graviton"></span></span><span class="pairline"><span class="t-plasma">Command</span> + <span class="t-graviton">Security</span></span><span class="who">Combat</span><span class="arch">brawler / bruiser</span></div>
+      <div class="pair"><span class="gems"><span class="gem ion"></span><span class="gem plasma"></span></span><span class="pairline"><span class="t-ion">Engineering</span> + <span class="t-plasma">Command</span></span><span class="who">Propulsion</span><span class="arch">aggro / rush</span></div>
+      <div class="pair"><span class="gems"><span class="gem plasma"></span><span class="gem tachyon"></span></span><span class="pairline"><span class="t-plasma">Command</span> + <span class="t-tachyon">Science</span></span><span class="who">Tactics</span><span class="arch">tempo / precision</span></div>
+      <div class="pair"><span class="gems"><span class="gem graviton"></span><span class="gem ion"></span></span><span class="pairline"><span class="t-graviton">Security</span> + <span class="t-ion">Engineering</span></span><span class="who">Damage Control</span><span class="arch">fortress / outlast</span></div>
+      <div class="pair"><span class="gems"><span class="gem graviton"></span><span class="gem tachyon"></span></span><span class="pairline"><span class="t-graviton">Security</span> + <span class="t-tachyon">Science</span></span><span class="who">Countermeasures</span><span class="arch">lockdown / attrition</span></div>
+      <div class="pair"><span class="gems"><span class="gem tachyon"></span><span class="gem ion"></span></span><span class="pairline"><span class="t-tachyon">Science</span> + <span class="t-ion">Engineering</span></span><span class="who">Logic</span><span class="arch">snowball / efficiency</span></div>
+    </div>
+
+    <div class="log" style="margin-top:24px; max-width:440px">
+      <span class="exlbl">Examples</span>
+      <span class="ln">You collected 3 <span class="t-plasma">Command</span>!</span>
+      <span class="ln">All power to the <span class="t-graviton">security</span> systems!</span>
+      <span class="ln">You spent 4 <span class="t-tachyon">Science</span> to...</span>
+      <span class="ln">Missile Battery — <span class="t-plasma">Targeting +2</span> · <span class="t-damage">Firepower +1</span></span>
+      <span class="ln">Afterburner — <span class="t-ion">Computing +2</span> · <span class="t-graviton">Protection −1</span></span>
+      <span class="ln">ECM Jammer — <span class="t-tachyon">Diagnostics +2</span></span>
+    </div>
+
+  </section>
+
+  <!-- ================= V4 · MAP ================= -->
+  <section class="panel" id="v4" role="tabpanel" hidden>
+
+    <h2>Styles of Play</h2>
+    <p class="sub">The relationship map as the centerpiece; the word lists beneath.</p>
+    <svg class="relmap" style="max-width:100%" viewBox="0 0 720 560" role="img" aria-label="Relationship map: four resources as nodes, six playstyles as their pairwise overlaps">
+      <line x1="310.9" y1="117.8" x2="149.1" y2="242.2" stroke="var(--line)" stroke-width="1.5"/>
+      <line x1="409.1" y1="117.8" x2="570.9" y2="242.2" stroke="var(--line)" stroke-width="1.5"/>
+      <line x1="149.1" y1="317.8" x2="310.9" y2="442.2" stroke="var(--line)" stroke-width="1.5"/>
+      <line x1="570.9" y1="317.8" x2="409.1" y2="442.2" stroke="var(--line)" stroke-width="1.5"/>
+      <line x1="360" y1="142" x2="360" y2="418" stroke="var(--line)" stroke-width="1.5"/>
+      <line x1="162" y1="280" x2="558" y2="280" stroke="var(--line)" stroke-width="1.5"/>
+
+      <g style="paint-order:stroke" stroke="var(--bg)" stroke-width="6" stroke-linejoin="round">
+        <text x="230" y="177" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Combat</text>
+        <text x="490" y="177" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Damage Control</text>
+        <text x="230" y="377" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Tactics</text>
+        <text x="490" y="377" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Logic</text>
+        <text x="360" y="203" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Countermeasures</text>
+        <text x="252" y="276" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Propulsion</text>
+      </g>
+      <g style="paint-order:stroke" stroke="var(--bg)" stroke-width="5" stroke-linejoin="round" font-family="ui-monospace, Menlo, monospace">
+        <text x="230" y="192" text-anchor="middle" font-size="10.5" fill="var(--muted)">brawler · bruiser</text>
+        <text x="490" y="192" text-anchor="middle" font-size="10.5" fill="var(--muted)">fortress · outlast</text>
+        <text x="230" y="392" text-anchor="middle" font-size="10.5" fill="var(--muted)">tempo · precision</text>
+        <text x="490" y="392" text-anchor="middle" font-size="10.5" fill="var(--muted)">snowball · efficiency</text>
+        <text x="360" y="218" text-anchor="middle" font-size="10.5" fill="var(--muted)">lockdown · attrition</text>
+        <text x="252" y="291" text-anchor="middle" font-size="10.5" fill="var(--muted)">aggro · rush</text>
+      </g>
+
+      <circle cx="360" cy="80" r="58" fill="var(--graviton)" fill-opacity="0.10" stroke="var(--graviton)" stroke-width="1.5"/>
+      <text x="360" y="78" text-anchor="middle" font-size="15" font-weight="650" fill="var(--ink)">Security</text>
+      <text x="360" y="96" text-anchor="middle" font-size="11" font-family="ui-monospace, Menlo, monospace" fill="var(--graviton-ink)">defense</text>
+
+      <circle cx="100" cy="280" r="58" fill="var(--plasma)" fill-opacity="0.10" stroke="var(--plasma)" stroke-width="1.5"/>
+      <text x="100" y="278" text-anchor="middle" font-size="15" font-weight="650" fill="var(--ink)">Command</text>
+      <text x="100" y="296" text-anchor="middle" font-size="11" font-family="ui-monospace, Menlo, monospace" fill="var(--plasma-ink)">offense</text>
+
+      <circle cx="620" cy="280" r="58" fill="var(--ion)" fill-opacity="0.10" stroke="var(--ion)" stroke-width="1.5"/>
+      <text x="620" y="278" text-anchor="middle" font-size="15" font-weight="650" fill="var(--ink)">Engineering</text>
+      <text x="620" y="296" text-anchor="middle" font-size="11" font-family="ui-monospace, Menlo, monospace" fill="var(--ion-ink)">growth</text>
+
+      <circle cx="360" cy="480" r="58" fill="var(--tachyon)" fill-opacity="0.10" stroke="var(--tachyon)" stroke-width="1.5"/>
+      <text x="360" y="478" text-anchor="middle" font-size="15" font-weight="650" fill="var(--ink)">Science</text>
+      <text x="360" y="496" text-anchor="middle" font-size="11" font-family="ui-monospace, Menlo, monospace" fill="var(--tachyon-ink)">control</text>
+    </svg>
+
+    <div class="band">
+      <div>
+        <h2>Resources</h2>
+        <p class="sub">Collected via matching and spent on abilities.</p>
+        <div class="statlist">
+          <div class="sline"><span class="name">Command</span><span class="gems"><span class="gem plasma"></span></span></div>
+          <div class="sline"><span class="name">Security</span><span class="gems"><span class="gem graviton"></span></span></div>
+          <div class="sline"><span class="name">Engineering</span><span class="gems"><span class="gem ion"></span></span></div>
+          <div class="sline"><span class="name">Science</span><span class="gems"><span class="gem tachyon"></span></span></div>
+        </div>
+      </div>
+      <div>
+        <h2>Tiles</h2>
+        <p class="sub">What gets matched on the board.</p>
+        <div class="tilegrid">
+          <div class="tile"><span class="tswatch" style="background:var(--plasma)"></span><span class="tname">Command</span></div>
+          <div class="tile"><span class="tswatch" style="background:var(--graviton)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2" stroke-linejoin="round"><path d="M12 3 L19 6 V11 C19 16 16 19.5 12 21 C8 19.5 5 16 5 11 V6 Z"/></svg></span><span class="tname">Security</span></div>
+          <div class="tile"><span class="tswatch" style="background:var(--ion)"></span><span class="tname">Engineering</span></div>
+          <div class="tile"><span class="tswatch" style="background:var(--tachyon)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="1.6"><circle cx="12" cy="12" r="1.7" fill="var(--bg)" stroke="none"/><ellipse cx="12" cy="12" rx="9" ry="3.6"/><ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(120 12 12)"/></svg></span><span class="tname">Science</span></div>
+          <div class="tile"><span class="tswatch" style="background:var(--scrap)"></span><span class="tname">Alloy</span><span class="tsub">currency</span></div>
+          <div class="tile"><span class="tswatch" style="background:var(--warp)"></span><span class="tname">Antimatter</span><span class="tsub">warp</span></div>
+          <div class="tile"><span class="tswatch" style="background:var(--damage)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5.5"/><line x1="12" y1="1.5" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22.5" y2="12"/></svg></span><span class="tname">Damage</span><span class="tsub">direct</span></div>
+        </div>
+      </div>
+      <div>
+        <h2>Stats</h2>
+        <p class="sub">Starship modifiers that improve abilities.</p>
+        <div class="statlist">
+          <div class="sline"><span class="name">Targeting</span><span class="gems"><span class="gem plasma"></span></span></div>
+          <div class="sline"><span class="name">Firepower</span><span class="gems"><span class="dot damage"></span></span></div>
+          <div class="sline"><span class="name">Protection</span><span class="gems"><span class="gem graviton"></span></span></div>
+          <div class="sline"><span class="name">Armor</span><span class="gems"><span class="dot scrap"></span></span></div>
+          <div class="sline"><span class="name">Computing</span><span class="gems"><span class="gem ion"></span></span></div>
+          <div class="sline"><span class="name">Warp</span><span class="gems"><span class="dot warp"></span></span></div>
+          <div class="sline"><span class="name">Diagnostics</span><span class="gems"><span class="gem tachyon"></span></span></div>
+          <div class="sline"><span class="name">Energy</span><span class="gems">—</span></div>
+        </div>
       </div>
     </div>
 
-    <div class="set">
-      <div class="set-head"><span class="gem graviton"></span><h3>Security</h3><span class="k" style="margin-left:auto">defense / sustain</span></div>
-      <p class="res t-graviton">Combat · Damage Control · Countermeasures</p>
-      <div class="log">
-        <span class="exlbl">Examples</span>
-        <span class="ln">You collected 3 <span class="t-graviton">Security</span>!</span>
-        <span class="ln">All power to the <span class="t-graviton">security</span> systems!</span>
-        <span class="ln">You spent 4 <span class="t-graviton">Security</span> to...</span>
-      </div>
+  </section>
+
+  <!-- ================= V5 · GLOSSARY ================= -->
+  <section class="panel" id="v5" role="tabpanel" hidden>
+
+    <h2>Terminology</h2>
+    <p class="sub">Every word in the game, one line each, alphabetical.</p>
+    <div class="gloss">
+      <div class="g"><span class="mark dot scrap"></span><span class="term">Alloy</span><span class="role">tile — currency</span></div>
+      <div class="g"><span class="mark dot warp"></span><span class="term">Antimatter</span><span class="role">tile — warp</span></div>
+      <div class="g"><span class="mark dot scrap"></span><span class="term">Armor</span><span class="role">stat</span></div>
+      <div class="g"><span class="dash">—</span><span class="term">Combat</span><span class="role">style of play — <span class="t-plasma">Command</span> + <span class="t-graviton">Security</span> · brawler / bruiser</span></div>
+      <div class="g"><span class="mark gem plasma"></span><span class="term">Command</span><span class="role">discipline · resource · tile — offense</span></div>
+      <div class="g"><span class="mark gem ion"></span><span class="term">Computing</span><span class="role">stat — Engineering lane</span></div>
+      <div class="g"><span class="dash">—</span><span class="term">Countermeasures</span><span class="role">style of play — <span class="t-graviton">Security</span> + <span class="t-tachyon">Science</span> · lockdown / attrition</span></div>
+      <div class="g"><span class="mark dot damage"></span><span class="term">Damage</span><span class="role">tile — direct</span></div>
+      <div class="g"><span class="dash">—</span><span class="term">Damage Control</span><span class="role">style of play — <span class="t-graviton">Security</span> + <span class="t-ion">Engineering</span> · fortress / outlast</span></div>
+      <div class="g"><span class="mark gem tachyon"></span><span class="term">Diagnostics</span><span class="role">stat — Science lane</span></div>
+      <div class="g"><span class="dash">—</span><span class="term">Energy</span><span class="role">stat</span></div>
+      <div class="g"><span class="mark gem ion"></span><span class="term">Engineering</span><span class="role">discipline · resource · tile — speed / growth</span></div>
+      <div class="g"><span class="mark dot damage"></span><span class="term">Firepower</span><span class="role">stat</span></div>
+      <div class="g"><span class="dash">—</span><span class="term">Logic</span><span class="role">style of play — <span class="t-tachyon">Science</span> + <span class="t-ion">Engineering</span> · snowball / efficiency</span></div>
+      <div class="g"><span class="dash">—</span><span class="term">Propulsion</span><span class="role">style of play — <span class="t-ion">Engineering</span> + <span class="t-plasma">Command</span> · aggro / rush</span></div>
+      <div class="g"><span class="mark gem graviton"></span><span class="term">Protection</span><span class="role">stat — Security lane</span></div>
+      <div class="g"><span class="mark gem tachyon"></span><span class="term">Science</span><span class="role">discipline · resource · tile — intel / control</span></div>
+      <div class="g"><span class="mark gem graviton"></span><span class="term">Security</span><span class="role">discipline · resource · tile — defense / sustain</span></div>
+      <div class="g"><span class="dash">—</span><span class="term">Tactics</span><span class="role">style of play — <span class="t-plasma">Command</span> + <span class="t-tachyon">Science</span> · tempo / precision</span></div>
+      <div class="g"><span class="mark gem plasma"></span><span class="term">Targeting</span><span class="role">stat — Command lane</span></div>
+      <div class="g"><span class="mark dot warp"></span><span class="term">Warp</span><span class="role">stat</span></div>
     </div>
 
-    <div class="set">
-      <div class="set-head"><span class="gem ion"></span><h3>Engineering</h3><span class="k" style="margin-left:auto">speed / growth</span></div>
-      <p class="res t-ion">Propulsion · Damage Control · Logic</p>
-      <div class="log">
-        <span class="exlbl">Examples</span>
-        <span class="ln">You collected 3 <span class="t-ion">Engineering</span>!</span>
-        <span class="ln">All power to the <span class="t-ion">engineering</span> systems!</span>
-        <span class="ln">You spent 4 <span class="t-ion">Engineering</span> to...</span>
-      </div>
+    <div class="log" style="margin-top:24px; max-width:440px">
+      <span class="exlbl">Examples</span>
+      <span class="ln">You collected 3 <span class="t-plasma">Command</span>!</span>
+      <span class="ln">All power to the <span class="t-graviton">security</span> systems!</span>
+      <span class="ln">You spent 4 <span class="t-tachyon">Science</span> to...</span>
+      <span class="ln">Missile Battery — <span class="t-plasma">Targeting +2</span> · <span class="t-damage">Firepower +1</span></span>
+      <span class="ln">Afterburner — <span class="t-ion">Computing +2</span> · <span class="t-graviton">Protection −1</span></span>
+      <span class="ln">ECM Jammer — <span class="t-tachyon">Diagnostics +2</span></span>
     </div>
 
-    <div class="set">
-      <div class="set-head"><span class="gem tachyon"></span><h3>Science</h3><span class="k" style="margin-left:auto">intel / control</span></div>
-      <p class="res t-tachyon">Tactics · Countermeasures · Logic</p>
-      <div class="log">
-        <span class="exlbl">Examples</span>
-        <span class="ln">You collected 3 <span class="t-tachyon">Science</span>!</span>
-        <span class="ln">All power to the <span class="t-tachyon">science</span> systems!</span>
-        <span class="ln">You spent 4 <span class="t-tachyon">Science</span> to...</span>
-      </div>
-    </div>
-
-  </div>
-
-  <h2 style="margin-top:48px">Resources</h2>
-  <p class="sub">Collected via matching and spent on abilities.</p>
-  <div class="statlist">
-    <div class="sline"><span class="name">Command</span><span class="gems"><span class="gem plasma"></span></span></div>
-    <div class="sline"><span class="name">Security</span><span class="gems"><span class="gem graviton"></span></span></div>
-    <div class="sline"><span class="name">Engineering</span><span class="gems"><span class="gem ion"></span></span></div>
-    <div class="sline"><span class="name">Science</span><span class="gems"><span class="gem tachyon"></span></span></div>
-  </div>
-
-  <h2 style="margin-top:48px">Tiles</h2>
-  <p class="sub">What gets matched on the board.</p>
-  <div class="tilegrid">
-    <div class="tile"><span class="tswatch" style="background:var(--plasma)"></span><span class="tname">Command</span></div>
-    <div class="tile"><span class="tswatch" style="background:var(--graviton)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2" stroke-linejoin="round"><path d="M12 3 L19 6 V11 C19 16 16 19.5 12 21 C8 19.5 5 16 5 11 V6 Z"/></svg></span><span class="tname">Security</span></div>
-    <div class="tile"><span class="tswatch" style="background:var(--ion)"></span><span class="tname">Engineering</span></div>
-    <div class="tile"><span class="tswatch" style="background:var(--tachyon)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="1.6"><circle cx="12" cy="12" r="1.7" fill="var(--bg)" stroke="none"/><ellipse cx="12" cy="12" rx="9" ry="3.6"/><ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(120 12 12)"/></svg></span><span class="tname">Science</span></div>
-    <div class="tile"><span class="tswatch" style="background:var(--scrap)"></span><span class="tname">Alloy</span><span class="tsub">currency</span></div>
-    <div class="tile"><span class="tswatch" style="background:var(--warp)"></span><span class="tname">Antimatter</span><span class="tsub">warp</span></div>
-    <div class="tile"><span class="tswatch" style="background:var(--damage)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5.5"/><line x1="12" y1="1.5" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22.5" y2="12"/></svg></span><span class="tname">Damage</span><span class="tsub">direct</span></div>
-  </div>
-
-  <h2 style="margin-top:48px">Styles of Play</h2>
-  <p class="sub">How styles of play emerge from combining disciplines.</p>
-  <svg class="relmap" viewBox="0 0 720 560" role="img" aria-label="Relationship map: four resources as nodes, six playstyles as their pairwise overlaps">
-    <line x1="310.9" y1="117.8" x2="149.1" y2="242.2" stroke="var(--line)" stroke-width="1.5"/>
-    <line x1="409.1" y1="117.8" x2="570.9" y2="242.2" stroke="var(--line)" stroke-width="1.5"/>
-    <line x1="149.1" y1="317.8" x2="310.9" y2="442.2" stroke="var(--line)" stroke-width="1.5"/>
-    <line x1="570.9" y1="317.8" x2="409.1" y2="442.2" stroke="var(--line)" stroke-width="1.5"/>
-    <line x1="360" y1="142" x2="360" y2="418" stroke="var(--line)" stroke-width="1.5"/>
-    <line x1="162" y1="280" x2="558" y2="280" stroke="var(--line)" stroke-width="1.5"/>
-
-    <g style="paint-order:stroke" stroke="var(--bg)" stroke-width="6" stroke-linejoin="round">
-      <text x="230" y="177" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Combat</text>
-      <text x="490" y="177" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Damage Control</text>
-      <text x="230" y="377" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Tactics</text>
-      <text x="490" y="377" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Logic</text>
-      <text x="360" y="203" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Countermeasures</text>
-      <text x="252" y="276" text-anchor="middle" font-size="13" font-weight="650" fill="var(--ink)">Propulsion</text>
-    </g>
-    <g style="paint-order:stroke" stroke="var(--bg)" stroke-width="5" stroke-linejoin="round" font-family="ui-monospace, Menlo, monospace">
-      <text x="230" y="192" text-anchor="middle" font-size="10.5" fill="var(--muted)">brawler · bruiser</text>
-      <text x="490" y="192" text-anchor="middle" font-size="10.5" fill="var(--muted)">fortress · outlast</text>
-      <text x="230" y="392" text-anchor="middle" font-size="10.5" fill="var(--muted)">tempo · precision</text>
-      <text x="490" y="392" text-anchor="middle" font-size="10.5" fill="var(--muted)">snowball · efficiency</text>
-      <text x="360" y="218" text-anchor="middle" font-size="10.5" fill="var(--muted)">lockdown · attrition</text>
-      <text x="252" y="291" text-anchor="middle" font-size="10.5" fill="var(--muted)">aggro · rush</text>
-    </g>
-
-    <circle cx="360" cy="80" r="58" fill="var(--graviton)" fill-opacity="0.10" stroke="var(--graviton)" stroke-width="1.5"/>
-    <text x="360" y="78" text-anchor="middle" font-size="15" font-weight="650" fill="var(--ink)">Security</text>
-    <text x="360" y="96" text-anchor="middle" font-size="11" font-family="ui-monospace, Menlo, monospace" fill="var(--graviton-ink)">defense</text>
-
-    <circle cx="100" cy="280" r="58" fill="var(--plasma)" fill-opacity="0.10" stroke="var(--plasma)" stroke-width="1.5"/>
-    <text x="100" y="278" text-anchor="middle" font-size="15" font-weight="650" fill="var(--ink)">Command</text>
-    <text x="100" y="296" text-anchor="middle" font-size="11" font-family="ui-monospace, Menlo, monospace" fill="var(--plasma-ink)">offense</text>
-
-    <circle cx="620" cy="280" r="58" fill="var(--ion)" fill-opacity="0.10" stroke="var(--ion)" stroke-width="1.5"/>
-    <text x="620" y="278" text-anchor="middle" font-size="15" font-weight="650" fill="var(--ink)">Engineering</text>
-    <text x="620" y="296" text-anchor="middle" font-size="11" font-family="ui-monospace, Menlo, monospace" fill="var(--ion-ink)">growth</text>
-
-    <circle cx="360" cy="480" r="58" fill="var(--tachyon)" fill-opacity="0.10" stroke="var(--tachyon)" stroke-width="1.5"/>
-    <text x="360" y="478" text-anchor="middle" font-size="15" font-weight="650" fill="var(--ink)">Science</text>
-    <text x="360" y="496" text-anchor="middle" font-size="11" font-family="ui-monospace, Menlo, monospace" fill="var(--tachyon-ink)">control</text>
-  </svg>
-
-  <div class="pairs" style="margin-top:20px">
-    <div class="pair"><span class="gems"><span class="gem plasma"></span><span class="gem graviton"></span></span><span class="pairline"><span class="t-plasma">Command</span> + <span class="t-graviton">Security</span></span><span class="who">Combat</span><span class="arch">brawler / bruiser</span></div>
-    <div class="pair"><span class="gems"><span class="gem ion"></span><span class="gem plasma"></span></span><span class="pairline"><span class="t-ion">Engineering</span> + <span class="t-plasma">Command</span></span><span class="who">Propulsion</span><span class="arch">aggro / rush</span></div>
-    <div class="pair"><span class="gems"><span class="gem plasma"></span><span class="gem tachyon"></span></span><span class="pairline"><span class="t-plasma">Command</span> + <span class="t-tachyon">Science</span></span><span class="who">Tactics</span><span class="arch">tempo / precision</span></div>
-    <div class="pair"><span class="gems"><span class="gem graviton"></span><span class="gem ion"></span></span><span class="pairline"><span class="t-graviton">Security</span> + <span class="t-ion">Engineering</span></span><span class="who">Damage Control</span><span class="arch">fortress / outlast</span></div>
-    <div class="pair"><span class="gems"><span class="gem graviton"></span><span class="gem tachyon"></span></span><span class="pairline"><span class="t-graviton">Security</span> + <span class="t-tachyon">Science</span></span><span class="who">Countermeasures</span><span class="arch">lockdown / attrition</span></div>
-    <div class="pair"><span class="gems"><span class="gem tachyon"></span><span class="gem ion"></span></span><span class="pairline"><span class="t-tachyon">Science</span> + <span class="t-ion">Engineering</span></span><span class="who">Logic</span><span class="arch">snowball / efficiency</span></div>
-  </div>
-
-  <h2 style="margin-top:48px">Stats</h2>
-  <p class="sub">Starship modifiers that improve abilities.</p>
-  <div class="statgrid">
-    <div class="sline"><span class="name">Targeting</span><span class="gems"><span class="gem plasma"></span></span></div>
-    <div class="sline"><span class="name">Firepower</span><span class="gems"><span class="dot damage"></span></span></div>
-    <div class="sline"><span class="name">Protection</span><span class="gems"><span class="gem graviton"></span></span></div>
-    <div class="sline"><span class="name">Armor</span><span class="gems"><span class="dot scrap"></span></span></div>
-    <div class="sline"><span class="name">Computing</span><span class="gems"><span class="gem ion"></span></span></div>
-    <div class="sline"><span class="name">Warp</span><span class="gems"><span class="dot warp"></span></span></div>
-    <div class="sline"><span class="name">Diagnostics</span><span class="gems"><span class="gem tachyon"></span></span></div>
-    <div class="sline"><span class="name">Energy</span><span class="gems">—</span></div>
-  </div>
-  <div class="log" style="margin-top:14px; max-width:440px">
-    <span class="exlbl">Examples</span>
-    <span class="ln">Plasma Cannon — <span class="t-damage">Firepower +2</span></span>
-    <span class="ln">Missile Battery — <span class="t-plasma">Targeting +2</span> · <span class="t-damage">Firepower +1</span></span>
-    <span class="ln">Shield Generator — <span class="t-graviton">Protection +2</span></span>
-    <span class="ln">Hull Plating — <span class="t-scrap">Armor +2</span> · <span class="t-ion">Computing −1</span></span>
-    <span class="ln">Afterburner — <span class="t-ion">Computing +2</span> · <span class="t-graviton">Protection −1</span></span>
-    <span class="ln">ECM Jammer — <span class="t-tachyon">Diagnostics +2</span></span>
-    <span class="ln">Warp Coil — <span class="t-warp">Warp +1</span></span>
-  </div>
+  </section>
 
 </div>
+
+<script>
+  const tabs = document.querySelectorAll('.navtab');
+  function show(id) {
+    document.querySelectorAll('.panel').forEach(p => { p.hidden = p.id !== id; });
+    tabs.forEach(t => t.setAttribute('aria-selected', String(t.dataset.panel === id)));
+  }
+  tabs.forEach(t => t.addEventListener('click', () => show(t.dataset.panel)));
+  show('v1');
+</script>
