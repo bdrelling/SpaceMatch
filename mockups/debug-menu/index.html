@@ -291,8 +291,11 @@ const PARENTS = {
   ed_condition: 'ed_effect', pick_statuses: 'ed_condition',
   cat_transforms: 'home', ed_transform: 'cat_transforms', ed_newtransform: 'cat_transforms',
   cat_tiles: 'home', ed_tile: 'cat_tiles', ed_newtile: 'cat_tiles',
-  cat_rules: 'home', ed_selrule: 'cat_rules', ed_newselrule: 'cat_rules',
-  cat_rulesets: 'home', ed_ruleset: 'cat_rulesets', menu_rule: 'ed_ruleset', ed_newrule: 'menu_rule', ed_newruleset: 'cat_rulesets',
+  cat_targets: 'home', view_target: 'cat_targets',
+  cat_conditions: 'home', view_condition: 'cat_conditions',
+  cat_rules: 'home', view_ruletemplate: 'cat_rules',
+  cat_rulesets: 'home', ed_ruleset: 'cat_rulesets', menu_rule: 'ed_ruleset', ed_newruleinstance: 'menu_rule',
+  ed_ruleinstance: 'ed_ruleset', ed_newruleset: 'cat_rulesets',
   ed_matchconfig: 'cat_match_configs', ed_newmatchconfig: 'cat_match_configs', pick_rulesets: 'ed_matchconfig',
 };
 function deepLink(id) {
@@ -383,7 +386,7 @@ function newRow(label, to) {
 // selects the new instance and returns to wherever the picker was opened
 function addBtn(name) {
   const h = on(() => {
-    const viaPicker = String(stack[stack.length - 2]).startsWith('pick_');
+    const viaPicker = /^(pick_|menu_)/.test(String(stack[stack.length - 2]));
     popN(viaPicker ? 2 : 1);
     toast(viaPicker ? `Added & picked: ${name}` : `Added: ${name}`);
   });
@@ -511,20 +514,22 @@ home: () => ({ title: '', rows: [
   scroller([
     tile('Adjustments', { emoji: '🎚️', to: 'cat_adjustments', count: 3 }),
     tile('Actions', { emoji: '🎬', to: 'cat_actions', count: 3 }),
+    tile('Conditions', { emoji: '🚦', to: 'cat_conditions', count: 7 }),
     tile('Effects', { emoji: '💫', to: 'cat_effects', count: 5 }),
+    tile('Targets', { emoji: '🎯', to: 'cat_targets', count: 13 }),
     tile('Transforms', { emoji: '🔻', to: 'cat_transforms', count: 3 }),
   ]),
   section('Content'),
   scroller([
     tile('Abilities', { emoji: '⚡', to: 'cat_abilities', count: 5 }),
-    tile('Starships', { emoji: '🛸', to: 'cat_starships', count: 2 }),
     tile('Modules', { emoji: '🧱', to: 'cat_modules', count: 7 }),
     tile('Loadouts', { emoji: '🔲', to: 'cat_loadouts', count: 2 }),
+    tile('Starships', { emoji: '🛸', to: 'cat_starships', count: 2 }),
   ]),
   section('Config'),
   scroller([
-    tile('Rules', { emoji: '📐', to: 'cat_rules', count: 5 }),
-    tile('Rulesets', { emoji: '📜', to: 'cat_rulesets', count: 7, edited: true }),
+    tile('Rules', { emoji: '📐', to: 'cat_rules', count: 18 }),
+    tile('Rulesets', { emoji: '📜', to: 'cat_rulesets', count: 6, edited: true }),
     tile('Match Configs', { emoji: '🚀', to: 'cat_match_configs', count: 2 }),
   ]),
 ]}),
@@ -727,6 +732,10 @@ pick_rulesets: () => ({ title: 'Ruleset', rows: [
   list([
     optRow('Default', 'The standard ruleset used for most matches.'),
     optRow('Alternate', 'An alternate ruleset for testing rule changes.'),
+    optRow('Default Tiles', 'The standard board tile set.'),
+    optRow('Default Special Tiles', 'The standard special tile spawns.'),
+    optRow('Default Ability Resources', 'The standard ability resource set.'),
+    optRow('Default Turns', 'The standard turn structure.'),
   ]),
   list([ newRow('New Ruleset', 'ed_newruleset') ]),
 ]}),
@@ -736,8 +745,12 @@ ed_newruleset: () => ({ title: 'New Ruleset', rows: [
   list([ scalar('text', 'ID', '6008'), scalar('text', 'Filename', 'new_ruleset') ]),
   section('Information'),
   list([ scalar('text', 'Name', 'New Ruleset'), descField('—') ]),
+  section('Configuration'),
+  list([ scalar('dropdown', 'Type', 'None') ]),
   section('Rules'),
   chips([ chip('', { add: true, menu: 'menu_rule' }) ]),
+  section('Rulesets'),
+  chips([ chip('', { add: true, menu: 'pick_rulesets' }) ]),
   addBtn('New Ruleset'),
 ]}),
 
@@ -981,6 +994,33 @@ ed_transform: () => ({ title: 'Shield Absorb', rows: [
   list([ variant('Kind', 'Absorb', null, 'menu_step', false, 'How the value is reshaped.') ]),
 ]}),
 
+/* --- Targets & Conditions (finite kind vocabularies from code — browsable, view-only) --- */
+cat_targets: () => ({ title: 'Targets', rows: [
+  list(MENUS.menu_target.map(k => optNav(k, MENU_DESCS.menu_target[k], 'view_target'))),
+]}),
+
+view_target: () => ({ title: 'Opponent', rows: [
+  section('Information'),
+  list([
+    scalar('text', 'Name', 'Opponent'),
+    descField('The enemy ship.'),
+  ]),
+]}),
+
+cat_conditions: () => ({ title: 'Conditions', rows: [
+  list(MENUS.menu_condition.map(k => optNav(k, MENU_DESCS.menu_condition[k], 'view_condition'))),
+]}),
+
+view_condition: () => ({ title: 'Has Status', rows: [
+  section('Information'),
+  list([
+    scalar('text', 'Name', 'Has Status'),
+    descField('Passes when the target carries a specific status.'),
+  ]),
+  section('Parameters'),
+  list([ scalar('text', 'Status', 'Status reference') ]),
+]}),
+
 pick_stats: () => ({ title: 'Stat', rows: [
   grid(['health', 'armor', 'shields', 'weapons', 'engines', 'computers', 'sensors', 'energy'].map(s => pickTile(titleize(s), STAT_SYMBOLS[s]))),
   list([ newRow('New Stat', 'ed_newstat') ]),
@@ -1203,41 +1243,41 @@ ed_newtile: () => ({ title: 'New Tile', rows: [
   addBtn('New Tile'),
 ]}),
 
-/* --- Rules (selection rules — how tiles are selected on the board) --- */
-cat_rules: () => ({ title: 'Rules', action: { fn: () => go('ed_newselrule') }, rows: [
-  list(['Swap', 'Slide', 'Swap Diagonal', 'Teleport', 'Trace'].map(s => nav(s, { to: 'ed_selrule' }))),
+/* --- Rules (rule TEMPLATES from code, grouped by type; rulesets hold configured instances) --- */
+cat_rules: () => ({ title: 'Rules', rows: [
+  section('Match'),
+  list(['Scoring', 'Damage', 'Extra Turn', 'Action Budget', 'Territory', 'Warp', 'Offset Scoring'].map(k => nav(k, { to: 'view_ruletemplate' }))),
+  section('Board'),
+  list(['Board Fill', 'Tile Match', 'Tile Spawn'].map(k => nav(k, { to: 'view_ruletemplate' }))),
+  section('Resources'),
+  list(['Resource Capacity', 'Scrap Grant', 'Reload Split'].map(k => nav(k, { to: 'view_ruletemplate' }))),
+  section('Selection'),
+  list(['Swap', 'Slide', 'Swap Diagonal', 'Teleport', 'Trace'].map(k => nav(k, { to: 'view_ruletemplate' }))),
 ]}),
 
-ed_selrule: () => ({ title: 'Swap', rows: [
-  section('Identity'),
-  list([ scalar('text', 'ID', '14001'), scalar('text', 'Filename', 'swap') ]),
+// a rule template is code — view-only: what it does and what its instances configure
+view_ruletemplate: () => ({ title: 'Damage', rows: [
   section('Information'),
   list([
-    scalar('text', 'Name', 'Swap'),
-    descField('Select two adjacent tiles to swap them.'),
+    scalar('text', 'Name', 'Damage'),
+    descField('Deals damage for each tile matched.'),
   ]),
-  section('Configuration'),
-  list([ stepper('Tiles Required', 2) ]),
+  section('Parameters'),
+  list([
+    scalar('text', 'Per Tile', 'Number'),
+    scalar('text', 'On Collision', 'Replace / Stack'),
+    scalar('text', 'Enabled', 'Toggle'),
+  ]),
 ]}),
 
-ed_newselrule: () => ({ title: 'New Rule', rows: [
-  section('Identity'),
-  list([ scalar('text', 'ID', '14006'), scalar('text', 'Filename', 'new_rule') ]),
-  section('Information'),
-  list([ scalar('text', 'Name', 'New Rule'), descField('—') ]),
-  section('Configuration'),
-  list([ stepper('Tiles Required', 2) ]),
-  addBtn('New Rule'),
-]}),
-
-/* --- Rulesets --- */
-cat_rulesets: () => ({ title: 'Rulesets', rows: [
-  section('Game Modes'),
+/* --- Rulesets (a ruleset is simply a grouping of rule instances and other rulesets) --- */
+cat_rulesets: () => ({ title: 'Rulesets', action: { fn: () => go('ed_newruleset') }, rows: [
+  section('Match Configs'),
   grid([
     tile('Default', { to: 'ed_ruleset', edited: true }),
     tile('Alternate', { to: 'ed_ruleset' }),
   ]),
-  section('Fragments'),
+  section('Shared'),
   list([
     nav('Default Tiles', { to: 'ed_ruleset' }),
     nav('Default Special Tiles', { to: 'ed_ruleset' }),
@@ -1246,7 +1286,7 @@ cat_rulesets: () => ({ title: 'Rulesets', rows: [
   ]),
 ]}),
 
-ed_ruleset: () => ({ title: 'Default', action: { fn: () => go('menu_rule') }, rows: [
+ed_ruleset: () => ({ title: 'Default', rows: [
   section('Identity'),
   list([ scalar('text', 'ID', '6001'), scalar('text', 'Filename', 'default') ]),
   section('Information'),
@@ -1254,25 +1294,48 @@ ed_ruleset: () => ({ title: 'Default', action: { fn: () => go('menu_rule') }, ro
     scalar('text', 'Name', 'Default'),
     descField('The standard ruleset used for most matches.'),
   ]),
+  section('Configuration'),
+  list([ scalar('dropdown', 'Type', 'Match Config') ]),
   section('Rules'),
-  list([
-    `<div class="cell"><div class="label"><b>Scoring</b></div><div class="v">Linear ▾</div><div class="ctl-toggle"><i></i></div></div>`,
-    `<div class="cell"><div class="label"><b>Damage</b></div><div class="v">2</div><div class="ctl-slider"><em style="width:20%"></em><i style="left:20%"></i></div><div class="ctl-toggle"><i></i></div></div>`,
-    `<div class="cell"><div class="label"><b>Spawn — Tactics</b></div><div class="v">3</div><div class="ctl-slider"><em style="width:30%"></em><i style="left:30%"></i></div><div class="ctl-toggle"><i></i></div></div>`,
+  chips([
+    chip('Scoring · Linear', { to: 'ed_ruleinstance' }),
+    chip('Damage · 2', { to: 'ed_ruleinstance' }),
+    chip('Tile Spawn · 3', { to: 'ed_ruleinstance' }),
+    chip('', { add: true, menu: 'menu_rule' }),
+  ]),
+  section('Rulesets'),
+  chips([
+    chip('Default Tiles', { to: 'pick_rulesets' }),
+    chip('Default Special Tiles', { to: 'pick_rulesets' }),
+    chip('Default Ability Resources', { to: 'pick_rulesets' }),
+    chip('Default Turns', { to: 'pick_rulesets' }),
+    chip('', { add: true, menu: 'pick_rulesets' }),
   ]),
 ]}),
 
+// template picker: choose a rule template, then configure the new instance
 menu_rule: () => ({ title: 'Add Rule', rows: [
   grid(['Scoring', 'Damage', 'Extra Turn', 'Action Budget', 'Board Fill', 'Resource Capacity', 'Scrap Grant', 'Territory', 'Tile Match', 'Tile Spawn', 'Warp', 'Offset Scoring', 'Reload Split', 'Selection'].map(k =>
-    tile(k, { compact: true, to: 'ed_newrule' }))),
+    tile(k, { compact: true, to: 'ed_newruleinstance' }))),
 ]}),
 
-ed_newrule: () => ({ title: 'Damage', rows: [
+// a rule instance: a template configured inside its owning ruleset
+ed_ruleinstance: () => ({ title: 'Damage', rows: [
   list([
-    scalar('slider', 'Per tile', '2', { pct: 20 }),
-    seg('On collision', ['Replace', 'Stack'], 0),
+    scalar('slider', 'Per Tile', '2', { pct: 20 }),
+    seg('On Collision', ['Replace', 'Stack'], 0),
     scalar('toggle', 'Enabled', ''),
   ]),
+  clearBtn(),
+]}),
+
+ed_newruleinstance: () => ({ title: 'Damage', rows: [
+  list([
+    scalar('slider', 'Per Tile', '1', { pct: 10 }),
+    seg('On Collision', ['Replace', 'Stack'], 0),
+    scalar('toggle', 'Enabled', ''),
+  ]),
+  addBtn('Damage Rule'),
 ]}),
 
 };
@@ -1368,8 +1431,8 @@ function genericKind(kind) {
 /* ---------- side nav (viewer aid) ---------- */
 const NAV = [
   ['Primitives', [['Resources', 'cat_resources'], ['Tiles', 'cat_tiles'], ['Stats', 'cat_stats'], ['Statuses', 'cat_statuses']]],
-  ['Building Blocks', [['Adjustments', 'cat_adjustments'], ['Actions', 'cat_actions'], ['Effects', 'cat_effects'], ['Transforms', 'cat_transforms']]],
-  ['Content', [['Abilities', 'cat_abilities'], ['Starships', 'cat_starships'], ['Modules', 'cat_modules'], ['Loadouts', 'cat_loadouts']]],
+  ['Building Blocks', [['Adjustments', 'cat_adjustments'], ['Actions', 'cat_actions'], ['Conditions', 'cat_conditions'], ['Effects', 'cat_effects'], ['Targets', 'cat_targets'], ['Transforms', 'cat_transforms']]],
+  ['Content', [['Abilities', 'cat_abilities'], ['Modules', 'cat_modules'], ['Loadouts', 'cat_loadouts'], ['Starships', 'cat_starships']]],
   ['Config', [['Rules', 'cat_rules'], ['Rulesets', 'cat_rulesets'], ['Match Configs', 'cat_match_configs']]],
 ];
 
