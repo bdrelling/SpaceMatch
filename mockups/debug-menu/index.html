@@ -275,12 +275,15 @@ const PARENTS = {
   cat_adjustments: 'home', ed_adjustment: 'cat_adjustments', pick_stats: 'ed_adjustment', ed_newadjustment: 'cat_adjustments',
   cat_stats: 'home', ed_stat: 'cat_stats', ed_newstat: 'cat_stats',
   cat_resources: 'home', ed_resource: 'cat_resources', ed_newresource: 'cat_resources',
-  cat_abilities: 'home', ed_ability: 'cat_abilities', ed_newability: 'cat_abilities', ed_cost: 'ed_ability', pick_resources: 'ed_cost',
+  cat_abilities: 'home', ed_ability: 'cat_abilities', ed_newability: 'cat_abilities', ed_cost: 'ed_ability', ed_newcost: 'ed_ability', pick_resources: 'ed_cost',
+  ed_newmodifier: 'ed_status',
   pick_effects: 'ed_ability', pick_transforms: 'ed_status',
   cat_actions: 'home', ed_action: 'cat_actions', ed_newaction: 'cat_actions', pick_actions: 'ed_effect',
   cat_effects: 'home', ed_effect: 'cat_effects', ed_neweffect: 'cat_effects',
   ed_condition: 'ed_effect', menu_condition_new: 'ed_effect', ed_newcondition: 'menu_condition_new', pick_statuses: 'ed_condition',
   ed_amount: 'ed_action', menu_amount_new: 'ed_ruleinstance', ed_newamount: 'menu_amount_new',
+  menu_action: 'ed_action', menu_target: 'ed_effect', menu_condition: 'ed_condition', menu_amount: 'ed_amount',
+  menu_stackrule: 'ed_status', menu_decayrule: 'ed_status', menu_step: 'ed_transform',
   cat_transforms: 'home', ed_transform: 'cat_transforms', ed_newtransform: 'cat_transforms',
   cat_targets: 'home', view_target: 'cat_targets',
   cat_conditions: 'home', view_condition: 'cat_conditions',
@@ -293,9 +296,24 @@ const PARENTS = {
   ed_ruleinstance: 'ed_ruleset', ed_newruleset: 'cat_rulesets',
   cat_match_configs: 'home', ed_matchconfig: 'cat_match_configs', ed_newmatchconfig: 'cat_match_configs', pick_rulesets: 'ed_matchconfig',
 };
+/* Owned sub-editors resolve their real parent from the data (deep links only) */
+const PARENT_RESOLVERS = {
+  ed_cost: a => 'ed_ability:' + a,
+  ed_ruleinstance: a => { const o = Object.entries(RULESETS).find(([, r]) => r.rules.includes(a)); return o ? 'ed_ruleset:' + o[0] : 'cat_rulesets'; },
+  ed_modifier: a => {
+    const s = Object.entries(STATUSES).find(([, x]) => (x.modifiers || []).includes(a));
+    if (s) return 'ed_status:' + s[0];
+    const m = Object.entries(MODULES).find(([, x]) => (x.modifiers || []).includes(a));
+    return m ? 'ed_module:' + m[0] : 'ed_status';
+  },
+};
+function parentOf(id) {
+  const b = baseOf(id), a = argOf(id);
+  return (a && PARENT_RESOLVERS[b]) ? PARENT_RESOLVERS[b](a) : PARENTS[b];
+}
 function deepLink(id) {
   const chain = [id];
-  for (let p = PARENTS[baseOf(id)]; p; p = PARENTS[baseOf(p)]) chain.unshift(p);
+  for (let p = parentOf(id); p; p = parentOf(p)) chain.unshift(p);
   if (chain[0] !== 'home') chain.unshift('home');
   stack = chain;
   render();
@@ -498,10 +516,17 @@ const STATS = {
 const STATUSES = {
   dodge:       { name: 'Dodge',       emoji: '💨', color: '#4fc3d8', type: 0, stacks: 1, stacking: 'Replace', decay: 'Trigger', desc: 'Avoids the next incoming hit, then expires.' },
   shield:      { name: 'Shield',      emoji: '🛡️', color: '#59adeb', type: 0, stacks: 3, stacking: 'Stack',   decay: 'Timing',  desc: 'Soaks incoming damage against its stacks; once depleted, the overflow passes through to Health.', transforms: ['Shield Absorb'], edited: true },
-  overcharge:  { name: 'Overcharge',  emoji: '⚡', color: '#f7cc4d', type: 0, stacks: 3, stacking: 'Stack',   decay: 'Timing',  desc: 'Boosts Weapons while active.', modifiers: ['+Weapons'] },
+  overcharge:  { name: 'Overcharge',  emoji: '⚡', color: '#f7cc4d', type: 0, stacks: 3, stacking: 'Stack',   decay: 'Timing',  desc: 'Boosts Weapons while active.', modifiers: ['weapons_2'] },
   target_lock: { name: 'Target Lock', emoji: '🎯', color: '#d06a6a', type: 1, stacks: 1, stacking: 'Replace', decay: 'Timing',  desc: 'Marks the ship, amplifying the damage it takes.', transforms: ['Lock Amplify'] },
   disabled:    { name: 'Disabled',    emoji: '🚫', color: '#99a3b3', type: 1, stacks: 1, stacking: 'Replace', decay: 'Timing',  desc: 'Prevents the ship from acting.' },
   burning:     { name: 'Burning',     emoji: '🔥', color: '#f5802e', type: 1, stacks: 5, stacking: 'Stack',   decay: 'Timing',  desc: 'Deals damage at the start of each turn.' },
+};
+
+// modifier instances: a picked Adjustment + an Amount, owned by a status or module
+const MODIFIERS = {
+  weapons_2:  { adjustment: '+Weapons', amount: 'c2' },
+  shields_x2: { adjustment: '×Shields', amount: 'c2' },
+  engines_1:  { adjustment: '+Engines', amount: 'c1' },
 };
 
 const ADJUSTMENTS = {
@@ -509,7 +534,6 @@ const ADJUSTMENTS = {
   engines_add:      { name: '+Engines',   stat: 'Engines', op: 0, desc: 'Adds to a ship’s Engines value.' },
   weapons_add:      { name: '+Weapons',   stat: 'Weapons', op: 0, desc: 'Adds to a ship’s Weapons value.' },
   shields_multiply: { name: '×Shields',   stat: 'Shields', op: 1, desc: 'Scales a ship’s Shields.' },
-  set_health:       { name: 'Set Health', stat: 'Health',  op: 0, desc: 'Sets Health to a fixed value.' },
 };
 
 const ACTIONS = {
@@ -588,9 +612,9 @@ const STARSHIPS = {
 
 const MODULE_SECTIONS = ['Weapons', 'Defense', 'Propulsion', 'Systems'];
 const MODULES = {
-  laser_cannon:     { name: 'Laser Cannon',     emoji: '🔫', sec: 'Weapons',    desc: 'Primary energy weapon; raises the ship’s Weapons while equipped.', modifiers: ['+Weapons'] },
-  shield_generator: { name: 'Shield Generator', emoji: '🛡️', sec: 'Defense',    desc: 'Projects the shield envelope; scales the ship’s Shields.', modifiers: ['×Shields'] },
-  engine:           { name: 'Engine',           emoji: '🚀', sec: 'Propulsion', desc: 'Sublight engines; raises the ship’s Engines.', modifiers: ['+Engines'] },
+  laser_cannon:     { name: 'Laser Cannon',     emoji: '🔫', sec: 'Weapons',    desc: 'Primary energy weapon; raises the ship’s Weapons while equipped.', modifiers: ['weapons_2'] },
+  shield_generator: { name: 'Shield Generator', emoji: '🛡️', sec: 'Defense',    desc: 'Projects the shield envelope; scales the ship’s Shields.', modifiers: ['shields_x2'] },
+  engine:           { name: 'Engine',           emoji: '🚀', sec: 'Propulsion', desc: 'Sublight engines; raises the ship’s Engines.', modifiers: ['engines_1'] },
   life_support:     { name: 'Life Support',     emoji: '🌿', sec: 'Systems',    desc: 'Keeps the crew alive.' },
   reactor:          { name: 'Reactor',          emoji: '☢️', sec: 'Systems',    desc: 'Generates the ship’s Energy.' },
   sensor_array:     { name: 'Sensor Array',     emoji: '📡', sec: 'Systems',    desc: 'Extends detection range and accuracy.' },
@@ -669,7 +693,7 @@ const RULESETS = {
 
 const MATCH_CONFIGS = {
   default: { name: 'Default', desc: 'The standard match setup.', ruleset: 'Standard', cols: 8,  rows: 8 },
-  wide:    { name: 'Wide',    desc: 'A wider board for testing.', ruleset: 'Standard', cols: 12, rows: 8 },
+  wide:    { name: 'Wide',    desc: 'A wider board for testing.', ruleset: 'Alternate', cols: 12, rows: 8 },
 };
 
 /* ---------- shared editor fragments ---------- */
@@ -727,7 +751,7 @@ home: () => ({ title: '', rows: [
   scroller([
     tile('Adjustments', { emoji: '🎚️', to: 'cat_adjustments', count: count(ADJUSTMENTS) }),
     tile('Actions', { emoji: '🎬', to: 'cat_actions', count: count(ACTIONS) }),
-    tile('Conditions', { emoji: '🚦', to: 'cat_conditions', count: count(CONDITION_PARAMS) }),
+    tile('Conditions', { emoji: '🚦', to: 'cat_conditions', count: count(CONDITION_KINDS) }),
     tile('Effects', { emoji: '💫', to: 'cat_effects', count: count(EFFECTS) }),
     tile('Targets', { emoji: '🎯', to: 'cat_targets', count: 13 }),
     tile('Transforms', { emoji: '🔻', to: 'cat_transforms', count: count(TRANSFORMS) }),
@@ -748,12 +772,12 @@ home: () => ({ title: '', rows: [
 ]}),
 
 pick_match_configs: () => ({ title: 'Quick Match', rows: [
-  list(Object.values(MATCH_CONFIGS).map(m => pickRow(m.name))),
+  list(Object.values(MATCH_CONFIGS).map(m => optRow(m.name, m.desc))),
   list([ newRow('New Match Config', 'ed_newmatchconfig') ]),
 ]}),
 
 pick_starships: () => ({ title: 'Starship', rows: [
-  list(Object.values(STARSHIPS).map(s => pickRow(s.name))),
+  list(Object.values(STARSHIPS).map(s => optRow(s.name, s.desc))),
   list([ newRow('New Starship', 'ed_newstarship') ]),
 ]}),
 
@@ -777,11 +801,15 @@ ed_newresource: () => ({ title: 'New Resource', rows: [
   infoSec('New Resource', '—'),
   section('Display'),
   list([ scalar('color', 'Color', '#7b8794') ]),
+  section('Configuration'),
+  list([ scalar('toggle', 'Special', '', { off: true }) ]),
   addBtn('New Resource'),
 ]}),
 
 pick_resources: () => ({ title: 'Resource', rows: [
   grid(Object.values(RESOURCES).filter(r => !r.special).map(r => pickTile(r.name, null, r.color))),
+  divider(),
+  grid(Object.values(RESOURCES).filter(r => r.special).map(r => pickTile(r.name, null, r.color))),
   list([ newRow('New Resource', 'ed_newresource') ]),
 ]}),
 
@@ -796,7 +824,7 @@ ed_tile: (arg = 'security') => { const t = TILES[arg]; return { title: t.name, r
   identitySec(TILES, arg),
   infoSec(t.name, t.desc),
   section('Display'),
-  list([ textureField(arg + '.png') ]),
+  list([ scalar('color', 'Color', t.color), textureField(arg + '.png') ]),
 ]}; },
 
 ed_newtile: () => ({ title: 'New Tile', rows: [
@@ -804,7 +832,9 @@ ed_newtile: () => ({ title: 'New Tile', rows: [
   list([ scalar('text', 'ID', String(count(TILES))), scalar('text', 'Filename', 'new_tile') ]),
   infoSec('New Tile', '—'),
   section('Display'),
-  list([ textureField('None') ]),
+  list([ scalar('color', 'Color', '#7b8794'), textureField('None') ]),
+  section('Configuration'),
+  list([ scalar('toggle', 'Special', '', { off: true }) ]),
   addBtn('New Tile'),
 ]}),
 
@@ -823,6 +853,8 @@ cat_stats: () => ({ title: 'Stats', action: { fn: () => go('ed_newstat') }, rows
 ed_stat: (arg = 'health') => { const s = STATS[arg]; return { title: s.name, rows: [
   identitySec(STATS, arg),
   infoSec(s.name, s.desc),
+  section('Display'),
+  list([ scalar('toggle', 'Hidden', '', { off: !s.hidden }) ]),
   section('Configuration'),
   list([
     // toggle off a bound to make it unbounded ("None")
@@ -830,27 +862,27 @@ ed_stat: (arg = 'health') => { const s = STATS[arg]; return { title: s.name, row
     scalar('slider', 'Maximum', 'None', { none: true, toggle: false }),
     scalar('slider', 'Default', s.def, { pct: s.defPct }),
   ]),
-  section('Display'),
-  list([ scalar('toggle', 'Hidden', '', { off: !s.hidden }) ]),
 ]}; },
 
 ed_newstat: () => ({ title: 'New Stat', rows: [
   section('Identity'),
   list([ scalar('text', 'ID', String(count(STATS))), scalar('text', 'Filename', 'new_stat') ]),
   infoSec('New Stat', '—'),
+  section('Display'),
+  list([ scalar('toggle', 'Hidden', '', { off: true }) ]),
   section('Configuration'),
   list([
     scalar('slider', 'Minimum', '0', { pct: 0, toggle: true }),
     scalar('slider', 'Maximum', 'None', { none: true, toggle: false }),
     scalar('slider', 'Default', '0', { pct: 0 }),
   ]),
-  section('Display'),
-  list([ scalar('toggle', 'Hidden', '', { off: true }) ]),
   addBtn('New Stat'),
 ]}),
 
 pick_stats: () => ({ title: 'Stat', rows: [
   grid(Object.entries(STATS).filter(([, s]) => !s.hidden).map(([k, s]) => pickTile(s.name, STAT_SYMBOLS[k]))),
+  divider(),
+  grid(Object.entries(STATS).filter(([, s]) => s.hidden).map(([k, s]) => pickTile(s.name, STAT_SYMBOLS[k]))),
   list([ newRow('New Stat', 'ed_newstat') ]),
 ]}),
 
@@ -865,6 +897,8 @@ cat_statuses: () => ({ title: 'Statuses', action: { fn: () => go('ed_newstatus')
 ed_status: (arg = 'shield') => { const s = STATUSES[arg]; const e = !!s.edited; return { title: s.name, rows: [
   identitySec(STATUSES, arg),
   infoSec(s.name, s.desc),
+  section('Display'),
+  list([ scalar('text', 'Symbol', s.emoji), scalar('color', 'Color', s.color) ]),
   section('Configuration'),
   list([
     seg('Type', ['Buff', 'Debuff'], s.type),
@@ -873,7 +907,7 @@ ed_status: (arg = 'shield') => { const s = STATUSES[arg]; const e = !!s.edited; 
     variant('Decay', s.decay, null, 'menu_decayrule', false, MENU_DESCS.menu_decayrule[s.decay]),
   ]),
   section('Modifiers'),
-  chips([ ...(s.modifiers || []).map(m => chip(m, { to: 'ed_modifier' })), chip('', { add: true, menu: 'ed_modifier' }) ]),
+  chips([ ...(s.modifiers || []).map(m => chip(MODIFIERS[m].adjustment, { to: 'ed_modifier:' + m })), chip('', { add: true, menu: 'ed_newmodifier' }) ]),
   section('Effects'),
   chips([ ...(s.effects || []).map(f => chip(f, { to: 'pick_effects' })), chip('', { add: true, menu: 'pick_effects' }) ]),
   section('Transforms'),
@@ -884,6 +918,8 @@ ed_newstatus: () => ({ title: 'New Status', rows: [
   section('Identity'),
   list([ scalar('text', 'ID', String(count(STATUSES))), scalar('text', 'Filename', 'new_status') ]),
   infoSec('New Status', '—'),
+  section('Display'),
+  list([ scalar('text', 'Symbol', '—'), scalar('color', 'Color', '#7b8794') ]),
   section('Configuration'),
   list([
     seg('Type', ['Buff', 'Debuff'], 0),
@@ -892,7 +928,7 @@ ed_newstatus: () => ({ title: 'New Status', rows: [
     variant('Decay', 'None', null, 'menu_decayrule'),
   ]),
   section('Modifiers'),
-  chips([ chip('', { add: true, menu: 'ed_modifier' }) ]),
+  chips([ chip('', { add: true, menu: 'ed_newmodifier' }) ]),
   section('Effects'),
   chips([ chip('', { add: true, menu: 'pick_effects' }) ]),
   section('Transforms'),
@@ -906,12 +942,20 @@ pick_statuses: () => ({ title: 'Status', rows: [
 ]}),
 
 // a Modifier attaches a reusable Adjustment (picked, not edited here) and sets its amount
-ed_modifier: () => ({ title: 'Modifier', rows: [
+ed_modifier: (arg = 'weapons_2') => { const m = MODIFIERS[arg]; return { title: 'Modifier', rows: [
   list([
-    ref('Adjustment', '+Armor', 'pick_adjustment'),
-    variant('Amount', AMOUNTS.c5.label, 'ed_amount:c5', null),
+    ref('Adjustment', m.adjustment, 'pick_adjustment'),
+    variant('Amount', AMOUNTS[m.amount].label, 'ed_amount:' + m.amount, null),
   ]),
   clearBtn(),
+]}; },
+
+ed_newmodifier: () => ({ title: 'Modifier', rows: [
+  list([
+    ref('Adjustment', 'None', 'pick_adjustment'),
+    variant('Amount', 'None', null, 'menu_amount_new'),
+  ]),
+  addBtn('Modifier'),
 ]}),
 
 pick_adjustment: () => ({ title: 'Adjustment', rows: [
@@ -1123,8 +1167,10 @@ cat_abilities: () => ({ title: 'Abilities', action: { fn: () => go('ed_newabilit
 ed_ability: (arg = 'fire_weapons') => { const a = ABILITIES[arg]; return { title: a.name, rows: [
   identitySec(ABILITIES, arg),
   infoSec(a.name, a.desc),
+  section('Display'),
+  list([ scalar('text', 'Icon', a.emoji) ]),
   section('Costs'),
-  chips([ chip(`${a.cost.amt} × ${a.cost.res}`, { to: 'ed_cost:' + arg }), chip('', { add: true, menu: 'ed_cost:' + arg }) ]),
+  chips([ chip(`${a.cost.amt} × ${a.cost.res}`, { to: 'ed_cost:' + arg }), chip('', { add: true, menu: 'ed_newcost' }) ]),
   section('Effects'),
   chips([ ...a.effects.map(f => chip(f, { to: 'pick_effects' })), chip('', { add: true, menu: 'pick_effects' }) ]),
 ]}; },
@@ -1133,8 +1179,10 @@ ed_newability: () => ({ title: 'New Ability', rows: [
   section('Identity'),
   list([ scalar('text', 'ID', String(count(ABILITIES))), scalar('text', 'Filename', 'new_ability') ]),
   infoSec('New Ability', '—'),
+  section('Display'),
+  list([ scalar('text', 'Icon', '—') ]),
   section('Costs'),
-  chips([ chip('', { add: true, menu: 'ed_cost' }) ]),
+  chips([ chip('', { add: true, menu: 'ed_newcost' }) ]),
   section('Effects'),
   chips([ chip('', { add: true, menu: 'pick_effects' }) ]),
   addBtn('New Ability'),
@@ -1147,6 +1195,14 @@ ed_cost: (arg = 'fire_weapons') => { const c = ABILITIES[arg].cost; return { tit
   ]),
   clearBtn(),
 ]}; },
+
+ed_newcost: () => ({ title: 'Cost', rows: [
+  list([
+    ref('Resource', 'None', 'pick_resources'),
+    scalar('slider', 'Amount', '0', { pct: 0 }),
+  ]),
+  addBtn('Cost'),
+]}),
 
 /* --- Starships (a starship references a picked Loadout) --- */
 cat_starships: () => ({ title: 'Starships', action: { fn: () => go('ed_newstarship') }, rows: [
@@ -1195,7 +1251,7 @@ ed_module: (arg = 'laser_cannon') => { const m = MODULES[arg]; return { title: m
   section('Configuration'),
   list([ scalar('dropdown', 'Section', m.sec) ]),
   section('Modifiers'),
-  chips([ ...(m.modifiers || []).map(x => chip(x, { to: 'ed_modifier' })), chip('', { add: true, menu: 'ed_modifier' }) ]),
+  chips([ ...(m.modifiers || []).map(x => chip(MODIFIERS[x].adjustment, { to: 'ed_modifier:' + x })), chip('', { add: true, menu: 'ed_newmodifier' }) ]),
 ]}; },
 
 ed_newmodule: () => ({ title: 'New Module', rows: [
@@ -1207,7 +1263,7 @@ ed_newmodule: () => ({ title: 'New Module', rows: [
   section('Configuration'),
   list([ scalar('dropdown', 'Section', 'None') ]),
   section('Modifiers'),
-  chips([ chip('', { add: true, menu: 'ed_modifier' }) ]),
+  chips([ chip('', { add: true, menu: 'ed_newmodifier' }) ]),
   addBtn('New Module'),
 ]}),
 
@@ -1306,7 +1362,7 @@ ed_newruleset: () => ({ title: 'New Ruleset', rows: [
 
 // template picker: choose a rule template, then configure the new instance
 menu_rule: () => ({ title: 'Add Rule', rows: [
-  grid(Object.keys(RULE_TEMPLATES).map(k => tile(k, { compact: true, to: 'ed_newruleinstance:' + k }))),
+  list(Object.entries(RULE_TEMPLATES).map(([k, t]) => optNav(k, t.desc, 'ed_newruleinstance:' + k))),
 ]}),
 
 // a rule instance: a template configured inside its owning ruleset
