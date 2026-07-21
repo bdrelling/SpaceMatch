@@ -167,13 +167,6 @@
   .chip:hover { background: var(--hover); }
   .chip.add { background: transparent; border: 1px dashed #38434e; color: var(--dim); }
 
-  /* ---- flow (target → action) ---- */
-  .flow { display: flex; align-items: stretch; gap: 8px; margin-bottom: 10px; }
-  .flow .arrow { color: var(--dim); align-self: center; flex: none; }
-  .flowtile {
-    flex: 1; background: var(--panel); padding: 10px 12px; cursor: pointer;
-    clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
-  }
   /* clear button — small, right by the close-button style, in its own footer section */
   .clearsec { margin: 24px 2px 4px; }
   .clearbtn {
@@ -186,9 +179,6 @@
   .addbtn:hover { background: rgba(86,200,216,.3); color: var(--accent); }
   /* picker footer row — create a new instance without leaving the pick flow */
   .cell.new .label { color: var(--accent); font-weight: 600; }
-  .flowtile:hover { background: var(--hover); }
-  .flowtile .fcap { font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: var(--dim); margin-bottom: 2px; }
-  .flowtile .fval { font-weight: 600; color: var(--good); }
 
   /* ---- controls ---- */
   .seg { display: flex; background: #0f151c; border-radius: 6px; padding: 2px; flex: none; }
@@ -272,14 +262,15 @@ const go = id => { stack.push(id); render(); };
 const pop = () => { if (stack.length > 1) { stack.pop(); render(); } };
 const popN = n => { while (n-- > 0 && stack.length > 1) stack.pop(); render(); };
 
+/* Screen ids are "base" or "base:item" — the item selects a row from the data
+   tables below, so every catalog row opens its own page. */
+const baseOf = id => String(id).split(':')[0];
+const argOf = id => String(id).split(':')[1];
+
 /* Logical parent of each screen — lets a deep link (e.g. screenshots) rebuild the
    full stack so the back link reads the real parent catalog, never a bare "Debug". */
 const PARENTS = {
   pick_match_configs: 'home', pick_starships: 'home',
-  cat_starships: 'home', ed_starship: 'cat_starships', ed_newstarship: 'cat_starships', pick_loadouts: 'ed_starship',
-  cat_modules: 'home', ed_module: 'cat_modules', ed_newmodule: 'cat_modules',
-  cat_loadouts: 'home', ed_loadout: 'cat_loadouts', ed_newloadout: 'cat_loadouts', pick_modules: 'ed_loadout',
-  cat_match_configs: 'home',
   cat_statuses: 'home', ed_status: 'cat_statuses', ed_newstatus: 'cat_statuses', ed_modifier: 'ed_status', pick_adjustment: 'ed_modifier',
   cat_adjustments: 'home', ed_adjustment: 'cat_adjustments', pick_stats: 'ed_adjustment', ed_newadjustment: 'cat_adjustments',
   cat_stats: 'home', ed_stat: 'cat_stats', ed_newstat: 'cat_stats',
@@ -288,19 +279,22 @@ const PARENTS = {
   pick_effects: 'ed_ability', pick_transforms: 'ed_status',
   cat_actions: 'home', ed_action: 'cat_actions', ed_newaction: 'cat_actions', pick_actions: 'ed_effect',
   cat_effects: 'home', ed_effect: 'cat_effects', ed_neweffect: 'cat_effects',
-  ed_condition: 'ed_effect', pick_statuses: 'ed_condition',
+  ed_condition: 'ed_effect', menu_condition_new: 'ed_effect', ed_newcondition: 'menu_condition_new', pick_statuses: 'ed_condition',
   cat_transforms: 'home', ed_transform: 'cat_transforms', ed_newtransform: 'cat_transforms',
-  cat_tiles: 'home', ed_tile: 'cat_tiles', ed_newtile: 'cat_tiles',
   cat_targets: 'home', view_target: 'cat_targets',
   cat_conditions: 'home', view_condition: 'cat_conditions',
-  cat_rules: 'home', view_ruletemplate: 'cat_rules',
+  cat_starships: 'home', ed_starship: 'cat_starships', ed_newstarship: 'cat_starships', pick_loadouts: 'ed_starship',
+  cat_modules: 'home', ed_module: 'cat_modules', ed_newmodule: 'cat_modules',
+  cat_loadouts: 'home', ed_loadout: 'cat_loadouts', ed_newloadout: 'cat_loadouts', pick_modules: 'ed_loadout',
+  cat_tiles: 'home', ed_tile: 'cat_tiles', ed_newtile: 'cat_tiles', pick_tiles: 'ed_ruleinstance',
+  cat_rules: 'home', view_ruletemplate: 'cat_rules', ed_selectionrule: 'cat_rules', ed_newselectionrule: 'cat_rules', pick_selrules: 'ed_ruleinstance',
   cat_rulesets: 'home', ed_ruleset: 'cat_rulesets', menu_rule: 'ed_ruleset', ed_newruleinstance: 'menu_rule',
   ed_ruleinstance: 'ed_ruleset', ed_newruleset: 'cat_rulesets',
-  ed_matchconfig: 'cat_match_configs', ed_newmatchconfig: 'cat_match_configs', pick_rulesets: 'ed_matchconfig',
+  cat_match_configs: 'home', ed_matchconfig: 'cat_match_configs', ed_newmatchconfig: 'cat_match_configs', pick_rulesets: 'ed_matchconfig',
 };
 function deepLink(id) {
   const chain = [id];
-  for (let p = PARENTS[id]; p; p = PARENTS[p]) chain.unshift(p);
+  for (let p = PARENTS[baseOf(id)]; p; p = PARENTS[baseOf(p)]) chain.unshift(p);
   if (chain[0] !== 'home') chain.unshift('home');
   stack = chain;
   render();
@@ -319,6 +313,7 @@ const grid = tiles => `<div class="grid">${tiles.join('')}</div>`;
 const scroller = tiles => `<div class="scroller">${tiles.join('')}</div>`;
 const chips = items => `<div class="chips">${items.join('')}</div>`;
 const divider = () => `<div class="divider"></div>`;
+const count = obj => Object.keys(obj).length;
 
 function nav(label, opts = {}) {
   const { to, detail = '', count = null, sign = '', edited = false, dim = false } = opts;
@@ -346,8 +341,7 @@ function chip(label, opts = {}) {
   const h = on(() => {
     if (menu) go(menu);
     else if (to) go(to);
-    else if (add) toast('Added');
-    else go('kind:' + label.split(' ')[0]);
+    else toast('Added');
   });
   return `<div class="chip${add ? ' add' : ''}" data-h="${h}">${add ? '＋' : label}</div>`;
 }
@@ -392,26 +386,6 @@ function addBtn(name) {
   });
   return `<div class="clearsec"><div class="clearbtn addbtn" data-h="${h}">Add</div></div>`;
 }
-
-// descriptions for effect-system kinds — shown in the picker AND on the kind's page
-const KIND_DESCS = {
-  Absorb: 'Spends the status’s stacks to soak an incoming value; the overflow passes through.',
-  Clamp: 'Holds the value within a minimum and/or maximum range.',
-  'Flat Mitigation': 'Subtracts a fixed amount from the value.',
-  Multiplier: 'Scales the value by a percentage.',
-  Attack: 'Deals damage to the target.',
-  Shield: 'Grants Shield stacks to the target.',
-  Dodge: 'Grants a chance to avoid the next hit.',
-  Drain: 'Removes stacks or resource from the target.',
-  'Damage Buff': 'Increases the target’s outgoing damage.',
-  Disable: 'Prevents the target from acting.',
-  'Apply Status': 'Applies a status to the target.',
-  'Remove Status': 'Removes a specific status from the target.',
-  'Remove By Type': 'Removes all buffs, or all debuffs, from the target.',
-  'Modify Stat': 'Changes a stat by an amount.',
-  'Set Stat': 'Sets a stat to a specific value.',
-  'Drain Resource': 'Removes an ability resource from the target.',
-};
 
 function textureField(name) {
   const h = on(() => toast('Pick texture'));
@@ -459,9 +433,10 @@ function pickRow(label, opts = {}) {
     <div class="label">${label}</div><div class="chev">›</div></div>`;
 }
 
-function pickTile(name, emoji) {
+function pickTile(name, emoji, swatch) {
   const h = on(() => { pop(); toast(`Picked: ${name}`); });
-  return `<div class="tile${emoji ? '' : ' compact'}" data-h="${h}">
+  return `<div class="tile${emoji || swatch ? '' : ' compact'}" data-h="${h}">
+    ${swatch ? `<div class="tswatch" style="background:${swatch}"></div>` : ''}
     ${emoji ? `<div class="temoji">${emoji}</div>` : ''}
     <div class="tname">${name}</div></div>`;
 }
@@ -474,7 +449,7 @@ function optRow(name, desc) {
     <div class="sub">${desc}</div></div>`;
 }
 
-// a described option that opens the kind's own editor
+// a described option that opens a page (kind views, create flows)
 function optNav(name, desc, to) {
   const h = on(() => go(to));
   return `<div class="cell tap hasdesc" data-h="${h}">
@@ -482,7 +457,216 @@ function optNav(name, desc, to) {
     <div class="sub">${desc || ''}</div></div>`;
 }
 
+/* ---------- data ----------
+   The mockup's authored content, one table per type. IDs are derived from the
+   table order; filenames are the keys. */
+
 const STAT_SYMBOLS = { health: '❤️', armor: '🛡️', shields: '🔷', weapons: '💥', engines: '🚀', computers: '💻', sensors: '📡', energy: '⚡' };
+
+const RESOURCES = {
+  tactics:     { name: 'Tactics',     color: '#e05457', desc: 'Powers offensive abilities — collected from Tactics tiles.' },
+  security:    { name: 'Security',    color: '#59adeb', desc: 'Powers control abilities — collected from Security tiles.' },
+  science:     { name: 'Science',     color: '#70c780', desc: 'Powers utility abilities — collected from Science tiles.' },
+  engineering: { name: 'Engineering', color: '#f7cc4d', desc: 'Powers repair and shield abilities — collected from Engineering tiles.' },
+  antimatter:  { name: 'Antimatter',  color: '#a878db', desc: 'Rare resource that powers ultimate abilities.', special: true },
+  alloy:       { name: 'Alloy',       color: '#99a3b3', desc: 'Currency for building and upgrading modules.', special: true },
+};
+
+const TILES = {
+  tactics:     { name: 'Tactics',     color: '#e05457', desc: 'Board tile matched to collect the Tactics resource.' },
+  security:    { name: 'Security',    color: '#59adeb', desc: 'Board tile matched to collect the Security resource.' },
+  science:     { name: 'Science',     color: '#70c780', desc: 'Board tile matched to collect the Science resource.' },
+  engineering: { name: 'Engineering', color: '#f7cc4d', desc: 'Board tile matched to collect the Engineering resource.' },
+  antimatter:  { name: 'Antimatter',  color: '#a878db', desc: 'Board tile matched to collect the Antimatter resource.', special: true },
+  alloy:       { name: 'Alloy',       color: '#99a3b3', desc: 'Board tile matched to collect Alloy.', special: true },
+  attack:      { name: 'Attack',      color: '#f5802e', desc: 'Board tile that attacks the opponent directly when matched.', special: true },
+};
+
+const STATS = {
+  health:    { name: 'Health',    desc: 'Hull integrity — the ship is destroyed when it reaches the minimum.', def: '20', defPct: 20 },
+  armor:     { name: 'Armor',     desc: 'Reduces incoming hull damage.', def: '0', defPct: 0 },
+  shields:   { name: 'Shields',   desc: 'Absorbs damage before it reaches the hull.', def: '0', defPct: 0 },
+  weapons:   { name: 'Weapons',   desc: 'Attack power of the ship’s weapons.', def: '5', defPct: 5 },
+  engines:   { name: 'Engines',   desc: 'Speed and evasive capability.', def: '5', defPct: 5 },
+  computers: { name: 'Computers', desc: 'Targeting and processing power.', def: '5', defPct: 5 },
+  sensors:   { name: 'Sensors',   desc: 'Detection range and accuracy.', def: '5', defPct: 5 },
+  energy:    { name: 'Energy',    desc: 'Powers modules and abilities.', def: '10', defPct: 10 },
+  luck:      { name: 'Luck',      desc: 'Hidden factor nudging random outcomes.', def: '0', defPct: 0, hidden: true },
+};
+
+const STATUSES = {
+  dodge:       { name: 'Dodge',       emoji: '💨', color: '#4fc3d8', type: 0, stacks: 1, stacking: 'Replace', decay: 'Trigger', desc: 'Avoids the next incoming hit, then expires.' },
+  shield:      { name: 'Shield',      emoji: '🛡️', color: '#59adeb', type: 0, stacks: 3, stacking: 'Stack',   decay: 'Timing',  desc: 'Soaks incoming damage against its stacks; once depleted, the overflow passes through to Health.', transforms: ['Shield Absorb'], edited: true },
+  overcharge:  { name: 'Overcharge',  emoji: '⚡', color: '#f7cc4d', type: 0, stacks: 3, stacking: 'Stack',   decay: 'Timing',  desc: 'Boosts Weapons while active.', modifiers: ['+Weapons'] },
+  target_lock: { name: 'Target Lock', emoji: '🎯', color: '#d06a6a', type: 1, stacks: 1, stacking: 'Replace', decay: 'Timing',  desc: 'Marks the ship, amplifying the damage it takes.', transforms: ['Lock Amplify'] },
+  disabled:    { name: 'Disabled',    emoji: '🚫', color: '#99a3b3', type: 1, stacks: 1, stacking: 'Replace', decay: 'Timing',  desc: 'Prevents the ship from acting.' },
+  burning:     { name: 'Burning',     emoji: '🔥', color: '#f5802e', type: 1, stacks: 5, stacking: 'Stack',   decay: 'Timing',  desc: 'Deals damage at the start of each turn.' },
+};
+
+const ADJUSTMENTS = {
+  armor_add:        { name: '+Armor',     stat: 'Armor',   op: 0, desc: 'Adds to a ship’s Armor value.' },
+  engines_add:      { name: '+Engines',   stat: 'Engines', op: 0, desc: 'Adds to a ship’s Engines value.' },
+  weapons_add:      { name: '+Weapons',   stat: 'Weapons', op: 0, desc: 'Adds to a ship’s Weapons value.' },
+  shields_multiply: { name: '×Shields',   stat: 'Shields', op: 1, desc: 'Scales a ship’s Shields.' },
+  set_health:       { name: 'Set Health', stat: 'Health',  op: 0, desc: 'Sets Health to a fixed value.' },
+};
+
+const ACTIONS = {
+  weapon_attack:       { name: 'Weapon Attack',       kind: 'Attack',       amount: 'Maximum Weapons', desc: 'Deals damage equal to the ship’s maximum Weapons.' },
+  hull_repair:         { name: 'Hull Repair',         kind: 'Modify Stat',  stat: 'Health', amount: 'Constant', desc: 'Restores the ship’s Health.' },
+  grant_shield:        { name: 'Grant Shield',        kind: 'Apply Status', status: 'Shield', amount: 'Constant', desc: 'Applies the Shield status to the ship.' },
+  grant_dodge:         { name: 'Grant Dodge',         kind: 'Apply Status', status: 'Dodge', amount: 'Constant', desc: 'Applies the Dodge status to the ship.' },
+  inflict_target_lock: { name: 'Inflict Target Lock', kind: 'Apply Status', status: 'Target Lock', amount: 'Constant', desc: 'Applies Target Lock to the target.' },
+};
+
+const EFFECTS = {
+  attack_opponent:   { name: 'Attack Opponent',   target: 'Opponent', action: 'Weapon Attack',       conds: ['has_target_lock'], desc: 'Attacks the chosen opponent with the ship’s weapons.' },
+  restore_health:    { name: 'Restore Health',    target: 'Self',     action: 'Hull Repair',         desc: 'Restores the ship’s Health.' },
+  apply_shield:      { name: 'Apply Shield',      target: 'Self',     action: 'Grant Shield',        desc: 'Grants Shield stacks to the ship.' },
+  apply_dodge:       { name: 'Apply Dodge',       target: 'Self',     action: 'Grant Dodge',         desc: 'Grants Dodge to the ship.' },
+  apply_target_lock: { name: 'Apply Target Lock', target: 'Opponent', action: 'Inflict Target Lock', desc: 'Applies Target Lock to the opponent.' },
+};
+
+const TRANSFORMS = {
+  shield_absorb: { name: 'Shield Absorb', kind: 'Absorb',          desc: 'Spends Shield stacks to soak incoming damage; the overflow passes through.' },
+  armor_plating: { name: 'Armor Plating', kind: 'Flat Mitigation', desc: 'Subtracts a flat amount from incoming damage.' },
+  lock_amplify:  { name: 'Lock Amplify',  kind: 'Multiplier',      desc: 'Scales incoming damage up while Target Locked.' },
+};
+
+// condition kinds: each has parameters its instances configure
+const CONDITION_PARAMS = {
+  'Stat Threshold': [ { label: 'Stat', kind: 'ref', picker: 'pick_stats', typeText: 'Stat reference' }, { label: 'Comparison', kind: 'seg', options: ['Above', 'Below'], typeText: 'Above / Below' }, { label: 'Value', kind: 'slider', value: '10', pct: 10, typeText: 'Number' } ],
+  'Compare Stats':  [ { label: 'First Stat', kind: 'ref', picker: 'pick_stats', typeText: 'Stat reference' }, { label: 'Comparison', kind: 'seg', options: ['Above', 'Below'], typeText: 'Above / Below' }, { label: 'Second Stat', kind: 'ref', picker: 'pick_stats', typeText: 'Stat reference' } ],
+  'Has Status':     [ { label: 'Status', kind: 'ref', picker: 'pick_statuses', typeText: 'Status reference' } ],
+  'Chance':         [ { label: 'Percent', kind: 'slider', value: '50', pct: 50, typeText: 'Number' } ],
+  'And':            [ { label: 'Conditions', kind: 'text', value: '', typeText: 'Condition list' } ],
+  'Or':             [ { label: 'Conditions', kind: 'text', value: '', typeText: 'Condition list' } ],
+  'Not':            [ { label: 'Condition', kind: 'text', value: '', typeText: 'Condition reference' } ],
+};
+
+// condition instances owned by effects
+const CONDITIONS = {
+  has_target_lock: { label: 'Has Target Lock', kind: 'Has Status', values: { 'Status': 'Target Lock' } },
+};
+
+const STARSHIPS = {
+  player_default:   { name: 'Player Default',   emoji: '🛸', desc: 'The starting player starship.',   loadout: 'Player Default' },
+  opponent_default: { name: 'Opponent Default', emoji: '🤖', desc: 'The starting opponent starship.', loadout: 'Opponent Default' },
+};
+
+const MODULE_SECTIONS = ['Weapons', 'Defense', 'Propulsion', 'Systems'];
+const MODULES = {
+  laser_cannon:     { name: 'Laser Cannon',     emoji: '🔫', sec: 'Weapons',    desc: 'Primary energy weapon; raises the ship’s Weapons while equipped.', modifiers: ['+Weapons'] },
+  shield_generator: { name: 'Shield Generator', emoji: '🛡️', sec: 'Defense',    desc: 'Projects the shield envelope; scales the ship’s Shields.', modifiers: ['×Shields'] },
+  engine:           { name: 'Engine',           emoji: '🚀', sec: 'Propulsion', desc: 'Sublight engines; raises the ship’s Engines.', modifiers: ['+Engines'] },
+  life_support:     { name: 'Life Support',     emoji: '🌿', sec: 'Systems',    desc: 'Keeps the crew alive.' },
+  reactor:          { name: 'Reactor',          emoji: '☢️', sec: 'Systems',    desc: 'Generates the ship’s Energy.' },
+  sensor_array:     { name: 'Sensor Array',     emoji: '📡', sec: 'Systems',    desc: 'Extends detection range and accuracy.' },
+  warp_core:        { name: 'Warp Core',        emoji: '🌀', sec: 'Systems',    desc: 'Powers warp travel between encounters.' },
+};
+
+const LOADOUTS = {
+  player_default:   { name: 'Player Default',   desc: 'Modules equipped on the starting player starship.',   cols: 4, rows: 3, modules: ['Laser Cannon', 'Shield Generator', 'Engine'] },
+  opponent_default: { name: 'Opponent Default', desc: 'Modules equipped on the starting opponent starship.', cols: 4, rows: 3, modules: ['Laser Cannon', 'Engine'] },
+};
+
+const ABILITIES = {
+  evasive_maneuvers: { name: 'Evasive Maneuvers', emoji: '💨', desc: 'Takes evasive action, making the ship harder to hit.', cost: { res: 'Science', amt: '5', pct: 25 },  effects: ['Apply Dodge'] },
+  fire_weapons:      { name: 'Fire Weapons',      emoji: '💥', desc: 'Fires the primary weapons at a chosen target.',        cost: { res: 'Tactics', amt: '10', pct: 50 },  effects: ['Attack Opponent'] },
+  raise_shields:     { name: 'Raise Shields',     emoji: '🛡️', desc: 'Raises the shields, granting Shield stacks.',          cost: { res: 'Engineering', amt: '8', pct: 40 }, effects: ['Apply Shield'] },
+  repair_hull:       { name: 'Repair Hull',       emoji: '🔧', desc: 'Repairs the hull, restoring Health.',                  cost: { res: 'Engineering', amt: '6', pct: 30 }, effects: ['Restore Health'] },
+  target_lock:       { name: 'Target Lock',       emoji: '🎯', desc: 'Locks onto the opponent, applying Target Lock.',       cost: { res: 'Security', amt: '4', pct: 20 },  effects: ['Apply Target Lock'] },
+};
+
+/* Rule TEMPLATES = the concrete Rule subclasses in code (all extend Rule).
+   A template page is view-only; its parameters are what instances configure. */
+const RULE_TEMPLATES = {
+  'Scoring':           { desc: 'Maps cleared match size to reward via a scoring formula.', params: [ { label: 'Formula', kind: 'text', value: 'Linear', typeText: 'Scoring Formula' } ] },
+  'Offset Scoring':    { desc: 'Shifts the match reward down by a fixed offset.', params: [ { label: 'Offset', kind: 'slider', value: '10', pct: 10, typeText: 'Number' } ] },
+  'Action Budget':     { desc: 'Limits moves per turn and what abilities cost.', params: [ { label: 'Actions Per Turn', kind: 'stepper', value: 3, typeText: 'Number' }, { label: 'Ability Turn Cost', kind: 'stepper', value: 1, typeText: 'Number' } ] },
+  'Resource Capacity': { desc: 'Caps how much of each resource can be held.', params: [ { label: 'Maximum', kind: 'slider', value: '100', pct: 50, typeText: 'Number' } ] },
+  'Extra Turn':        { desc: 'Grants an extra turn on a large enough match.', params: [ { label: 'Minimum Match', kind: 'stepper', value: 4, typeText: 'Number' } ] },
+  'Tile Spawn':        { desc: 'Spawns a tile on the board at a relative weight.', params: [ { label: 'Tile', kind: 'ref', picker: 'pick_tiles', value: 'Tactics', typeText: 'Tile reference' }, { label: 'Weight', kind: 'slider', value: '3', pct: 30, typeText: 'Number' } ] },
+  'Tile Match':        { desc: 'Banks a matched tile into an ability resource.', params: [ { label: 'Tile', kind: 'ref', picker: 'pick_tiles', value: 'Tactics', typeText: 'Tile reference' }, { label: 'Reward', kind: 'ref', picker: 'pick_resources', value: 'Tactics', typeText: 'Resource reference' } ] },
+  'Damage':            { desc: 'Deals damage to the opponent when its tile is matched.', params: [ { label: 'Tile', kind: 'ref', picker: 'pick_tiles', value: 'Attack', typeText: 'Tile reference' } ] },
+  'Alloy Grant':       { desc: 'Banks matched Alloy tiles into the wallet.', params: [ { label: 'Tile', kind: 'ref', picker: 'pick_tiles', value: 'Alloy', typeText: 'Tile reference' } ] },
+  'Warp':              { desc: 'Charges the warp meter when its tile is matched.', params: [ { label: 'Tile', kind: 'ref', picker: 'pick_tiles', value: 'Antimatter', typeText: 'Tile reference' } ] },
+  'Board Fill':        { desc: 'Controls the edge the board refills from.', params: [ { label: 'Direction', kind: 'seg', options: ['Top', 'Bottom'], typeText: 'Top / Bottom' } ] },
+  'Reload Split':      { desc: 'Splits a dead board’s tiles between combatants on reload.', params: [] },
+  'Territory':         { desc: 'Tags shared-board territory for each side.', params: [ { label: 'Player Color', kind: 'color', value: '#56c8d8', typeText: 'Color' }, { label: 'Opponent Color', kind: 'color', value: '#d06a6a', typeText: 'Color' } ] },
+  'Selection Default': { desc: 'Sets the board’s default selection rule.', params: [ { label: 'Selection', kind: 'ref', picker: 'pick_selrules', value: 'Swap', typeText: 'Selection Rule reference' } ] },
+};
+
+/* Selection rules are authored INSTANCES of one SelectionRule class (a mode +
+   options), referenced by the Selection Default rule or a starship override. */
+const SELECTION_MODES = ['Swap', 'Slide', 'Trace', 'Teleport'];
+const SELECTION_RULES = {
+  swap:          { name: 'Swap',          mode: 0, diagonal: false, minRun: 3, matchRequired: true,  range: 0, desc: 'Select two adjacent tiles to swap them.' },
+  slide:         { name: 'Slide',         mode: 1, diagonal: false, minRun: 3, matchRequired: true,  range: 0, desc: 'Slide a row or column by one tile.' },
+  swap_diagonal: { name: 'Swap Diagonal', mode: 0, diagonal: true,  minRun: 3, matchRequired: true,  range: 0, desc: 'Swap tiles that touch diagonally too.' },
+  teleport:      { name: 'Teleport',      mode: 3, diagonal: false, minRun: 3, matchRequired: false, range: 3, desc: 'Swap any two tiles within range.' },
+  trace:         { name: 'Trace',         mode: 2, diagonal: false, minRun: 3, matchRequired: true,  range: 0, desc: 'Trace a path through matching tiles.' },
+};
+
+// rule INSTANCES: a template configured inside its owning ruleset
+const RULE_INSTANCES = {
+  sc_linear:  { template: 'Scoring',           label: 'Scoring · Linear' },
+  os_10:      { template: 'Offset Scoring',    label: 'Offset Scoring · 10' },
+  ab_3:       { template: 'Action Budget',     label: 'Action Budget · 3' },
+  rc_100:     { template: 'Resource Capacity', label: 'Resource Capacity · 100' },
+  ts_tactics: { template: 'Tile Spawn',        label: 'Tile Spawn · Tactics' },
+  ts_security:{ template: 'Tile Spawn',        label: 'Tile Spawn · Security',    values: { 'Tile': 'Security' } },
+  ts_science: { template: 'Tile Spawn',        label: 'Tile Spawn · Science',     values: { 'Tile': 'Science' } },
+  ts_engineering: { template: 'Tile Spawn',    label: 'Tile Spawn · Engineering', values: { 'Tile': 'Engineering' } },
+  ts_antimatter:  { template: 'Tile Spawn',    label: 'Tile Spawn · Antimatter',  values: { 'Tile': 'Antimatter' } },
+  ts_alloy:   { template: 'Tile Spawn',        label: 'Tile Spawn · Alloy',       values: { 'Tile': 'Alloy' } },
+  ts_attack:  { template: 'Tile Spawn',        label: 'Tile Spawn · Attack',      values: { 'Tile': 'Attack' } },
+  tm_tactics: { template: 'Tile Match',        label: 'Tile Match · Tactics' },
+  tm_security:{ template: 'Tile Match',        label: 'Tile Match · Security',    values: { 'Tile': 'Security', 'Reward': 'Security' } },
+  tm_science: { template: 'Tile Match',        label: 'Tile Match · Science',     values: { 'Tile': 'Science', 'Reward': 'Science' } },
+  tm_engineering: { template: 'Tile Match',    label: 'Tile Match · Engineering', values: { 'Tile': 'Engineering', 'Reward': 'Engineering' } },
+  alloy_grant:{ template: 'Alloy Grant',       label: 'Alloy Grant' },
+  dmg_attack: { template: 'Damage',            label: 'Damage · Attack' },
+  warp_charge:{ template: 'Warp',              label: 'Warp' },
+  bf_top:     { template: 'Board Fill',        label: 'Board Fill · Top' },
+  rs_even:    { template: 'Reload Split',      label: 'Reload Split' },
+  sd_swap:    { template: 'Selection Default', label: 'Selection · Swap' },
+};
+
+/* A ruleset is simply a grouping of rule instances and other rulesets. */
+const RULESETS = {
+  standard:          { name: 'Standard',          desc: 'The standard ruleset used for most matches.', rules: [], rulesets: ['Tiles', 'Ability Resources', 'Special Tiles', 'Turns', 'Board'], edited: true },
+  alternate:         { name: 'Alternate',         desc: 'An alternate ruleset for testing rule changes.', rules: [], rulesets: ['Tiles', 'Ability Resources', 'Special Tiles', 'Alternate Turns', 'Board'] },
+  tiles:             { name: 'Tiles',             desc: 'Tile spawn weights for the standard board.', rules: ['ts_tactics', 'ts_security', 'ts_science', 'ts_engineering', 'ts_antimatter', 'ts_alloy', 'ts_attack'], rulesets: [] },
+  ability_resources: { name: 'Ability Resources', desc: 'Banks matched tiles into ability resources.', rules: ['tm_tactics', 'tm_security', 'tm_science', 'tm_engineering'], rulesets: [] },
+  special_tiles:     { name: 'Special Tiles',     desc: 'What special tiles do when matched.', rules: ['alloy_grant', 'dmg_attack', 'warp_charge'], rulesets: [] },
+  turns:             { name: 'Turns',             desc: 'Turn structure for the standard game.', rules: ['ab_3', 'rc_100', 'os_10', 'sc_linear', 'sd_swap'], rulesets: [] },
+  alternate_turns:   { name: 'Alternate Turns',   desc: 'Turn structure for the alternate game.', rules: ['ab_3', 'sc_linear'], rulesets: [] },
+  board:             { name: 'Board',             desc: 'How the board refills and reloads.', rules: ['bf_top', 'rs_even'], rulesets: [] },
+};
+
+const MATCH_CONFIGS = {
+  default: { name: 'Default', desc: 'The standard match setup.', ruleset: 'Standard', cols: 8,  rows: 8 },
+  wide:    { name: 'Wide',    desc: 'A wider board for testing.', ruleset: 'Standard', cols: 12, rows: 8 },
+};
+
+/* ---------- shared editor fragments ---------- */
+const idOf = (base, table, key) => String(base + Object.keys(table).indexOf(key) + 1);
+const identitySec = (base, table, key) => section('Identity') + list([scalar('text', 'ID', idOf(base, table, key)), scalar('text', 'Filename', key)]);
+const infoSec = (name, desc) => section('Information') + list([scalar('text', 'Name', name), descField(desc)]);
+
+// one row of a template/kind parameter — view (type only), edit (value), or new (unset)
+function paramRow(p, mode, values = {}) {
+  if (mode === 'view') return scalar('text', p.label, p.typeText);
+  const v = values[p.label] !== undefined ? values[p.label] : p.value;
+  if (p.kind === 'slider')  return scalar('slider', p.label, mode === 'new' ? '0' : v, { pct: mode === 'new' ? 0 : (p.pct || 30) });
+  if (p.kind === 'seg')     return seg(p.label, p.options, 0);
+  if (p.kind === 'stepper') return stepper(p.label, mode === 'new' ? 0 : v);
+  if (p.kind === 'toggle')  return scalar('toggle', p.label, '', { off: mode === 'new' });
+  if (p.kind === 'color')   return scalar('color', p.label, v);
+  if (p.kind === 'ref')     return ref(p.label, mode === 'new' ? 'None' : v, p.picker);
+  return scalar('text', p.label, mode === 'new' ? '—' : v);
+}
 
 /* ---------- screens ---------- */
 const SCREENS = {
@@ -505,299 +689,172 @@ home: () => ({ title: '', rows: [
   </div>`,
   section('Primitives'),
   scroller([
-    tile('Resources', { emoji: '🔋', to: 'cat_resources', count: 6 }),
-    tile('Tiles', { emoji: '🎨', to: 'cat_tiles', count: 7 }),
-    tile('Stats', { emoji: '📊', to: 'cat_stats', count: 9 }),
-    tile('Statuses', { emoji: '✨', to: 'cat_statuses', count: 6, edited: true }),
+    tile('Resources', { emoji: '🔋', to: 'cat_resources', count: count(RESOURCES) }),
+    tile('Tiles', { emoji: '🎨', to: 'cat_tiles', count: count(TILES) }),
+    tile('Stats', { emoji: '📊', to: 'cat_stats', count: count(STATS) }),
+    tile('Statuses', { emoji: '✨', to: 'cat_statuses', count: count(STATUSES), edited: true }),
   ]),
   section('Building Blocks'),
   scroller([
-    tile('Adjustments', { emoji: '🎚️', to: 'cat_adjustments', count: 3 }),
-    tile('Actions', { emoji: '🎬', to: 'cat_actions', count: 3 }),
-    tile('Conditions', { emoji: '🚦', to: 'cat_conditions', count: 7 }),
-    tile('Effects', { emoji: '💫', to: 'cat_effects', count: 5 }),
+    tile('Adjustments', { emoji: '🎚️', to: 'cat_adjustments', count: count(ADJUSTMENTS) }),
+    tile('Actions', { emoji: '🎬', to: 'cat_actions', count: count(ACTIONS) }),
+    tile('Conditions', { emoji: '🚦', to: 'cat_conditions', count: count(CONDITION_PARAMS) }),
+    tile('Effects', { emoji: '💫', to: 'cat_effects', count: count(EFFECTS) }),
     tile('Targets', { emoji: '🎯', to: 'cat_targets', count: 13 }),
-    tile('Transforms', { emoji: '🔻', to: 'cat_transforms', count: 3 }),
+    tile('Transforms', { emoji: '🔻', to: 'cat_transforms', count: count(TRANSFORMS) }),
   ]),
   section('Content'),
   scroller([
-    tile('Abilities', { emoji: '⚡', to: 'cat_abilities', count: 5 }),
-    tile('Modules', { emoji: '🧱', to: 'cat_modules', count: 7 }),
-    tile('Loadouts', { emoji: '🔲', to: 'cat_loadouts', count: 2 }),
-    tile('Starships', { emoji: '🛸', to: 'cat_starships', count: 2 }),
+    tile('Abilities', { emoji: '⚡', to: 'cat_abilities', count: count(ABILITIES) }),
+    tile('Modules', { emoji: '🧱', to: 'cat_modules', count: count(MODULES) }),
+    tile('Loadouts', { emoji: '🔲', to: 'cat_loadouts', count: count(LOADOUTS) }),
+    tile('Starships', { emoji: '🛸', to: 'cat_starships', count: count(STARSHIPS) }),
   ]),
   section('Config'),
   scroller([
-    tile('Rules', { emoji: '📐', to: 'cat_rules', count: 18 }),
-    tile('Rulesets', { emoji: '📜', to: 'cat_rulesets', count: 6, edited: true }),
-    tile('Match Configs', { emoji: '🚀', to: 'cat_match_configs', count: 2 }),
+    tile('Rules', { emoji: '📐', to: 'cat_rules', count: count(RULE_TEMPLATES) + count(SELECTION_RULES) }),
+    tile('Rulesets', { emoji: '📜', to: 'cat_rulesets', count: count(RULESETS), edited: true }),
+    tile('Match Configs', { emoji: '🚀', to: 'cat_match_configs', count: count(MATCH_CONFIGS) }),
   ]),
 ]}),
 
 pick_match_configs: () => ({ title: 'Quick Match', rows: [
-  list([ pickRow('Default'), pickRow('Wide') ]),
+  list(Object.values(MATCH_CONFIGS).map(m => pickRow(m.name))),
   list([ newRow('New Match Config', 'ed_newmatchconfig') ]),
 ]}),
 
 pick_starships: () => ({ title: 'Starship', rows: [
-  list([ pickRow('Player Default'), pickRow('Opponent Default') ]),
+  list(Object.values(STARSHIPS).map(s => pickRow(s.name))),
   list([ newRow('New Starship', 'ed_newstarship') ]),
 ]}),
 
-/* --- Starships (a starship references a picked Loadout) --- */
-cat_starships: () => ({ title: 'Starships', action: { fn: () => go('ed_newstarship') }, rows: [
-  grid([
-    tile('Player Default', { emoji: '🛸', to: 'ed_starship' }),
-    tile('Opponent Default', { emoji: '🤖', to: 'ed_starship' }),
-  ]),
+/* --- Resources --- */
+cat_resources: () => ({ title: 'Resources', action: { fn: () => go('ed_newresource') }, rows: [
+  grid(Object.entries(RESOURCES).filter(([, r]) => !r.special).map(([k, r]) => tile(r.name, { swatch: r.color, to: 'ed_resource:' + k }))),
+  divider(),
+  grid(Object.entries(RESOURCES).filter(([, r]) => r.special).map(([k, r]) => tile(r.name, { swatch: r.color, to: 'ed_resource:' + k }))),
 ]}),
 
-ed_starship: () => ({ title: 'Player Default', rows: [
-  section('Identity'),
-  list([ scalar('text', 'ID', '10001'), scalar('text', 'Filename', 'player_default') ]),
-  section('Information'),
-  list([
-    scalar('text', 'Name', 'Player Default'),
-    descField('The starting player starship.'),
-  ]),
+ed_resource: (arg = 'tactics') => { const r = RESOURCES[arg]; return { title: r.name, rows: [
+  identitySec(2000, RESOURCES, arg),
+  infoSec(r.name, r.desc),
   section('Display'),
-  list([ textureField('player_default.png') ]),
-  section('Configuration'),
-  list([ ref('Loadout', 'Player Default', 'pick_loadouts') ]),
-]}),
+  list([ scalar('color', 'Color', r.color) ]),
+]}; },
 
-ed_newstarship: () => ({ title: 'New Starship', rows: [
+ed_newresource: () => ({ title: 'New Resource', rows: [
   section('Identity'),
-  list([ scalar('text', 'ID', '10003'), scalar('text', 'Filename', 'new_starship') ]),
-  section('Information'),
-  list([ scalar('text', 'Name', 'New Starship'), descField('—') ]),
+  list([ scalar('text', 'ID', String(2000 + count(RESOURCES) + 1)), scalar('text', 'Filename', 'new_resource') ]),
+  infoSec('New Resource', '—'),
   section('Display'),
-  list([ textureField('None') ]),
-  section('Configuration'),
-  list([ ref('Loadout', 'None', 'pick_loadouts') ]),
-  addBtn('New Starship'),
+  list([ scalar('color', 'Color', '#7b8794') ]),
+  addBtn('New Resource'),
 ]}),
 
-/* --- Modules (grouped by temporary equipment sections — final grouping TBD) --- */
-cat_modules: () => ({ title: 'Modules', action: { fn: () => go('ed_newmodule') }, rows: [
-  section('Weapons'),
-  grid([
-    tile('Laser Cannon', { emoji: '🔫', to: 'ed_module' }),
-  ]),
-  section('Defenses'),
-  grid([
-    tile('Shield Generator', { emoji: '🛡️', to: 'ed_module' }),
-  ]),
-  section('Systems'),
-  grid([
-    tile('Engine', { emoji: '🚀', to: 'ed_module' }),
-    tile('Life Support', { emoji: '🌿', to: 'ed_module' }),
-    tile('Reactor', { emoji: '☢️', to: 'ed_module' }),
-    tile('Sensor Array', { emoji: '📡', to: 'ed_module' }),
-    tile('Warp Core', { emoji: '🌀', to: 'ed_module' }),
-  ]),
+pick_resources: () => ({ title: 'Resource', rows: [
+  grid(Object.values(RESOURCES).filter(r => !r.special).map(r => pickTile(r.name, null, r.color))),
+  list([ newRow('New Resource', 'ed_newresource') ]),
 ]}),
 
-ed_module: () => ({ title: 'Laser Cannon', rows: [
-  section('Identity'),
-  list([ scalar('text', 'ID', '11002'), scalar('text', 'Filename', 'laser_cannon') ]),
-  section('Information'),
-  list([
-    scalar('text', 'Name', 'Laser Cannon'),
-    descField('Primary energy weapon; raises the ship’s Weapons while equipped.'),
-  ]),
+/* --- Tiles --- */
+cat_tiles: () => ({ title: 'Tiles', action: { fn: () => go('ed_newtile') }, rows: [
+  grid(Object.entries(TILES).filter(([, t]) => !t.special).map(([k, t]) => tile(t.name, { swatch: t.color, to: 'ed_tile:' + k }))),
+  divider(),
+  grid(Object.entries(TILES).filter(([, t]) => t.special).map(([k, t]) => tile(t.name, { swatch: t.color, to: 'ed_tile:' + k }))),
+]}),
+
+ed_tile: (arg = 'security') => { const t = TILES[arg]; return { title: t.name, rows: [
+  identitySec(3000, TILES, arg),
+  infoSec(t.name, t.desc),
   section('Display'),
-  list([ textureField('laser_cannon.png') ]),
-  section('Configuration'),
-  list([ scalar('dropdown', 'Section', 'Weapons') ]),
-  section('Modifiers'),
-  chips([ chip('+Weapons', { to: 'ed_modifier' }), chip('', { add: true, menu: 'ed_modifier' }) ]),
-]}),
+  list([ textureField(arg + '.png') ]),
+]}; },
 
-ed_newmodule: () => ({ title: 'New Module', rows: [
+ed_newtile: () => ({ title: 'New Tile', rows: [
   section('Identity'),
-  list([ scalar('text', 'ID', '11008'), scalar('text', 'Filename', 'new_module') ]),
-  section('Information'),
-  list([ scalar('text', 'Name', 'New Module'), descField('—') ]),
+  list([ scalar('text', 'ID', String(3000 + count(TILES) + 1)), scalar('text', 'Filename', 'new_tile') ]),
+  infoSec('New Tile', '—'),
   section('Display'),
   list([ textureField('None') ]),
+  addBtn('New Tile'),
+]}),
+
+pick_tiles: () => ({ title: 'Tile', rows: [
+  grid(Object.values(TILES).map(t => pickTile(t.name, null, t.color))),
+  list([ newRow('New Tile', 'ed_newtile') ]),
+]}),
+
+/* --- Stats --- */
+cat_stats: () => ({ title: 'Stats', action: { fn: () => go('ed_newstat') }, rows: [
+  list(Object.entries(STATS).filter(([, s]) => !s.hidden).map(([k, s]) => nav(s.name, { to: 'ed_stat:' + k }))),
+  `<div class="sectionlabel">Hidden · <span style="text-transform:none;letter-spacing:0;font-weight:400">not shown to players</span></div>`,
+  list(Object.entries(STATS).filter(([, s]) => s.hidden).map(([k, s]) => nav(s.name, { to: 'ed_stat:' + k, dim: true }))),
+]}),
+
+ed_stat: (arg = 'health') => { const s = STATS[arg]; return { title: s.name, rows: [
+  identitySec(1000, STATS, arg),
+  infoSec(s.name, s.desc),
   section('Configuration'),
-  list([ scalar('dropdown', 'Section', 'None') ]),
-  section('Modifiers'),
-  chips([ chip('', { add: true, menu: 'ed_modifier' }) ]),
-  addBtn('New Module'),
-]}),
-
-// picker over the Modules catalog
-pick_modules: () => ({ title: 'Module', rows: [
-  grid([
-    pickTile('Laser Cannon', '🔫'),
-    pickTile('Shield Generator', '🛡️'),
-    pickTile('Engine', '🚀'),
-    pickTile('Life Support', '🌿'),
-    pickTile('Reactor', '☢️'),
-    pickTile('Sensor Array', '📡'),
-    pickTile('Warp Core', '🌀'),
+  list([
+    // toggle off a bound to make it unbounded ("None")
+    scalar('slider', 'Minimum', '0', { pct: 0, toggle: true }),
+    scalar('slider', 'Maximum', 'None', { none: true, toggle: false }),
+    scalar('slider', 'Default', s.def, { pct: s.defPct }),
   ]),
-  list([ newRow('New Module', 'ed_newmodule') ]),
-]}),
+  section('Display'),
+  list([ scalar('toggle', 'Hidden', '', { off: !s.hidden }) ]),
+]}; },
 
-/* --- Loadouts (the modules equipped on a starship; starships pick one) --- */
-cat_loadouts: () => ({ title: 'Loadouts', action: { fn: () => go('ed_newloadout') }, rows: [
-  grid([
-    tile('Player Default', { emoji: '🔲', to: 'ed_loadout' }),
-    tile('Opponent Default', { emoji: '🔲', to: 'ed_loadout' }),
-  ]),
-]}),
-
-ed_loadout: () => ({ title: 'Player Default', rows: [
+ed_newstat: () => ({ title: 'New Stat', rows: [
   section('Identity'),
-  list([ scalar('text', 'ID', '12001'), scalar('text', 'Filename', 'player_default') ]),
-  section('Information'),
-  list([
-    scalar('text', 'Name', 'Player Default'),
-    descField('Modules equipped on the starting player starship.'),
-  ]),
-  section('Configuration'),
-  list([ stepper('Columns', 4), stepper('Rows', 3) ]),
-  section('Modules'),
-  chips([
-    chip('Laser Cannon', { to: 'pick_modules' }),
-    chip('Shield Generator', { to: 'pick_modules' }),
-    chip('Engine', { to: 'pick_modules' }),
-    chip('', { add: true, menu: 'pick_modules' }),
-  ]),
-]}),
-
-ed_newloadout: () => ({ title: 'New Loadout', rows: [
-  section('Identity'),
-  list([ scalar('text', 'ID', '12003'), scalar('text', 'Filename', 'new_loadout') ]),
-  section('Information'),
-  list([ scalar('text', 'Name', 'New Loadout'), descField('—') ]),
-  section('Configuration'),
-  list([ stepper('Columns', 4), stepper('Rows', 3) ]),
-  section('Modules'),
-  chips([ chip('', { add: true, menu: 'pick_modules' }) ]),
-  addBtn('New Loadout'),
-]}),
-
-// picker over the Loadouts catalog
-pick_loadouts: () => ({ title: 'Loadout', rows: [
-  list([
-    optRow('Player Default', 'Modules equipped on the starting player starship.'),
-    optRow('Opponent Default', 'Modules equipped on the starting opponent starship.'),
-  ]),
-  list([ newRow('New Loadout', 'ed_newloadout') ]),
-]}),
-
-cat_match_configs: () => ({ title: 'Match Configs', action: { fn: () => go('ed_newmatchconfig') }, rows: [
-  list([
-    nav('Default', { to: 'ed_matchconfig' }),
-    nav('Wide', { to: 'ed_matchconfig' }),
-  ]),
-]}),
-
-ed_matchconfig: () => ({ title: 'Default', rows: [
-  section('Identity'),
-  list([ scalar('text', 'ID', '15001'), scalar('text', 'Filename', 'default') ]),
-  section('Information'),
-  list([
-    scalar('text', 'Name', 'Default'),
-    descField('The standard match setup.'),
-  ]),
+  list([ scalar('text', 'ID', String(1000 + count(STATS) + 1)), scalar('text', 'Filename', 'new_stat') ]),
+  infoSec('New Stat', '—'),
   section('Configuration'),
   list([
-    ref('Ruleset', 'Default', 'pick_rulesets'),
-    stepper('Columns', 8),
-    stepper('Rows', 8),
+    scalar('slider', 'Minimum', '0', { pct: 0, toggle: true }),
+    scalar('slider', 'Maximum', 'None', { none: true, toggle: false }),
+    scalar('slider', 'Default', '0', { pct: 0 }),
   ]),
+  section('Display'),
+  list([ scalar('toggle', 'Hidden', '', { off: true }) ]),
+  addBtn('New Stat'),
 ]}),
 
-ed_newmatchconfig: () => ({ title: 'New Match Config', rows: [
-  section('Identity'),
-  list([ scalar('text', 'ID', '15003'), scalar('text', 'Filename', 'new_match_config') ]),
-  section('Information'),
-  list([ scalar('text', 'Name', 'New Match Config'), descField('—') ]),
-  section('Configuration'),
-  list([
-    ref('Ruleset', 'None', 'pick_rulesets'),
-    stepper('Columns', 8),
-    stepper('Rows', 8),
-  ]),
-  addBtn('New Match Config'),
-]}),
-
-// picker over the Rulesets catalog
-pick_rulesets: () => ({ title: 'Ruleset', rows: [
-  list([
-    optRow('Default', 'The standard ruleset used for most matches.'),
-    optRow('Alternate', 'An alternate ruleset for testing rule changes.'),
-    optRow('Default Tiles', 'The standard board tile set.'),
-    optRow('Default Special Tiles', 'The standard special tile spawns.'),
-    optRow('Default Ability Resources', 'The standard ability resource set.'),
-    optRow('Default Turns', 'The standard turn structure.'),
-  ]),
-  list([ newRow('New Ruleset', 'ed_newruleset') ]),
-]}),
-
-ed_newruleset: () => ({ title: 'New Ruleset', rows: [
-  section('Identity'),
-  list([ scalar('text', 'ID', '6008'), scalar('text', 'Filename', 'new_ruleset') ]),
-  section('Information'),
-  list([ scalar('text', 'Name', 'New Ruleset'), descField('—') ]),
-  section('Configuration'),
-  list([ scalar('dropdown', 'Type', 'None') ]),
-  section('Rules'),
-  chips([ chip('', { add: true, menu: 'menu_rule' }) ]),
-  section('Rulesets'),
-  chips([ chip('', { add: true, menu: 'pick_rulesets' }) ]),
-  addBtn('New Ruleset'),
+pick_stats: () => ({ title: 'Stat', rows: [
+  grid(Object.entries(STATS).filter(([, s]) => !s.hidden).map(([k, s]) => pickTile(s.name, STAT_SYMBOLS[k]))),
+  list([ newRow('New Stat', 'ed_newstat') ]),
 ]}),
 
 /* --- Statuses --- */
 cat_statuses: () => ({ title: 'Statuses', action: { fn: () => go('ed_newstatus') }, rows: [
   `<div class="sectionlabel">Buffs <span class="sign up">▲</span></div>`,
-  grid([
-    statusTile('Dodge', '💨', '#4fc3d8', 'ed_status'),
-    statusTile('Shield', '🛡️', '#59adeb', 'ed_status', true),
-    statusTile('Overcharge', '⚡', '#f7cc4d', 'ed_status'),
-  ]),
+  grid(Object.entries(STATUSES).filter(([, s]) => s.type === 0).map(([k, s]) => statusTile(s.name, s.emoji, s.color, 'ed_status:' + k, !!s.edited))),
   `<div class="sectionlabel">Debuffs <span class="sign down">▼</span></div>`,
-  grid([
-    statusTile('Target Lock', '🎯', '#d06a6a', 'ed_status'),
-    statusTile('Disabled', '🚫', '#99a3b3', 'ed_status'),
-    statusTile('Burning', '🔥', '#f5802e', 'ed_status'),
-  ]),
+  grid(Object.entries(STATUSES).filter(([, s]) => s.type === 1).map(([k, s]) => statusTile(s.name, s.emoji, s.color, 'ed_status:' + k, !!s.edited))),
 ]}),
 
-ed_status: () => ({ title: 'Shield', rows: [
-  section('Identity'),
-  list([ scalar('text', 'ID', '4001'), scalar('text', 'Filename', 'shield') ]),
-  section('Information'),
-  list([
-    scalar('text', 'Name', 'Shield'),
-    descField('Soaks incoming damage against its stacks; once depleted, the overflow passes through to Health.'),
-  ]),
+ed_status: (arg = 'shield') => { const s = STATUSES[arg]; const e = !!s.edited; return { title: s.name, rows: [
+  identitySec(4000, STATUSES, arg),
+  infoSec(s.name, s.desc),
   section('Configuration'),
   list([
-    seg('Type', ['Buff', 'Debuff'], 0),
-    stepper('Maximum Stacks', 3, true),
-    variant('Stacking', 'Stack', null, 'menu_stackrule', true, 'Each application adds a separate instance.'),
-    variant('Decay', 'Timing', null, 'menu_decayrule', false, 'Expires after a set number of turns.'),
+    seg('Type', ['Buff', 'Debuff'], s.type),
+    stepper('Maximum Stacks', s.stacks, e),
+    variant('Stacking', s.stacking, null, 'menu_stackrule', e, MENU_DESCS.menu_stackrule[s.stacking]),
+    variant('Decay', s.decay, null, 'menu_decayrule', false, MENU_DESCS.menu_decayrule[s.decay]),
   ]),
   section('Modifiers'),
-  chips([ chip('', { add: true, menu: 'ed_modifier' }) ]),
+  chips([ ...(s.modifiers || []).map(m => chip(m, { to: 'ed_modifier' })), chip('', { add: true, menu: 'ed_modifier' }) ]),
   section('Effects'),
-  chips([ chip('', { add: true, menu: 'pick_effects' }) ]),
+  chips([ ...(s.effects || []).map(f => chip(f, { to: 'pick_effects' })), chip('', { add: true, menu: 'pick_effects' }) ]),
   section('Transforms'),
-  chips([ chip('Shield Absorb', { to: 'pick_transforms' }), chip('', { add: true, menu: 'pick_transforms' }) ]),
-]}),
+  chips([ ...(s.transforms || []).map(t => chip(t, { to: 'pick_transforms' })), chip('', { add: true, menu: 'pick_transforms' }) ]),
+]}; },
 
 ed_newstatus: () => ({ title: 'New Status', rows: [
   section('Identity'),
-  list([ scalar('text', 'ID', '4007'), scalar('text', 'Filename', 'new_status') ]),
-  section('Information'),
-  list([ scalar('text', 'Name', 'New Status'), descField('—') ]),
+  list([ scalar('text', 'ID', String(4000 + count(STATUSES) + 1)), scalar('text', 'Filename', 'new_status') ]),
+  infoSec('New Status', '—'),
   section('Configuration'),
   list([
     seg('Type', ['Buff', 'Debuff'], 0),
@@ -814,6 +871,11 @@ ed_newstatus: () => ({ title: 'New Status', rows: [
   addBtn('New Status'),
 ]}),
 
+pick_statuses: () => ({ title: 'Status', rows: [
+  grid(Object.values(STATUSES).map(s => pickTile(s.name, s.emoji))),
+  list([ newRow('New Status', 'ed_newstatus') ]),
+]}),
+
 // a Modifier attaches a reusable Adjustment (picked, not edited here) and sets its amount
 ed_modifier: () => ({ title: 'Modifier', rows: [
   list([
@@ -824,19 +886,30 @@ ed_modifier: () => ({ title: 'Modifier', rows: [
 ]}),
 
 pick_adjustment: () => ({ title: 'Adjustment', rows: [
-  list([
-    optRow('+Armor', 'Adds to a ship’s Armor value.'),
-    optRow('×Shields', 'Scales a ship’s Shields.'),
-    optRow('Set Health', 'Sets Health to a fixed value.'),
-  ]),
+  list(Object.values(ADJUSTMENTS).map(a => optRow(a.name, a.desc))),
   list([ newRow('New Adjustment', 'ed_newadjustment') ]),
 ]}),
 
+/* --- Adjustments (reusable building block: Stat + Applies To + Operation) --- */
+cat_adjustments: () => ({ title: 'Adjustments', action: { fn: () => go('ed_newadjustment') }, rows: [
+  list(Object.entries(ADJUSTMENTS).map(([k, a]) => nav(a.name, { to: 'ed_adjustment:' + k }))),
+]}),
+
+ed_adjustment: (arg = 'armor_add') => { const a = ADJUSTMENTS[arg]; return { title: a.name, rows: [
+  identitySec(7000, ADJUSTMENTS, arg),
+  infoSec(a.name, a.desc),
+  section('Configuration'),
+  list([
+    ref('Stat', a.stat, 'pick_stats'),
+    scalar('dropdown', 'Applies To', 'Current Value'),
+    seg('Operation', ['Add', 'Multiply'], a.op),
+  ]),
+]}; },
+
 ed_newadjustment: () => ({ title: 'New Adjustment', rows: [
   section('Identity'),
-  list([ scalar('text', 'ID', '7004'), scalar('text', 'Filename', 'new_adjustment') ]),
-  section('Information'),
-  list([ scalar('text', 'Name', 'New Adjustment'), descField('—') ]),
+  list([ scalar('text', 'ID', String(7000 + count(ADJUSTMENTS) + 1)), scalar('text', 'Filename', 'new_adjustment') ]),
+  infoSec('New Adjustment', '—'),
   section('Configuration'),
   list([
     ref('Stat', 'None', 'pick_stats'),
@@ -846,60 +919,27 @@ ed_newadjustment: () => ({ title: 'New Adjustment', rows: [
   addBtn('New Adjustment'),
 ]}),
 
-/* --- Adjustments (reusable building block: Stat + Applies To + Operation) --- */
-cat_adjustments: () => ({ title: 'Adjustments', action: { fn: () => go('ed_newadjustment') }, rows: [
-  list([
-    nav('+Armor', { to: 'ed_adjustment' }),
-    nav('×Shields', { to: 'ed_adjustment' }),
-    nav('Set Health', { to: 'ed_adjustment' }),
-  ]),
-]}),
-
-ed_adjustment: () => ({ title: '+Armor', rows: [
-  section('Identity'),
-  list([ scalar('text', 'ID', '7001'), scalar('text', 'Filename', 'armor_add') ]),
-  section('Information'),
-  list([
-    scalar('text', 'Name', '+Armor'),
-    descField('Adds to a ship’s Armor value.'),
-  ]),
-  section('Configuration'),
-  list([
-    ref('Stat', 'Armor', 'pick_stats'),
-    scalar('dropdown', 'Applies To', 'Current Value'),
-    seg('Operation', ['Add', 'Multiply'], 0),
-  ]),
-]}),
-
 /* --- Actions (reusable building block: a configured action kind) --- */
 cat_actions: () => ({ title: 'Actions', action: { fn: () => go('ed_newaction') }, rows: [
-  list([
-    nav('Weapon Attack', { to: 'ed_action' }),
-    nav('Hull Repair', { to: 'ed_action' }),
-    nav('Grant Shield', { to: 'ed_action' }),
-  ]),
+  list(Object.entries(ACTIONS).map(([k, a]) => nav(a.name, { to: 'ed_action:' + k }))),
 ]}),
 
-ed_action: () => ({ title: 'Weapon Attack', rows: [
-  section('Identity'),
-  list([ scalar('text', 'ID', '13001'), scalar('text', 'Filename', 'weapon_attack') ]),
-  section('Information'),
-  list([
-    scalar('text', 'Name', 'Weapon Attack'),
-    descField('Deals damage equal to the ship’s maximum Weapons.'),
-  ]),
+ed_action: (arg = 'weapon_attack') => { const a = ACTIONS[arg]; return { title: a.name, rows: [
+  identitySec(13000, ACTIONS, arg),
+  infoSec(a.name, a.desc),
   section('Configuration'),
   list([
-    variant('Kind', 'Attack', null, 'menu_action', false, 'Deals damage to the target.'),
-    variant('Amount', 'Maximum Weapons', null, 'menu_amount', false, 'How much damage is dealt.'),
+    variant('Kind', a.kind, null, 'menu_action', false, KIND_DESCS[a.kind]),
+    ...(a.stat ? [ref('Stat', a.stat, 'pick_stats')] : []),
+    ...(a.status ? [ref('Status', a.status, 'pick_statuses')] : []),
+    variant('Amount', a.amount, null, 'menu_amount', false, MENU_DESCS.menu_amount[a.amount] || 'How much the action applies.'),
   ]),
-]}),
+]}; },
 
 ed_newaction: () => ({ title: 'New Action', rows: [
   section('Identity'),
-  list([ scalar('text', 'ID', '13004'), scalar('text', 'Filename', 'new_action') ]),
-  section('Information'),
-  list([ scalar('text', 'Name', 'New Action'), descField('—') ]),
+  list([ scalar('text', 'ID', String(13000 + count(ACTIONS) + 1)), scalar('text', 'Filename', 'new_action') ]),
+  infoSec('New Action', '—'),
   section('Configuration'),
   list([ variant('Kind', 'None', null, 'menu_action', false, 'What the action does; picking a kind reveals its options.') ]),
   addBtn('New Action'),
@@ -907,245 +947,133 @@ ed_newaction: () => ({ title: 'New Action', rows: [
 
 // picker over the Actions catalog
 pick_actions: () => ({ title: 'Action', rows: [
-  list([
-    optRow('Weapon Attack', 'Deals damage equal to the ship’s maximum Weapons.'),
-    optRow('Hull Repair', 'Restores the ship’s Health.'),
-    optRow('Grant Shield', 'Applies the Shield status to the ship.'),
-  ]),
+  list(Object.values(ACTIONS).map(a => optRow(a.name, a.desc))),
   list([ newRow('New Action', 'ed_newaction') ]),
 ]}),
 
 /* --- Effects (reusable building block; instances referenced from content via pickers) --- */
 cat_effects: () => ({ title: 'Effects', action: { fn: () => go('ed_neweffect') }, rows: [
-  list([
-    nav('Attack Opponent', { to: 'ed_effect' }),
-    nav('Restore Health', { to: 'ed_effect' }),
-    nav('Apply Shield', { to: 'ed_effect' }),
-    nav('Apply Dodge', { to: 'ed_effect' }),
-    nav('Apply Target Lock', { to: 'ed_effect' }),
-  ]),
+  list(Object.entries(EFFECTS).map(([k, f]) => nav(f.name, { to: 'ed_effect:' + k }))),
 ]}),
 
-// picker over the Effects catalog — used anywhere content references an effect
-pick_effects: () => ({ title: 'Effect', rows: [
+ed_effect: (arg = 'attack_opponent') => { const f = EFFECTS[arg]; return { title: f.name, rows: [
+  identitySec(8000, EFFECTS, arg),
+  infoSec(f.name, f.desc),
+  section('Behavior'),
   list([
-    optRow('Attack Opponent', 'Attacks the chosen opponent with the ship’s weapons.'),
-    optRow('Restore Health', 'Restores the ship’s Health.'),
-    optRow('Apply Shield', 'Grants Shield stacks to the ship.'),
-    optRow('Apply Dodge', 'Grants Dodge to the ship.'),
-    optRow('Apply Target Lock', 'Applies Target Lock to the opponent.'),
+    variant('Target', f.target, null, 'menu_target', false, MENU_DESCS.menu_target[f.target]),
+    ref('Action', f.action, 'pick_actions'),
   ]),
-  list([ newRow('New Effect', 'ed_neweffect') ]),
-]}),
+  section('Conditions'),
+  chips([ ...(f.conds || []).map(c => chip(CONDITIONS[c].label, { to: 'ed_condition:' + c })), chip('', { add: true, menu: 'menu_condition_new' }) ]),
+]}; },
 
 ed_neweffect: () => ({ title: 'New Effect', rows: [
   section('Identity'),
-  list([ scalar('text', 'ID', '8006'), scalar('text', 'Filename', 'new_effect') ]),
-  section('Information'),
-  list([ scalar('text', 'Name', 'New Effect'), descField('—') ]),
+  list([ scalar('text', 'ID', String(8000 + count(EFFECTS) + 1)), scalar('text', 'Filename', 'new_effect') ]),
+  infoSec('New Effect', '—'),
   section('Behavior'),
   list([
     variant('Target', 'None', null, 'menu_target', false, 'Who the action is applied to.'),
     ref('Action', 'None', 'pick_actions'),
   ]),
   section('Conditions'),
-  chips([ chip('', { add: true, menu: 'menu_condition' }) ]),
+  chips([ chip('', { add: true, menu: 'menu_condition_new' }) ]),
   addBtn('New Effect'),
+]}),
+
+// picker over the Effects catalog — used anywhere content references an effect
+pick_effects: () => ({ title: 'Effect', rows: [
+  list(Object.values(EFFECTS).map(f => optRow(f.name, f.desc))),
+  list([ newRow('New Effect', 'ed_neweffect') ]),
+]}),
+
+// a Condition instance is owned by its effect (inline sub-editor, like Modifier/Cost)
+ed_condition: (arg = 'has_target_lock') => { const c = CONDITIONS[arg]; return { title: 'Condition', rows: [
+  list([
+    variant('Kind', c.kind, null, 'menu_condition', false, MENU_DESCS.menu_condition[c.kind]),
+    ...CONDITION_PARAMS[c.kind].map(p => paramRow(p, 'edit', c.values || {})),
+  ]),
+  clearBtn(),
+]}; },
+
+// add-condition flow: choose a kind, then configure the new instance
+menu_condition_new: () => ({ title: 'Condition', rows: [
+  list(Object.keys(CONDITION_PARAMS).map(k => optNav(k, MENU_DESCS.menu_condition[k], 'ed_newcondition:' + k))),
+]}),
+
+ed_newcondition: (arg = 'Has Status') => ({ title: 'Condition', rows: [
+  list([
+    variant('Kind', arg, null, 'menu_condition', false, MENU_DESCS.menu_condition[arg]),
+    ...CONDITION_PARAMS[arg].map(p => paramRow(p, 'new')),
+  ]),
+  addBtn(arg + ' Condition'),
 ]}),
 
 /* --- Transforms (reusable building block; instances referenced from statuses via pickers) --- */
 cat_transforms: () => ({ title: 'Transforms', action: { fn: () => go('ed_newtransform') }, rows: [
-  list([
-    nav('Shield Absorb', { to: 'ed_transform' }),
-    nav('Armor Plating', { to: 'ed_transform' }),
-    nav('Lock Amplify', { to: 'ed_transform' }),
-  ]),
+  list(Object.entries(TRANSFORMS).map(([k, t]) => nav(t.name, { to: 'ed_transform:' + k }))),
 ]}),
 
-// picker over the Transforms catalog
-pick_transforms: () => ({ title: 'Transform', rows: [
-  list([
-    optRow('Shield Absorb', 'Spends Shield stacks to soak incoming damage.'),
-    optRow('Armor Plating', 'Subtracts a flat amount from incoming damage.'),
-    optRow('Lock Amplify', 'Scales incoming damage up while Target Locked.'),
-  ]),
-  list([ newRow('New Transform', 'ed_newtransform') ]),
-]}),
+ed_transform: (arg = 'shield_absorb') => { const t = TRANSFORMS[arg]; return { title: t.name, rows: [
+  identitySec(9000, TRANSFORMS, arg),
+  infoSec(t.name, t.desc),
+  section('Configuration'),
+  list([ variant('Kind', t.kind, null, 'menu_step', false, KIND_DESCS[t.kind]) ]),
+]}; },
 
 ed_newtransform: () => ({ title: 'New Transform', rows: [
   section('Identity'),
-  list([ scalar('text', 'ID', '9004'), scalar('text', 'Filename', 'new_transform') ]),
-  section('Information'),
-  list([ scalar('text', 'Name', 'New Transform'), descField('—') ]),
+  list([ scalar('text', 'ID', String(9000 + count(TRANSFORMS) + 1)), scalar('text', 'Filename', 'new_transform') ]),
+  infoSec('New Transform', '—'),
   section('Configuration'),
   list([ variant('Kind', 'None', null, 'menu_step', false, 'How the value is reshaped.') ]),
   addBtn('New Transform'),
 ]}),
 
-ed_transform: () => ({ title: 'Shield Absorb', rows: [
-  section('Identity'),
-  list([ scalar('text', 'ID', '9001'), scalar('text', 'Filename', 'shield_absorb') ]),
-  section('Information'),
-  list([
-    scalar('text', 'Name', 'Shield Absorb'),
-    descField('Spends Shield stacks to soak incoming damage; the overflow passes through.'),
-  ]),
-  section('Configuration'),
-  list([ variant('Kind', 'Absorb', null, 'menu_step', false, 'How the value is reshaped.') ]),
+// picker over the Transforms catalog
+pick_transforms: () => ({ title: 'Transform', rows: [
+  list(Object.values(TRANSFORMS).map(t => optRow(t.name, t.desc))),
+  list([ newRow('New Transform', 'ed_newtransform') ]),
 ]}),
 
 /* --- Targets & Conditions (finite kind vocabularies from code — browsable, view-only) --- */
 cat_targets: () => ({ title: 'Targets', rows: [
-  list(MENUS.menu_target.map(k => optNav(k, MENU_DESCS.menu_target[k], 'view_target'))),
+  list(MENUS.menu_target.map(k => optNav(k, MENU_DESCS.menu_target[k], 'view_target:' + k))),
 ]}),
 
-view_target: () => ({ title: 'Opponent', rows: [
-  section('Information'),
-  list([
-    scalar('text', 'Name', 'Opponent'),
-    descField('The enemy ship.'),
-  ]),
+view_target: (arg = 'Opponent') => ({ title: arg, rows: [
+  infoSec(arg, MENU_DESCS.menu_target[arg]),
 ]}),
 
 cat_conditions: () => ({ title: 'Conditions', rows: [
-  list(MENUS.menu_condition.map(k => optNav(k, MENU_DESCS.menu_condition[k], 'view_condition'))),
+  list(Object.keys(CONDITION_PARAMS).map(k => optNav(k, MENU_DESCS.menu_condition[k], 'view_condition:' + k))),
 ]}),
 
-view_condition: () => ({ title: 'Has Status', rows: [
-  section('Information'),
-  list([
-    scalar('text', 'Name', 'Has Status'),
-    descField('Passes when the target carries a specific status.'),
-  ]),
+view_condition: (arg = 'Has Status') => ({ title: arg, rows: [
+  infoSec(arg, MENU_DESCS.menu_condition[arg]),
   section('Parameters'),
-  list([ scalar('text', 'Status', 'Status reference') ]),
-]}),
-
-pick_stats: () => ({ title: 'Stat', rows: [
-  grid(['health', 'armor', 'shields', 'weapons', 'engines', 'computers', 'sensors', 'energy'].map(s => pickTile(titleize(s), STAT_SYMBOLS[s]))),
-  list([ newRow('New Stat', 'ed_newstat') ]),
-]}),
-
-/* --- Stats --- */
-cat_stats: () => ({ title: 'Stats', action: { fn: () => go('ed_newstat') }, rows: [
-  list([
-    nav('Health', { to: 'ed_stat' }),
-    nav('Armor', { to: 'ed_stat' }),
-    nav('Shields', { to: 'ed_stat' }),
-    nav('Weapons', { to: 'ed_stat' }),
-    nav('Engines', { to: 'ed_stat' }),
-    nav('Computers', { to: 'ed_stat' }),
-    nav('Sensors', { to: 'ed_stat' }),
-    nav('Energy', { to: 'ed_stat' }),
-  ]),
-  `<div class="sectionlabel">Hidden · <span style="text-transform:none;letter-spacing:0;font-weight:400">not shown to players</span></div>`,
-  list([
-    nav('Luck', { to: 'ed_stat', dim: true }),
-  ]),
-]}),
-
-ed_stat: () => ({ title: 'Health', rows: [
-  section('Identity'),
-  list([ scalar('text', 'ID', '1001'), scalar('text', 'Filename', 'health') ]),
-  section('Information'),
-  list([
-    scalar('text', 'Name', 'Health'),
-    descField('Hull integrity — the ship is destroyed when it reaches the minimum.'),
-  ]),
-  section('Configuration'),
-  list([
-    // toggle off a bound to make it unbounded ("None")
-    scalar('slider', 'Minimum', '0', { pct: 0, toggle: true }),
-    scalar('slider', 'Maximum', 'None', { none: true, toggle: false }),
-    scalar('slider', 'Default', '20', { pct: 20 }),
-  ]),
-  section('Display'),
-  list([ scalar('toggle', 'Hidden', '', { off: true }) ]),
-]}),
-
-ed_newstat: () => ({ title: 'New Stat', rows: [
-  section('Identity'),
-  list([ scalar('text', 'ID', '1010'), scalar('text', 'Filename', 'new_stat') ]),
-  section('Information'),
-  list([ scalar('text', 'Name', 'New Stat'), descField('—') ]),
-  section('Configuration'),
-  list([
-    scalar('slider', 'Minimum', '0', { pct: 0, toggle: true }),
-    scalar('slider', 'Maximum', 'None', { none: true, toggle: false }),
-    scalar('slider', 'Default', '0', { pct: 0 }),
-  ]),
-  section('Display'),
-  list([ scalar('toggle', 'Hidden', '', { off: true }) ]),
-  addBtn('New Stat'),
-]}),
-
-/* --- Resources --- */
-cat_resources: () => ({ title: 'Resources', action: { fn: () => go('ed_newresource') }, rows: [
-  grid([
-    tile('Tactics', { swatch: '#e05457', to: 'ed_resource' }),
-    tile('Security', { swatch: '#59adeb', to: 'ed_resource' }),
-    tile('Science', { swatch: '#70c780', to: 'ed_resource' }),
-    tile('Engineering', { swatch: '#f7cc4d', to: 'ed_resource' }),
-  ]),
-  divider(),
-  grid([
-    tile('Antimatter', { swatch: '#a878db', to: 'ed_resource' }),
-    tile('Alloy', { swatch: '#99a3b3', to: 'ed_resource' }),
-  ]),
-]}),
-
-ed_resource: () => ({ title: 'Tactics', rows: [
-  section('Identity'),
-  list([ scalar('text', 'ID', '2001'), scalar('text', 'Filename', 'tactics') ]),
-  section('Information'),
-  list([
-    scalar('text', 'Name', 'Tactics'),
-    descField('Powers offensive abilities — collected from Tactics tiles.'),
-  ]),
-  section('Display'),
-  list([ scalar('color', 'Color', '#e05457') ]),
-]}),
-
-ed_newresource: () => ({ title: 'New Resource', rows: [
-  section('Identity'),
-  list([ scalar('text', 'ID', '2007'), scalar('text', 'Filename', 'new_resource') ]),
-  section('Information'),
-  list([ scalar('text', 'Name', 'New Resource'), descField('—') ]),
-  section('Display'),
-  list([ scalar('color', 'Color', '#7b8794') ]),
-  addBtn('New Resource'),
+  list(CONDITION_PARAMS[arg].length ? CONDITION_PARAMS[arg].map(p => paramRow(p, 'view')) : [ scalar('text', 'None', '') ]),
 ]}),
 
 /* --- Abilities --- */
 cat_abilities: () => ({ title: 'Abilities', action: { fn: () => go('ed_newability') }, rows: [
-  grid([
-    tile('Evasive Maneuvers', { emoji: '💨', to: 'ed_ability' }),
-    tile('Fire Weapons', { emoji: '💥', to: 'ed_ability' }),
-    tile('Raise Shields', { emoji: '🛡️', to: 'ed_ability' }),
-    tile('Repair Hull', { emoji: '🔧', to: 'ed_ability' }),
-    tile('Target Lock', { emoji: '🎯', to: 'ed_ability' }),
-  ]),
+  grid(Object.entries(ABILITIES).map(([k, a]) => tile(a.name, { emoji: a.emoji, to: 'ed_ability:' + k }))),
 ]}),
 
-ed_ability: () => ({ title: 'Fire Weapons', rows: [
-  section('Identity'),
-  list([ scalar('text', 'ID', '5001'), scalar('text', 'Filename', 'fire_weapons') ]),
-  section('Information'),
-  list([
-    scalar('text', 'Name', 'Fire Weapons'),
-    descField('Fires the primary weapons at a chosen target.'),
-  ]),
+ed_ability: (arg = 'fire_weapons') => { const a = ABILITIES[arg]; return { title: a.name, rows: [
+  identitySec(5000, ABILITIES, arg),
+  infoSec(a.name, a.desc),
   section('Costs'),
-  chips([ chip('10 × Tactics', { to: 'ed_cost' }), chip('', { add: true, menu: 'ed_cost' }) ]),
+  chips([ chip(`${a.cost.amt} × ${a.cost.res}`, { to: 'ed_cost:' + arg }), chip('', { add: true, menu: 'ed_cost:' + arg }) ]),
   section('Effects'),
-  chips([ chip('Attack Opponent', { to: 'pick_effects' }), chip('', { add: true, menu: 'pick_effects' }) ]),
-]}),
+  chips([ ...a.effects.map(f => chip(f, { to: 'pick_effects' })), chip('', { add: true, menu: 'pick_effects' }) ]),
+]}; },
 
 ed_newability: () => ({ title: 'New Ability', rows: [
   section('Identity'),
-  list([ scalar('text', 'ID', '5006'), scalar('text', 'Filename', 'new_ability') ]),
-  section('Information'),
-  list([ scalar('text', 'Name', 'New Ability'), descField('—') ]),
+  list([ scalar('text', 'ID', String(5000 + count(ABILITIES) + 1)), scalar('text', 'Filename', 'new_ability') ]),
+  infoSec('New Ability', '—'),
   section('Costs'),
   chips([ chip('', { add: true, menu: 'ed_cost' }) ]),
   section('Effects'),
@@ -1153,194 +1081,237 @@ ed_newability: () => ({ title: 'New Ability', rows: [
   addBtn('New Ability'),
 ]}),
 
-ed_cost: () => ({ title: 'Cost', rows: [
+ed_cost: (arg = 'fire_weapons') => { const c = ABILITIES[arg].cost; return { title: 'Cost', rows: [
   list([
-    ref('Resource', 'Tactics', 'pick_resources'),
-    scalar('slider', 'Amount', '10', { pct: 50 }),
+    ref('Resource', c.res, 'pick_resources'),
+    scalar('slider', 'Amount', c.amt, { pct: c.pct }),
   ]),
   clearBtn(),
+]}; },
+
+/* --- Starships (a starship references a picked Loadout) --- */
+cat_starships: () => ({ title: 'Starships', action: { fn: () => go('ed_newstarship') }, rows: [
+  grid(Object.entries(STARSHIPS).map(([k, s]) => tile(s.name, { emoji: s.emoji, to: 'ed_starship:' + k }))),
 ]}),
 
-pick_resources: () => ({ title: 'Resource', rows: [
-  grid(['tactics', 'security', 'science', 'engineering'].map(s => pickTile(titleize(s)))),
-  list([ newRow('New Resource', 'ed_newresource') ]),
-]}),
-
-ed_effect: () => ({ title: 'Attack Opponent', rows: [
-  section('Identity'),
-  list([ scalar('text', 'ID', '8001'), scalar('text', 'Filename', 'attack_opponent') ]),
-  section('Information'),
-  list([
-    scalar('text', 'Name', 'Attack Opponent'),
-    descField('Attacks the chosen opponent with the ship’s weapons.'),
-  ]),
-  section('Behavior'),
-  list([
-    variant('Target', 'Opponent', null, 'menu_target', false, 'Who the action is applied to.'),
-    ref('Action', 'Weapon Attack', 'pick_actions'),
-  ]),
-  section('Conditions'),
-  chips([ chip('Has Target Lock', { to: 'ed_condition' }), chip('', { add: true, menu: 'menu_condition' }) ]),
-]}),
-
-// a Condition is owned by its effect (inline sub-editor, like Modifier/Cost)
-ed_condition: () => ({ title: 'Condition', rows: [
-  list([
-    variant('Kind', 'Has Status', null, 'menu_condition', false, 'Passes when the target carries a specific status.'),
-    ref('Status', 'Target Lock', 'pick_statuses'),
-  ]),
-  clearBtn(),
-]}),
-
-// picker over the Statuses catalog
-pick_statuses: () => ({ title: 'Status', rows: [
-  grid([
-    pickTile('Dodge', '💨'),
-    pickTile('Shield', '🛡️'),
-    pickTile('Overcharge', '⚡'),
-    pickTile('Target Lock', '🎯'),
-    pickTile('Disabled', '🚫'),
-    pickTile('Burning', '🔥'),
-  ]),
-  list([ newRow('New Status', 'ed_newstatus') ]),
-]}),
-
-/* --- Tiles --- */
-cat_tiles: () => ({ title: 'Tiles', action: { fn: () => go('ed_tile') }, rows: [
-  grid([
-    tile('Tactics', { swatch: '#e05457', to: 'ed_tile' }),
-    tile('Security', { swatch: '#59adeb', to: 'ed_tile' }),
-    tile('Science', { swatch: '#70c780', to: 'ed_tile' }),
-    tile('Engineering', { swatch: '#f7cc4d', to: 'ed_tile' }),
-  ]),
-  divider(),
-  grid([
-    tile('Antimatter', { swatch: '#a878db', to: 'ed_tile' }),
-    tile('Alloy', { swatch: '#99a3b3', to: 'ed_tile' }),
-    tile('Attack', { swatch: '#f5802e', to: 'ed_tile' }),
-  ]),
-]}),
-
-ed_tile: () => ({ title: 'Security', rows: [
-  section('Identity'),
-  list([ scalar('text', 'ID', '3001'), scalar('text', 'Filename', 'security') ]),
-  section('Information'),
-  list([
-    scalar('text', 'Name', 'Security'),
-    descField('Board tile matched to collect the Security resource.'),
-  ]),
+ed_starship: (arg = 'player_default') => { const s = STARSHIPS[arg]; return { title: s.name, rows: [
+  identitySec(10000, STARSHIPS, arg),
+  infoSec(s.name, s.desc),
   section('Display'),
-  list([ textureField('security.png') ]),
-]}),
+  list([ textureField(arg + '.png') ]),
+  section('Configuration'),
+  list([ ref('Loadout', s.loadout, 'pick_loadouts') ]),
+]}; },
 
-ed_newtile: () => ({ title: 'New Tile', rows: [
+ed_newstarship: () => ({ title: 'New Starship', rows: [
   section('Identity'),
-  list([ scalar('text', 'ID', '3008'), scalar('text', 'Filename', 'new_tile') ]),
-  section('Information'),
-  list([ scalar('text', 'Name', 'New Tile'), descField('—') ]),
+  list([ scalar('text', 'ID', String(10000 + count(STARSHIPS) + 1)), scalar('text', 'Filename', 'new_starship') ]),
+  infoSec('New Starship', '—'),
   section('Display'),
   list([ textureField('None') ]),
-  addBtn('New Tile'),
+  section('Configuration'),
+  list([ ref('Loadout', 'None', 'pick_loadouts') ]),
+  addBtn('New Starship'),
 ]}),
 
-/* --- Rules (rule TEMPLATES from code, grouped by type; rulesets hold configured instances) --- */
-cat_rules: () => ({ title: 'Rules', rows: [
-  section('Match'),
-  list(['Scoring', 'Damage', 'Extra Turn', 'Action Budget', 'Territory', 'Warp', 'Offset Scoring'].map(k => nav(k, { to: 'view_ruletemplate' }))),
-  section('Board'),
-  list(['Board Fill', 'Tile Match', 'Tile Spawn'].map(k => nav(k, { to: 'view_ruletemplate' }))),
-  section('Resources'),
-  list(['Resource Capacity', 'Scrap Grant', 'Reload Split'].map(k => nav(k, { to: 'view_ruletemplate' }))),
-  section('Selection'),
-  list(['Swap', 'Slide', 'Swap Diagonal', 'Teleport', 'Trace'].map(k => nav(k, { to: 'view_ruletemplate' }))),
+/* --- Modules (grouped by equipment section — Weapons / Defense / Propulsion / Systems) --- */
+cat_modules: () => ({ title: 'Modules', action: { fn: () => go('ed_newmodule') }, rows:
+  MODULE_SECTIONS.flatMap(sec => [
+    section(sec),
+    grid(Object.entries(MODULES).filter(([, m]) => m.sec === sec).map(([k, m]) => tile(m.name, { emoji: m.emoji, to: 'ed_module:' + k }))),
+  ]),
+}),
+
+ed_module: (arg = 'laser_cannon') => { const m = MODULES[arg]; return { title: m.name, rows: [
+  identitySec(11000, MODULES, arg),
+  infoSec(m.name, m.desc),
+  section('Display'),
+  list([ textureField(arg + '.png') ]),
+  section('Configuration'),
+  list([ scalar('dropdown', 'Section', m.sec) ]),
+  section('Modifiers'),
+  chips([ ...(m.modifiers || []).map(x => chip(x, { to: 'ed_modifier' })), chip('', { add: true, menu: 'ed_modifier' }) ]),
+]}; },
+
+ed_newmodule: () => ({ title: 'New Module', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', String(11000 + count(MODULES) + 1)), scalar('text', 'Filename', 'new_module') ]),
+  infoSec('New Module', '—'),
+  section('Display'),
+  list([ textureField('None') ]),
+  section('Configuration'),
+  list([ scalar('dropdown', 'Section', 'None') ]),
+  section('Modifiers'),
+  chips([ chip('', { add: true, menu: 'ed_modifier' }) ]),
+  addBtn('New Module'),
+]}),
+
+// picker over the Modules catalog
+pick_modules: () => ({ title: 'Module', rows: [
+  grid(Object.values(MODULES).map(m => pickTile(m.name, m.emoji))),
+  list([ newRow('New Module', 'ed_newmodule') ]),
+]}),
+
+/* --- Loadouts (the modules equipped on a starship; starships pick one) --- */
+cat_loadouts: () => ({ title: 'Loadouts', action: { fn: () => go('ed_newloadout') }, rows: [
+  grid(Object.entries(LOADOUTS).map(([k, l]) => tile(l.name, { emoji: '🔲', to: 'ed_loadout:' + k }))),
+]}),
+
+ed_loadout: (arg = 'player_default') => { const l = LOADOUTS[arg]; return { title: l.name, rows: [
+  identitySec(12000, LOADOUTS, arg),
+  infoSec(l.name, l.desc),
+  section('Configuration'),
+  list([ stepper('Columns', l.cols), stepper('Rows', l.rows) ]),
+  section('Modules'),
+  chips([ ...l.modules.map(m => chip(m, { to: 'pick_modules' })), chip('', { add: true, menu: 'pick_modules' }) ]),
+]}; },
+
+ed_newloadout: () => ({ title: 'New Loadout', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', String(12000 + count(LOADOUTS) + 1)), scalar('text', 'Filename', 'new_loadout') ]),
+  infoSec('New Loadout', '—'),
+  section('Configuration'),
+  list([ stepper('Columns', 4), stepper('Rows', 3) ]),
+  section('Modules'),
+  chips([ chip('', { add: true, menu: 'pick_modules' }) ]),
+  addBtn('New Loadout'),
+]}),
+
+// picker over the Loadouts catalog
+pick_loadouts: () => ({ title: 'Loadout', rows: [
+  list(Object.values(LOADOUTS).map(l => optRow(l.name, l.desc))),
+  list([ newRow('New Loadout', 'ed_newloadout') ]),
+]}),
+
+/* --- Rules: templates (code-defined Rule subclasses, view-only) + authored selection rules --- */
+cat_rules: () => ({ title: 'Rules', action: { fn: () => go('ed_newselectionrule') }, rows: [
+  section('Templates'),
+  list(Object.entries(RULE_TEMPLATES).map(([k, t]) => optNav(k, t.desc, 'view_ruletemplate:' + k))),
+  section('Selection Rules'),
+  list(Object.entries(SELECTION_RULES).map(([k, s]) => nav(s.name, { to: 'ed_selectionrule:' + k }))),
 ]}),
 
 // a rule template is code — view-only: what it does and what its instances configure
-view_ruletemplate: () => ({ title: 'Damage', rows: [
-  section('Information'),
-  list([
-    scalar('text', 'Name', 'Damage'),
-    descField('Deals damage for each tile matched.'),
-  ]),
+view_ruletemplate: (arg = 'Damage') => { const t = RULE_TEMPLATES[arg]; return { title: arg, rows: [
+  infoSec(arg, t.desc),
   section('Parameters'),
+  list(t.params.length ? t.params.map(p => paramRow(p, 'view')) : [ scalar('text', 'None', '') ]),
+]}; },
+
+// selection rules are authored instances of one SelectionRule class (mode + options)
+ed_selectionrule: (arg = 'swap') => { const s = SELECTION_RULES[arg]; return { title: s.name, rows: [
+  identitySec(14000, SELECTION_RULES, arg),
+  infoSec(s.name, s.desc),
+  section('Configuration'),
   list([
-    scalar('text', 'Per Tile', 'Number'),
-    scalar('text', 'On Collision', 'Replace / Stack'),
-    scalar('text', 'Enabled', 'Toggle'),
+    seg('Mode', SELECTION_MODES, s.mode),
+    scalar('toggle', 'Allow Diagonal', '', { off: !s.diagonal }),
+    stepper('Minimum Run', s.minRun),
+    scalar('toggle', 'Match Required', '', { off: !s.matchRequired }),
+    stepper('Teleport Range', s.range),
   ]),
+]}; },
+
+ed_newselectionrule: () => ({ title: 'New Selection Rule', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', String(14000 + count(SELECTION_RULES) + 1)), scalar('text', 'Filename', 'new_selection_rule') ]),
+  infoSec('New Selection Rule', '—'),
+  section('Configuration'),
+  list([
+    seg('Mode', SELECTION_MODES, 0),
+    scalar('toggle', 'Allow Diagonal', '', { off: true }),
+    stepper('Minimum Run', 3),
+    scalar('toggle', 'Match Required', ''),
+    stepper('Teleport Range', 0),
+  ]),
+  addBtn('New Selection Rule'),
+]}),
+
+// picker over the authored selection rules
+pick_selrules: () => ({ title: 'Selection Rule', rows: [
+  list(Object.values(SELECTION_RULES).map(s => optRow(s.name, s.desc))),
+  list([ newRow('New Selection Rule', 'ed_newselectionrule') ]),
 ]}),
 
 /* --- Rulesets (a ruleset is simply a grouping of rule instances and other rulesets) --- */
 cat_rulesets: () => ({ title: 'Rulesets', action: { fn: () => go('ed_newruleset') }, rows: [
-  section('Match Configs'),
-  grid([
-    tile('Default', { to: 'ed_ruleset', edited: true }),
-    tile('Alternate', { to: 'ed_ruleset' }),
-  ]),
-  section('Shared'),
-  list([
-    nav('Default Tiles', { to: 'ed_ruleset' }),
-    nav('Default Special Tiles', { to: 'ed_ruleset' }),
-    nav('Default Ability Resources', { to: 'ed_ruleset' }),
-    nav('Default Turns', { to: 'ed_ruleset' }),
-  ]),
+  list(Object.entries(RULESETS).map(([k, r]) => nav(r.name, { to: 'ed_ruleset:' + k, edited: !!r.edited }))),
 ]}),
 
-ed_ruleset: () => ({ title: 'Default', rows: [
-  section('Identity'),
-  list([ scalar('text', 'ID', '6001'), scalar('text', 'Filename', 'default') ]),
-  section('Information'),
-  list([
-    scalar('text', 'Name', 'Default'),
-    descField('The standard ruleset used for most matches.'),
-  ]),
-  section('Configuration'),
-  list([ scalar('dropdown', 'Type', 'Match Config') ]),
+ed_ruleset: (arg = 'standard') => { const r = RULESETS[arg]; return { title: r.name, rows: [
+  identitySec(6000, RULESETS, arg),
+  infoSec(r.name, r.desc),
   section('Rules'),
-  chips([
-    chip('Scoring · Linear', { to: 'ed_ruleinstance' }),
-    chip('Damage · 2', { to: 'ed_ruleinstance' }),
-    chip('Tile Spawn · 3', { to: 'ed_ruleinstance' }),
-    chip('', { add: true, menu: 'menu_rule' }),
-  ]),
+  chips([ ...r.rules.map(i => chip(RULE_INSTANCES[i].label, { to: 'ed_ruleinstance:' + i })), chip('', { add: true, menu: 'menu_rule' }) ]),
   section('Rulesets'),
-  chips([
-    chip('Default Tiles', { to: 'pick_rulesets' }),
-    chip('Default Special Tiles', { to: 'pick_rulesets' }),
-    chip('Default Ability Resources', { to: 'pick_rulesets' }),
-    chip('Default Turns', { to: 'pick_rulesets' }),
-    chip('', { add: true, menu: 'pick_rulesets' }),
-  ]),
+  chips([ ...r.rulesets.map(n => chip(n, { to: 'pick_rulesets' })), chip('', { add: true, menu: 'pick_rulesets' }) ]),
+]}; },
+
+ed_newruleset: () => ({ title: 'New Ruleset', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', String(6000 + count(RULESETS) + 1)), scalar('text', 'Filename', 'new_ruleset') ]),
+  infoSec('New Ruleset', '—'),
+  section('Rules'),
+  chips([ chip('', { add: true, menu: 'menu_rule' }) ]),
+  section('Rulesets'),
+  chips([ chip('', { add: true, menu: 'pick_rulesets' }) ]),
+  addBtn('New Ruleset'),
 ]}),
 
 // template picker: choose a rule template, then configure the new instance
 menu_rule: () => ({ title: 'Add Rule', rows: [
-  grid(['Scoring', 'Damage', 'Extra Turn', 'Action Budget', 'Board Fill', 'Resource Capacity', 'Scrap Grant', 'Territory', 'Tile Match', 'Tile Spawn', 'Warp', 'Offset Scoring', 'Reload Split', 'Selection'].map(k =>
-    tile(k, { compact: true, to: 'ed_newruleinstance' }))),
+  grid(Object.keys(RULE_TEMPLATES).map(k => tile(k, { compact: true, to: 'ed_newruleinstance:' + k }))),
 ]}),
 
 // a rule instance: a template configured inside its owning ruleset
-ed_ruleinstance: () => ({ title: 'Damage', rows: [
-  list([
-    scalar('slider', 'Per Tile', '2', { pct: 20 }),
-    seg('On Collision', ['Replace', 'Stack'], 0),
-    scalar('toggle', 'Enabled', ''),
-  ]),
+ed_ruleinstance: (arg = 'dmg_attack') => { const i = RULE_INSTANCES[arg]; const t = RULE_TEMPLATES[i.template]; return { title: i.template, rows: [
+  list(t.params.length ? t.params.map(p => paramRow(p, 'edit', i.values || {})) : [ scalar('text', 'Parameters', 'None') ]),
   clearBtn(),
+]}; },
+
+ed_newruleinstance: (arg = 'Damage') => { const t = RULE_TEMPLATES[arg]; return { title: arg, rows: [
+  list(t.params.length ? t.params.map(p => paramRow(p, 'new')) : [ scalar('text', 'Parameters', 'None') ]),
+  addBtn(arg + ' Rule'),
+]}; },
+
+// picker over the Rulesets catalog
+pick_rulesets: () => ({ title: 'Ruleset', rows: [
+  list(Object.values(RULESETS).map(r => optRow(r.name, r.desc))),
+  list([ newRow('New Ruleset', 'ed_newruleset') ]),
 ]}),
 
-ed_newruleinstance: () => ({ title: 'Damage', rows: [
+/* --- Match Configs --- */
+cat_match_configs: () => ({ title: 'Match Configs', action: { fn: () => go('ed_newmatchconfig') }, rows: [
+  list(Object.entries(MATCH_CONFIGS).map(([k, m]) => nav(m.name, { to: 'ed_matchconfig:' + k }))),
+]}),
+
+ed_matchconfig: (arg = 'default') => { const m = MATCH_CONFIGS[arg]; return { title: m.name, rows: [
+  identitySec(15000, MATCH_CONFIGS, arg),
+  infoSec(m.name, m.desc),
+  section('Configuration'),
   list([
-    scalar('slider', 'Per Tile', '1', { pct: 10 }),
-    seg('On Collision', ['Replace', 'Stack'], 0),
-    scalar('toggle', 'Enabled', ''),
+    ref('Ruleset', m.ruleset, 'pick_rulesets'),
+    stepper('Columns', m.cols),
+    stepper('Rows', m.rows),
   ]),
-  addBtn('Damage Rule'),
+]}; },
+
+ed_newmatchconfig: () => ({ title: 'New Match Config', rows: [
+  section('Identity'),
+  list([ scalar('text', 'ID', String(15000 + count(MATCH_CONFIGS) + 1)), scalar('text', 'Filename', 'new_match_config') ]),
+  infoSec('New Match Config', '—'),
+  section('Configuration'),
+  list([
+    ref('Ruleset', 'None', 'pick_rulesets'),
+    stepper('Columns', 8),
+    stepper('Rows', 8),
+  ]),
+  addBtn('New Match Config'),
 ]}),
 
 };
 
-/* --- kind menus, generated as grids --- */
+/* --- kind menus (pick + return) --- */
 const MENUS = {
   menu_target: ['Self', 'Opponent', 'Instigator', 'Chosen', 'Chosen Ally', 'All Entities', 'All Allies', 'All Opponents', 'Random Ally', 'Random Opponent', 'Highest Stat', 'Lowest Stat', 'Sides'],
   menu_condition: ['Stat Threshold', 'Compare Stats', 'Has Status', 'Chance', 'And', 'Or', 'Not'],
@@ -1351,17 +1322,38 @@ const MENUS = {
 };
 const MENU_TITLES = { menu_target: 'Target', menu_condition: 'Condition', menu_amount: 'Amount', menu_stackrule: 'Stacking', menu_decayrule: 'Decay', menu_step: 'Transform' };
 
-// picker options that need explaining render as a described list instead of a name grid
+// descriptions for effect-system kinds — shown in pickers AND on kind pages
+const KIND_DESCS = {
+  Absorb: 'Spends the status’s stacks to soak an incoming value; the overflow passes through.',
+  Clamp: 'Holds the value within a minimum and/or maximum range.',
+  'Flat Mitigation': 'Subtracts a fixed amount from the value.',
+  Multiplier: 'Scales the value by a percentage.',
+  Attack: 'Deals damage to the target.',
+  Shield: 'Grants Shield stacks to the target.',
+  Dodge: 'Grants a chance to avoid the next hit.',
+  Drain: 'Removes stacks or resource from the target.',
+  'Damage Buff': 'Increases the target’s outgoing damage.',
+  Disable: 'Prevents the target from acting.',
+  'Apply Status': 'Applies a status to the target.',
+  'Remove Status': 'Removes a specific status from the target.',
+  'Remove By Type': 'Removes all buffs, or all debuffs, from the target.',
+  'Modify Stat': 'Changes a stat by an amount.',
+  'Set Stat': 'Sets a stat to a specific value.',
+  'Drain Resource': 'Removes an ability resource from the target.',
+};
+
 const MENU_DESCS = {
   menu_stackrule: {
     'Stack': 'Each application adds a separate instance that expires on its own.',
     'Replace': 'A new application replaces the existing one, resetting its timer.',
     'Keep Highest': 'Only the strongest application is kept; weaker ones are discarded.',
+    'None': 'Not yet chosen.',
   },
   menu_decayrule: {
     'Timing': 'Expires automatically after a set number of turns.',
     'Threshold': 'Expires when a tracked value crosses a limit.',
     'Trigger': 'Expires when a specific event occurs.',
+    'None': 'Not yet chosen.',
   },
   menu_target: {
     'Self': 'The ship that owns the effect.',
@@ -1396,6 +1388,7 @@ const MENU_DESCS = {
     'Math': 'Combines other amounts with an operation.',
     'Modification': 'The value being modified by the current event.',
     'Status Count': 'The number of stacks of a status.',
+    'Maximum Weapons': 'The maximum value of the Weapons stat.',
   },
 };
 
@@ -1418,15 +1411,6 @@ SCREENS.menu_action = () => ({ title: 'Action', rows: [
   section('Core'),
   list(['Apply Status', 'Remove Status', 'Remove By Type', 'Modify Stat', 'Set Stat', 'Drain Resource'].map(k => optRow(k, KIND_DESCS[k]))),
 ]});
-
-/* editor for a kind not mocked in detail — shows its description + a clear action */
-function genericKind(kind) {
-  return { title: kind, rows: [
-    section('Information'),
-    list([ descField(KIND_DESCS[kind] || 'Not yet configured.') ]),
-    clearBtn(),
-  ]};
-}
 
 /* ---------- side nav (viewer aid) ---------- */
 const NAV = [
@@ -1452,14 +1436,15 @@ function buildNav() {
 }
 
 function updateNavActive() {
-  const active = stack.length > 1 ? stack[1] : null;   // catalog you entered through
+  const active = stack.length > 1 ? baseOf(stack[1]) : null;   // catalog you entered through
   document.querySelectorAll('#sidenav .nav-item').forEach(el =>
     el.classList.toggle('active', el.dataset.target === active));
 }
 
 /* ---------- render ---------- */
 function screenFor(id) {
-  return SCREENS[id] ? SCREENS[id]() : genericKind(id.replace(/^kind:/, ''));
+  const f = SCREENS[baseOf(id)];
+  return f ? f(argOf(id)) : { title: baseOf(id), rows: [] };
 }
 
 function render() {
