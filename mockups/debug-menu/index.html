@@ -287,7 +287,7 @@ const PARENTS = {
   cat_modules: 'home', ed_module: 'cat_modules', ed_newmodule: 'cat_modules',
   cat_loadouts: 'home', ed_loadout: 'cat_loadouts', ed_newloadout: 'cat_loadouts', pick_modules: 'ed_loadout',
   cat_tiles: 'home', ed_tile: 'cat_tiles', ed_newtile: 'cat_tiles', pick_tiles: 'ed_ruleinstance',
-  cat_rules: 'home', view_ruletemplate: 'cat_rules', ed_selectionrule: 'cat_rules', ed_newselectionrule: 'cat_rules', pick_selrules: 'ed_ruleinstance',
+  cat_rules: 'home', view_ruletemplate: 'cat_rules',
   cat_rulesets: 'home', ed_ruleset: 'cat_rulesets', menu_rule: 'ed_ruleset', ed_newruleinstance: 'menu_rule',
   ed_ruleinstance: 'ed_ruleset', ed_newruleset: 'cat_rulesets',
   cat_match_configs: 'home', ed_matchconfig: 'cat_match_configs', ed_newmatchconfig: 'cat_match_configs', pick_rulesets: 'ed_matchconfig',
@@ -578,59 +578,49 @@ const ABILITIES = {
   target_lock:       { name: 'Target Lock',       emoji: '🎯', desc: 'Locks onto the opponent, applying Target Lock.',       cost: { res: 'Security', amt: '4', pct: 20 },  effects: ['Apply Target Lock'] },
 };
 
-/* Rule TEMPLATES = the concrete Rule subclasses in code (all extend Rule).
-   A template page is view-only; its parameters are what instances configure. */
+/* Rule TEMPLATES: a rule with parameters, no values ("Play"). Instances live
+   inside rulesets with values filled in ("Play 3"). Numeric parameters are
+   AMOUNTS — constant, stat-based, status-based, etc. (menu_amount). */
 const RULE_TEMPLATES = {
-  'Scoring':           { desc: 'Maps cleared match size to reward via a scoring formula.', params: [ { label: 'Formula', kind: 'text', value: 'Linear', typeText: 'Scoring Formula' } ] },
-  'Offset Scoring':    { desc: 'Shifts the match reward down by a fixed offset.', params: [ { label: 'Offset', kind: 'slider', value: '10', pct: 10, typeText: 'Number' } ] },
-  'Action Budget':     { desc: 'Limits moves per turn and what abilities cost.', params: [ { label: 'Actions Per Turn', kind: 'stepper', value: 3, typeText: 'Number' }, { label: 'Ability Turn Cost', kind: 'stepper', value: 1, typeText: 'Number' } ] },
-  'Resource Capacity': { desc: 'Caps how much of each resource can be held.', params: [ { label: 'Maximum', kind: 'slider', value: '100', pct: 50, typeText: 'Number' } ] },
-  'Extra Turn':        { desc: 'Grants an extra turn on a large enough match.', params: [ { label: 'Minimum Match', kind: 'stepper', value: 4, typeText: 'Number' } ] },
-  'Tile Spawn':        { desc: 'Spawns a tile on the board at a relative weight.', params: [ { label: 'Tile', kind: 'ref', picker: 'pick_tiles', value: 'Tactics', typeText: 'Tile reference' }, { label: 'Weight', kind: 'slider', value: '3', pct: 30, typeText: 'Number' } ] },
-  'Tile Match':        { desc: 'Banks a matched tile into an ability resource.', params: [ { label: 'Tile', kind: 'ref', picker: 'pick_tiles', value: 'Tactics', typeText: 'Tile reference' }, { label: 'Reward', kind: 'ref', picker: 'pick_resources', value: 'Tactics', typeText: 'Resource reference' } ] },
-  'Damage':            { desc: 'Deals damage to the opponent when its tile is matched.', params: [ { label: 'Tile', kind: 'ref', picker: 'pick_tiles', value: 'Attack', typeText: 'Tile reference' } ] },
-  'Alloy Grant':       { desc: 'Banks matched Alloy tiles into the wallet.', params: [ { label: 'Tile', kind: 'ref', picker: 'pick_tiles', value: 'Alloy', typeText: 'Tile reference' } ] },
-  'Warp':              { desc: 'Charges the warp meter when its tile is matched.', params: [ { label: 'Tile', kind: 'ref', picker: 'pick_tiles', value: 'Antimatter', typeText: 'Tile reference' } ] },
-  'Board Fill':        { desc: 'Controls the edge the board refills from.', params: [ { label: 'Direction', kind: 'seg', options: ['Top', 'Bottom'], typeText: 'Top / Bottom' } ] },
+  'Scoring':           { desc: 'Scores {score} for each cleared match.', params: [ { label: 'Score', kind: 'amount' } ] },
+  'Offset Scoring':    { desc: 'Shifts match scoring down by {offset}.', params: [ { label: 'Offset', kind: 'amount' } ] },
+  'Action Budget':     { desc: 'Allows {actions} actions each turn; abilities cost {cost}.', params: [ { label: 'Actions', kind: 'amount' }, { label: 'Ability Turn Cost', kind: 'amount' } ] },
+  'Resource Capacity': { desc: 'Caps each resource at {maximum}.', params: [ { label: 'Maximum', kind: 'amount' } ] },
+  'Extra Turn':        { desc: 'Grants an extra turn on a match of {minimum} or more.', params: [ { label: 'Minimum', kind: 'amount' } ] },
+  'Tile Spawn':        { desc: 'Spawns {tile} tiles at relative weight {weight}.', params: [ { label: 'Tile', kind: 'ref', picker: 'pick_tiles', value: 'Tactics', typeText: 'Tile reference' }, { label: 'Weight', kind: 'amount' } ] },
+  'Tile Match':        { desc: 'Banks matched {tile} tiles into {reward}.', params: [ { label: 'Tile', kind: 'ref', picker: 'pick_tiles', value: 'Tactics', typeText: 'Tile reference' }, { label: 'Reward', kind: 'ref', picker: 'pick_resources', value: 'Tactics', typeText: 'Resource reference' } ] },
+  'Damage':            { desc: 'Deals {damage} damage to the opponent when its {tile} tile is matched.', params: [ { label: 'Tile', kind: 'ref', picker: 'pick_tiles', value: 'Attack', typeText: 'Tile reference' }, { label: 'Damage', kind: 'amount' } ] },
+  'Alloy Grant':       { desc: 'Grants {amount} Alloy when its {tile} tile is matched.', params: [ { label: 'Tile', kind: 'ref', picker: 'pick_tiles', value: 'Alloy', typeText: 'Tile reference' }, { label: 'Amount', kind: 'amount' } ] },
+  'Warp':              { desc: 'Charges the warp meter by {charge} per matched {tile} tile.', params: [ { label: 'Tile', kind: 'ref', picker: 'pick_tiles', value: 'Antimatter', typeText: 'Tile reference' }, { label: 'Charge', kind: 'amount' } ] },
+  'Board Fill':        { desc: 'Refills the board from the {direction} edge.', params: [ { label: 'Direction', kind: 'seg', options: ['Top', 'Bottom'], typeText: 'Top / Bottom' } ] },
   'Reload Split':      { desc: 'Splits a dead board’s tiles between combatants on reload.', params: [] },
   'Territory':         { desc: 'Tags shared-board territory for each side.', params: [ { label: 'Player Color', kind: 'color', value: '#56c8d8', typeText: 'Color' }, { label: 'Opponent Color', kind: 'color', value: '#d06a6a', typeText: 'Color' } ] },
-  'Selection Default': { desc: 'Sets the board’s default selection rule.', params: [ { label: 'Selection', kind: 'ref', picker: 'pick_selrules', value: 'Swap', typeText: 'Selection Rule reference' } ] },
+  'Selection':         { desc: 'How tiles are selected and moved on the board.', params: [ { label: 'Mode', kind: 'seg', options: ['Swap', 'Slide', 'Trace', 'Teleport'], typeText: 'Swap / Slide / Trace / Teleport' }, { label: 'Allow Diagonal', kind: 'toggle', typeText: 'Toggle' }, { label: 'Minimum Run', kind: 'stepper', value: 3, typeText: 'Number' }, { label: 'Match Required', kind: 'toggle', on: true, typeText: 'Toggle' }, { label: 'Teleport Range', kind: 'stepper', value: 0, typeText: 'Number' } ] },
 };
 
-/* Selection rules are authored INSTANCES of one SelectionRule class (a mode +
-   options), referenced by the Selection Default rule or a starship override. */
-const SELECTION_MODES = ['Swap', 'Slide', 'Trace', 'Teleport'];
-const SELECTION_RULES = {
-  swap:          { name: 'Swap',          mode: 0, diagonal: false, minRun: 3, matchRequired: true,  range: 0, desc: 'Select two adjacent tiles to swap them.' },
-  slide:         { name: 'Slide',         mode: 1, diagonal: false, minRun: 3, matchRequired: true,  range: 0, desc: 'Slide a row or column by one tile.' },
-  swap_diagonal: { name: 'Swap Diagonal', mode: 0, diagonal: true,  minRun: 3, matchRequired: true,  range: 0, desc: 'Swap tiles that touch diagonally too.' },
-  teleport:      { name: 'Teleport',      mode: 3, diagonal: false, minRun: 3, matchRequired: false, range: 3, desc: 'Swap any two tiles within range.' },
-  trace:         { name: 'Trace',         mode: 2, diagonal: false, minRun: 3, matchRequired: true,  range: 0, desc: 'Trace a path through matching tiles.' },
-};
-
-// rule INSTANCES: a template configured inside its owning ruleset
+// rule INSTANCES: a template with values, owned by a ruleset
 const RULE_INSTANCES = {
-  sc_linear:  { template: 'Scoring',           label: 'Scoring · Linear' },
-  os_10:      { template: 'Offset Scoring',    label: 'Offset Scoring · 10' },
-  ab_3:       { template: 'Action Budget',     label: 'Action Budget · 3' },
-  rc_100:     { template: 'Resource Capacity', label: 'Resource Capacity · 100' },
-  ts_tactics: { template: 'Tile Spawn',        label: 'Tile Spawn · Tactics' },
-  ts_security:{ template: 'Tile Spawn',        label: 'Tile Spawn · Security',    values: { 'Tile': 'Security' } },
-  ts_science: { template: 'Tile Spawn',        label: 'Tile Spawn · Science',     values: { 'Tile': 'Science' } },
-  ts_engineering: { template: 'Tile Spawn',    label: 'Tile Spawn · Engineering', values: { 'Tile': 'Engineering' } },
-  ts_antimatter:  { template: 'Tile Spawn',    label: 'Tile Spawn · Antimatter',  values: { 'Tile': 'Antimatter' } },
-  ts_alloy:   { template: 'Tile Spawn',        label: 'Tile Spawn · Alloy',       values: { 'Tile': 'Alloy' } },
-  ts_attack:  { template: 'Tile Spawn',        label: 'Tile Spawn · Attack',      values: { 'Tile': 'Attack' } },
+  sc_1:       { template: 'Scoring',           label: 'Scoring · 1',       values: { 'Score': 'Constant · 1' } },
+  os_10:      { template: 'Offset Scoring',    label: 'Offset Scoring · 10', values: { 'Offset': 'Constant · 10' } },
+  ab_3:       { template: 'Action Budget',     label: 'Action Budget · 3', values: { 'Actions': 'Constant · 3', 'Ability Turn Cost': 'Constant · 1' } },
+  rc_100:     { template: 'Resource Capacity', label: 'Resource Capacity · 100', values: { 'Maximum': 'Constant · 100' } },
+  ts_tactics: { template: 'Tile Spawn',        label: 'Tile Spawn · Tactics',     values: { 'Weight': 'Constant · 3' } },
+  ts_security:{ template: 'Tile Spawn',        label: 'Tile Spawn · Security',    values: { 'Tile': 'Security', 'Weight': 'Constant · 3' } },
+  ts_science: { template: 'Tile Spawn',        label: 'Tile Spawn · Science',     values: { 'Tile': 'Science', 'Weight': 'Constant · 3' } },
+  ts_engineering: { template: 'Tile Spawn',    label: 'Tile Spawn · Engineering', values: { 'Tile': 'Engineering', 'Weight': 'Constant · 3' } },
+  ts_antimatter:  { template: 'Tile Spawn',    label: 'Tile Spawn · Antimatter',  values: { 'Tile': 'Antimatter', 'Weight': 'Constant · 1' } },
+  ts_alloy:   { template: 'Tile Spawn',        label: 'Tile Spawn · Alloy',       values: { 'Tile': 'Alloy', 'Weight': 'Constant · 1' } },
+  ts_attack:  { template: 'Tile Spawn',        label: 'Tile Spawn · Attack',      values: { 'Tile': 'Attack', 'Weight': 'Constant · 1' } },
   tm_tactics: { template: 'Tile Match',        label: 'Tile Match · Tactics' },
   tm_security:{ template: 'Tile Match',        label: 'Tile Match · Security',    values: { 'Tile': 'Security', 'Reward': 'Security' } },
   tm_science: { template: 'Tile Match',        label: 'Tile Match · Science',     values: { 'Tile': 'Science', 'Reward': 'Science' } },
   tm_engineering: { template: 'Tile Match',    label: 'Tile Match · Engineering', values: { 'Tile': 'Engineering', 'Reward': 'Engineering' } },
-  alloy_grant:{ template: 'Alloy Grant',       label: 'Alloy Grant' },
-  dmg_attack: { template: 'Damage',            label: 'Damage · Attack' },
-  warp_charge:{ template: 'Warp',              label: 'Warp' },
+  alloy_grant:{ template: 'Alloy Grant',       label: 'Alloy Grant · 1',   values: { 'Amount': 'Constant · 1' } },
+  dmg_attack: { template: 'Damage',            label: 'Damage · Maximum Weapons', values: { 'Damage': 'Maximum Weapons' } },
+  warp_charge:{ template: 'Warp',              label: 'Warp · 1',          values: { 'Charge': 'Constant · 1' } },
   bf_top:     { template: 'Board Fill',        label: 'Board Fill · Top' },
   rs_even:    { template: 'Reload Split',      label: 'Reload Split' },
-  sd_swap:    { template: 'Selection Default', label: 'Selection · Swap' },
+  sel_swap:   { template: 'Selection',         label: 'Selection · Swap',  values: { 'Mode': 0 } },
 };
 
 /* A ruleset is simply a grouping of rule instances and other rulesets. */
@@ -640,8 +630,8 @@ const RULESETS = {
   tiles:             { name: 'Tiles',             desc: 'Tile spawn weights for the standard board.', rules: ['ts_tactics', 'ts_security', 'ts_science', 'ts_engineering', 'ts_antimatter', 'ts_alloy', 'ts_attack'], rulesets: [] },
   ability_resources: { name: 'Ability Resources', desc: 'Banks matched tiles into ability resources.', rules: ['tm_tactics', 'tm_security', 'tm_science', 'tm_engineering'], rulesets: [] },
   special_tiles:     { name: 'Special Tiles',     desc: 'What special tiles do when matched.', rules: ['alloy_grant', 'dmg_attack', 'warp_charge'], rulesets: [] },
-  turns:             { name: 'Turns',             desc: 'Turn structure for the standard game.', rules: ['ab_3', 'rc_100', 'os_10', 'sc_linear', 'sd_swap'], rulesets: [] },
-  alternate_turns:   { name: 'Alternate Turns',   desc: 'Turn structure for the alternate game.', rules: ['ab_3', 'sc_linear'], rulesets: [] },
+  turns:             { name: 'Turns',             desc: 'Turn structure for the standard game.', rules: ['ab_3', 'rc_100', 'os_10', 'sc_1', 'sel_swap'], rulesets: [] },
+  alternate_turns:   { name: 'Alternate Turns',   desc: 'Turn structure for the alternate game.', rules: ['ab_3', 'sc_1'], rulesets: [] },
   board:             { name: 'Board',             desc: 'How the board refills and reloads.', rules: ['bf_top', 'rs_even'], rulesets: [] },
 };
 
@@ -651,18 +641,19 @@ const MATCH_CONFIGS = {
 };
 
 /* ---------- shared editor fragments ---------- */
-const idOf = (base, table, key) => String(base + Object.keys(table).indexOf(key) + 1);
-const identitySec = (base, table, key) => section('Identity') + list([scalar('text', 'ID', idOf(base, table, key)), scalar('text', 'Filename', key)]);
+const idOf = (table, key) => String(Object.keys(table).indexOf(key));
+const identitySec = (table, key) => section('Identity') + list([scalar('text', 'ID', idOf(table, key)), scalar('text', 'Filename', key)]);
 const infoSec = (name, desc) => section('Information') + list([scalar('text', 'Name', name), descField(desc)]);
 
 // one row of a template/kind parameter — view (type only), edit (value), or new (unset)
 function paramRow(p, mode, values = {}) {
-  if (mode === 'view') return scalar('text', p.label, p.typeText);
+  if (mode === 'view') return scalar('text', p.label, p.kind === 'amount' ? 'Amount' : p.typeText);
   const v = values[p.label] !== undefined ? values[p.label] : p.value;
+  if (p.kind === 'amount')  return variant(p.label, mode === 'new' ? 'None' : (v || 'Constant · 1'), null, 'menu_amount');
   if (p.kind === 'slider')  return scalar('slider', p.label, mode === 'new' ? '0' : v, { pct: mode === 'new' ? 0 : (p.pct || 30) });
-  if (p.kind === 'seg')     return seg(p.label, p.options, 0);
+  if (p.kind === 'seg')     return seg(p.label, p.options, mode === 'new' ? 0 : (typeof v === 'number' ? v : 0));
   if (p.kind === 'stepper') return stepper(p.label, mode === 'new' ? 0 : v);
-  if (p.kind === 'toggle')  return scalar('toggle', p.label, '', { off: mode === 'new' });
+  if (p.kind === 'toggle')  return scalar('toggle', p.label, '', { off: mode === 'new' ? true : !p.on });
   if (p.kind === 'color')   return scalar('color', p.label, v);
   if (p.kind === 'ref')     return ref(p.label, mode === 'new' ? 'None' : v, p.picker);
   return scalar('text', p.label, mode === 'new' ? '—' : v);
@@ -712,7 +703,7 @@ home: () => ({ title: '', rows: [
   ]),
   section('Config'),
   scroller([
-    tile('Rules', { emoji: '📐', to: 'cat_rules', count: count(RULE_TEMPLATES) + count(SELECTION_RULES) }),
+    tile('Rules', { emoji: '📐', to: 'cat_rules', count: count(RULE_TEMPLATES) }),
     tile('Rulesets', { emoji: '📜', to: 'cat_rulesets', count: count(RULESETS), edited: true }),
     tile('Match Configs', { emoji: '🚀', to: 'cat_match_configs', count: count(MATCH_CONFIGS) }),
   ]),
@@ -736,7 +727,7 @@ cat_resources: () => ({ title: 'Resources', action: { fn: () => go('ed_newresour
 ]}),
 
 ed_resource: (arg = 'tactics') => { const r = RESOURCES[arg]; return { title: r.name, rows: [
-  identitySec(2000, RESOURCES, arg),
+  identitySec(RESOURCES, arg),
   infoSec(r.name, r.desc),
   section('Display'),
   list([ scalar('color', 'Color', r.color) ]),
@@ -744,7 +735,7 @@ ed_resource: (arg = 'tactics') => { const r = RESOURCES[arg]; return { title: r.
 
 ed_newresource: () => ({ title: 'New Resource', rows: [
   section('Identity'),
-  list([ scalar('text', 'ID', String(2000 + count(RESOURCES) + 1)), scalar('text', 'Filename', 'new_resource') ]),
+  list([ scalar('text', 'ID', String(count(RESOURCES))), scalar('text', 'Filename', 'new_resource') ]),
   infoSec('New Resource', '—'),
   section('Display'),
   list([ scalar('color', 'Color', '#7b8794') ]),
@@ -764,7 +755,7 @@ cat_tiles: () => ({ title: 'Tiles', action: { fn: () => go('ed_newtile') }, rows
 ]}),
 
 ed_tile: (arg = 'security') => { const t = TILES[arg]; return { title: t.name, rows: [
-  identitySec(3000, TILES, arg),
+  identitySec(TILES, arg),
   infoSec(t.name, t.desc),
   section('Display'),
   list([ textureField(arg + '.png') ]),
@@ -772,7 +763,7 @@ ed_tile: (arg = 'security') => { const t = TILES[arg]; return { title: t.name, r
 
 ed_newtile: () => ({ title: 'New Tile', rows: [
   section('Identity'),
-  list([ scalar('text', 'ID', String(3000 + count(TILES) + 1)), scalar('text', 'Filename', 'new_tile') ]),
+  list([ scalar('text', 'ID', String(count(TILES))), scalar('text', 'Filename', 'new_tile') ]),
   infoSec('New Tile', '—'),
   section('Display'),
   list([ textureField('None') ]),
@@ -792,7 +783,7 @@ cat_stats: () => ({ title: 'Stats', action: { fn: () => go('ed_newstat') }, rows
 ]}),
 
 ed_stat: (arg = 'health') => { const s = STATS[arg]; return { title: s.name, rows: [
-  identitySec(1000, STATS, arg),
+  identitySec(STATS, arg),
   infoSec(s.name, s.desc),
   section('Configuration'),
   list([
@@ -807,7 +798,7 @@ ed_stat: (arg = 'health') => { const s = STATS[arg]; return { title: s.name, row
 
 ed_newstat: () => ({ title: 'New Stat', rows: [
   section('Identity'),
-  list([ scalar('text', 'ID', String(1000 + count(STATS) + 1)), scalar('text', 'Filename', 'new_stat') ]),
+  list([ scalar('text', 'ID', String(count(STATS))), scalar('text', 'Filename', 'new_stat') ]),
   infoSec('New Stat', '—'),
   section('Configuration'),
   list([
@@ -834,7 +825,7 @@ cat_statuses: () => ({ title: 'Statuses', action: { fn: () => go('ed_newstatus')
 ]}),
 
 ed_status: (arg = 'shield') => { const s = STATUSES[arg]; const e = !!s.edited; return { title: s.name, rows: [
-  identitySec(4000, STATUSES, arg),
+  identitySec(STATUSES, arg),
   infoSec(s.name, s.desc),
   section('Configuration'),
   list([
@@ -853,7 +844,7 @@ ed_status: (arg = 'shield') => { const s = STATUSES[arg]; const e = !!s.edited; 
 
 ed_newstatus: () => ({ title: 'New Status', rows: [
   section('Identity'),
-  list([ scalar('text', 'ID', String(4000 + count(STATUSES) + 1)), scalar('text', 'Filename', 'new_status') ]),
+  list([ scalar('text', 'ID', String(count(STATUSES))), scalar('text', 'Filename', 'new_status') ]),
   infoSec('New Status', '—'),
   section('Configuration'),
   list([
@@ -896,7 +887,7 @@ cat_adjustments: () => ({ title: 'Adjustments', action: { fn: () => go('ed_newad
 ]}),
 
 ed_adjustment: (arg = 'armor_add') => { const a = ADJUSTMENTS[arg]; return { title: a.name, rows: [
-  identitySec(7000, ADJUSTMENTS, arg),
+  identitySec(ADJUSTMENTS, arg),
   infoSec(a.name, a.desc),
   section('Configuration'),
   list([
@@ -908,7 +899,7 @@ ed_adjustment: (arg = 'armor_add') => { const a = ADJUSTMENTS[arg]; return { tit
 
 ed_newadjustment: () => ({ title: 'New Adjustment', rows: [
   section('Identity'),
-  list([ scalar('text', 'ID', String(7000 + count(ADJUSTMENTS) + 1)), scalar('text', 'Filename', 'new_adjustment') ]),
+  list([ scalar('text', 'ID', String(count(ADJUSTMENTS))), scalar('text', 'Filename', 'new_adjustment') ]),
   infoSec('New Adjustment', '—'),
   section('Configuration'),
   list([
@@ -925,7 +916,7 @@ cat_actions: () => ({ title: 'Actions', action: { fn: () => go('ed_newaction') }
 ]}),
 
 ed_action: (arg = 'weapon_attack') => { const a = ACTIONS[arg]; return { title: a.name, rows: [
-  identitySec(13000, ACTIONS, arg),
+  identitySec(ACTIONS, arg),
   infoSec(a.name, a.desc),
   section('Configuration'),
   list([
@@ -938,7 +929,7 @@ ed_action: (arg = 'weapon_attack') => { const a = ACTIONS[arg]; return { title: 
 
 ed_newaction: () => ({ title: 'New Action', rows: [
   section('Identity'),
-  list([ scalar('text', 'ID', String(13000 + count(ACTIONS) + 1)), scalar('text', 'Filename', 'new_action') ]),
+  list([ scalar('text', 'ID', String(count(ACTIONS))), scalar('text', 'Filename', 'new_action') ]),
   infoSec('New Action', '—'),
   section('Configuration'),
   list([ variant('Kind', 'None', null, 'menu_action', false, 'What the action does; picking a kind reveals its options.') ]),
@@ -957,7 +948,7 @@ cat_effects: () => ({ title: 'Effects', action: { fn: () => go('ed_neweffect') }
 ]}),
 
 ed_effect: (arg = 'attack_opponent') => { const f = EFFECTS[arg]; return { title: f.name, rows: [
-  identitySec(8000, EFFECTS, arg),
+  identitySec(EFFECTS, arg),
   infoSec(f.name, f.desc),
   section('Behavior'),
   list([
@@ -970,7 +961,7 @@ ed_effect: (arg = 'attack_opponent') => { const f = EFFECTS[arg]; return { title
 
 ed_neweffect: () => ({ title: 'New Effect', rows: [
   section('Identity'),
-  list([ scalar('text', 'ID', String(8000 + count(EFFECTS) + 1)), scalar('text', 'Filename', 'new_effect') ]),
+  list([ scalar('text', 'ID', String(count(EFFECTS))), scalar('text', 'Filename', 'new_effect') ]),
   infoSec('New Effect', '—'),
   section('Behavior'),
   list([
@@ -1016,7 +1007,7 @@ cat_transforms: () => ({ title: 'Transforms', action: { fn: () => go('ed_newtran
 ]}),
 
 ed_transform: (arg = 'shield_absorb') => { const t = TRANSFORMS[arg]; return { title: t.name, rows: [
-  identitySec(9000, TRANSFORMS, arg),
+  identitySec(TRANSFORMS, arg),
   infoSec(t.name, t.desc),
   section('Configuration'),
   list([ variant('Kind', t.kind, null, 'menu_step', false, KIND_DESCS[t.kind]) ]),
@@ -1024,7 +1015,7 @@ ed_transform: (arg = 'shield_absorb') => { const t = TRANSFORMS[arg]; return { t
 
 ed_newtransform: () => ({ title: 'New Transform', rows: [
   section('Identity'),
-  list([ scalar('text', 'ID', String(9000 + count(TRANSFORMS) + 1)), scalar('text', 'Filename', 'new_transform') ]),
+  list([ scalar('text', 'ID', String(count(TRANSFORMS))), scalar('text', 'Filename', 'new_transform') ]),
   infoSec('New Transform', '—'),
   section('Configuration'),
   list([ variant('Kind', 'None', null, 'menu_step', false, 'How the value is reshaped.') ]),
@@ -1062,7 +1053,7 @@ cat_abilities: () => ({ title: 'Abilities', action: { fn: () => go('ed_newabilit
 ]}),
 
 ed_ability: (arg = 'fire_weapons') => { const a = ABILITIES[arg]; return { title: a.name, rows: [
-  identitySec(5000, ABILITIES, arg),
+  identitySec(ABILITIES, arg),
   infoSec(a.name, a.desc),
   section('Costs'),
   chips([ chip(`${a.cost.amt} × ${a.cost.res}`, { to: 'ed_cost:' + arg }), chip('', { add: true, menu: 'ed_cost:' + arg }) ]),
@@ -1072,7 +1063,7 @@ ed_ability: (arg = 'fire_weapons') => { const a = ABILITIES[arg]; return { title
 
 ed_newability: () => ({ title: 'New Ability', rows: [
   section('Identity'),
-  list([ scalar('text', 'ID', String(5000 + count(ABILITIES) + 1)), scalar('text', 'Filename', 'new_ability') ]),
+  list([ scalar('text', 'ID', String(count(ABILITIES))), scalar('text', 'Filename', 'new_ability') ]),
   infoSec('New Ability', '—'),
   section('Costs'),
   chips([ chip('', { add: true, menu: 'ed_cost' }) ]),
@@ -1095,22 +1086,28 @@ cat_starships: () => ({ title: 'Starships', action: { fn: () => go('ed_newstarsh
 ]}),
 
 ed_starship: (arg = 'player_default') => { const s = STARSHIPS[arg]; return { title: s.name, rows: [
-  identitySec(10000, STARSHIPS, arg),
+  identitySec(STARSHIPS, arg),
   infoSec(s.name, s.desc),
   section('Display'),
   list([ textureField(arg + '.png') ]),
   section('Configuration'),
-  list([ ref('Loadout', s.loadout, 'pick_loadouts') ]),
+  list([
+    ref('Loadout', s.loadout, 'pick_loadouts'),
+    ref('Ruleset', s.ruleset || 'None', 'pick_rulesets'),
+  ]),
 ]}; },
 
 ed_newstarship: () => ({ title: 'New Starship', rows: [
   section('Identity'),
-  list([ scalar('text', 'ID', String(10000 + count(STARSHIPS) + 1)), scalar('text', 'Filename', 'new_starship') ]),
+  list([ scalar('text', 'ID', String(count(STARSHIPS))), scalar('text', 'Filename', 'new_starship') ]),
   infoSec('New Starship', '—'),
   section('Display'),
   list([ textureField('None') ]),
   section('Configuration'),
-  list([ ref('Loadout', 'None', 'pick_loadouts') ]),
+  list([
+    ref('Loadout', 'None', 'pick_loadouts'),
+    ref('Ruleset', 'None', 'pick_rulesets'),
+  ]),
   addBtn('New Starship'),
 ]}),
 
@@ -1123,7 +1120,7 @@ cat_modules: () => ({ title: 'Modules', action: { fn: () => go('ed_newmodule') }
 }),
 
 ed_module: (arg = 'laser_cannon') => { const m = MODULES[arg]; return { title: m.name, rows: [
-  identitySec(11000, MODULES, arg),
+  identitySec(MODULES, arg),
   infoSec(m.name, m.desc),
   section('Display'),
   list([ textureField(arg + '.png') ]),
@@ -1135,7 +1132,7 @@ ed_module: (arg = 'laser_cannon') => { const m = MODULES[arg]; return { title: m
 
 ed_newmodule: () => ({ title: 'New Module', rows: [
   section('Identity'),
-  list([ scalar('text', 'ID', String(11000 + count(MODULES) + 1)), scalar('text', 'Filename', 'new_module') ]),
+  list([ scalar('text', 'ID', String(count(MODULES))), scalar('text', 'Filename', 'new_module') ]),
   infoSec('New Module', '—'),
   section('Display'),
   list([ textureField('None') ]),
@@ -1158,7 +1155,7 @@ cat_loadouts: () => ({ title: 'Loadouts', action: { fn: () => go('ed_newloadout'
 ]}),
 
 ed_loadout: (arg = 'player_default') => { const l = LOADOUTS[arg]; return { title: l.name, rows: [
-  identitySec(12000, LOADOUTS, arg),
+  identitySec(LOADOUTS, arg),
   infoSec(l.name, l.desc),
   section('Configuration'),
   list([ stepper('Columns', l.cols), stepper('Rows', l.rows) ]),
@@ -1168,7 +1165,7 @@ ed_loadout: (arg = 'player_default') => { const l = LOADOUTS[arg]; return { titl
 
 ed_newloadout: () => ({ title: 'New Loadout', rows: [
   section('Identity'),
-  list([ scalar('text', 'ID', String(12000 + count(LOADOUTS) + 1)), scalar('text', 'Filename', 'new_loadout') ]),
+  list([ scalar('text', 'ID', String(count(LOADOUTS))), scalar('text', 'Filename', 'new_loadout') ]),
   infoSec('New Loadout', '—'),
   section('Configuration'),
   list([ stepper('Columns', 4), stepper('Rows', 3) ]),
@@ -1183,12 +1180,10 @@ pick_loadouts: () => ({ title: 'Loadout', rows: [
   list([ newRow('New Loadout', 'ed_newloadout') ]),
 ]}),
 
-/* --- Rules: templates (code-defined Rule subclasses, view-only) + authored selection rules --- */
-cat_rules: () => ({ title: 'Rules', action: { fn: () => go('ed_newselectionrule') }, rows: [
-  section('Templates'),
+/* --- Rules: the templates. A template is a rule with parameters and no values;
+   instances (values filled in) exist only inside rulesets. --- */
+cat_rules: () => ({ title: 'Rules', rows: [
   list(Object.entries(RULE_TEMPLATES).map(([k, t]) => optNav(k, t.desc, 'view_ruletemplate:' + k))),
-  section('Selection Rules'),
-  list(Object.entries(SELECTION_RULES).map(([k, s]) => nav(s.name, { to: 'ed_selectionrule:' + k }))),
 ]}),
 
 // a rule template is code — view-only: what it does and what its instances configure
@@ -1198,48 +1193,13 @@ view_ruletemplate: (arg = 'Damage') => { const t = RULE_TEMPLATES[arg]; return {
   list(t.params.length ? t.params.map(p => paramRow(p, 'view')) : [ scalar('text', 'None', '') ]),
 ]}; },
 
-// selection rules are authored instances of one SelectionRule class (mode + options)
-ed_selectionrule: (arg = 'swap') => { const s = SELECTION_RULES[arg]; return { title: s.name, rows: [
-  identitySec(14000, SELECTION_RULES, arg),
-  infoSec(s.name, s.desc),
-  section('Configuration'),
-  list([
-    seg('Mode', SELECTION_MODES, s.mode),
-    scalar('toggle', 'Allow Diagonal', '', { off: !s.diagonal }),
-    stepper('Minimum Run', s.minRun),
-    scalar('toggle', 'Match Required', '', { off: !s.matchRequired }),
-    stepper('Teleport Range', s.range),
-  ]),
-]}; },
-
-ed_newselectionrule: () => ({ title: 'New Selection Rule', rows: [
-  section('Identity'),
-  list([ scalar('text', 'ID', String(14000 + count(SELECTION_RULES) + 1)), scalar('text', 'Filename', 'new_selection_rule') ]),
-  infoSec('New Selection Rule', '—'),
-  section('Configuration'),
-  list([
-    seg('Mode', SELECTION_MODES, 0),
-    scalar('toggle', 'Allow Diagonal', '', { off: true }),
-    stepper('Minimum Run', 3),
-    scalar('toggle', 'Match Required', ''),
-    stepper('Teleport Range', 0),
-  ]),
-  addBtn('New Selection Rule'),
-]}),
-
-// picker over the authored selection rules
-pick_selrules: () => ({ title: 'Selection Rule', rows: [
-  list(Object.values(SELECTION_RULES).map(s => optRow(s.name, s.desc))),
-  list([ newRow('New Selection Rule', 'ed_newselectionrule') ]),
-]}),
-
 /* --- Rulesets (a ruleset is simply a grouping of rule instances and other rulesets) --- */
 cat_rulesets: () => ({ title: 'Rulesets', action: { fn: () => go('ed_newruleset') }, rows: [
   list(Object.entries(RULESETS).map(([k, r]) => nav(r.name, { to: 'ed_ruleset:' + k, edited: !!r.edited }))),
 ]}),
 
 ed_ruleset: (arg = 'standard') => { const r = RULESETS[arg]; return { title: r.name, rows: [
-  identitySec(6000, RULESETS, arg),
+  identitySec(RULESETS, arg),
   infoSec(r.name, r.desc),
   section('Rules'),
   chips([ ...r.rules.map(i => chip(RULE_INSTANCES[i].label, { to: 'ed_ruleinstance:' + i })), chip('', { add: true, menu: 'menu_rule' }) ]),
@@ -1249,7 +1209,7 @@ ed_ruleset: (arg = 'standard') => { const r = RULESETS[arg]; return { title: r.n
 
 ed_newruleset: () => ({ title: 'New Ruleset', rows: [
   section('Identity'),
-  list([ scalar('text', 'ID', String(6000 + count(RULESETS) + 1)), scalar('text', 'Filename', 'new_ruleset') ]),
+  list([ scalar('text', 'ID', String(count(RULESETS))), scalar('text', 'Filename', 'new_ruleset') ]),
   infoSec('New Ruleset', '—'),
   section('Rules'),
   chips([ chip('', { add: true, menu: 'menu_rule' }) ]),
@@ -1286,7 +1246,7 @@ cat_match_configs: () => ({ title: 'Match Configs', action: { fn: () => go('ed_n
 ]}),
 
 ed_matchconfig: (arg = 'default') => { const m = MATCH_CONFIGS[arg]; return { title: m.name, rows: [
-  identitySec(15000, MATCH_CONFIGS, arg),
+  identitySec(MATCH_CONFIGS, arg),
   infoSec(m.name, m.desc),
   section('Configuration'),
   list([
@@ -1298,7 +1258,7 @@ ed_matchconfig: (arg = 'default') => { const m = MATCH_CONFIGS[arg]; return { ti
 
 ed_newmatchconfig: () => ({ title: 'New Match Config', rows: [
   section('Identity'),
-  list([ scalar('text', 'ID', String(15000 + count(MATCH_CONFIGS) + 1)), scalar('text', 'Filename', 'new_match_config') ]),
+  list([ scalar('text', 'ID', String(count(MATCH_CONFIGS))), scalar('text', 'Filename', 'new_match_config') ]),
   infoSec('New Match Config', '—'),
   section('Configuration'),
   list([
