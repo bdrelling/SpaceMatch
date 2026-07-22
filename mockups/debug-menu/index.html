@@ -584,9 +584,10 @@ const AMOUNT_KINDS = {
   'Maximum Stat': { desc: 'The maximum value of {stat}.', params: [ { key: 'stat', kind: 'ref', picker: 'pick_stats', value: 'Weapons', typeText: 'Stat', desc: 'The stat read from.' } ] },
   'Missing Stat': { desc: 'How far {stat} is below its maximum.', params: [ { key: 'stat', kind: 'ref', picker: 'pick_stats', value: 'Health', typeText: 'Stat', desc: 'The stat read from.' } ] },
   'Random':       { desc: 'A random number between {minimum} and {maximum}.', params: [ { key: 'minimum', kind: 'slider', value: '1', pct: 10, typeText: 'Number', desc: 'The lowest possible roll.' }, { key: 'maximum', kind: 'slider', value: '6', pct: 30, typeText: 'Number', desc: 'The highest possible roll.' } ] },
-  'Math':         { desc: 'Combines {first} and {second} with {operation}.', params: [ { key: 'first', kind: 'amount', value: 'c1', desc: 'The left operand.' }, { key: 'operation', kind: 'seg', options: ['Add', 'Multiply'], typeText: 'Add / Multiply', desc: 'How the operands combine.' }, { key: 'second', kind: 'amount', value: 'max_weapons', desc: 'The right operand.' } ] },
+  'Math':         { desc: 'Combines {left} and {right} with {operation}.', params: [ { key: 'left', kind: 'amount', value: 'c1', desc: 'The left operand.' }, { key: 'operation', kind: 'seg', options: ['Add', 'Subtract', 'Multiply'], typeText: 'Add / Subtract / Multiply', desc: 'How the operands combine.' }, { key: 'right', kind: 'amount', value: 'max_weapons', desc: 'The right operand.' } ] },
   'Modification': { desc: 'The value being modified by the current event.', params: [] },
   'Status Count': { desc: 'The number of stacks of {status}.', params: [ { key: 'status', kind: 'ref', picker: 'pick_statuses', value: 'Burning', typeText: 'Status', desc: 'The status whose stacks are counted.' } ] },
+  'Currency':     { desc: 'The current balance of {currency}.', params: [ { key: 'currency', kind: 'ref', picker: 'pick_resources', value: 'Alloy', typeText: 'Resource', desc: 'The currency read from.' } ] },
 };
 
 // amount instances owned inline by whatever references them
@@ -603,10 +604,10 @@ const AMOUNTS = {
 /* Condition kinds — parameters reuse the same building blocks (Stat refs,
    Status refs, Amounts, nested conditions). */
 const CONDITION_KINDS = {
-  'Stat Threshold': { desc: 'Passes when {stat} is {comparison} {value}.', params: [ { key: 'stat', kind: 'ref', picker: 'pick_stats', value: 'Health', typeText: 'Stat', desc: 'The stat being checked.' }, { key: 'comparison', kind: 'seg', options: ['Above', 'Below'], typeText: 'Above / Below', desc: 'Whether the stat must be above or below the value.' }, { key: 'value', kind: 'amount', value: 'c10', desc: 'The amount the stat is compared against.' } ] },
-  'Compare Stats':  { desc: 'Passes when {first} is {comparison} {second}.', params: [ { key: 'first', kind: 'amount', value: 'c1', desc: 'The amount on the left of the comparison.' }, { key: 'comparison', kind: 'seg', options: ['Above', 'Below'], typeText: 'Above / Below', desc: 'How the two amounts are compared.' }, { key: 'second', kind: 'amount', value: 'max_weapons', desc: 'The amount on the right of the comparison.' } ] },
-  'Has Status':     { desc: 'Passes when the target carries {status}.', params: [ { key: 'status', kind: 'ref', picker: 'pick_statuses', value: 'Shield', typeText: 'Status', desc: 'The status the target must carry.' } ] },
-  'Chance':         { desc: 'Passes {percent} times out of 100.', params: [ { key: 'percent', kind: 'amount', value: 'c10', desc: 'The chance to pass, out of 100.' } ] },
+  'Stat Threshold': { desc: 'Passes when {target}’s {stat} is {comparison} {value}.', params: [ { key: 'target', kind: 'target', value: 'Self', desc: 'Whose stat is checked.' }, { key: 'stat', kind: 'ref', picker: 'pick_stats', value: 'Health', typeText: 'Stat', desc: 'The stat being checked.' }, { key: 'comparison', kind: 'seg', options: ['Less Than', 'Equal To', 'Greater Than'], typeText: 'Less / Equal / Greater', desc: 'How the stat compares to the value.' }, { key: 'value', kind: 'amount', value: 'c10', desc: 'The amount the stat is compared against.' } ] },
+  'Compare Stats':  { desc: 'Passes when {target}’s {stat} is {comparison} {other}’s.', params: [ { key: 'target', kind: 'target', value: 'Self', desc: 'The ship on the left of the comparison.' }, { key: 'other', kind: 'target', value: 'Opponent', desc: 'The ship on the right of the comparison.' }, { key: 'stat', kind: 'ref', picker: 'pick_stats', value: 'Weapons', typeText: 'Stat', desc: 'The stat compared between the two.' }, { key: 'comparison', kind: 'seg', options: ['Less Than', 'Equal To', 'Greater Than'], typeText: 'Less / Equal / Greater', desc: 'How the two values are compared.' } ] },
+  'Has Status':     { desc: 'Passes when {target} carries {status}.', params: [ { key: 'target', kind: 'target', value: 'Self', desc: 'Who must carry the status.' }, { key: 'status', kind: 'ref', picker: 'pick_statuses', value: 'Shield', typeText: 'Status', desc: 'The status the target must carry.' } ] },
+  'Chance':         { desc: 'Passes {chance} percent of the time.', params: [ { key: 'chance', kind: 'slider', value: '10', pct: 10, typeText: 'Number', desc: 'The probability of passing, as a percentage.' } ] },
   'And':            { desc: 'Passes when all of {conditions} pass.', params: [ { key: 'conditions', kind: 'conditions', typeText: 'Conditions', desc: 'The child conditions this one combines.' } ] },
   'Or':             { desc: 'Passes when any of {conditions} passes.', params: [ { key: 'conditions', kind: 'conditions', typeText: 'Conditions', desc: 'The child conditions this one combines.' } ] },
   'Not':            { desc: 'Inverts {condition}.', params: [ { key: 'condition', kind: 'conditions', typeText: 'Condition', desc: 'The child condition to invert.' } ] },
@@ -614,13 +615,14 @@ const CONDITION_KINDS = {
 
 // condition instances owned by effects
 const CONDITIONS = {
-  has_target_lock: { label: 'Has Target Lock', kind: 'Has Status', values: { status: 'Target Lock' } },
+  has_target_lock: { label: 'Has Target Lock', kind: 'Has Status', values: { target: 'Opponent', status: 'Target Lock' } },
 };
 
 // target kinds that carry parameters (shown on the Targets catalog's view pages)
 const TARGET_PARAMS = {
-  'Highest Stat': [ { key: 'stat', kind: 'ref', picker: 'pick_stats', value: 'Weapons', typeText: 'Stat', desc: 'The stat that ranks the ships.' } ],
-  'Lowest Stat':  [ { key: 'stat', kind: 'ref', picker: 'pick_stats', value: 'Health', typeText: 'Stat', desc: 'The stat that ranks the ships.' } ],
+  'Highest Stat': [ { key: 'from', kind: 'target', value: 'All Entities', desc: 'The pool of ships being ranked.' }, { key: 'stat', kind: 'ref', picker: 'pick_stats', value: 'Weapons', typeText: 'Stat', desc: 'The stat that ranks the ships.' } ],
+  'Lowest Stat':  [ { key: 'from', kind: 'target', value: 'All Entities', desc: 'The pool of ships being ranked.' }, { key: 'stat', kind: 'ref', picker: 'pick_stats', value: 'Health', typeText: 'Stat', desc: 'The stat that ranks the ships.' } ],
+  'Sides':        [ { key: 'radius', kind: 'stepper', value: 1, typeText: 'Number', desc: 'How many neighbors out from the ship count.' } ],
 };
 
 const STARSHIPS = {
@@ -742,7 +744,7 @@ function exampleText(desc, params, values = {}) {
 
 // view-only schema row: {key} + type on top, what the parameter means below
 function paramViewRow(p) {
-  const type = p.kind === 'amount' ? 'Amount' : p.typeText;
+  const type = p.kind === 'amount' ? 'Amount' : (p.kind === 'target' ? 'Target' : p.typeText);
   return `<div class="cell hasdesc"><div class="toprow"><div class="label"><code>{${p.key}}</code></div><div class="v">${type}</div></div><div class="sub">${p.desc || ''}</div></div>`;
 }
 
@@ -762,6 +764,7 @@ function paramRow(p, mode, values = {}) {
   if (p.kind === 'amount')  return mode === 'new'
     ? variant(label, 'None', null, 'menu_amount_new')
     : variant(label, AMOUNTS[v] ? AMOUNTS[v].label : v, 'ed_amount:' + v, null);
+  if (p.kind === 'target')  return variant(label, mode === 'new' ? 'None' : v, null, 'menu_target');
   if (p.kind === 'slider')  return scalar('slider', label, mode === 'new' ? '0' : v, { pct: mode === 'new' ? 0 : (p.pct || 30) });
   if (p.kind === 'seg')     return seg(label, p.options, mode === 'new' ? 0 : (typeof v === 'number' ? v : 0));
   if (p.kind === 'stepper') return stepper(label, mode === 'new' ? 0 : v);
