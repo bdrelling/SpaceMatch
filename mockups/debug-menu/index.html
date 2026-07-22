@@ -57,6 +57,8 @@
     padding: 7px 12px 7px 22px; border-left: 2px solid transparent; border-radius: 0 6px 6px 0;
     cursor: pointer; user-select: none; color: var(--text);
   }
+  /* composition nesting — a nested item is a component of the one above it */
+  .nav-item.sub { padding-left: 38px; font-size: 13px; }
   .nav-item:hover { background: var(--hover); }
   .nav-item.active {
     color: var(--accent); font-weight: 600;
@@ -211,6 +213,16 @@
   /* description field — label on top, wrapped copy below */
   .field-desc { flex-direction: column; align-items: stretch; gap: 4px; }
   .field-desc .desc { color: var(--dim); font-size: 13px; line-height: 1.4; }
+  /* raw template text — {tokens} render as code chips */
+  .desc code, .label code {
+    font-family: var(--mono); font-size: 12px; color: var(--accent);
+    background: rgba(86,200,216,.08); padding: 1px 5px; border-radius: 4px;
+  }
+  /* loadout shape — grid-based, not necessarily rectangular */
+  .shape { display: flex; flex-direction: column; gap: 3px; }
+  .shape-row { display: flex; gap: 3px; }
+  .shape i { width: 14px; height: 14px; border-radius: 2px; background: rgba(255,255,255,.045); }
+  .shape i.on { background: rgba(86,200,216,.4); box-shadow: inset 0 0 0 1px rgba(86,200,216,.5); }
   /* a row that carries an explanatory subtitle (e.g. Stacking / Decay) */
   .cell.hasdesc { flex-direction: column; align-items: stretch; gap: 4px; }
   .cell.hasdesc .toprow { display: flex; align-items: center; gap: 10px; }
@@ -411,6 +423,12 @@ function textureField(name) {
   return `<div class="cell tap" data-h="${h}"><div class="label">Texture</div><div class="ctl-texture"></div><div class="v">${name}</div><div class="chev">›</div></div>`;
 }
 
+// loadout socket shape — tap to open the shape editor
+function shapeField(shape) {
+  const rows = shape.map(r => `<div class="shape-row">${[...r].map(c => `<i class="${c === 'X' ? 'on' : ''}"></i>`).join('')}</div>`).join('');
+  return `<div class="cell tap" data-h="${on(() => toast('Edit shape'))}"><div class="label">Shape</div><div class="shape">${rows}</div><div class="chev">›</div></div>`;
+}
+
 function statusTile(name, emoji, color, to, edited = false) {
   const h = on(() => go(to));
   return `<div class="tile status${edited ? ' edited' : ''}" data-h="${h}">
@@ -561,14 +579,14 @@ const TRANSFORMS = {
 /* AMOUNTS — the one numeric building block, reused by rules, conditions,
    actions, and modifiers. A kind plus its configuration. */
 const AMOUNT_KINDS = {
-  'Constant':     { desc: 'A fixed number: {value}.', params: [ { key: 'value', kind: 'slider', value: '1', pct: 10, typeText: 'Number' } ] },
-  'Current Stat': { desc: 'The current value of {stat}.', params: [ { key: 'stat', kind: 'ref', picker: 'pick_stats', value: 'Weapons', typeText: 'Stat' } ] },
-  'Maximum Stat': { desc: 'The maximum value of {stat}.', params: [ { key: 'stat', kind: 'ref', picker: 'pick_stats', value: 'Weapons', typeText: 'Stat' } ] },
-  'Missing Stat': { desc: 'How far {stat} is below its maximum.', params: [ { key: 'stat', kind: 'ref', picker: 'pick_stats', value: 'Health', typeText: 'Stat' } ] },
-  'Random':       { desc: 'A random number between {minimum} and {maximum}.', params: [ { key: 'minimum', kind: 'slider', value: '1', pct: 10, typeText: 'Number' }, { key: 'maximum', kind: 'slider', value: '6', pct: 30, typeText: 'Number' } ] },
-  'Math':         { desc: 'Combines {first} and {second} with {operation}.', params: [ { key: 'first', kind: 'amount', value: 'c1' }, { key: 'operation', kind: 'seg', options: ['Add', 'Multiply'], typeText: 'Add / Multiply' }, { key: 'second', kind: 'amount', value: 'max_weapons' } ] },
+  'Constant':     { desc: 'A fixed number: {value}.', params: [ { key: 'value', kind: 'slider', value: '1', pct: 10, typeText: 'Number', desc: 'The number.' } ] },
+  'Current Stat': { desc: 'The current value of {stat}.', params: [ { key: 'stat', kind: 'ref', picker: 'pick_stats', value: 'Weapons', typeText: 'Stat', desc: 'The stat read from.' } ] },
+  'Maximum Stat': { desc: 'The maximum value of {stat}.', params: [ { key: 'stat', kind: 'ref', picker: 'pick_stats', value: 'Weapons', typeText: 'Stat', desc: 'The stat read from.' } ] },
+  'Missing Stat': { desc: 'How far {stat} is below its maximum.', params: [ { key: 'stat', kind: 'ref', picker: 'pick_stats', value: 'Health', typeText: 'Stat', desc: 'The stat read from.' } ] },
+  'Random':       { desc: 'A random number between {minimum} and {maximum}.', params: [ { key: 'minimum', kind: 'slider', value: '1', pct: 10, typeText: 'Number', desc: 'The lowest possible roll.' }, { key: 'maximum', kind: 'slider', value: '6', pct: 30, typeText: 'Number', desc: 'The highest possible roll.' } ] },
+  'Math':         { desc: 'Combines {first} and {second} with {operation}.', params: [ { key: 'first', kind: 'amount', value: 'c1', desc: 'The left operand.' }, { key: 'operation', kind: 'seg', options: ['Add', 'Multiply'], typeText: 'Add / Multiply', desc: 'How the operands combine.' }, { key: 'second', kind: 'amount', value: 'max_weapons', desc: 'The right operand.' } ] },
   'Modification': { desc: 'The value being modified by the current event.', params: [] },
-  'Status Count': { desc: 'The number of stacks of {status}.', params: [ { key: 'status', kind: 'ref', picker: 'pick_statuses', value: 'Burning', typeText: 'Status' } ] },
+  'Status Count': { desc: 'The number of stacks of {status}.', params: [ { key: 'status', kind: 'ref', picker: 'pick_statuses', value: 'Burning', typeText: 'Status', desc: 'The status whose stacks are counted.' } ] },
 };
 
 // amount instances owned inline by whatever references them
@@ -585,13 +603,13 @@ const AMOUNTS = {
 /* Condition kinds — parameters reuse the same building blocks (Stat refs,
    Status refs, Amounts, nested conditions). */
 const CONDITION_KINDS = {
-  'Stat Threshold': { desc: 'Passes when {stat} is {comparison} {value}.', params: [ { key: 'stat', kind: 'ref', picker: 'pick_stats', value: 'Health', typeText: 'Stat' }, { key: 'comparison', kind: 'seg', options: ['Above', 'Below'], typeText: 'Above / Below' }, { key: 'value', kind: 'amount', value: 'c10' } ] },
-  'Compare Stats':  { desc: 'Passes when {first} is {comparison} {second}.', params: [ { key: 'first', kind: 'amount', value: 'c1' }, { key: 'comparison', kind: 'seg', options: ['Above', 'Below'], typeText: 'Above / Below' }, { key: 'second', kind: 'amount', value: 'max_weapons' } ] },
-  'Has Status':     { desc: 'Passes when the target carries {status}.', params: [ { key: 'status', kind: 'ref', picker: 'pick_statuses', value: 'Shield', typeText: 'Status' } ] },
-  'Chance':         { desc: 'Passes {percent} of the time.', params: [ { key: 'percent', kind: 'amount', value: 'c10' } ] },
-  'And':            { desc: 'Passes when all of {conditions} pass.', params: [ { key: 'conditions', kind: 'conditions', typeText: 'Conditions' } ] },
-  'Or':             { desc: 'Passes when any of {conditions} passes.', params: [ { key: 'conditions', kind: 'conditions', typeText: 'Conditions' } ] },
-  'Not':            { desc: 'Inverts {condition}.', params: [ { key: 'condition', kind: 'conditions', typeText: 'Condition' } ] },
+  'Stat Threshold': { desc: 'Passes when {stat} is {comparison} {value}.', params: [ { key: 'stat', kind: 'ref', picker: 'pick_stats', value: 'Health', typeText: 'Stat', desc: 'The stat being checked.' }, { key: 'comparison', kind: 'seg', options: ['Above', 'Below'], typeText: 'Above / Below', desc: 'Whether the stat must be above or below the value.' }, { key: 'value', kind: 'amount', value: 'c10', desc: 'The amount the stat is compared against.' } ] },
+  'Compare Stats':  { desc: 'Passes when {first} is {comparison} {second}.', params: [ { key: 'first', kind: 'amount', value: 'c1', desc: 'The amount on the left of the comparison.' }, { key: 'comparison', kind: 'seg', options: ['Above', 'Below'], typeText: 'Above / Below', desc: 'How the two amounts are compared.' }, { key: 'second', kind: 'amount', value: 'max_weapons', desc: 'The amount on the right of the comparison.' } ] },
+  'Has Status':     { desc: 'Passes when the target carries {status}.', params: [ { key: 'status', kind: 'ref', picker: 'pick_statuses', value: 'Shield', typeText: 'Status', desc: 'The status the target must carry.' } ] },
+  'Chance':         { desc: 'Passes {percent} times out of 100.', params: [ { key: 'percent', kind: 'amount', value: 'c10', desc: 'The chance to pass, out of 100.' } ] },
+  'And':            { desc: 'Passes when all of {conditions} pass.', params: [ { key: 'conditions', kind: 'conditions', typeText: 'Conditions', desc: 'The child conditions this one combines.' } ] },
+  'Or':             { desc: 'Passes when any of {conditions} passes.', params: [ { key: 'conditions', kind: 'conditions', typeText: 'Conditions', desc: 'The child conditions this one combines.' } ] },
+  'Not':            { desc: 'Inverts {condition}.', params: [ { key: 'condition', kind: 'conditions', typeText: 'Condition', desc: 'The child condition to invert.' } ] },
 };
 
 // condition instances owned by effects
@@ -601,8 +619,8 @@ const CONDITIONS = {
 
 // target kinds that carry parameters (shown on the Targets catalog's view pages)
 const TARGET_PARAMS = {
-  'Highest Stat': [ { key: 'stat', kind: 'ref', picker: 'pick_stats', value: 'Weapons', typeText: 'Stat' } ],
-  'Lowest Stat':  [ { key: 'stat', kind: 'ref', picker: 'pick_stats', value: 'Health', typeText: 'Stat' } ],
+  'Highest Stat': [ { key: 'stat', kind: 'ref', picker: 'pick_stats', value: 'Weapons', typeText: 'Stat', desc: 'The stat that ranks the ships.' } ],
+  'Lowest Stat':  [ { key: 'stat', kind: 'ref', picker: 'pick_stats', value: 'Health', typeText: 'Stat', desc: 'The stat that ranks the ships.' } ],
 };
 
 const STARSHIPS = {
@@ -621,9 +639,10 @@ const MODULES = {
   warp_core:        { name: 'Warp Core',        emoji: '🌀', sec: 'Systems',    desc: 'Powers warp travel between encounters.' },
 };
 
+// a loadout's shape is grid-based but not necessarily rectangular ('X' = socket)
 const LOADOUTS = {
-  player_default:   { name: 'Player Default',   desc: 'Modules equipped on the starting player starship.',   cols: 4, rows: 3, modules: ['Laser Cannon', 'Shield Generator', 'Engine'] },
-  opponent_default: { name: 'Opponent Default', desc: 'Modules equipped on the starting opponent starship.', cols: 4, rows: 3, modules: ['Laser Cannon', 'Engine'] },
+  player_default:   { name: 'Player Default',   desc: 'Modules equipped on the starting player starship.',   shape: ['.XX.', 'XXXX', '.XX.'], modules: ['Laser Cannon', 'Shield Generator', 'Engine'] },
+  opponent_default: { name: 'Opponent Default', desc: 'Modules equipped on the starting opponent starship.', shape: ['XXX', 'XX.'], modules: ['Laser Cannon', 'Engine'] },
 };
 
 const ABILITIES = {
@@ -638,20 +657,20 @@ const ABILITIES = {
    inside rulesets with values filled in ("Play 3"). Numeric parameters are
    AMOUNTS — constant, stat-based, status-based, etc. (menu_amount). */
 const RULE_TEMPLATES = {
-  'Scoring':           { desc: 'Scores {score} for each cleared match.', params: [ { key: 'score', kind: 'amount', value: 'c1' } ] },
-  'Offset Scoring':    { desc: 'Shifts match scoring down by {offset}.', params: [ { key: 'offset', kind: 'amount', value: 'c10' } ] },
-  'Action Budget':     { desc: 'Allows {actions} actions each turn; abilities cost {ability_turn_cost}.', params: [ { key: 'actions', kind: 'amount', value: 'c3' }, { key: 'ability_turn_cost', kind: 'amount', value: 'c1' } ] },
-  'Resource Capacity': { desc: 'Caps each resource at {maximum}.', params: [ { key: 'maximum', kind: 'amount', value: 'c100' } ] },
-  'Extra Turn':        { desc: 'Grants an extra turn on a match of {minimum} or more.', params: [ { key: 'minimum', kind: 'amount', value: 'c5' } ] },
-  'Tile Spawn':        { desc: 'Spawns {tile} tiles at relative weight {weight}.', params: [ { key: 'tile', kind: 'ref', picker: 'pick_tiles', value: 'Tactics', typeText: 'Tile' }, { key: 'weight', kind: 'amount', value: 'c3' } ] },
-  'Tile Match':        { desc: 'Banks matched {tile} tiles into {reward}.', params: [ { key: 'tile', kind: 'ref', picker: 'pick_tiles', value: 'Tactics', typeText: 'Tile' }, { key: 'reward', kind: 'ref', picker: 'pick_resources', value: 'Tactics', typeText: 'Resource' } ] },
-  'Damage':            { desc: 'Deals {damage} damage to the opponent when its {tile} tile is matched.', params: [ { key: 'tile', kind: 'ref', picker: 'pick_tiles', value: 'Attack', typeText: 'Tile' }, { key: 'damage', kind: 'amount', value: 'c2' } ] },
-  'Alloy Grant':       { desc: 'Grants {amount} Alloy when its {tile} tile is matched.', params: [ { key: 'tile', kind: 'ref', picker: 'pick_tiles', value: 'Alloy', typeText: 'Tile' }, { key: 'amount', kind: 'amount', value: 'c1' } ] },
-  'Warp':              { desc: 'Charges the warp meter by {charge} per matched {tile} tile.', params: [ { key: 'tile', kind: 'ref', picker: 'pick_tiles', value: 'Antimatter', typeText: 'Tile' }, { key: 'charge', kind: 'amount', value: 'c1' } ] },
-  'Board Fill':        { desc: 'Refills the board from the {direction} edge.', params: [ { key: 'direction', kind: 'seg', options: ['Top', 'Bottom'], typeText: 'Top / Bottom' } ] },
+  'Scoring':           { desc: 'Scores {score} for each cleared match.', params: [ { key: 'score', kind: 'amount', value: 'c1', desc: 'The score granted per cleared match.' } ] },
+  'Offset Scoring':    { desc: 'Shifts match scoring down by {offset}.', params: [ { key: 'offset', kind: 'amount', value: 'c10', desc: 'How much scoring shifts down.' } ] },
+  'Action Budget':     { desc: 'Allows {actions} actions each turn; abilities cost {ability_turn_cost}.', params: [ { key: 'actions', kind: 'amount', value: 'c3', desc: 'Actions allowed per turn.' }, { key: 'ability_turn_cost', kind: 'amount', value: 'c1', desc: 'Actions an ability consumes.' } ] },
+  'Resource Capacity': { desc: 'Caps each resource at {maximum}.', params: [ { key: 'maximum', kind: 'amount', value: 'c100', desc: 'The cap for each resource.' } ] },
+  'Extra Turn':        { desc: 'Grants an extra turn on a match of {minimum} or more.', params: [ { key: 'minimum', kind: 'amount', value: 'c5', desc: 'The match size that earns an extra turn.' } ] },
+  'Tile Spawn':        { desc: 'Spawns {tile} tiles at relative weight {weight}.', params: [ { key: 'tile', kind: 'ref', picker: 'pick_tiles', value: 'Tactics', typeText: 'Tile', desc: 'The tile being spawned.' }, { key: 'weight', kind: 'amount', value: 'c3', desc: 'Relative spawn weight.' } ] },
+  'Tile Match':        { desc: 'Banks matched {tile} tiles into {reward}.', params: [ { key: 'tile', kind: 'ref', picker: 'pick_tiles', value: 'Tactics', typeText: 'Tile', desc: 'The tile being matched.' }, { key: 'reward', kind: 'ref', picker: 'pick_resources', value: 'Tactics', typeText: 'Resource', desc: 'The resource it banks into.' } ] },
+  'Damage':            { desc: 'Deals {damage} damage to the opponent when its {tile} tile is matched.', params: [ { key: 'tile', kind: 'ref', picker: 'pick_tiles', value: 'Attack', typeText: 'Tile', desc: 'The tile that triggers the attack.' }, { key: 'damage', kind: 'amount', value: 'c2', desc: 'The damage dealt.' } ] },
+  'Alloy Grant':       { desc: 'Grants {amount} Alloy when its {tile} tile is matched.', params: [ { key: 'tile', kind: 'ref', picker: 'pick_tiles', value: 'Alloy', typeText: 'Tile', desc: 'The tile that grants Alloy.' }, { key: 'amount', kind: 'amount', value: 'c1', desc: 'Alloy granted per match.' } ] },
+  'Warp':              { desc: 'Charges the warp meter by {charge} per matched {tile} tile.', params: [ { key: 'tile', kind: 'ref', picker: 'pick_tiles', value: 'Antimatter', typeText: 'Tile', desc: 'The tile that charges the meter.' }, { key: 'charge', kind: 'amount', value: 'c1', desc: 'Charge per matched tile.' } ] },
+  'Board Fill':        { desc: 'Refills the board from the {direction} edge.', params: [ { key: 'direction', kind: 'seg', options: ['Top', 'Bottom'], typeText: 'Top / Bottom', desc: 'The edge new tiles fall in from.' } ] },
   'Reload Split':      { desc: 'Splits a dead board’s tiles between combatants on reload.', params: [] },
-  'Territory':         { desc: 'Tags shared-board territory with {player_color} and {opponent_color}.', params: [ { key: 'player_color', kind: 'color', value: '#56c8d8', typeText: 'Color' }, { key: 'opponent_color', kind: 'color', value: '#d06a6a', typeText: 'Color' } ] },
-  'Selection':         { desc: 'Tiles are selected by {mode}, matching at least {minimum_run}.', params: [ { key: 'mode', kind: 'seg', options: ['Swap', 'Slide', 'Trace', 'Teleport'], typeText: 'Swap / Slide / Trace / Teleport' }, { key: 'allow_diagonal', kind: 'toggle', typeText: 'Toggle' }, { key: 'minimum_run', kind: 'stepper', value: 3, typeText: 'Number' }, { key: 'match_required', kind: 'toggle', on: true, typeText: 'Toggle' }, { key: 'teleport_range', kind: 'stepper', value: 0, typeText: 'Number' } ] },
+  'Territory':         { desc: 'Tags shared-board territory with {player_color} and {opponent_color}.', params: [ { key: 'player_color', kind: 'color', value: '#56c8d8', typeText: 'Color', desc: 'Territory tint for the player.' }, { key: 'opponent_color', kind: 'color', value: '#d06a6a', typeText: 'Color', desc: 'Territory tint for the opponent.' } ] },
+  'Selection':         { desc: 'Tiles are selected by {mode}, matching at least {minimum_run}.', params: [ { key: 'mode', kind: 'seg', options: ['Swap', 'Slide', 'Trace', 'Teleport'], typeText: 'Swap / Slide / Trace / Teleport', desc: 'The gesture used to select tiles.' }, { key: 'allow_diagonal', kind: 'toggle', typeText: 'Toggle', desc: 'Whether diagonal neighbors count.' }, { key: 'minimum_run', kind: 'stepper', value: 3, typeText: 'Number', desc: 'The smallest valid match.' }, { key: 'match_required', kind: 'toggle', on: true, typeText: 'Toggle', desc: 'Whether a move must produce a match.' }, { key: 'teleport_range', kind: 'stepper', value: 0, typeText: 'Number', desc: 'How far Teleport can reach.' } ] },
 };
 
 // rule INSTANCES: a template with values, owned by a ruleset
@@ -702,11 +721,42 @@ const identitySec = (table, key) => section('Identity') + list([scalar('text', '
 const infoSec = (name, desc) => section('Information') + list([scalar('text', 'Name', name), descField(desc)]);
 
 /* one row of a template/kind parameter.
-   view = schema ({snake_key} → type, no values), edit = instance values,
+   view = schema ({snake_key} + what it means), edit = instance values,
    new = unset. Amount params navigate into the amount sub-editor. */
 const keyLabel = k => k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+const codeTokens = s => s.replace(/\{(\w+)\}/g, '<code>{$1}</code>');
+
+// substitute {tokens} with example values to show how a template reads in play
+function exampleText(desc, params, values = {}) {
+  return desc.replace(/\{(\w+)\}/g, (_, k) => {
+    const p = params.find(x => x.key === k);
+    if (!p) return k;
+    const v = values[k] !== undefined ? values[k] : p.value;
+    if (p.kind === 'amount') { const a = AMOUNTS[v]; return a ? (a.kind === 'Constant' ? a.values.value : a.label) : v; }
+    if (p.kind === 'seg') return p.options[typeof v === 'number' ? v : 0];
+    if (p.kind === 'stepper') return String(v);
+    if (p.kind === 'conditions') return 'its conditions';
+    return String(v);
+  });
+}
+
+// view-only schema row: {key} + type on top, what the parameter means below
+function paramViewRow(p) {
+  const type = p.kind === 'amount' ? 'Amount' : p.typeText;
+  return `<div class="cell hasdesc"><div class="toprow"><div class="label"><code>{${p.key}}</code></div><div class="v">${type}</div></div><div class="sub">${p.desc || ''}</div></div>`;
+}
+
+// Information block for a template/kind page: raw text, then a worked example
+function templateInfo(name, desc, params) {
+  return section('Information') + list([
+    scalar('text', 'Name', name),
+    `<div class="cell field-desc"><div class="label">Description</div><div class="desc">${codeTokens(desc)}</div></div>`,
+    `<div class="cell field-desc"><div class="label">Example</div><div class="desc">${exampleText(desc, params)}</div></div>`,
+  ]);
+}
+
 function paramRow(p, mode, values = {}) {
-  if (mode === 'view') return scalar('text', '{' + p.key + '}', p.kind === 'amount' ? 'Amount' : (p.kind === 'conditions' ? p.typeText : p.typeText));
+  if (mode === 'view') return paramViewRow(p);
   const label = keyLabel(p.key);
   const v = values[p.key] !== undefined ? values[p.key] : p.value;
   if (p.kind === 'amount')  return mode === 'new'
@@ -750,10 +800,10 @@ home: () => ({ title: '', rows: [
   section('Building Blocks'),
   scroller([
     tile('Adjustments', { emoji: '🎚️', to: 'cat_adjustments', count: count(ADJUSTMENTS) }),
-    tile('Actions', { emoji: '🎬', to: 'cat_actions', count: count(ACTIONS) }),
-    tile('Conditions', { emoji: '🚦', to: 'cat_conditions', count: count(CONDITION_KINDS) }),
     tile('Effects', { emoji: '💫', to: 'cat_effects', count: count(EFFECTS) }),
     tile('Targets', { emoji: '🎯', to: 'cat_targets', count: 13 }),
+    tile('Actions', { emoji: '🎬', to: 'cat_actions', count: count(ACTIONS) }),
+    tile('Conditions', { emoji: '🚦', to: 'cat_conditions', count: count(CONDITION_KINDS) }),
     tile('Transforms', { emoji: '🔻', to: 'cat_transforms', count: count(TRANSFORMS) }),
   ]),
   section('Content'),
@@ -1154,7 +1204,7 @@ cat_conditions: () => ({ title: 'Conditions', rows: [
 ]}),
 
 view_condition: (arg = 'Has Status') => { const c = CONDITION_KINDS[arg]; return { title: arg, rows: [
-  infoSec(arg, c.desc),
+  templateInfo(arg, c.desc, c.params),
   section('Parameters'),
   list(c.params.length ? c.params.map(p => paramRow(p, 'view')) : [ scalar('text', 'None', '') ]),
 ]}; },
@@ -1282,7 +1332,7 @@ ed_loadout: (arg = 'player_default') => { const l = LOADOUTS[arg]; return { titl
   identitySec(LOADOUTS, arg),
   infoSec(l.name, l.desc),
   section('Configuration'),
-  list([ stepper('Columns', l.cols), stepper('Rows', l.rows) ]),
+  list([ shapeField(l.shape) ]),
   section('Modules'),
   chips([ ...l.modules.map(m => chip(m, { to: 'pick_modules' })), chip('', { add: true, menu: 'pick_modules' }) ]),
 ]}; },
@@ -1292,7 +1342,7 @@ ed_newloadout: () => ({ title: 'New Loadout', rows: [
   list([ scalar('text', 'ID', String(count(LOADOUTS))), scalar('text', 'Filename', 'new_loadout') ]),
   infoSec('New Loadout', '—'),
   section('Configuration'),
-  list([ stepper('Columns', 4), stepper('Rows', 3) ]),
+  list([ shapeField(['XXX', 'XXX', 'XXX']) ]),
   section('Modules'),
   chips([ chip('', { add: true, menu: 'pick_modules' }) ]),
   addBtn('New Loadout'),
@@ -1312,7 +1362,7 @@ cat_rules: () => ({ title: 'Rules', rows: [
 
 // a rule template is code — view-only: what it does and what its instances configure
 view_ruletemplate: (arg = 'Damage') => { const t = RULE_TEMPLATES[arg]; return { title: arg, rows: [
-  infoSec(arg, t.desc),
+  templateInfo(arg, t.desc, t.params),
   section('Parameters'),
   list(t.params.length ? t.params.map(p => paramRow(p, 'view')) : [ scalar('text', 'None', '') ]),
 ]}; },
@@ -1500,9 +1550,10 @@ SCREENS.menu_action = () => ({ title: 'Action', rows: [
 ]});
 
 /* ---------- side nav (viewer aid) ---------- */
+/* third element marks a nested item — a component of the entry above it */
 const NAV = [
   ['Primitives', [['Resources', 'cat_resources'], ['Tiles', 'cat_tiles'], ['Stats', 'cat_stats'], ['Statuses', 'cat_statuses']]],
-  ['Building Blocks', [['Adjustments', 'cat_adjustments'], ['Actions', 'cat_actions'], ['Conditions', 'cat_conditions'], ['Effects', 'cat_effects'], ['Targets', 'cat_targets'], ['Transforms', 'cat_transforms']]],
+  ['Building Blocks', [['Adjustments', 'cat_adjustments'], ['Effects', 'cat_effects'], ['Targets', 'cat_targets', true], ['Actions', 'cat_actions', true], ['Conditions', 'cat_conditions', true], ['Transforms', 'cat_transforms']]],
   ['Content', [['Abilities', 'cat_abilities'], ['Modules', 'cat_modules'], ['Loadouts', 'cat_loadouts'], ['Starships', 'cat_starships']]],
   ['Config', [['Rules', 'cat_rules'], ['Rulesets', 'cat_rulesets'], ['Match Configs', 'cat_match_configs']]],
 ];
@@ -1511,8 +1562,8 @@ function buildNav() {
   let html = `<div class="navbrand"><span class="prompt">&gt;_</span>Debug</div>`;
   for (const [section, items] of NAV) {
     html += `<div class="nav-section">${section}</div>`;
-    for (const [label, target] of items) {
-      html += `<div class="nav-item" data-target="${target || label}">${label}</div>`;
+    for (const [label, target, sub] of items) {
+      html += `<div class="nav-item${sub ? ' sub' : ''}" data-target="${target || label}">${label}</div>`;
     }
   }
   const nav = $('sidenav');
