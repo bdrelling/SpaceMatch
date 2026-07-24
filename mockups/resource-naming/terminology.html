@@ -766,8 +766,98 @@
   <!-- ================= V5 · MAPPED ================= -->
   <section class="panel" id="v5" role="tabpanel" hidden>
 
-    <h2>Styles of Play</h2>
-    <p class="sub">The relationship map as the centerpiece; the word lists beneath.</p>
+    <h2>Stats</h2>
+    <h3 style="margin-top:14px">Primary</h3>
+    <div class="tablewrap">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th></th>
+            <th><span class="gem plasma"></span>Command</th>
+            <th><span class="gem graviton"></span>Security</th>
+            <th><span class="gem ion"></span>Engineering</th>
+            <th><span class="gem tachyon"></span>Science</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>Theme</th>
+            <td><span class="cellsub">offense</span></td>
+            <td><span class="cellsub">defense / sustain</span></td>
+            <td><span class="cellsub">speed / growth</span></td>
+            <td><span class="cellsub">intel / control</span></td>
+          </tr>
+          <tr>
+            <th>Resource</th>
+            <td><span class="name t-plasma">Command</span></td>
+            <td><span class="name t-graviton">Security</span></td>
+            <td><span class="name t-ion">Engineering</span></td>
+            <td><span class="name t-tachyon">Science</span></td>
+          </tr>
+          <tr>
+            <th>Tile</th>
+            <td><span class="sw24" style="background:var(--plasma)"></span></td>
+            <td><span class="sw24" style="background:var(--graviton)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2" stroke-linejoin="round"><path d="M12 3 L19 6 V11 C19 16 16 19.5 12 21 C8 19.5 5 16 5 11 V6 Z"/></svg></span></td>
+            <td><span class="sw24" style="background:var(--ion)"></span></td>
+            <td><span class="sw24" style="background:var(--tachyon)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="1.6"><circle cx="12" cy="12" r="1.7" fill="var(--bg)" stroke="none"/><ellipse cx="12" cy="12" rx="9" ry="3.6"/><ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(120 12 12)"/></svg></span></td>
+          </tr>
+          <tr>
+            <th>Stat</th>
+            <td><span class="name t-plasma">Targeting</span></td>
+            <td><span class="name t-graviton">Protection</span></td>
+            <td><span class="name t-ion">Computing</span></td>
+            <td><span class="name t-tachyon">Diagnostics</span></td>
+          </tr>
+          <tr>
+            <th>Styles</th>
+            <td><span class="cellsub">Combat · Propulsion · Tactics</span></td>
+            <td><span class="cellsub">Combat · Damage Control · Countermeasures</span></td>
+            <td><span class="cellsub">Propulsion · Damage Control · Logic</span></td>
+            <td><span class="cellsub">Tactics · Countermeasures · Logic</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 style="margin-top:24px">Secondary</h3>
+    <div class="tablewrap">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th></th>
+            <th><span class="dot damage"></span>Damage</th>
+            <th><span class="dot scrap"></span>Alloy</th>
+            <th><span class="dot warp"></span>Antimatter</th>
+            <th>—</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th>Resource</th>
+            <td><span class="cellsub">—</span></td>
+            <td><span class="name t-scrap">Alloy</span></td>
+            <td><span class="name t-warp">Antimatter</span></td>
+            <td><span class="cellsub">—</span></td>
+          </tr>
+          <tr>
+            <th>Tile</th>
+            <td><span class="sw24" style="background:var(--damage)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5.5"/><line x1="12" y1="1.5" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22.5" y2="12"/></svg></span></td>
+            <td><span class="sw24" style="background:var(--scrap)"></span></td>
+            <td><span class="sw24" style="background:var(--warp)"></span></td>
+            <td><span class="cellsub">—</span></td>
+          </tr>
+          <tr>
+            <th>Stat</th>
+            <td><span class="name t-damage">Firepower</span></td>
+            <td><span class="name t-scrap">Armor</span></td>
+            <td><span class="name t-warp">Warp</span></td>
+            <td><span class="name">Energy</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2 style="margin-top:48px">Styles of Play</h2>
     <svg class="relmap" style="max-width:100%" viewBox="0 0 720 560" role="img" aria-label="Relationship map: four resources as nodes, six playstyles as their pairwise overlaps">
       <line x1="310.9" y1="117.8" x2="149.1" y2="242.2" stroke="var(--line)" stroke-width="1.5"/>
       <line x1="409.1" y1="117.8" x2="570.9" y2="242.2" stroke="var(--line)" stroke-width="1.5"/>
@@ -809,61 +899,6 @@
       <text x="360" y="478" text-anchor="middle" font-size="15" font-weight="650" fill="var(--ink)">Science</text>
       <text x="360" y="496" text-anchor="middle" font-size="11" font-family="ui-monospace, Menlo, monospace" fill="var(--tachyon-ink)">control</text>
     </svg>
-
-    <h2 style="margin-top:48px">Resources · Tiles · Stats</h2>
-    <div class="tablewrap">
-      <table class="matrix">
-        <thead>
-          <tr>
-            <th>Resource</th>
-            <th>Tile</th>
-            <th>Stat</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><span class="name t-plasma"><span class="gem plasma" style="margin-right:8px"></span>Command</span></td>
-            <td><div class="kv"><span class="sw24" style="background:var(--plasma)"></span><span class="name">Command</span></div></td>
-            <td><span class="name t-plasma">Targeting</span></td>
-          </tr>
-          <tr>
-            <td><span class="name t-graviton"><span class="gem graviton" style="margin-right:8px"></span>Security</span></td>
-            <td><div class="kv"><span class="sw24" style="background:var(--graviton)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2" stroke-linejoin="round"><path d="M12 3 L19 6 V11 C19 16 16 19.5 12 21 C8 19.5 5 16 5 11 V6 Z"/></svg></span><span class="name">Security</span></div></td>
-            <td><span class="name t-graviton">Protection</span></td>
-          </tr>
-          <tr>
-            <td><span class="name t-ion"><span class="gem ion" style="margin-right:8px"></span>Engineering</span></td>
-            <td><div class="kv"><span class="sw24" style="background:var(--ion)"></span><span class="name">Engineering</span></div></td>
-            <td><span class="name t-ion">Computing</span></td>
-          </tr>
-          <tr>
-            <td><span class="name t-tachyon"><span class="gem tachyon" style="margin-right:8px"></span>Science</span></td>
-            <td><div class="kv"><span class="sw24" style="background:var(--tachyon)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="1.6"><circle cx="12" cy="12" r="1.7" fill="var(--bg)" stroke="none"/><ellipse cx="12" cy="12" rx="9" ry="3.6"/><ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="9" ry="3.6" transform="rotate(120 12 12)"/></svg></span><span class="name">Science</span></div></td>
-            <td><span class="name t-tachyon">Diagnostics</span></td>
-          </tr>
-          <tr>
-            <td style="border-top:2px solid var(--line)"><span class="cellsub">—</span></td>
-            <td style="border-top:2px solid var(--line)"><div class="kv"><span class="sw24" style="background:var(--damage)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--bg)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5.5"/><line x1="12" y1="1.5" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22.5"/><line x1="1.5" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22.5" y2="12"/></svg></span><span class="name">Damage</span></div></td>
-            <td style="border-top:2px solid var(--line)"><span class="name t-damage">Firepower</span></td>
-          </tr>
-          <tr>
-            <td><span class="name t-scrap"><span class="dot scrap" style="margin-right:7px"></span>Alloy</span></td>
-            <td><div class="kv"><span class="sw24" style="background:var(--scrap)"></span><span class="name">Alloy</span></div></td>
-            <td><span class="name t-scrap">Armor</span></td>
-          </tr>
-          <tr>
-            <td><span class="name t-warp"><span class="dot warp" style="margin-right:7px"></span>Antimatter</span></td>
-            <td><div class="kv"><span class="sw24" style="background:var(--warp)"></span><span class="name">Antimatter</span></div></td>
-            <td><span class="name t-warp">Warp</span></td>
-          </tr>
-          <tr>
-            <td><span class="cellsub">—</span></td>
-            <td><span class="cellsub">—</span></td>
-            <td><span class="name">Energy</span></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
 
     <h2 style="margin-top:48px">Examples</h2>
     <div class="log" style="margin-top:14px">
