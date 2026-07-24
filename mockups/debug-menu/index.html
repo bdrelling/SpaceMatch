@@ -297,6 +297,7 @@ const PARENTS = {
   menu_action: 'ed_action', menu_target: 'ed_effect', menu_condition: 'ed_condition', menu_amount: 'ed_amount',
   menu_stackrule: 'ed_status', menu_decayrule: 'ed_status', menu_step: 'ed_transform',
   cat_transforms: 'home', ed_transform: 'cat_transforms', ed_newtransform: 'cat_transforms',
+  cat_amounts: 'home', view_amount: 'cat_amounts',
   cat_targets: 'home', view_target: 'cat_targets',
   cat_conditions: 'home', view_condition: 'cat_conditions',
   cat_starships: 'home', ed_starship: 'cat_starships', ed_newstarship: 'cat_starships', pick_loadouts: 'ed_starship',
@@ -803,6 +804,7 @@ home: () => ({ title: '', rows: [
   section('Building Blocks'),
   scroller([
     tile('Adjustments', { emoji: '🎚️', to: 'cat_adjustments', count: count(ADJUSTMENTS) }),
+    tile('Amounts', { emoji: '🔢', to: 'cat_amounts', count: count(AMOUNT_KINDS) }),
     tile('Effects', { emoji: '💫', to: 'cat_effects', count: count(EFFECTS) }),
     tile('Targets', { emoji: '🎯', to: 'cat_targets', count: 13 }),
     tile('Actions', { emoji: '🎬', to: 'cat_actions', count: count(ACTIONS) }),
@@ -1189,7 +1191,17 @@ pick_transforms: () => ({ title: 'Transform', rows: [
   list([ newRow('New Transform', 'ed_newtransform') ]),
 ]}),
 
-/* --- Targets & Conditions (finite kind vocabularies from code — browsable, view-only) --- */
+/* --- Amounts, Targets & Conditions (finite kind vocabularies from code — browsable, view-only) --- */
+cat_amounts: () => ({ title: 'Amounts', rows: [
+  list(Object.entries(AMOUNT_KINDS).map(([k, a]) => optNav(k, a.desc, 'view_amount:' + k))),
+]}),
+
+view_amount: (arg = 'Constant') => { const a = AMOUNT_KINDS[arg]; return { title: arg, rows: [
+  templateInfo(arg, a.desc, a.params),
+  section('Parameters'),
+  list(a.params.length ? a.params.map(p => paramRow(p, 'view')) : [ scalar('text', 'None', '') ]),
+]}; },
+
 cat_targets: () => ({ title: 'Targets', rows: [
   list(MENUS.menu_target.map(k => optNav(k, MENU_DESCS.menu_target[k], 'view_target:' + k))),
 ]}),
@@ -1556,7 +1568,7 @@ SCREENS.menu_action = () => ({ title: 'Action', rows: [
 /* third element marks a nested item — a component of the entry above it */
 const NAV = [
   ['Primitives', [['Resources', 'cat_resources'], ['Tiles', 'cat_tiles'], ['Stats', 'cat_stats'], ['Statuses', 'cat_statuses']]],
-  ['Building Blocks', [['Adjustments', 'cat_adjustments'], ['Effects', 'cat_effects'], ['Targets', 'cat_targets', true], ['Actions', 'cat_actions', true], ['Conditions', 'cat_conditions', true], ['Transforms', 'cat_transforms']]],
+  ['Building Blocks', [['Adjustments', 'cat_adjustments'], ['Amounts', 'cat_amounts'], ['Effects', 'cat_effects'], ['Targets', 'cat_targets', true], ['Actions', 'cat_actions', true], ['Conditions', 'cat_conditions', true], ['Transforms', 'cat_transforms']]],
   ['Content', [['Abilities', 'cat_abilities'], ['Modules', 'cat_modules'], ['Loadouts', 'cat_loadouts'], ['Starships', 'cat_starships']]],
   ['Config', [['Rules', 'cat_rules'], ['Rulesets', 'cat_rulesets'], ['Match Configs', 'cat_match_configs']]],
 ];
